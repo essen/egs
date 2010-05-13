@@ -1,0 +1,318 @@
+%	EGS: Erlang Game Server
+%	Copyright (C) 2010  Loic Hoguin
+%
+%	This file is part of EGS.
+%
+%	EGS is free software: you can redistribute it and/or modify
+%	it under the terms of the GNU General Public License as published by
+%	the Free Software Foundation, either version 3 of the License, or
+%	(at your option) any later version.
+%
+%	gasetools is distributed in the hope that it will be useful,
+%	but WITHOUT ANY WARRANTY; without even the implied warranty of
+%	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%	GNU General Public License for more details.
+%
+%	You should have received a copy of the GNU General Public License
+%	along with gasetools.  If not, see <http://www.gnu.org/licenses/>.
+
+-module(egs_proto).
+-compile(export_all).
+
+%% @doc Prepare a packet. Return the real size and padding at the end.
+
+packet_prepare(Packet) ->
+	Size = 4 + byte_size(Packet),
+	case Size rem 4 of
+		0 ->
+			{ok, Size, <<>>};
+		2 ->
+			{ok, Size + 2, << 0:16 >>};
+		_ ->
+			{error, badarg}
+	end.
+
+%% @doc Receive exactly one packet command. Handle errors properly. Return the full packet for the command.
+
+packet_recv(CSocket, Timeout) ->
+	case packet_safe_recv(CSocket, 4, Timeout) of
+		{error, A} ->
+			{error, A};
+		{ok, << Size:32/little-unsigned-integer >>} ->
+			case packet_safe_recv(CSocket, Size - 4, Timeout) of
+				{error, B} ->
+					{error, B};
+				{ok, Tail} ->
+					{ok, << Size:32/little-unsigned-integer, Tail/binary >>}
+			end
+	end.
+
+%% @doc Safely receive a packet. Close the connection if an error happens.
+
+packet_safe_recv(CSocket, Size, Timeout) ->
+	try ssl:recv(CSocket, Size, Timeout) of
+		{ok, Packet} ->
+			{ok, Packet};
+		{error, timeout} ->
+			{error, timeout};
+		{error, _} ->
+			ssl:close(CSocket),
+			{error, closed}
+	catch
+		_ ->
+			ssl:close(CSocket),
+			{error, closed}
+	end.
+
+%% @doc Send a packet. The packet argument must not contain the size field.
+
+packet_send(CSocket, Packet) ->
+	{ok, Size, Padding} = packet_prepare(Packet),
+	packet_send(CSocket, << Size:32/little-unsigned-integer, Packet/binary, Padding/binary >>, Size).
+
+%% @doc Send a normal command.
+
+packet_send(CSocket, Packet, Size) when Size =< 16#4000 ->
+	ssl:send(CSocket, Packet);
+
+%% @doc Send a fragmented command when size is too big.
+%% @todo Wait for fragments reception confirmation?
+
+packet_send(CSocket, Packet, Size) ->
+	packet_fragment_send(CSocket, Packet, Size, 0).
+
+%% @doc Send the last chunk of a fragmented command.
+
+packet_fragment_send(CSocket, Packet, Size, Current) when Size - Current =< 16#4000 ->
+	FragmentSize = 16#10 + byte_size(Packet),
+	Fragment = << FragmentSize:32/little-unsigned-integer, 16#0b030000:32/unsigned-integer,
+		Size:32/little-unsigned-integer, Current:32/little-unsigned-integer, Packet/binary >>,
+	ssl:send(CSocket, Fragment);
+
+%% @doc Send another chunk of a fragmented command.
+
+packet_fragment_send(CSocket, Packet, Size, Current) ->
+	<< Chunk:131072/bits, Rest/bits >> = Packet,
+	Fragment = << 16#10400000:32/unsigned-integer, 16#0b030000:32/unsigned-integer,
+		Size:32/little-unsigned-integer, Current:32/little-unsigned-integer, Chunk/binary >>,
+	ssl:send(CSocket, Fragment),
+	packet_fragment_send(CSocket, Rest, Size, Current + 16#4000).
+
+%% @doc Split a packet received into commands. This is only needed when receiving packets in active mode.
+
+packet_split(Packet) ->
+	<< Size:32/little-unsigned-integer, _/bits >> = Packet,
+	BitSize = Size * 8,
+	<< Split:BitSize/bits, Rest/bits >> = Packet,
+	case Rest of
+		<< >> ->
+			[ Split ];
+		_ ->
+			[ Split | packet_split(Rest) ]
+	end.
+
+%% @doc Parse a character creation command. Return the character number and data.
+
+parse_character_create(Packet) ->
+	<< _:352, Number:32/little-unsigned-integer, Char/bits >> = Packet,
+	[{number, Number}, {char, Char}].
+
+%% @doc Parse a character selection command. Return the selected character's number.
+
+parse_character_select(Packet) ->
+	<< _:352, Number:32/little-unsigned-integer, _/bits >> = Packet,
+	[{number, Number}].
+
+%% @doc Parse a chat command. AOTI v2.000 version of the command.
+
+parse_chat(0, Packet) ->
+	<< _:384, FromGID:32/unsigned-integer, _:128, Message/bits >> = Packet,
+	[{gid, FromGID}, {name, missing}, {message, Message}];
+
+%% @doc Parse a chat command. AOTI since an unknown version of the game.
+
+parse_chat(_, Packet) ->
+	<< _:384, FromGID:32/unsigned-integer, _:128, FromName:512/bits, Message/bits >> = Packet,
+	[{gid, FromGID}, {name, FromName}, {message, Message}].
+
+%% @doc Parse the game server auth command. Used when first connecting to a game server.
+
+parse_game_auth(Packet) ->
+	<< _:352, GID:32/little-unsigned-integer, Auth:32/bits, _/bits >> = Packet,
+	[{gid, GID}, {auth, Auth}].
+
+%% @doc Parse a lobby change command.
+
+parse_lobby_change(Packet) ->
+	<< _:400, Map:16/unsigned-integer, Entry:16/unsigned-integer, _/bits >> = Packet,
+	[{map, Map}, {entry, Entry}].
+
+%% @doc Parse the MOTD request command.
+
+parse_motd_request(Packet) ->
+	<< _:352, Page:8/little-unsigned-integer, Language:8/little-unsigned-integer, _/bits >> = Packet,
+	[{page, Page}, {language, Language}].
+
+%% @doc Parse the options change command. Retrieve the options for saving.
+
+parse_options_change(Packet) ->
+	<< _:352, Options/bits >> = Packet,
+	[{options, Options}].
+
+%% @doc Parse the platform information command. Retrieve the game version for later use.
+
+parse_platform_info(Packet) ->
+	<< _:416, Version:32/little-unsigned-integer, _/bits >> = Packet,
+	[{version, Version}].
+
+%% @doc Parse the uni selection command.
+
+parse_uni_select(Packet) ->
+	<< _:352, Uni:32/little-unsigned-integer, _/bits >> = Packet,
+	[{uni, Uni}].
+
+%% @doc Indicate that the authentication was successful and send the real GUARDIANS ID.
+%% @todo Apparently it's possible to ask a question here too. Used for free course on JP.
+
+send_auth_success(CSocket, SessionID, GID, Auth) ->
+	Packet = << 16#0223:16, 0:208, SessionID:32/little-unsigned-integer, 0:64, GID:32/little-unsigned-integer, Auth:32/bits >>,
+	packet_send(CSocket, Packet).
+
+%% @doc Center the camera on the player, if possible.
+%% @todo Probably.
+
+send_camera_center(CSocket, GID) ->
+	Packet = << 16#0236:16, 0:208, GID:32/little-unsigned-integer, 0:64 >>,
+	packet_send(CSocket, Packet).
+
+%% @doc Send the character list for selection.
+
+send_character_list(CSocket, GID, Data0, Data1, Data2, Data3) ->
+	[{status, Status0}, {char, Char0}|_] = Data0,
+	[{status, Status1}, {char, Char1}|_] = Data1,
+	[{status, Status2}, {char, Char2}|_] = Data2,
+	[{status, Status3}, {char, Char3}|_] = Data3,
+	Packet = << 16#0d03:16/unsigned-integer, 0:80, GID:32/little-unsigned-integer, 0:96, GID:32/little-unsigned-integer, 0:104,
+		Status0:8/unsigned-integer, 0:48, Char0/binary, 0:520,
+		Status1:8/unsigned-integer, 0:48, Char1/binary, 0:520,
+		Status2:8/unsigned-integer, 0:48, Char2/binary, 0:520,
+		Status3:8/unsigned-integer, 0:48, Char3/binary, 0:512 >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @doc Send the data for the selected character.
+
+send_character_selected(CSocket, GID, Char, Options) ->
+	Packet = << 16#0d01:16, 0:208, GID:32/little-unsigned-integer, 0:64, Char/binary, 0:8128, Options/binary >>,
+	packet_send(CSocket, Packet).
+
+%% @doc Send a chat command. AOTI v2.000 version of the command.
+
+send_chat(CSocket, 0, FromGID, _, Message) ->
+	Packet = << 16#0304:16/unsigned-integer, 0:320, 16#1200:16/unsigned-integer, FromGID:32/little-unsigned-integer, 0:128, Message/bits >>,
+	packet_send(CSocket, Packet);
+
+%% @doc Send a chat command. AOTI since an unknown version of the game.
+
+send_chat(CSocket, _, FromGID, FromName, Message) ->
+	Packet = << 16#0304:16, 0:320, 16#1200:16/unsigned-integer, FromGID:32/little-unsigned-integer, 0:128, FromName:512/bits, Message/bits >>,
+	packet_send(CSocket, Packet).
+
+%% @doc Send the character flags list.
+
+send_flags(CSocket, GID) ->
+	{ok, Flags} = file:read_file("p/flags.bin"),
+	Packet = << 16#0d05:16, 0:80, GID:32/little-unsigned-integer, 0:96, GID:32/little-unsigned-integer, 0:64, Flags/binary >>,
+	packet_send(CSocket, Packet).
+
+%% @doc Send the IP and port of the game server the player is sent to.
+
+send_game_server_info(CSocket, GID, Port) ->
+	Packet = << 16#0216:16, 0:208, GID:32/little-unsigned-integer, 0:64, << 192, 168, 1, 13 >>/binary, Port:32/little-unsigned-integer >>,
+	packet_send(CSocket, Packet).
+
+%% @doc Say hello. Used by the game server where a temporary session ID isn't needed.
+
+send_hello(CSocket) ->
+	send_hello(CSocket, 0).
+
+%% @doc Say hello and send a temporary session ID to the client. Used by the login server.
+
+send_hello(CSocket, SessionID) ->
+	Packet = << 16#0202:16, 0:304, SessionID:32/little-unsigned-integer >>,
+	packet_send(CSocket, Packet).
+
+%% @doc Keepalive.
+
+send_keepalive(CSocket, GID) ->
+	Packet = << 16#2b1b:16, 0:208, GID:32/little-unsigned-integer, 0:64 >>,
+	packet_send(CSocket, Packet).
+
+%% @doc Make the client load the quest previously sent.
+
+send_load_quest(CSocket, GID) ->
+	Packet = << 16#1212:16, 0:208, GID:32/little-unsigned-integer, 0:64 >>,
+	packet_send(CSocket, Packet).
+
+%% @doc Indicate to the client that loading should finish.
+
+send_loading_end(CSocket, GID) ->
+	Packet = << 16#0208:16, 0:208, GID:32/little-unsigned-integer, 0:96 >>,
+	packet_send(CSocket, Packet).
+
+%% @doc Send the map ID to be loaded by the client.
+
+send_map(CSocket, Map, Entry) ->
+	Packet = << 16#0205:16, 0:368, Map:16/unsigned-integer, 0:16, Entry:16/unsigned-integer, 0:80 >>,
+	packet_send(CSocket, Packet).
+
+%% @doc Send the requested MOTD page to the client. Pages start at 0.
+
+send_motd(CSocket, Page) ->
+	{ok, File} = file:read_file("conf/motd.txt"),
+	Tokens = re:split(File, "\n."),
+	MOTD = << << Line/binary, "\n", 0 >> || Line <- lists:sublist(Tokens, 1 + Page * 15, 15) >>,
+	NbPages = 1 + length(Tokens) div 15,
+	Packet = << 16#0225:16, 0:304, NbPages:8, Page:8, 16#8200:16/unsigned-integer, MOTD/binary, 0:16 >>,
+	packet_send(CSocket, Packet).
+
+%% @doc Send the player's NPC and PM information.
+
+send_npc_info(CSocket, GID) ->
+	Packet = << 16#1602:16, 0:208, GID:32/little-unsigned-integer, 0:3680 >>,
+	packet_send(CSocket, Packet).
+
+%% @doc Send the player's partner card.
+
+send_player_card(CSocket, GID, Char) ->
+	<< CharInfo:576/bits, _/bits >> = Char,
+	Packet = << 16#1500:16, 0:208, GID:32/little-unsigned-integer, 0:64, CharInfo/binary, 0:3072, 16#01040103:32, 0:64 >>,
+	packet_send(CSocket, Packet).
+
+%% @doc Send the quest file to be loaded.
+
+send_quest(CSocket, Filename) ->
+	{ok, File} = file:read_file(Filename),
+	Packet = << 16#020e:16, 0:304, 16#00200000:32/unsigned-integer, 16#2032674b:32/unsigned-integer, File/binary >>,
+	packet_send(CSocket, Packet).
+
+%% @doc Send the list of available universes.
+
+send_universe_cube(CSocket) ->
+	{ok, File} = file:read_file("p/unicube.bin"),
+	Packet = << 16#021e:16, 0:304, File/binary >>,
+	packet_send(CSocket, Packet).
+
+%% @doc Send the current universe name and number.
+%% @todo Currently only have universe number 2, named EGS Test.
+
+send_universe_info(CSocket, GID) ->
+	Packet = << 16#0222:16, 0:80, GID:32/little-unsigned-integer, 0:96, GID:32/little-unsigned-integer, 0:64,
+		2:32/little-unsigned-integer, 0:32, 16#45, 0, 16#47, 0, 16#53, 0, 16#20, 0, 16#54, 0, 16#65, 0, 16#73, 0, 16#74, 0:24 >>,
+	packet_send(CSocket, Packet).
+
+%% @doc Send the zone file to be loaded.
+
+send_zone(CSocket, Filename) ->
+	{ok, File} = file:read_file(Filename),
+	Packet = << 16#020f:16, 0:336, 16#00700100:32/unsigned-integer, File/binary >>,
+	packet_send(CSocket, Packet).

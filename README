@@ -1,0 +1,6 @@
+EGS is a GPLv3 Erlang Game Server for AOTI. See LICENSE.txt for details.
+
+ * This is a work in progress!
+ * Server files are not included.
+
+Use 'make' to compile, 'make run' to run and 'make fclean' to cleanup.
