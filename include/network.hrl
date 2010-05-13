@@ -22,7 +22,8 @@
 -define(PATCH_PORT_US, 11230).
 -define(PATCH_LISTEN_OPTIONS, [binary, {send_timeout, 5000}, {packet, 0}, {active, false}, {reuseaddr, true}]).
 
--define(LOGIN_PORT_JP, 12030).
+-define(LOGIN_PORT_JP_ONE, 12030).
+-define(LOGIN_PORT_JP_TWO, 12031).
 -define(LOGIN_PORT_US, 12230).
 -define(LOGIN_LISTEN_OPTIONS, [binary, {active, false}, {certfile, "ssl/servercert.pem"}, {keyfile, "ssl/serverkey.pem"}, {password, "alpha"}]).
 

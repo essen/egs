@@ -26,9 +26,10 @@
 %% @doc Start the login server. Currently AOTI JP and US only.
 
 start() ->
-	JPPid = spawn_link(?MODULE, listen, [?LOGIN_PORT_JP, 10000001]),
-	USPid = spawn_link(?MODULE, listen, [?LOGIN_PORT_US, 20000001]),
-	[{jp, JPPid}, {us, USPid}].
+	JPPidE1 = spawn_link(?MODULE, listen, [?LOGIN_PORT_JP_ONE, 10000001]),
+	JPPidE2 = spawn_link(?MODULE, listen, [?LOGIN_PORT_JP_TWO, 20000001]),
+	USPid = spawn_link(?MODULE, listen, [?LOGIN_PORT_US, 30000001]),
+	[{jp_e1, JPPidE1}, {jp_e2, JPPidE2}, {us, USPid}].
 
 %% @doc Listen for connections.
 
