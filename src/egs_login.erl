@@ -90,12 +90,16 @@ handle(16#0217, CSocket, SessionID, _) ->
 
 %% @doc Authentication request handler. Currently always succeed.
 %%      Use the temporary session ID as the GID for now.
+%%      Use username and password as a folder name for saving character data.
 %% @todo Handle real GIDs whenever there's real authentication.
 
-handle(16#0219, CSocket, SessionID, _) ->
-	log(SessionID, "auth success"),
+handle(16#0219, CSocket, SessionID, Packet) ->
+	[{username, Username}, {password, Password}] = egs_proto:parse_auth_request(Packet),
+	log(SessionID, io_lib:format("auth success for ~s ~s", [Username, Password])),
 	Auth = crypto:rand_bytes(4),
-	egs_db:users_insert(#users{gid=SessionID, pid=self(), socket=CSocket, auth=Auth}),
+	Folder = << Username/binary, "-", Password/binary >>,
+	log(SessionID, Folder),
+	egs_db:users_insert(#users{gid=SessionID, pid=self(), socket=CSocket, auth=Auth, folder=Folder}),
 	egs_proto:send_auth_success(CSocket, SessionID, SessionID, Auth);
 
 %% @doc MOTD request handler. Handles both forms of MOTD requests, US and JP.

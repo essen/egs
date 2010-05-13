@@ -111,6 +111,13 @@ packet_split(Packet) ->
 			[ Split | packet_split(Rest) ]
 	end.
 
+%% @doc Parse a login authentication command. Return the username and password.
+
+parse_auth_request(Packet) ->
+	<< _:352, Username:192/bits, Password:192/bits, _/bits >> = Packet,
+	[{username, re:replace(Username, "\\0+", "", [global, {return, binary}])},
+		{password, re:replace(Password, "\\0+", "", [global, {return, binary}])}].
+
 %% @doc Parse a character creation command. Return the character number and data.
 
 parse_character_create(Packet) ->

@@ -74,7 +74,7 @@ process_handle(16#020d, CSocket, Version, Packet) ->
 	case User#users.auth of
 		Auth ->
 			log(GID, "good auth, proceed"),
-			egs_db:users_insert(#users{gid=GID, pid=self(), socket=CSocket, auth= << 0:32 >>}),
+			egs_db:users_insert(#users{gid=GID, pid=self(), socket=CSocket, auth= << 0:32 >>, folder=User#users.folder}),
 			egs_proto:send_flags(CSocket, GID),
 			?MODULE:char_select(CSocket, GID, Version);
 		_ ->
@@ -123,16 +123,23 @@ char_select_handle(16#020b, CSocket, GID, Version, Packet) ->
 
 char_select_handle(16#0d02, CSocket, GID, Version, Packet) ->
 	log(GID, "character creation"),
+	User = egs_db:users_select(GID),
 	[{number, Number}, {char, Char}] = egs_proto:parse_character_create(Packet),
-	file:write_file(io_lib:format("save/~b-character", [Number]), Char),
-	file:write_file(io_lib:format("save/~b-character.options", [Number]), << 0:192 >>),
+	_ = file:make_dir(io_lib:format("save/~s", [User#users.folder])),
+	file:write_file(io_lib:format("save/~s/~b-character", [User#users.folder, Number]), Char),
+	file:write_file(io_lib:format("save/~s/~b-character.options", [User#users.folder, Number]), << 0:192 >>),
 	char_select_load(CSocket, GID, Version, Number);
 
 %% @doc Character selection screen request.
 
 char_select_handle(16#0d06, CSocket, GID, Version, _) ->
 	log(GID, "send character selection screen"),
-	egs_proto:send_character_list(CSocket, GID, char_load(0), char_load(1), char_load(2), char_load(3)),
+	User = egs_db:users_select(GID),
+	egs_proto:send_character_list(CSocket, GID,
+		char_load(User#users.folder, 0),
+		char_load(User#users.folder, 1),
+		char_load(User#users.folder, 2),
+		char_load(User#users.folder, 3)),
 	?MODULE:char_select(CSocket, GID, Version);
 
 %% @doc Unknown command handler. Do nothing.
@@ -143,8 +150,8 @@ char_select_handle(Command, CSocket, GID, Version, _) ->
 
 %% @doc Load the given character's data.
 
-char_load(Number) ->
-	Filename = io_lib:format("save/~b-character", [Number]),
+char_load(Folder, Number) ->
+	Filename = io_lib:format("save/~s/~b-character", [Folder, Number]),
 	case file:read_file(Filename) of
 		{ok, Char} ->
 			{ok, Options} = file:read_file(io_lib:format("~s.options", [Filename])),
@@ -156,8 +163,8 @@ char_load(Number) ->
 %% @doc Load the selected character and start the main game's loop.
 
 char_select_load(CSocket, GID, Version, Number) ->
-	[{status, _}, {char, << Name:512/bits, _/bits >>}|_] = char_load(Number),
 	User = egs_db:users_select(GID),
+	[{status, _}, {char, << Name:512/bits, _/bits >>}|_] = char_load(User#users.folder, Number),
 	NewRow = User#users{charnumber=Number, charname=Name},
 	egs_db:users_insert(NewRow),
 	?MODULE:lobby_load(CSocket, GID, 16#0100, 16#0100),
@@ -168,7 +175,7 @@ char_select_load(CSocket, GID, Version, Number) ->
 
 lobby_load(CSocket, GID, Map, Entry) ->
 	User = egs_db:users_select(GID),
-	[{status, 1}, {char, Char}, {options, Options}] = char_load(User#users.charnumber),
+	[{status, 1}, {char, Char}, {options, Options}] = char_load(User#users.folder, User#users.charnumber),
 	[{quest, Quest}, {zone, Zone}] = proplists:get_value(Map, ?MAPS, [{quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}]),
 	try
 		egs_proto:send_character_selected(CSocket, GID, Char, Options),
@@ -297,7 +304,7 @@ handle(Command, _, GID, _, Packet) when Command =:= 16#0d07 ->
 	log(GID, "options changes"),
 	[{options, Options}] = egs_proto:parse_options_change(Packet),
 	User = egs_db:users_select(GID),
-	file:write_file(io_lib:format("save/~b-character.options", [User#users.charnumber]), Options);
+	file:write_file(io_lib:format("save/~s/~b-character.options", [User#users.folder, User#users.charnumber]), Options);
 
 %% @doc Unknown command handler. Do nothing.
 
