@@ -179,6 +179,9 @@ lobby_load(CSocket, GID, Map, Entry) ->
 	[{status, 1}, {char, Char}, {options, Options}] = char_load(User#users.folder, User#users.charnumber),
 	[{quest, Quest}, {zone, Zone}] = proplists:get_value(Map, ?MAPS, [{quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}]),
 	try
+		% broadcast spawn to other people
+		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_spawn, User} end, egs_db:users_select_others(GID)),
+		% load lobby and character
 		egs_proto:send_character_selected(CSocket, GID, Char, Options),
 		% 0246 0a0a 1006
 		send_packet_1005(CSocket, GID, Char),
@@ -195,8 +198,8 @@ lobby_load(CSocket, GID, Map, Entry) ->
 		egs_proto:send_map(CSocket, Map, Entry),
 		% 100e 020c
 		egs_proto:send_load_quest(CSocket, GID),
-		send_packet_201(CSocket, GID, Map, Entry, Char),
-		% 0a06, (0233, other chars?)
+		send_packet_201(CSocket, GID, Map, Entry, User, Char),
+		% 0a06
 		Users = egs_db:users_select_others(GID),
 		send_packet_233(CSocket, GID, Users),
 		egs_proto:send_loading_end(CSocket, GID),
@@ -235,6 +238,9 @@ loop(CSocket, GID, Version) ->
 			?MODULE:loop(CSocket, GID, Version);
 		{psu_chat, ChatGID, ChatName, ChatMessage} ->
 			egs_proto:send_chat(CSocket, Version, ChatGID, ChatName, ChatMessage),
+			?MODULE:loop(CSocket, GID, Version);
+		{psu_player_spawn, SpawnPlayer} ->
+			send_spawn(CSocket, GID, SpawnPlayer),
 			?MODULE:loop(CSocket, GID, Version);
 		{ssl, _, Data} ->
 			Packets = egs_proto:packet_split(Data),
@@ -357,11 +363,13 @@ send_packet_200(CSocket, GID) ->
 
 %% @todo Figure out what the other things are.
 
-send_packet_201(CSocket, GID, Map, Entry, Char) ->
+send_packet_201(CSocket, GID, Map, Entry, User, Char) ->
+	CharGID = User#users.gid,
+	CharLID = User#users.lid,
 	{ok, File} = file:read_file("p/packet0201.bin"),
-	<< _:96, A:32/bits, _:96, B:32/bits, _:96, C:32/bits, _:128, D:96/bits, _:2592, After/bits >> = File,
-	Packet = << 16#0201:16, 0:48, A/binary, GID:32/little-unsigned-integer, 0:64, B/binary, GID:32/little-unsigned-integer,
-		0:64, C/binary, GID:32/little-unsigned-integer, 0:96, D/binary, Map:16/unsigned-integer,
+	<< _:96, A:32/bits, _:96, B:32/bits, _:256, D:96/bits, _:2592, After/bits >> = File,
+	Packet = << 16#0201:16, 0:48, A/binary, CharGID:32/little-unsigned-integer, 0:64, B/binary, GID:32/little-unsigned-integer,
+		0:64, CharLID:32/little-unsigned-integer, CharGID:32/little-unsigned-integer, 0:96, D/binary, Map:16/unsigned-integer,
 		0:16, Entry:16/unsigned-integer, 0:16, 0:320, Char/binary, After/binary >>,
 	egs_proto:packet_send(CSocket, Packet).
 
@@ -401,6 +409,13 @@ send_packet_1005(CSocket, GID, Char) ->
 	<< Name:512/bits, _/bits >> = Char,
 	Packet = << 16#1005:16, 0:208, GID:32/little-unsigned-integer, 0:64, Before/binary, GID:32/little-unsigned-integer, 0:64, Name/binary, After/binary >>,
 	egs_proto:packet_send(CSocket, Packet).
+
+%% @todo Figure out what the other things are and do it right.
+%% @todo Temporarily send 233 until the correct process is figured out.
+%%       Should be something along the lines of 203 201 204.
+
+send_spawn(CSocket, GID, _) ->
+	send_packet_233(CSocket, GID, egs_db:users_select_others(GID)).
 
 %% @doc Log message to the console.
 
