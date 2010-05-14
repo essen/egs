@@ -27,5 +27,6 @@
 -define(LOGIN_PORT_US, 12230).
 -define(LOGIN_LISTEN_OPTIONS, [binary, {active, false}, {certfile, "ssl/servercert.pem"}, {keyfile, "ssl/serverkey.pem"}, {password, "alpha"}]).
 
+-define(GAME_IP, << 192, 168, 1, 13 >>).
 -define(GAME_PORT, 12061).
 -define(GAME_LISTEN_OPTIONS, [binary, {active, false}, {certfile, "ssl/servercert.pem"}, {keyfile, "ssl/serverkey.pem"}, {password, "alpha"}]).

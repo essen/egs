@@ -233,8 +233,8 @@ send_flags(CSocket, GID) ->
 
 %% @doc Send the IP and port of the game server the player is sent to.
 
-send_game_server_info(CSocket, GID, Port) ->
-	Packet = << 16#0216:16, 0:208, GID:32/little-unsigned-integer, 0:64, << 192, 168, 1, 13 >>/binary, Port:32/little-unsigned-integer >>,
+send_game_server_info(CSocket, GID, IP, Port) ->
+	Packet = << 16#0216:16, 0:208, GID:32/little-unsigned-integer, 0:64, IP/binary, Port:32/little-unsigned-integer >>,
 	packet_send(CSocket, Packet).
 
 %% @doc Say hello. Used by the game server where a temporary session ID isn't needed.

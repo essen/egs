@@ -84,7 +84,7 @@ loop(CSocket, SessionID) ->
 
 handle(16#0217, CSocket, SessionID, _) ->
 	log(SessionID, "send game server info"),
-	egs_proto:send_game_server_info(CSocket, SessionID, ?GAME_PORT),
+	egs_proto:send_game_server_info(CSocket, SessionID, ?GAME_IP, ?GAME_PORT),
 	ssl:close(CSocket),
 	closed;
 
