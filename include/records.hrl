@@ -18,4 +18,5 @@
 
 %% EGS database schema.
 
--record(users, {gid, pid, socket, auth, folder, charnumber, charname}).
+-record(ids, {type, id}).
+-record(users, {gid, pid, socket, auth, folder, charnumber, charname, lid}).

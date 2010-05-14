@@ -74,7 +74,8 @@ process_handle(16#020d, CSocket, Version, Packet) ->
 	case User#users.auth of
 		Auth ->
 			log(GID, "good auth, proceed"),
-			egs_db:users_insert(#users{gid=GID, pid=self(), socket=CSocket, auth= << 0:32 >>, folder=User#users.folder}),
+			LID = egs_db:next(lobby),
+			egs_db:users_insert(#users{gid=GID, pid=self(), socket=CSocket, auth= << 0:32 >>, folder=User#users.folder, lid=LID}),
 			egs_proto:send_flags(CSocket, GID),
 			?MODULE:char_select(CSocket, GID, Version);
 		_ ->
@@ -196,6 +197,8 @@ lobby_load(CSocket, GID, Map, Entry) ->
 		egs_proto:send_load_quest(CSocket, GID),
 		send_packet_201(CSocket, GID, Map, Entry, Char),
 		% 0a06, (0233, other chars?)
+		Users = egs_db:users_select_others(GID),
+		send_packet_233(CSocket, GID, Users),
 		egs_proto:send_loading_end(CSocket, GID),
 		egs_proto:send_camera_center(CSocket, GID)
 	catch
@@ -206,9 +209,30 @@ lobby_load(CSocket, GID, Map, Entry) ->
 
 %% @doc Game's main loop.
 %% @todo Have some kind of clock process for keepalive packets.
+%% @todo Handle 0102 and 0503 broadcasts correctly.
 
 loop(CSocket, GID, Version) ->
 	receive
+		{psu_broadcast_0102, Data} ->
+			<< _:96, SrcGID:32/little-unsigned-integer, _:256, After/bits >> = Data,
+			% TODO: assign the LID correctly when sending the character info for the player's character, not when broadcasting
+			User = egs_db:users_select(SrcGID),
+			LID = User#users.lid,
+			Send = << 16#01020101:32, 0:32, 16#00011300:32, SrcGID:32/little-unsigned-integer, 0:64,
+				16#00011300:32, GID:32/little-unsigned-integer, 0:64, SrcGID:32/little-unsigned-integer,
+				LID:32/little-unsigned-integer, After/binary >>,
+			egs_proto:packet_send(CSocket, Send),
+			?MODULE:loop(CSocket, GID, Version);
+		{psu_broadcast_0503, Data} ->
+			<< _:96, SrcGID:32/little-unsigned-integer, _:256, After/bits >> = Data,
+			% TODO: assign the LID correctly when sending the character info for the player's character, not when broadcasting
+			User = egs_db:users_select(SrcGID),
+			LID = User#users.lid,
+			Send = << 16#05030101:32, 0:32, 16#00011300:32, SrcGID:32/little-unsigned-integer, 0:64,
+				16#00011300:32, GID:32/little-unsigned-integer, 0:64, SrcGID:32/little-unsigned-integer,
+				LID:32/little-unsigned-integer, After/binary >>,
+			egs_proto:packet_send(CSocket, Send),
+			?MODULE:loop(CSocket, GID, Version);
 		{psu_chat, ChatGID, ChatName, ChatMessage} ->
 			egs_proto:send_chat(CSocket, Version, ChatGID, ChatName, ChatMessage),
 			?MODULE:loop(CSocket, GID, Version);
@@ -279,7 +303,7 @@ handle(16#0302, _, GID, _, _) ->
 %%      We must take extra precautions to handle different versions of the game correctly.
 %% @todo Only broadcast to people in the same map.
 
-handle(Command, _, GID, Version, Packet) when Command =:= 16#0304 ->
+handle(16#0304, _, GID, Version, Packet) ->
 	log(GID, "broadcast chat"),
 	[{gid, _}, {name, ChatName}, {message, ChatMessage}] = egs_proto:parse_chat(Version, Packet),
 	case ChatName of
@@ -291,16 +315,28 @@ handle(Command, _, GID, Version, Packet) when Command =:= 16#0304 ->
 	end,
 	lists:foreach(fun(User) -> User#users.pid ! {psu_chat, GID, ActualName, ChatMessage} end, egs_db:users_select_all());
 
+%% @doc Movements handler. Broadcast to all other players.
+
+handle(16#0102, _, GID, _, Packet) ->
+	<< _:32, Data/bits >> = Packet,
+	lists:foreach(fun(User) -> User#users.pid ! {psu_broadcast_0102, Data} end, egs_db:users_select_others(GID));
+
+%% @doc Position change handler. Broadcast to all other players.
+
+handle(16#0503, _, GID, _, Packet) ->
+	<< _:32, Data/bits >> = Packet,
+	lists:foreach(fun(User) -> User#users.pid ! {psu_broadcast_0503, Data} end, egs_db:users_select_others(GID));
+
 %% @doc Lobby change handler.
 
-handle(Command, CSocket, GID, _, Packet) when Command =:= 16#0807 ->
+handle(16#0807, CSocket, GID, _, Packet) ->
 	[{map, Map}, {entry, Entry}] = egs_proto:parse_lobby_change(Packet),
 	log(GID, io_lib:format("lobby change (~4.16.0b,~4.16.0b)", [Map, Entry])),
 	lobby_load(CSocket, GID, Map, Entry);
 
 %% @doc Options changes handler.
 
-handle(Command, _, GID, _, Packet) when Command =:= 16#0d07 ->
+handle(16#0d07, _, GID, _, Packet) ->
 	log(GID, "options changes"),
 	[{options, Options}] = egs_proto:parse_options_change(Packet),
 	User = egs_db:users_select(GID),
@@ -325,9 +361,37 @@ send_packet_201(CSocket, GID, Map, Entry, Char) ->
 	{ok, File} = file:read_file("p/packet0201.bin"),
 	<< _:96, A:32/bits, _:96, B:32/bits, _:96, C:32/bits, _:128, D:96/bits, _:2592, After/bits >> = File,
 	Packet = << 16#0201:16, 0:48, A/binary, GID:32/little-unsigned-integer, 0:64, B/binary, GID:32/little-unsigned-integer,
-		0:64, C/binary, GID:32/little-unsigned-integer, 0:96, D/binary, Map:16/unsigned-integer, 0:16, Entry:16/unsigned-integer,
-		0:16, 0:320, Char/binary, After/binary >>,
+		0:64, C/binary, GID:32/little-unsigned-integer, 0:96, D/binary, Map:16/unsigned-integer,
+		0:16, Entry:16/unsigned-integer, 0:16, 0:320, Char/binary, After/binary >>,
 	egs_proto:packet_send(CSocket, Packet).
+
+%% @todo Figure out what the other things are.
+
+send_packet_233(CSocket, GID, Users) ->
+	NbUsers = length(Users),
+	case NbUsers of
+		0 ->
+			ignore;
+		_ ->
+			Header = << 16#02330300:32, 0:32, 16#00001200:32, GID:32/little-unsigned-integer, 0:64, 16#00011300:32,
+				GID:32/little-unsigned-integer, 0:64, NbUsers:32/little-unsigned-integer >>,
+			Contents = build_packet_233_contents(Users),
+			Packet = << Header/binary, Contents/binary >>,
+			egs_proto:packet_send(CSocket, Packet)
+	end.
+
+build_packet_233_contents([]) ->
+	<< >>;
+build_packet_233_contents(Users) ->
+	[User|Rest] = Users,
+	{ok, File} = file:read_file("p/player.bin"),
+	<< A:32/bits, _:32, B:64/bits, _:32, C:480/bits, _:2208, D/bits >> = File,
+	{ok, CharFile} = file:read_file(io_lib:format("save/~s/~b-character", [User#users.folder, User#users.charnumber])),
+	CharGID = User#users.gid,
+	LID = User#users.lid,
+	Chunk = << A/binary, CharGID:32/little-unsigned-integer, B/binary, LID:16/little-unsigned-integer, 16#0100:16, C/binary, CharFile/binary, D/binary >>,
+	Next = build_packet_233_contents(Rest),
+	<< Chunk/binary, Next/binary >>.
 
 %% @todo Figure out what the packet is.
 

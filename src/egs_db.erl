@@ -36,7 +36,14 @@ do(Q) ->
 create() ->
 	mnesia:create_schema([node()]),
 	mnesia:start(),
+	mnesia:create_table(ids, [{attributes, record_info(fields, ids)}]),
+	mnesia:dirty_update_counter(ids, lobby, 0),
 	mnesia:create_table(users, [{attributes, record_info(fields, users)}]).
+
+%% @doc Retrieve the next unique ID.
+
+next(Type) ->
+	mnesia:dirty_update_counter(ids, Type, 1).
 
 %% @doc Select exactly one user by its GID. Return an #users record.
 
@@ -48,6 +55,11 @@ users_select(GID) ->
 
 users_select_all() ->
 	do(qlc:q([X || X <- mnesia:table(users)])).
+
+%% @doc Select all other users. Return a list of #users records.
+
+users_select_others(GID) ->
+	do(qlc:q([X || X <- mnesia:table(users), X#users.gid /= GID, X#users.charnumber /= undefined])).
 
 %% @doc Insert or update an user.
 
