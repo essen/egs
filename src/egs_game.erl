@@ -249,8 +249,8 @@ loop(CSocket, GID, Version) ->
 					egs_proto:packet_send(CSocket, Send)
 			end,
 			?MODULE:loop(CSocket, GID, Version);
-		{psu_chat, ChatGID, ChatName, ChatMessage} ->
-			egs_proto:send_chat(CSocket, Version, ChatGID, ChatName, ChatMessage),
+		{psu_chat, ChatGID, ChatName, ChatModifiers, ChatMessage} ->
+			egs_proto:send_chat(CSocket, Version, ChatGID, ChatName, ChatModifiers, ChatMessage),
 			?MODULE:loop(CSocket, GID, Version);
 		{psu_player_spawn, SpawnPlayer} ->
 			send_spawn(CSocket, GID, SpawnPlayer),
@@ -324,7 +324,7 @@ handle(16#0302, _, GID, _, _) ->
 
 handle(16#0304, _, GID, Version, Packet) ->
 	log(GID, "broadcast chat"),
-	[{gid, _}, {name, ChatName}, {message, ChatMessage}] = egs_proto:parse_chat(Version, Packet),
+	[{gid, _}, {name, ChatName}, {modifiers, ChatModifiers}, {message, ChatMessage}] = egs_proto:parse_chat(Version, Packet),
 	case ChatName of
 		missing ->
 			case egs_db:users_select(GID) of
@@ -336,7 +336,7 @@ handle(16#0304, _, GID, Version, Packet) ->
 		_ ->
 			ActualName = ChatName
 	end,
-	lists:foreach(fun(User) -> User#users.pid ! {psu_chat, GID, ActualName, ChatMessage} end, egs_db:users_select_all());
+	lists:foreach(fun(User) -> User#users.pid ! {psu_chat, GID, ActualName, ChatModifiers, ChatMessage} end, egs_db:users_select_all());
 
 %% @doc Movements handler. Broadcast to all other players.
 

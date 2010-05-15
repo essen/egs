@@ -133,14 +133,14 @@ parse_character_select(Packet) ->
 %% @doc Parse a chat command. AOTI v2.000 version of the command.
 
 parse_chat(0, Packet) ->
-	<< _:384, FromGID:32/unsigned-integer, _:128, Message/bits >> = Packet,
-	[{gid, FromGID}, {name, missing}, {message, Message}];
+	<< _:384, FromGID:32/unsigned-integer, Modifiers:128/bits, Message/bits >> = Packet,
+	[{gid, FromGID}, {name, missing}, {modifiers, Modifiers}, {message, Message}];
 
 %% @doc Parse a chat command. AOTI since an unknown version of the game.
 
 parse_chat(_, Packet) ->
-	<< _:384, FromGID:32/unsigned-integer, _:128, FromName:512/bits, Message/bits >> = Packet,
-	[{gid, FromGID}, {name, FromName}, {message, Message}].
+	<< _:384, FromGID:32/unsigned-integer, Modifiers:128/bits, FromName:512/bits, Message/bits >> = Packet,
+	[{gid, FromGID}, {name, FromName}, {modifiers, Modifiers}, {message, Message}].
 
 %% @doc Parse the game server auth command. Used when first connecting to a game server.
 
@@ -214,14 +214,14 @@ send_character_selected(CSocket, GID, Char, Options) ->
 
 %% @doc Send a chat command. AOTI v2.000 version of the command.
 
-send_chat(CSocket, 0, FromGID, _, Message) ->
-	Packet = << 16#0304:16/unsigned-integer, 0:320, 16#1200:16/unsigned-integer, FromGID:32/little-unsigned-integer, 0:128, Message/bits >>,
+send_chat(CSocket, 0, FromGID, _, Modifiers, Message) ->
+	Packet = << 16#0304:16/unsigned-integer, 0:320, 16#1200:16/unsigned-integer, FromGID:32/little-unsigned-integer, Modifiers:128/bits, Message/bits >>,
 	packet_send(CSocket, Packet);
 
 %% @doc Send a chat command. AOTI since an unknown version of the game.
 
-send_chat(CSocket, _, FromGID, FromName, Message) ->
-	Packet = << 16#0304:16, 0:320, 16#1200:16/unsigned-integer, FromGID:32/little-unsigned-integer, 0:128, FromName:512/bits, Message/bits >>,
+send_chat(CSocket, _, FromGID, FromName, Modifiers, Message) ->
+	Packet = << 16#0304:16, 0:320, 16#1200:16/unsigned-integer, FromGID:32/little-unsigned-integer, Modifiers:128/bits, FromName:512/bits, Message/bits >>,
 	packet_send(CSocket, Packet).
 
 %% @doc Send the character flags list.
