@@ -70,18 +70,23 @@ process(CSocket, Version) ->
 
 process_handle(16#020d, CSocket, Version, Packet) ->
 	[{gid, GID}, {auth, Auth}] = egs_proto:parse_game_auth(Packet),
-	User = egs_db:users_select(GID),
-	case User#users.auth of
-		Auth ->
-			log(GID, "good auth, proceed"),
-			LID = egs_db:next(lobby),
-			egs_db:users_insert(#users{gid=GID, pid=self(), socket=CSocket, auth= << 0:32 >>, folder=User#users.folder, lid=LID}),
-			egs_proto:send_flags(CSocket, GID),
-			?MODULE:char_select(CSocket, GID, Version);
-		_ ->
-			log(GID, "bad auth, closing"),
-			egs_db:users_delete(GID),
-			ssl:close(CSocket)
+	case egs_db:users_select(GID) of
+		error ->
+			log(GID, "can't find user, closing"),
+			ssl:close(CSocket);
+		User ->
+			case User#users.auth of
+				Auth ->
+					log(GID, "good auth, proceed"),
+					LID = egs_db:next(lobby),
+					egs_db:users_insert(#users{gid=GID, pid=self(), socket=CSocket, auth= << 0:32 >>, folder=User#users.folder, lid=LID}),
+					egs_proto:send_flags(CSocket, GID),
+					?MODULE:char_select(CSocket, GID, Version);
+				_ ->
+					log(GID, "bad auth, closing"),
+					egs_db:users_delete(GID),
+					ssl:close(CSocket)
+			end
 	end;
 
 %% @doc Platform information handler. Obtain the game version.
@@ -219,22 +224,30 @@ loop(CSocket, GID, Version) ->
 		{psu_broadcast_0102, Data} ->
 			<< _:96, SrcGID:32/little-unsigned-integer, _:256, After/bits >> = Data,
 			% TODO: assign the LID correctly when sending the character info for the player's character, not when broadcasting
-			User = egs_db:users_select(SrcGID),
-			LID = User#users.lid,
-			Send = << 16#01020101:32, 0:32, 16#00011300:32, SrcGID:32/little-unsigned-integer, 0:64,
-				16#00011300:32, GID:32/little-unsigned-integer, 0:64, SrcGID:32/little-unsigned-integer,
-				LID:32/little-unsigned-integer, After/binary >>,
-			egs_proto:packet_send(CSocket, Send),
+			case egs_db:users_select(SrcGID) of
+				error ->
+					ignore;
+				User ->
+					LID = User#users.lid,
+					Send = << 16#01020101:32, 0:32, 16#00011300:32, SrcGID:32/little-unsigned-integer, 0:64,
+						16#00011300:32, GID:32/little-unsigned-integer, 0:64, SrcGID:32/little-unsigned-integer,
+						LID:32/little-unsigned-integer, After/binary >>,
+					egs_proto:packet_send(CSocket, Send)
+			end,
 			?MODULE:loop(CSocket, GID, Version);
 		{psu_broadcast_0503, Data} ->
 			<< _:96, SrcGID:32/little-unsigned-integer, _:256, After/bits >> = Data,
 			% TODO: assign the LID correctly when sending the character info for the player's character, not when broadcasting
-			User = egs_db:users_select(SrcGID),
-			LID = User#users.lid,
-			Send = << 16#05030101:32, 0:32, 16#00011300:32, SrcGID:32/little-unsigned-integer, 0:64,
-				16#00011300:32, GID:32/little-unsigned-integer, 0:64, SrcGID:32/little-unsigned-integer,
-				LID:32/little-unsigned-integer, After/binary >>,
-			egs_proto:packet_send(CSocket, Send),
+			case egs_db:users_select(SrcGID) of
+				error ->
+					ignore;
+				User ->
+					LID = User#users.lid,
+					Send = << 16#05030101:32, 0:32, 16#00011300:32, SrcGID:32/little-unsigned-integer, 0:64,
+						16#00011300:32, GID:32/little-unsigned-integer, 0:64, SrcGID:32/little-unsigned-integer,
+						LID:32/little-unsigned-integer, After/binary >>,
+					egs_proto:packet_send(CSocket, Send)
+			end,
 			?MODULE:loop(CSocket, GID, Version);
 		{psu_chat, ChatGID, ChatName, ChatMessage} ->
 			egs_proto:send_chat(CSocket, Version, ChatGID, ChatName, ChatMessage),
@@ -292,7 +305,7 @@ handle(16#021f, CSocket, GID, _, Packet) ->
 			log(GID, "uni selection (my room)"),
 			% 0230 0220
 			% myroom_load(CSocket, GID, Version, 16#a701, 16#0100);
-			lobby_load(CSocket, GID, 16#0100, 16#0100);
+			lobby_load(CSocket, GID, 16#6700, 16#0100);
 		_ ->
 			log(GID, "uni selection (reload)"),
 			% 0230 0220
@@ -314,8 +327,12 @@ handle(16#0304, _, GID, Version, Packet) ->
 	[{gid, _}, {name, ChatName}, {message, ChatMessage}] = egs_proto:parse_chat(Version, Packet),
 	case ChatName of
 		missing ->
-			User = egs_db:users_select(GID),
-			ActualName = User#users.charname;
+			case egs_db:users_select(GID) of
+				error ->
+					ActualName = ChatName;
+				User ->
+					ActualName = User#users.charname
+			end;
 		_ ->
 			ActualName = ChatName
 	end,

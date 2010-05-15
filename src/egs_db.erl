@@ -48,8 +48,12 @@ next(Type) ->
 %% @doc Select exactly one user by its GID. Return an #users record.
 
 users_select(GID) ->
-	{atomic, [Val]} = mnesia:transaction(fun() -> mnesia:read({users, GID}) end),
-	Val.
+	case mnesia:transaction(fun() -> mnesia:read({users, GID}) end) of
+		{atomic, []} ->
+			error;
+		{atomic, [Val]} ->
+			Val
+	end.
 
 %% @doc Select all users. Return a list of #users records.
 
