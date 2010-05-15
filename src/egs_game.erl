@@ -348,7 +348,11 @@ handle(16#0102, _, GID, _, Packet) ->
 
 handle(16#0503, _, GID, _, Packet) ->
 	<< _:32, Data/bits >> = Packet,
-	lists:foreach(fun(User) -> User#users.pid ! {psu_broadcast_0503, Data} end, egs_db:users_select_others(GID));
+	<< _:416, Coords:96/bits, _:160, Map:32/little-unsigned-integer, Entry:32/little-unsigned-integer, _/bits >> = Data,
+	User = egs_db:users_select(GID),
+	NewUser = User#users{coords=Coords, map=Map, entry=Entry},
+	egs_db:users_insert(NewUser),
+	lists:foreach(fun(X) -> X#users.pid ! {psu_broadcast_0503, Data} end, egs_db:users_select_others(GID));
 
 %% @doc Lobby change handler.
 
@@ -410,11 +414,18 @@ build_packet_233_contents([]) ->
 build_packet_233_contents(Users) ->
 	[User|Rest] = Users,
 	{ok, File} = file:read_file("p/player.bin"),
-	<< A:32/bits, _:32, B:64/bits, _:32, C:480/bits, _:2208, D/bits >> = File,
+	<< A:32/bits, _:32, B:64/bits, _:32, C:192/bits, _:96, D:192/bits, _:2208, E/bits >> = File,
 	{ok, CharFile} = file:read_file(io_lib:format("save/~s/~b-character", [User#users.folder, User#users.charnumber])),
 	CharGID = User#users.gid,
 	LID = User#users.lid,
-	Chunk = << A/binary, CharGID:32/little-unsigned-integer, B/binary, LID:16/little-unsigned-integer, 16#0100:16, C/binary, CharFile/binary, D/binary >>,
+	case User#users.coords of % TODO: temporary? undefined handling
+		undefined ->
+			Coords = << 0:96 >>;
+		_ ->
+			Coords = User#users.coords
+	end,
+	Chunk = << A/binary, CharGID:32/little-unsigned-integer, B/binary, LID:16/little-unsigned-integer, 16#0100:16, C/binary,
+		Coords:96/bits, D/binary, CharFile/binary, E/binary >>,
 	Next = build_packet_233_contents(Rest),
 	<< Chunk/binary, Next/binary >>.
 
