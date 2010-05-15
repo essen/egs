@@ -61,7 +61,7 @@ process(CSocket, Version) ->
 			process_handle(Command, CSocket, Version, Packet);
 		{error, timeout} ->
 			reload,
-			?MODULE:process(CSocket);
+			?MODULE:process(CSocket, Version);
 		{error, closed} ->
 			log(0, "recv error, closing")
 	end.
