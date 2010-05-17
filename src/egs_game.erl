@@ -439,18 +439,23 @@ build_packet_233_contents([]) ->
 build_packet_233_contents(Users) ->
 	[User|Rest] = Users,
 	{ok, File} = file:read_file("p/player.bin"),
-	<< A:32/bits, _:32, B:64/bits, _:32, C:192/bits, _:96, D:192/bits, _:2208, E/bits >> = File,
+	<< A:32/bits, _:32, B:64/bits, _:32, C:96/bits, _:64, D:32/bits, _:96, E:128/bits, _:2272, F/bits >> = File,
 	{ok, CharFile} = file:read_file(io_lib:format("save/~s/~b-character", [User#users.folder, User#users.charnumber])),
 	CharGID = User#users.gid,
 	LID = User#users.lid,
 	case User#users.coords of % TODO: temporary? undefined handling
 		undefined ->
-			Coords = << 0:96 >>;
+			Coords = << 0:96 >>,
+			Map = 1,
+			Entry = 0;
 		_ ->
-			Coords = User#users.coords
+			Coords = User#users.coords,
+			Map = User#users.map,
+			Entry = User#users.entry
 	end,
 	Chunk = << A/binary, CharGID:32/little-unsigned-integer, B/binary, LID:16/little-unsigned-integer, 16#0100:16, C/binary,
-		Coords:96/bits, D/binary, CharFile/binary, E/binary >>,
+		Map:16/little-unsigned-integer, 0:16, Entry:16/little-unsigned-integer, 0:16, D:32/bits, Coords:96/bits, E/binary,
+		Map:16/little-unsigned-integer, 0:16, Entry:16/little-unsigned-integer, 0:16, CharFile/binary, F/binary >>,
 	Next = build_packet_233_contents(Rest),
 	<< Chunk/binary, Next/binary >>.
 
