@@ -18,7 +18,7 @@
 
 -module(egs_game).
 -export([start/0]). % external
--export([listen/0, accept/1, process/2, char_select/3, lobby_load/4, loop/3]). % internal
+-export([listen/0, accept/1, process/2, char_select/3, lobby_load/4, loop/3, loop/4]). % internal
 
 -include("include/records.hrl").
 -include("include/network.hrl").
@@ -215,11 +215,16 @@ lobby_load(CSocket, GID, Map, Entry) ->
 			log(GID, "send error, closing")
 	end.
 
+%% @doc Alias for the game main's loop when the buffer is empty.
+
+loop(CSocket, GID, Version) ->
+	loop(CSocket, GID, Version, << >>).
+
 %% @doc Game's main loop.
 %% @todo Have some kind of clock process for keepalive packets.
 %% @todo Handle 0102 and 0503 broadcasts correctly.
 
-loop(CSocket, GID, Version) ->
+loop(CSocket, GID, Version, SoFar) ->
 	receive
 		{psu_broadcast_0102, Data} ->
 			<< _:96, SrcGID:32/little-unsigned-integer, _:256, After/bits >> = Data,
@@ -234,7 +239,7 @@ loop(CSocket, GID, Version) ->
 						LID:32/little-unsigned-integer, After/binary >>,
 					egs_proto:packet_send(CSocket, Send)
 			end,
-			?MODULE:loop(CSocket, GID, Version);
+			?MODULE:loop(CSocket, GID, Version, SoFar);
 		{psu_broadcast_010f, Data} ->
 			<< _:96, SrcGID:32/little-unsigned-integer, _:256, After/bits >> = Data,
 			% TODO: assign the LID correctly when sending the character info for the player's character, not when broadcasting
@@ -248,7 +253,7 @@ loop(CSocket, GID, Version) ->
 						LID:32/little-unsigned-integer, After/binary >>,
 					egs_proto:packet_send(CSocket, Send)
 			end,
-			?MODULE:loop(CSocket, GID, Version);
+			?MODULE:loop(CSocket, GID, Version, SoFar);
 		{psu_broadcast_0503, Data} ->
 			<< _:96, SrcGID:32/little-unsigned-integer, _:256, After/bits >> = Data,
 			% TODO: assign the LID correctly when sending the character info for the player's character, not when broadcasting
@@ -262,17 +267,17 @@ loop(CSocket, GID, Version) ->
 						LID:32/little-unsigned-integer, After/binary >>,
 					egs_proto:packet_send(CSocket, Send)
 			end,
-			?MODULE:loop(CSocket, GID, Version);
+			?MODULE:loop(CSocket, GID, Version, SoFar);
 		{psu_chat, ChatGID, ChatName, ChatModifiers, ChatMessage} ->
 			egs_proto:send_chat(CSocket, Version, ChatGID, ChatName, ChatModifiers, ChatMessage),
-			?MODULE:loop(CSocket, GID, Version);
+			?MODULE:loop(CSocket, GID, Version, SoFar);
 		{psu_player_spawn, SpawnPlayer} ->
 			send_spawn(CSocket, GID, SpawnPlayer),
-			?MODULE:loop(CSocket, GID, Version);
+			?MODULE:loop(CSocket, GID, Version, SoFar);
 		{ssl, _, Data} ->
-			Packets = egs_proto:packet_split(Data),
+			{Packets, Rest} = egs_proto:packet_split(<< SoFar/bits, Data/bits >>),
 			[dispatch(CSocket, GID, Version, P) || P <- Packets],
-			?MODULE:loop(CSocket, GID, Version);
+			?MODULE:loop(CSocket, GID, Version, Rest);
 		{ssl_closed, _} ->
 			log(GID, "ssl closed~n"),
 			egs_db:users_delete(GID),
@@ -282,11 +287,11 @@ loop(CSocket, GID, Version) ->
 			egs_db:users_delete(GID),
 			ssl:close(CSocket);
 		_ ->
-			?MODULE:loop(CSocket, GID, Version)
+			?MODULE:loop(CSocket, GID, Version, SoFar)
 	after 1000 ->
 		egs_proto:send_keepalive(CSocket, GID),
 		reload,
-		?MODULE:loop(CSocket, GID, Version)
+		?MODULE:loop(CSocket, GID, Version, SoFar)
 	end.
 
 %% @doc Dispatch the command to the right handler.

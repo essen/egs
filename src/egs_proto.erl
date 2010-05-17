@@ -101,14 +101,22 @@ packet_fragment_send(CSocket, Packet, Size, Current) ->
 %% @doc Split a packet received into commands. This is only needed when receiving packets in active mode.
 
 packet_split(Packet) ->
+	packet_split(Packet, []).
+
+packet_split(Packet, Result) ->
 	<< Size:32/little-unsigned-integer, _/bits >> = Packet,
-	BitSize = Size * 8,
-	<< Split:BitSize/bits, Rest/bits >> = Packet,
-	case Rest of
-		<< >> ->
-			[ Split ];
-		_ ->
-			[ Split | packet_split(Rest) ]
+	case Size > byte_size(Packet) of
+		true ->
+			{Result, Packet};
+		false ->
+			BitSize = Size * 8,
+			<< Split:BitSize/bits, Rest/bits >> = Packet,
+			case Rest of
+				<< >> ->
+					{Result ++ [Split], << >>};
+				_ ->
+					packet_split(Rest, Result ++ [Split])
+			end
 	end.
 
 %% @doc Parse a login authentication command. Return the username and password.
