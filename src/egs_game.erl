@@ -379,6 +379,16 @@ handle(16#0503, _, GID, _, Packet) ->
 	egs_db:users_insert(NewUser),
 	lists:foreach(fun(X) -> X#users.pid ! {psu_broadcast_0503, Data} end, egs_db:users_select_others(GID));
 
+%% @todo Unknown handler. Do nothing for now.
+
+handle(16#050f, _, _, _, _) ->
+	ignore;
+
+%% @doc Stand still handler. Do nothing.
+
+handle(16#0514, _, _, _, _) ->
+	ignore;
+
 %% @doc Lobby change handler.
 
 handle(16#0807, CSocket, GID, _, Packet) ->
@@ -393,6 +403,11 @@ handle(16#0d07, _, GID, _, Packet) ->
 	[{options, Options}] = egs_proto:parse_options_change(Packet),
 	User = egs_db:users_select(GID),
 	file:write_file(io_lib:format("save/~s/~b-character.options", [User#users.folder, User#users.charnumber]), Options);
+
+%% @doc Sit on chair? handler. Do nothing for now.
+
+handle(16#0f0a, _, GID, _, _) ->
+	log(GID, "sit on chair");
 
 %% @doc Unknown command handler. Do nothing.
 
