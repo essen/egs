@@ -404,10 +404,11 @@ handle(16#0d07, _, GID, _, Packet) ->
 	User = egs_db:users_select(GID),
 	file:write_file(io_lib:format("save/~s/~b-character.options", [User#users.folder, User#users.charnumber]), Options);
 
-%% @doc Sit on chair? handler. Do nothing for now.
+%% @doc Lobby event handler. Do nothing for now.
+%%      Apparently used for elevator, sit on chairs, and more?
 
 handle(16#0f0a, _, GID, _, _) ->
-	log(GID, "sit on chair");
+	log(GID, "lobby event");
 
 %% @doc Unknown command handler. Do nothing.
 
