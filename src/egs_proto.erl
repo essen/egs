@@ -245,6 +245,35 @@ send_game_server_info(CSocket, GID, IP, Port) ->
 	Packet = << 16#0216:16, 0:208, GID:32/little-unsigned-integer, 0:64, IP/binary, Port:32/little-unsigned-integer >>,
 	packet_send(CSocket, Packet).
 
+%% @doc Shortcut for send_global/4.
+
+send_global(CSocket, Type, Message) ->
+	send_global(CSocket, Type, Message, 2).
+
+%% @doc Send a global message.
+%%      There are four types of global messages: dialog, top, scroll and timeout.
+%%      * dialog: A dialog in the center of the screen, which can be OK'd by players.
+%%      * top: Horizontal scroll on top of the screen, traditionally used for server-wide messages.
+%%      * scroll: Vertical scroll on the right of the screen, traditionally used for Player X joined the party.
+%%      * timeout: A dialog in the center of the screen that disappears after Duration seconds.
+
+send_global(CSocket, Type, Message, Duration) ->
+	TypeID = case Type of
+		dialog -> 0;
+		top -> 1;
+		scroll -> 2;
+		timeout -> 3;
+		_ -> 1
+	end,
+	UCS2Message = << << X:8, 0:8 >> || X <- Message >>,
+	try
+		Packet = << 16#0228:16, 0:304, TypeID:32/little-unsigned-integer, Duration:32/little-unsigned-integer, UCS2Message/binary, 0, 0 >>,
+		packet_send(CSocket, Packet)
+	catch
+		_:_ ->
+			ignore
+	end.
+
 %% @doc Say hello. Used by the game server where a temporary session ID isn't needed.
 
 send_hello(CSocket) ->

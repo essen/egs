@@ -17,9 +17,11 @@
 %	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
 -module(egs).
--export([start/0, reload/0]).
+-export([start/0, reload/0, global/2]).
 
--define(MODULES, [egs_db, egs_game, egs_login, egs_patch, egs_proto]).
+-include("include/records.hrl").
+
+-define(MODULES, [egs, egs_db, egs_game, egs_login, egs_patch, egs_proto]).
 
 %% @doc Start all the application servers. Return the PIDs of the listening processes.
 
@@ -38,3 +40,8 @@ start() ->
 reload() ->
 	[code:soft_purge(Module) || Module <- ?MODULES],
 	[code:load_file(Module) || Module <- ?MODULES].
+
+%% @doc Send a global message.
+
+global(Type, Message) ->
+	lists:foreach(fun(User) -> egs_proto:send_global(User#users.socket, Type, Message) end, egs_db:users_select_all()).
