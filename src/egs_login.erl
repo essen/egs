@@ -47,7 +47,7 @@ accept(LSocket, SessionID) ->
 			NextID = SessionID + 1,
 			ssl:ssl_accept(CSocket),
 			spawn_link(?MODULE, process, [CSocket, SessionID]);
-		{error, timeout} ->
+		_ ->
 			NextID = SessionID,
 			reload
 	end,
