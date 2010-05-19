@@ -223,6 +223,7 @@ loop(CSocket, GID, Version) ->
 %% @doc Game's main loop.
 %% @todo Have some kind of clock process for keepalive packets.
 %% @todo Handle 0102 and 0503 broadcasts correctly.
+%% @todo Don't use SrcGID!!
 
 loop(CSocket, GID, Version, SoFar) ->
 	receive
@@ -237,6 +238,18 @@ loop(CSocket, GID, Version, SoFar) ->
 					Send = << 16#01020101:32, 0:32, 16#00011300:32, SrcGID:32/little-unsigned-integer, 0:64,
 						16#00011300:32, GID:32/little-unsigned-integer, 0:64, SrcGID:32/little-unsigned-integer,
 						LID:32/little-unsigned-integer, After/binary >>,
+					egs_proto:packet_send(CSocket, Send)
+			end,
+			?MODULE:loop(CSocket, GID, Version, SoFar);
+		{psu_broadcast_0107, Data} ->
+			<< Before:96/bits, SrcGID:32/little-unsigned-integer, Middle:224/bits, _:32, After/bits >> = Data,
+			case egs_db:users_select(SrcGID) of
+				error ->
+					ignore;
+				User ->
+					LID = User#users.lid,
+					Send = << Before/binary, SrcGID:32/little-unsigned-integer, Middle/binary, LID:32/little-unsigned-integer, After/binary >>,
+					file:write_file("sendanim.bin", Send),
 					egs_proto:packet_send(CSocket, Send)
 			end,
 			?MODULE:loop(CSocket, GID, Version, SoFar);
@@ -363,6 +376,12 @@ handle(16#0102, _, GID, _, Packet) ->
 	<< _:32, Data/bits >> = Packet,
 	lists:foreach(fun(User) -> User#users.pid ! {psu_broadcast_0102, Data} end, egs_db:users_select_others(GID));
 
+%% @doc Sit on chairs animation handler. Broadcast to all other players.
+
+handle(16#0107, _, GID, _, Packet) ->
+	<< _:32, Data/bits >> = Packet,
+	lists:foreach(fun(User) -> User#users.pid ! {psu_broadcast_0107, Data} end, egs_db:users_select_others(GID));
+
 %% @doc Lobby actions handler. Broadcast to all other players.
 
 handle(16#010f, _, GID, _, Packet) ->
@@ -404,11 +423,15 @@ handle(16#0d07, _, GID, _, Packet) ->
 	User = egs_db:users_select(GID),
 	file:write_file(io_lib:format("save/~s/~b-character.options", [User#users.folder, User#users.charnumber]), Options);
 
-%% @doc Lobby event handler. Do nothing for now.
+%% @doc Lobby event handler. Handle chairs!
 %%      Apparently used for elevator, sit on chairs, and more?
+%% @todo Handle more than sit on chair. Handle sit on chair correctly.
 
-handle(16#0f0a, _, GID, _, _) ->
-	log(GID, "lobby event");
+handle(16#0f0a, CSocket, GID, _, Orig) ->
+	<< _:448, A:32/little-unsigned-integer, _:64, B:32/little-unsigned-integer, _/bits >> = Orig,
+	Packet = << 16#1211:16, 0:176, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, A:32/little-unsigned-integer, B:32/little-unsigned-integer, 8:32/little-unsigned-integer, 0:32 >>,
+	egs_proto:packet_send(CSocket, Packet),
+	log(GID, "lobby event (can only chair so far)");
 
 %% @doc Unknown command handler. Do nothing.
 
