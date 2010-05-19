@@ -46,7 +46,7 @@ accept(LSocket) ->
 			egs_proto:send_hello(CSocket),
 			PID = spawn_link(?MODULE, process, [CSocket, 0]),
 			ssl:controlling_process(CSocket, PID);
-		{error, timeout} ->
+		_ ->
 			reload
 	end,
 	?MODULE:accept(LSocket).
