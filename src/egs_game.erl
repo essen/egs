@@ -224,8 +224,6 @@ loop(CSocket, GID, Version) ->
 
 %% @doc Game's main loop.
 %% @todo Have some kind of clock process for keepalive packets.
-%% @todo Handle 0102 and 0503 broadcasts correctly.
-%% @todo Don't use SrcGID!!
 
 loop(CSocket, GID, Version, SoFar) ->
 	receive
@@ -375,7 +373,7 @@ handle(16#0d07, _, GID, _, Packet) ->
 
 %% @doc Lobby event handler. Handle chairs!
 %%      Apparently used for elevator, sit on chairs, and more?
-%% @todo Handle more than sit on chair. Handle sit on chair correctly.
+%% @todo Handle more than sit on chair.
 
 handle(16#0f0a, CSocket, GID, _, Orig) ->
 	<< _:448, A:32/little-unsigned-integer, _:64, B:32/little-unsigned-integer, _/bits >> = Orig,
