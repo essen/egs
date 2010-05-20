@@ -16,10 +16,27 @@
 %	You should have received a copy of the GNU General Public License
 %	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
-{'src/egs.erl', [{outdir, "ebin"}]}.
-{'src/egs_cron.erl', [{outdir, "ebin"}]}.
-{'src/egs_db.erl', [{outdir, "ebin"}]}.
-{'src/egs_game.erl', [{outdir, "ebin"}]}.
-{'src/egs_login.erl', [{outdir, "ebin"}]}.
-{'src/egs_patch.erl', [{outdir, "ebin"}]}.
-{'src/egs_proto.erl', [{outdir, "ebin"}]}.
+-module(egs_cron).
+-export([start/0]). % external
+-export([cleanup/0, keepalive/0]). % internal
+
+-include("include/records.hrl").
+
+%% @doc Start the cron processes.
+
+start() ->
+	KeepAlivePid = spawn_link(?MODULE, keepalive, []),
+	[{keepalive, KeepAlivePid}].
+
+%% @doc Keep connected players alive.
+%% @todo Don't even need to send a keepalive packet if we sent a packet in the last Timeout milliseconds.
+
+keepalive() ->
+	receive
+		_ ->
+			?MODULE:keepalive()
+	after 5000 ->
+		lists:foreach(fun(User) -> User#users.pid ! {psu_keepalive} end, egs_db:users_select_all()),
+		reload,
+		?MODULE:keepalive()
+	end.

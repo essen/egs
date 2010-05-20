@@ -235,6 +235,9 @@ loop(CSocket, GID, Version, SoFar) ->
 		{psu_chat, ChatGID, ChatName, ChatModifiers, ChatMessage} ->
 			egs_proto:send_chat(CSocket, Version, ChatGID, ChatName, ChatModifiers, ChatMessage),
 			?MODULE:loop(CSocket, GID, Version, SoFar);
+		{psu_keepalive} ->
+			egs_proto:send_keepalive(CSocket, GID),
+			?MODULE:loop(CSocket, GID, Version, SoFar);
 		{psu_player_spawn, SpawnPlayer} ->
 			send_spawn(CSocket, GID, SpawnPlayer),
 			?MODULE:loop(CSocket, GID, Version, SoFar);
@@ -253,7 +256,6 @@ loop(CSocket, GID, Version, SoFar) ->
 		_ ->
 			?MODULE:loop(CSocket, GID, Version, SoFar)
 	after 1000 ->
-		egs_proto:send_keepalive(CSocket, GID),
 		reload,
 		?MODULE:loop(CSocket, GID, Version, SoFar)
 	end.

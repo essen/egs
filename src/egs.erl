@@ -21,7 +21,7 @@
 
 -include("include/records.hrl").
 
--define(MODULES, [egs, egs_db, egs_game, egs_login, egs_patch, egs_proto]).
+-define(MODULES, [egs, egs_cron, egs_db, egs_game, egs_login, egs_patch, egs_proto]).
 
 %% @doc Start all the application servers. Return the PIDs of the listening processes.
 
@@ -30,10 +30,11 @@ start() ->
 	application:start(ssl),
 	ssl:seed(crypto:rand_bytes(256)),
 	egs_db:create(),
+	Cron = egs_cron:start(),
 	Game = egs_game:start(),
 	Login = egs_login:start(),
 	Patch = egs_patch:start(),
-	[{patch, Patch}, {login, Login}, {game, Game}].
+	[{patch, Patch}, {login, Login}, {game, Game}, {cron, Cron}].
 
 %% @doc Reload all the modules.
 
