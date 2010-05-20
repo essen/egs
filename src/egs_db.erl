@@ -74,3 +74,13 @@ users_insert(User) ->
 
 users_delete(GID) ->
 	mnesia:transaction(fun() -> mnesia:delete({users, GID}) end).
+
+%% @doc Cleanup the disconnected users who failed after the login stage but before the game stage.
+
+users_cleanup() ->
+	Timeout = calendar:datetime_to_gregorian_seconds(calendar:universal_time()) - 300,
+	Users = do(qlc:q([X#users.gid || X <- mnesia:table(users),
+		X#users.auth /= success, X#users.time < Timeout])),
+	mnesia:transaction(fun() ->
+		lists:foreach(fun(GID) -> users_delete(GID) end, Users)
+	end).

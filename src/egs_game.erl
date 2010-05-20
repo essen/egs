@@ -79,7 +79,8 @@ process_handle(16#020d, CSocket, Version, Packet) ->
 				Auth ->
 					log(GID, "good auth, proceed"),
 					LID = egs_db:next(lobby),
-					egs_db:users_insert(#users{gid=GID, pid=self(), socket=CSocket, auth= << 0:32 >>, folder=User#users.folder, lid=LID}),
+					Time = calendar:datetime_to_gregorian_seconds(calendar:universal_time()),
+					egs_db:users_insert(#users{gid=GID, pid=self(), socket=CSocket, auth=success, time=Time, folder=User#users.folder, lid=LID}),
 					egs_proto:send_flags(CSocket, GID),
 					?MODULE:char_select(CSocket, GID, Version);
 				_ ->

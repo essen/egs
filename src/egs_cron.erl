@@ -26,7 +26,20 @@
 
 start() ->
 	KeepAlivePid = spawn_link(?MODULE, keepalive, []),
-	[{keepalive, KeepAlivePid}].
+	CleanupPid = spawn_link(?MODULE, cleanup, []),
+	[{keepalive, KeepAlivePid}, {cleanup, CleanupPid}].
+
+%% @doc Cleanup the users table of failures to log into the game server.
+
+cleanup() ->
+	receive
+		_ ->
+			?MODULE:cleanup()
+	after 300000 ->
+		egs_db:users_cleanup(),
+		reload,
+		?MODULE:cleanup()
+	end.
 
 %% @doc Keep connected players alive.
 %% @todo Don't even need to send a keepalive packet if we sent a packet in the last Timeout milliseconds.

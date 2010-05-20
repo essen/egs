@@ -98,8 +98,8 @@ handle(16#0219, CSocket, SessionID, Packet) ->
 	log(SessionID, io_lib:format("auth success for ~s ~s", [Username, Password])),
 	Auth = crypto:rand_bytes(4),
 	Folder = << Username/binary, "-", Password/binary >>,
-	log(SessionID, Folder),
-	egs_db:users_insert(#users{gid=SessionID, pid=self(), socket=CSocket, auth=Auth, folder=Folder}),
+	Time = calendar:datetime_to_gregorian_seconds(calendar:universal_time()),
+	egs_db:users_insert(#users{gid=SessionID, pid=self(), socket=CSocket, auth=Auth, time=Time, folder=Folder}),
 	egs_proto:send_auth_success(CSocket, SessionID, SessionID, Auth);
 
 %% @doc MOTD request handler. Handles both forms of MOTD requests, US and JP.
