@@ -173,14 +173,16 @@ char_select_load(CSocket, GID, Version, Number) ->
 	[{status, _}, {char, << Name:512/bits, _/bits >>}|_] = char_load(User#users.folder, Number),
 	NewRow = User#users{charnumber=Number, charname=Name},
 	egs_db:users_insert(NewRow),
-	?MODULE:lobby_load(CSocket, GID, 16#0100, 16#0100),
+	?MODULE:lobby_load(CSocket, GID, 1, 1),
 	ssl:setopts(CSocket, [{active, true}]),
 	?MODULE:loop(CSocket, GID, Version).
 
 %% @doc Load the given map as a standard lobby.
 
 lobby_load(CSocket, GID, Map, Entry) ->
-	User = egs_db:users_select(GID),
+	OldUser = egs_db:users_select(GID),
+	User = OldUser#users{map=Map, entry=Entry},
+	egs_db:users_insert(User),
 	[{status, 1}, {char, Char}, {options, Options}] = char_load(User#users.folder, User#users.charnumber),
 	[{quest, Quest}, {zone, Zone}] = proplists:get_value(Map, ?MAPS, [{quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}]),
 	try
@@ -227,59 +229,10 @@ loop(CSocket, GID, Version) ->
 
 loop(CSocket, GID, Version, SoFar) ->
 	receive
-		{psu_broadcast_0102, Data} ->
-			<< _:96, SrcGID:32/little-unsigned-integer, _:256, After/bits >> = Data,
-			% TODO: assign the LID correctly when sending the character info for the player's character, not when broadcasting
-			case egs_db:users_select(SrcGID) of
-				error ->
-					ignore;
-				User ->
-					LID = User#users.lid,
-					Send = << 16#01020101:32, 0:32, 16#00011300:32, SrcGID:32/little-unsigned-integer, 0:64,
-						16#00011300:32, GID:32/little-unsigned-integer, 0:64, SrcGID:32/little-unsigned-integer,
-						LID:32/little-unsigned-integer, After/binary >>,
-					egs_proto:packet_send(CSocket, Send)
-			end,
-			?MODULE:loop(CSocket, GID, Version, SoFar);
-		{psu_broadcast_0107, Data} ->
-			<< Before:96/bits, SrcGID:32/little-unsigned-integer, Middle:224/bits, _:32, After/bits >> = Data,
-			case egs_db:users_select(SrcGID) of
-				error ->
-					ignore;
-				User ->
-					LID = User#users.lid,
-					Send = << Before/binary, SrcGID:32/little-unsigned-integer, Middle/binary, LID:32/little-unsigned-integer, After/binary >>,
-					file:write_file("sendanim.bin", Send),
-					egs_proto:packet_send(CSocket, Send)
-			end,
-			?MODULE:loop(CSocket, GID, Version, SoFar);
-		{psu_broadcast_010f, Data} ->
-			<< _:96, SrcGID:32/little-unsigned-integer, _:256, After/bits >> = Data,
-			% TODO: assign the LID correctly when sending the character info for the player's character, not when broadcasting
-			case egs_db:users_select(SrcGID) of
-				error ->
-					ignore;
-				User ->
-					LID = User#users.lid,
-					Send = << 16#010f0100:32, 0:32, 16#00011300:32, SrcGID:32/little-unsigned-integer, 0:64,
-						16#00011300:32, GID:32/little-unsigned-integer, 0:64, SrcGID:32/little-unsigned-integer,
-						LID:32/little-unsigned-integer, After/binary >>,
-					egs_proto:packet_send(CSocket, Send)
-			end,
-			?MODULE:loop(CSocket, GID, Version, SoFar);
-		{psu_broadcast_0503, Data} ->
-			<< _:96, SrcGID:32/little-unsigned-integer, _:256, After/bits >> = Data,
-			% TODO: assign the LID correctly when sending the character info for the player's character, not when broadcasting
-			case egs_db:users_select(SrcGID) of
-				error ->
-					ignore;
-				User ->
-					LID = User#users.lid,
-					Send = << 16#05030101:32, 0:32, 16#00011300:32, SrcGID:32/little-unsigned-integer, 0:64,
-						16#00011300:32, GID:32/little-unsigned-integer, 0:64, SrcGID:32/little-unsigned-integer,
-						LID:32/little-unsigned-integer, After/binary >>,
-					egs_proto:packet_send(CSocket, Send)
-			end,
+		{psu_broadcast, Packet} ->
+			<< A:192/bits, _:64, B/bits >> = Packet,
+			Broadcast = << A/binary, 16#00011300:32, GID:32/little-unsigned-integer, B/binary >>,
+			egs_proto:packet_send(CSocket, Broadcast),
 			?MODULE:loop(CSocket, GID, Version, SoFar);
 		{psu_chat, ChatGID, ChatName, ChatModifiers, ChatMessage} ->
 			egs_proto:send_chat(CSocket, Version, ChatGID, ChatName, ChatModifiers, ChatMessage),
@@ -310,8 +263,43 @@ loop(CSocket, GID, Version, SoFar) ->
 %% @doc Dispatch the command to the right handler.
 
 dispatch(CSocket, GID, Version, Packet) ->
-	<< _:32, Command:16/unsigned-integer, _/bits >> = Packet,
-	handle(Command, CSocket, GID, Version, Packet).
+	<< _:32, Command:16/unsigned-integer, Channel:8/little-unsigned-integer, _/bits >> = Packet,
+	case Channel of
+		1 ->
+			broadcast(Command, CSocket, GID, Version, Packet);
+		_ ->
+			handle(Command, CSocket, GID, Version, Packet)
+	end.
+
+%% @doc Position change broadcast handler. Save the position and then dispatch it.
+
+broadcast(16#0503, _, GID, _, Packet) ->
+	<< _:448, Coords:96/bits, _:160, Map:32/little-unsigned-integer, Entry:32/little-unsigned-integer, _/bits >> = Packet,
+	User = egs_db:users_select(GID),
+	NewUser = User#users{coords=Coords, map=Map, entry=Entry},
+	egs_db:users_insert(NewUser),
+	broadcast(default, ignore, GID, ignore, Packet);
+
+%% @doc Default broadcast handler. Dispatch the packet to everyone (for now).
+%%      We clean up the packet and use the real GID and LID of the user, disregarding what was sent and possibly tampered with.
+%% @todo Don't query the user data everytime! Keep an User instead of a GID probably.
+
+broadcast(_, _, GID, _, Packet) ->
+	<< _:32, A:64/bits, _:64, B:192/bits, _:64, C/bits >> = Packet,
+	case egs_db:users_select(GID) of
+		error ->
+			ignore;
+		Self ->
+			LID = Self#users.lid,
+			SafePacket = << A/binary, 16#00011300:32, GID:32/little-unsigned-integer, B/binary,
+				GID:32/little-unsigned-integer, LID:32/little-unsigned-integer, C/binary >>,
+			lists:foreach(fun(User) -> User#users.pid ! {psu_broadcast, SafePacket} end, egs_db:users_select_others(GID))
+	end.
+
+%% @doc Movement (non-broadcast) handler. Do nothing.
+
+handle(16#0102, _, _, _, _) ->
+	ignore;
 
 %% @doc Keepalive handler. Do nothing.
 
@@ -337,11 +325,11 @@ handle(16#021f, CSocket, GID, _, Packet) ->
 			log(GID, "uni selection (my room)"),
 			% 0230 0220
 			% myroom_load(CSocket, GID, Version, 16#a701, 16#0100);
-			lobby_load(CSocket, GID, 16#6700, 16#0100);
+			lobby_load(CSocket, GID, 103, 1);
 		_ ->
 			log(GID, "uni selection (reload)"),
 			% 0230 0220
-			lobby_load(CSocket, GID, 16#0100, 16#0100)
+			lobby_load(CSocket, GID, 1, 1)
 	end;
 
 %% @doc Shortcut changes handler. Do nothing.
@@ -350,7 +338,7 @@ handle(16#021f, CSocket, GID, _, Packet) ->
 handle(16#0302, _, GID, _, _) ->
 	log(GID, "dismissed shortcut changes");
 
-%% @doc Chat handler. Broadcast the chat message to all other players.
+%% @doc Chat broadcast handler. Dispatch the message to everyone (for now).
 %%      We must take extra precautions to handle different versions of the game correctly.
 %% @todo Only broadcast to people in the same map.
 
@@ -369,44 +357,6 @@ handle(16#0304, _, GID, Version, Packet) ->
 			ActualName = ChatName
 	end,
 	lists:foreach(fun(User) -> User#users.pid ! {psu_chat, GID, ActualName, ChatModifiers, ChatMessage} end, egs_db:users_select_all());
-
-%% @doc Movements handler. Broadcast to all other players.
-
-handle(16#0102, _, GID, _, Packet) ->
-	<< _:32, Data/bits >> = Packet,
-	lists:foreach(fun(User) -> User#users.pid ! {psu_broadcast_0102, Data} end, egs_db:users_select_others(GID));
-
-%% @doc Sit on chairs animation handler. Broadcast to all other players.
-
-handle(16#0107, _, GID, _, Packet) ->
-	<< _:32, Data/bits >> = Packet,
-	lists:foreach(fun(User) -> User#users.pid ! {psu_broadcast_0107, Data} end, egs_db:users_select_others(GID));
-
-%% @doc Lobby actions handler. Broadcast to all other players.
-
-handle(16#010f, _, GID, _, Packet) ->
-	<< _:32, Data/bits >> = Packet,
-	lists:foreach(fun(User) -> User#users.pid ! {psu_broadcast_010f, Data} end, egs_db:users_select_others(GID));
-
-%% @doc Position change handler. Broadcast to all other players.
-
-handle(16#0503, _, GID, _, Packet) ->
-	<< _:32, Data/bits >> = Packet,
-	<< _:416, Coords:96/bits, _:160, Map:32/little-unsigned-integer, Entry:32/little-unsigned-integer, _/bits >> = Data,
-	User = egs_db:users_select(GID),
-	NewUser = User#users{coords=Coords, map=Map, entry=Entry},
-	egs_db:users_insert(NewUser),
-	lists:foreach(fun(X) -> X#users.pid ! {psu_broadcast_0503, Data} end, egs_db:users_select_others(GID));
-
-%% @todo Unknown handler. Do nothing for now.
-
-handle(16#050f, _, _, _, _) ->
-	ignore;
-
-%% @doc Stand still handler. Do nothing.
-
-handle(16#0514, _, _, _, _) ->
-	ignore;
 
 %% @doc Lobby change handler.
 
@@ -454,8 +404,8 @@ send_packet_201(CSocket, GID, Map, Entry, User, Char) ->
 	{ok, File} = file:read_file("p/packet0201.bin"),
 	<< _:96, A:32/bits, _:96, B:32/bits, _:256, D:96/bits, _:2592, After/bits >> = File,
 	Packet = << 16#0201:16, 0:48, A/binary, CharGID:32/little-unsigned-integer, 0:64, B/binary, GID:32/little-unsigned-integer,
-		0:64, CharLID:32/little-unsigned-integer, CharGID:32/little-unsigned-integer, 0:96, D/binary, Map:16/unsigned-integer,
-		0:16, Entry:16/unsigned-integer, 0:16, 0:320, Char/binary, After/binary >>,
+		0:64, CharLID:32/little-unsigned-integer, CharGID:32/little-unsigned-integer, 0:96, D/binary, Map:16/little-unsigned-integer,
+		0:16, Entry:16/little-unsigned-integer, 0:16, 0:320, Char/binary, After/binary >>,
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @todo Figure out what the other things are.

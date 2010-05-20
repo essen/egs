@@ -159,7 +159,7 @@ parse_game_auth(Packet) ->
 %% @doc Parse a lobby change command.
 
 parse_lobby_change(Packet) ->
-	<< _:400, Map:16/unsigned-integer, Entry:16/unsigned-integer, _/bits >> = Packet,
+	<< _:400, Map:16/little-unsigned-integer, Entry:16/little-unsigned-integer, _/bits >> = Packet,
 	[{map, Map}, {entry, Entry}].
 
 %% @doc Parse the MOTD request command.
@@ -306,7 +306,7 @@ send_loading_end(CSocket, GID) ->
 %% @doc Send the map ID to be loaded by the client.
 
 send_map(CSocket, Map, Entry) ->
-	Packet = << 16#0205:16, 0:368, Map:16/unsigned-integer, 0:16, Entry:16/unsigned-integer, 0:80 >>,
+	Packet = << 16#0205:16, 0:368, Map:16/little-unsigned-integer, 0:16, Entry:16/little-unsigned-integer, 0:80 >>,
 	packet_send(CSocket, Packet).
 
 %% @doc Send the requested MOTD page to the client. Pages start at 0.

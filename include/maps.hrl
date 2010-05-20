@@ -19,11 +19,11 @@
 %% EGS maps settings.
 
 -define(MAPS, [
-	{ 16#0100, [{quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}] },
-	{ 16#0200, [{quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}] },
-	{ 16#0300, [{quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}] },
-	{ 16#0400, [{quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}] },
-% TODO: 0500 (0000): 5th floor
+	{ 1, [{quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}] },
+	{ 2, [{quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}] },
+	{ 3, [{quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}] },
+	{ 4, [{quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}] },
+% TODO: 0500 (0000): 5th floor 2032674b too (same as floor1)
 % TODO: 6400 (0000 0100 0200): clyez 2nd floor shops, right
 % TODO: 6500 (0000 0100 0200): clyez 2nd floor shops, left
 % TODO: 6600 (0000 0100 0200): clyez 3rd floor shops, right
