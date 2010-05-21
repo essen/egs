@@ -32,6 +32,7 @@ start() ->
 %% @doc Listen for connections.
 
 listen(Port) ->
+	process_flag(trap_exit, true),
 	{ok, LSocket} = gen_tcp:listen(Port, ?PATCH_LISTEN_OPTIONS),
 	?MODULE:accept(LSocket).
 

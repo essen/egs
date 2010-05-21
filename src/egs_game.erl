@@ -33,6 +33,7 @@ start() ->
 %% @doc Listen for connections.
 
 listen() ->
+	process_flag(trap_exit, true),
 	{ok, LSocket} = ssl:listen(?GAME_PORT, ?GAME_LISTEN_OPTIONS),
 	?MODULE:accept(LSocket).
 
@@ -42,10 +43,15 @@ accept(LSocket) ->
 	case ssl:transport_accept(LSocket, 5000) of
 		{ok, CSocket} ->
 			ssl:ssl_accept(CSocket),
-			log(0, "hello (new connection)"),
-			egs_proto:send_hello(CSocket),
-			PID = spawn_link(?MODULE, process, [CSocket, 0]),
-			ssl:controlling_process(CSocket, PID);
+			try
+				log(0, "hello (new connection)"),
+				egs_proto:send_hello(CSocket),
+				Pid = spawn_link(?MODULE, process, [CSocket, 0]),
+				ssl:controlling_process(CSocket, Pid)
+			catch
+				_:_ ->
+					reload
+			end;
 		_ ->
 			reload
 	end,

@@ -34,6 +34,7 @@ start() ->
 %% @doc Listen for connections.
 
 listen(Port, SessionID) ->
+	process_flag(trap_exit, true),
 	{ok, LSocket} = ssl:listen(Port, ?LOGIN_LISTEN_OPTIONS),
 	?MODULE:accept(LSocket, SessionID).
 
