@@ -359,5 +359,6 @@ send_universe_info(CSocket, GID) ->
 
 send_zone(CSocket, Filename) ->
 	{ok, File} = file:read_file(Filename),
-	Packet = << 16#020f:16, 0:336, 16#00700100:32/unsigned-integer, File/binary >>,
+	Size = byte_size(File),
+	Packet = << 16#020f:16, 0:336, Size:32/little-unsigned-integer, File/binary >>,
 	packet_send(CSocket, Packet).
