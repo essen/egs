@@ -230,7 +230,6 @@ loop(CSocket, GID, Version) ->
 	loop(CSocket, GID, Version, << >>).
 
 %% @doc Game's main loop.
-%% @todo Have some kind of clock process for keepalive packets.
 
 loop(CSocket, GID, Version, SoFar) ->
 	receive
@@ -245,27 +244,30 @@ loop(CSocket, GID, Version, SoFar) ->
 		{psu_keepalive} ->
 			egs_proto:send_keepalive(CSocket, GID),
 			?MODULE:loop(CSocket, GID, Version, SoFar);
-		{psu_player_spawn, SpawnPlayer} ->
-			send_spawn(CSocket, GID, SpawnPlayer),
+		{psu_player_spawn, PlayerGID} ->
+			send_spawn(CSocket, GID, PlayerGID),
 			?MODULE:loop(CSocket, GID, Version, SoFar);
 		{ssl, _, Data} ->
 			{Packets, Rest} = egs_proto:packet_split(<< SoFar/bits, Data/bits >>),
 			[dispatch(CSocket, GID, Version, P) || P <- Packets],
 			?MODULE:loop(CSocket, GID, Version, Rest);
 		{ssl_closed, _} ->
-			log(GID, "ssl closed~n"),
-			egs_db:users_delete(GID),
-			ssl:close(CSocket);
+			close(CSocket, GID);
 		{ssl_error, _, _} ->
-			io:format("ssl error~n"),
-			egs_db:users_delete(GID),
-			ssl:close(CSocket);
+			close(CSocket, GID);
 		_ ->
 			?MODULE:loop(CSocket, GID, Version, SoFar)
 	after 1000 ->
 		reload,
 		?MODULE:loop(CSocket, GID, Version, SoFar)
 	end.
+
+%% @doc Close the connection for the given user.
+
+close(CSocket, GID) ->
+	log(GID, "quit"),
+	egs_db:users_delete(GID),
+	ssl:close(CSocket).
 
 %% @doc Dispatch the command to the right handler.
 
