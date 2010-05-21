@@ -191,7 +191,7 @@ lobby_load(CSocket, GID, Map, Entry) ->
 	User = OldUser#users{map=Map, entry=Entry},
 	egs_db:users_insert(User),
 	[{status, 1}, {char, Char}, {options, Options}] = char_load(User#users.folder, User#users.charnumber),
-	[{quest, Quest}, {zone, Zone}] = proplists:get_value(Map, ?MAPS, [{quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}]),
+	[{name, _}, {quest, Quest}, {zone, Zone}] = proplists:get_value(Map, ?MAPS, [{quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}]),
 	try
 		% broadcast spawn to other people
 		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_spawn, User} end, egs_db:users_select_others(GID)),
