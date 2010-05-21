@@ -58,7 +58,7 @@ users_select(GID) ->
 %% @doc Select all users. Return a list of #users records.
 
 users_select_all() ->
-	do(qlc:q([X || X <- mnesia:table(users)])).
+	do(qlc:q([X || X <- mnesia:table(users), X#users.charnumber /= undefined])).
 
 %% @doc Select all other users. Return a list of #users records.
 
