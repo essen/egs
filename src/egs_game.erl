@@ -335,7 +335,7 @@ handle(16#021f, CSocket, GID, _, Packet) ->
 			log(GID, "uni selection (my room)"),
 			% 0230 0220
 			% myroom_load(CSocket, GID, Version, 16#a701, 16#0100);
-			lobby_load(CSocket, GID, 0, 103, 1);
+			lobby_load(CSocket, GID, 11, 103, 1);
 		_ ->
 			log(GID, "uni selection (reload)"),
 			% 0230 0220
