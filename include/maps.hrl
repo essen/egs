@@ -19,18 +19,23 @@
 %% EGS maps settings.
 
 -define(MAPS, [
-	{    1, [{name, "GC Floor 1"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}] },
-	{    2, [{name, "GC Floor 2"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}] },
-	{    3, [{name, "GC Floor 3"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}] },
-	{    4, [{name, "GC Floor 4"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}] },
-	{    5, [{name, "GC Floor 5"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.club.nbl"}] },
+	{ [1100000,0,1], [{name, "GC Floor 1"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}] },
+	{ [1100000,0,2], [{name, "GC Floor 2"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}] },
+	{ [1100000,0,3], [{name, "GC Floor 3"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}] },
+	{ [1100000,0,4], [{name, "GC Floor 4"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}] },
+	{ [1100000,0,5], [{name, "GC Floor 5"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.club.nbl"}] },
+	{ [1100000,0,103], [{name, "GC Club Commune"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.club.nbl"}] }, % entries 0 1
+
+	{ [1102000,0,1], [{name, "Neudaiz City"}, {quest, "p/quest.8a23294b.bin"}, {zone, "p/zone-2.nbl"}] },
+%	{ [1102000,11,100], [{name, "Neudaiz City"}, {quest, "p/quest.8a23294b.bin"}, {zone, "p/zone-2.nbl"}] },
+
+	{ [1104000,0,900], [{name, "Space Port"}, {quest, "p/quest.spaceport.nbl"}, {zone, "p/zone.spaceport.nbl"}] }
+]).
+
 %	{  100, [{name, "GC Floor 2 Shops R"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/TODO"}] }, % entries 0 1 2
 %	{  101, [{name, "GC Floor 2 Shops L"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/TODO"}] }, % entries 0 1 2
 %	{  102, [{name, "GC Floor 3 Shops R"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/TODO"}] }, % entries 0 1 2
-	{  103, [{name, "GC Club Commune"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.club.nbl"}] }, % entries 0 1
-	{  900, [{name, "GC Space Port"}, {quest, "p/quest.spaceport.nbl"}, {zone, "p/zone.spaceport.nbl"}] }
 %	{ 16#a701, [{quest, "p/quest.myroom.nbl"}, {zone, "p/zone.myroom.nbl"}] } % TODO: 6400 too? on US through a door?
-]).
 
 % TODO:
 % 100 101 102 103 104 105 106 107 108 109 111 112 113 117 119 120 121 122 123 124 130 131 140

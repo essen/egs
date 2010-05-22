@@ -159,9 +159,9 @@ parse_game_auth(Packet) ->
 %% @doc Parse a lobby change command.
 
 parse_lobby_change(Packet) ->
-	<< _:384, MapType:16/little-unsigned-integer, MapNumber:16/little-unsigned-integer,
-		MapEntry:16/little-unsigned-integer, _/bits >> = Packet,
-	[{maptype, MapType}, {mapnumber, MapNumber}, {mapentry, MapEntry}].
+	<< _:352, Quest:32/little-unsigned-integer, MapType:16/little-unsigned-integer,
+		MapNumber:16/little-unsigned-integer, MapEntry:16/little-unsigned-integer, _/bits >> = Packet,
+	[{quest, Quest}, {maptype, MapType}, {mapnumber, MapNumber}, {mapentry, MapEntry}].
 
 %% @doc Parse the MOTD request command.
 
@@ -306,8 +306,8 @@ send_loading_end(CSocket, GID) ->
 
 %% @doc Send the map ID to be loaded by the client.
 
-send_map(CSocket, MapType, MapNumber, MapEntry) ->
-	Packet = << 16#0205:16, 0:336, MapType:32/little-unsigned-integer,
+send_map(CSocket, Quest, MapType, MapNumber, MapEntry) ->
+	Packet = << 16#0205:16, 0:304, Quest:32/little-unsigned-integer, MapType:32/little-unsigned-integer,
 		MapNumber:32/little-unsigned-integer, MapEntry:32/little-unsigned-integer, 0:64 >>,
 	packet_send(CSocket, Packet).
 
