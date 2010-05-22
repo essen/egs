@@ -372,7 +372,7 @@ handle(16#0304, _, GID, Version, Packet) ->
 
 handle(16#0807, CSocket, GID, _, Packet) ->
 	[{maptype, MapType}, {mapnumber, MapNumber}, {mapentry, MapEntry}] = egs_proto:parse_lobby_change(Packet),
-	log(GID, io_lib:format("lobby change (~4.16.0b,~4.16.0b,~4.16.0b)", [MapType, MapNumber, MapEntry])),
+	log(GID, io_lib:format("lobby change (~b,~b,~b)", [MapType, MapNumber, MapEntry])),
 	lobby_load(CSocket, GID, MapType, MapNumber, MapEntry);
 
 %% @doc Unknown flags-related command handler.
