@@ -23,8 +23,8 @@
 	{ [1100000,0,2], [{name, "GC Floor 2"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}] },
 	{ [1100000,0,3], [{name, "GC Floor 3"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}] },
 	{ [1100000,0,4], [{name, "GC Floor 4"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}] },
-	{ [1100000,0,5], [{name, "GC Floor 5"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.club.nbl"}] },
-	{ [1100000,0,103], [{name, "GC Club Commune"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.club.nbl"}] }, % entries 0 1
+	{ [1100000,11,5], [{name, "GC Floor 5"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.club.nbl"}] },
+	{ [1100000,11,103], [{name, "GC Club Commune"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.club.nbl"}] }, % entries 0 1
 
 	{ [1102000,0,1], [{name, "Neudaiz City"}, {quest, "p/quest.neudaiz.nbl"}, {zone, "p/zone.neudaiz.nbl"}] },
 %	{ [1102000,11,100], [{name, "Neudaiz City"}, {quest, "p/quest.neudaiz.nbl"}, {zone, "p/zone.neudaiz.nbl"}] },
