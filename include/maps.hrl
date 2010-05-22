@@ -23,7 +23,7 @@
 	{    2, [{name, "GC Floor 2"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}] },
 	{    3, [{name, "GC Floor 3"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}] },
 	{    4, [{name, "GC Floor 4"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}] },
-%	{    5, [{name, "GC Floor 5"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/TODO"}] },
+	{    5, [{name, "GC Floor 5"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.club.nbl"}] },
 %	{  100, [{name, "GC Floor 2 Shops R"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/TODO"}] }, % entries 0 1 2
 %	{  101, [{name, "GC Floor 2 Shops L"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/TODO"}] }, % entries 0 1 2
 %	{  102, [{name, "GC Floor 3 Shops R"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/TODO"}] }, % entries 0 1 2
