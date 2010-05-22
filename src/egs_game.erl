@@ -375,6 +375,17 @@ handle(16#0807, CSocket, GID, _, Packet) ->
 	log(GID, io_lib:format("lobby change (~4.16.0b,~4.16.0b,~4.16.0b)", [MapType, MapNumber, MapEntry])),
 	lobby_load(CSocket, GID, MapType, MapNumber, MapEntry);
 
+%% @doc Unknown flags-related command handler.
+%%      Just reply with a success value.
+%% @todo Find what it really does and handle it correctly.
+
+handle(16#0d04, CSocket, GID, _, Orig) ->
+	log(GID, "fake flags handler"),
+	<< _:352, A:144/bits, _:8, B/bits >> = Orig,
+	Packet = << 16#0d040300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, A/binary, 1, B/binary >>,
+	file:write_file("fakingit.bin", Packet),
+	egs_proto:packet_send(CSocket, Packet);
+
 %% @doc Options changes handler.
 
 handle(16#0d07, _, GID, _, Packet) ->
