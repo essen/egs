@@ -17,7 +17,7 @@
 %	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
 -module(egs).
--export([start/0, reload/0, global/2, warp/2]).
+-export([start/0, reload/0, global/2, warp/3]).
 
 -include("include/records.hrl").
 
@@ -49,5 +49,5 @@ global(Type, Message) ->
 
 %% @doc Warp all players to a new map.
 
-warp(Map, Entry) ->
-	lists:foreach(fun(User) -> egs_game:lobby_load(User#users.socket, User#users.gid, Map, Entry) end, egs_db:users_select_all()).
+warp(MapType, MapNumber, MapEntry) ->
+	lists:foreach(fun(User) -> egs_game:lobby_load(User#users.socket, User#users.gid, MapType, MapNumber, MapEntry) end, egs_db:users_select_all()).

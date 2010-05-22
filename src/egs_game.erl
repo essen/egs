@@ -18,7 +18,7 @@
 
 -module(egs_game).
 -export([start/0]). % external
--export([listen/0, accept/1, process/2, char_select/3, lobby_load/4, loop/3, loop/4]). % internal
+-export([listen/0, accept/1, process/2, char_select/3, lobby_load/5, loop/3, loop/4]). % internal
 
 -include("include/records.hrl").
 -include("include/network.hrl").
@@ -180,18 +180,18 @@ char_select_load(CSocket, GID, Version, Number) ->
 	[{status, _}, {char, << Name:512/bits, _/bits >>}|_] = char_load(User#users.folder, Number),
 	NewRow = User#users{charnumber=Number, charname=Name},
 	egs_db:users_insert(NewRow),
-	?MODULE:lobby_load(CSocket, GID, 1, 1),
+	?MODULE:lobby_load(CSocket, GID, 0, 1, 1),
 	ssl:setopts(CSocket, [{active, true}]),
 	?MODULE:loop(CSocket, GID, Version).
 
 %% @doc Load the given map as a standard lobby.
 
-lobby_load(CSocket, GID, Map, Entry) ->
+lobby_load(CSocket, GID, MapType, MapNumber, MapEntry) ->
 	OldUser = egs_db:users_select(GID),
-	User = OldUser#users{map=Map, entry=Entry},
+	User = OldUser#users{maptype=MapType, mapnumber=MapNumber, mapentry=MapEntry},
 	egs_db:users_insert(User),
 	[{status, 1}, {char, Char}, {options, Options}] = char_load(User#users.folder, User#users.charnumber),
-	[{name, _}, {quest, Quest}, {zone, Zone}] = proplists:get_value(Map, ?MAPS, [{quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}]),
+	[{name, _}, {quest, Quest}, {zone, Zone}] = proplists:get_value(MapNumber, ?MAPS, [{name, "Unknown"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}]),
 	try
 		% broadcast spawn to other people
 		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_spawn, User} end, egs_db:users_select_others(GID)),
@@ -209,10 +209,10 @@ lobby_load(CSocket, GID, Map, Entry) ->
 		% 0a05 0111 010d
 		send_packet_200(CSocket, GID),
 		egs_proto:send_zone(CSocket, Zone),
-		egs_proto:send_map(CSocket, Map, Entry),
+		egs_proto:send_map(CSocket, MapType, MapNumber, MapEntry),
 		% 100e 020c
 		egs_proto:send_load_quest(CSocket, GID),
-		send_packet_201(CSocket, GID, Map, Entry, User, Char),
+		send_packet_201(CSocket, GID, User, Char),
 		% 0a06
 		Users = egs_db:users_select_others(GID),
 		send_packet_233(CSocket, GID, Users),
@@ -283,9 +283,10 @@ dispatch(CSocket, GID, Version, Packet) ->
 %% @doc Position change broadcast handler. Save the position and then dispatch it.
 
 broadcast(16#0503, _, GID, _, Packet) ->
-	<< _:448, Coords:96/bits, _:160, Map:32/little-unsigned-integer, Entry:32/little-unsigned-integer, _/bits >> = Packet,
+	<< _:448, Coords:96/bits, _:128, MapType:32/little-unsigned-integer, MapNumber:32/little-unsigned-integer,
+		MapEntry:32/little-unsigned-integer, _/bits >> = Packet,
 	User = egs_db:users_select(GID),
-	NewUser = User#users{coords=Coords, map=Map, entry=Entry},
+	NewUser = User#users{coords=Coords, maptype=MapType, mapnumber=MapNumber, mapentry=MapEntry},
 	egs_db:users_insert(NewUser),
 	broadcast(default, ignore, GID, ignore, Packet);
 
@@ -334,11 +335,11 @@ handle(16#021f, CSocket, GID, _, Packet) ->
 			log(GID, "uni selection (my room)"),
 			% 0230 0220
 			% myroom_load(CSocket, GID, Version, 16#a701, 16#0100);
-			lobby_load(CSocket, GID, 103, 1);
+			lobby_load(CSocket, GID, 0, 103, 1);
 		_ ->
 			log(GID, "uni selection (reload)"),
 			% 0230 0220
-			lobby_load(CSocket, GID, 1, 1)
+			lobby_load(CSocket, GID, 0, 1, 1)
 	end;
 
 %% @doc Shortcut changes handler. Do nothing.
@@ -370,9 +371,9 @@ handle(16#0304, _, GID, Version, Packet) ->
 %% @doc Lobby change handler.
 
 handle(16#0807, CSocket, GID, _, Packet) ->
-	[{map, Map}, {entry, Entry}] = egs_proto:parse_lobby_change(Packet),
-	log(GID, io_lib:format("lobby change (~4.16.0b,~4.16.0b)", [Map, Entry])),
-	lobby_load(CSocket, GID, Map, Entry);
+	[{maptype, MapType}, {mapnumber, MapNumber}, {mapentry, MapEntry}] = egs_proto:parse_lobby_change(Packet),
+	log(GID, io_lib:format("lobby change (~4.16.0b,~4.16.0b,~4.16.0b)", [MapType, MapNumber, MapEntry])),
+	lobby_load(CSocket, GID, MapType, MapNumber, MapEntry);
 
 %% @doc Options changes handler.
 
@@ -407,14 +408,17 @@ send_packet_200(CSocket, GID) ->
 
 %% @todo Figure out what the other things are.
 
-send_packet_201(CSocket, GID, Map, Entry, User, Char) ->
+send_packet_201(CSocket, GID, User, Char) ->
+	MapType = User#users.maptype,
+	MapNumber = User#users.mapnumber,
+	MapEntry = User#users.mapentry,
 	CharGID = User#users.gid,
 	CharLID = User#users.lid,
 	{ok, File} = file:read_file("p/packet0201.bin"),
-	<< _:96, A:32/bits, _:96, B:32/bits, _:256, D:96/bits, _:2592, After/bits >> = File,
+	<< _:96, A:32/bits, _:96, B:32/bits, _:256, D:64/bits, _:2624, After/bits >> = File,
 	Packet = << 16#0201:16, 0:48, A/binary, CharGID:32/little-unsigned-integer, 0:64, B/binary, GID:32/little-unsigned-integer,
-		0:64, CharLID:32/little-unsigned-integer, CharGID:32/little-unsigned-integer, 0:96, D/binary, Map:16/little-unsigned-integer,
-		0:16, Entry:16/little-unsigned-integer, 0:16, 0:320, Char/binary, After/binary >>,
+		0:64, CharLID:32/little-unsigned-integer, CharGID:32/little-unsigned-integer, 0:96, D/binary, MapType:32/little-unsigned-integer,
+		MapNumber:32/little-unsigned-integer, MapEntry:32/little-unsigned-integer, 0:320, Char/binary, After/binary >>,
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @todo Figure out what the other things are.
@@ -437,23 +441,25 @@ build_packet_233_contents([]) ->
 build_packet_233_contents(Users) ->
 	[User|Rest] = Users,
 	{ok, File} = file:read_file("p/player.bin"),
-	<< A:32/bits, _:32, B:64/bits, _:32, C:96/bits, _:64, D:32/bits, _:96, E:128/bits, _:2272, F/bits >> = File,
+	<< A:32/bits, _:32, B:64/bits, _:32, C:64/bits, _:96, D:32/bits, _:96, E:96/bits, _:2304, F/bits >> = File,
 	{ok, CharFile} = file:read_file(io_lib:format("save/~s/~b-character", [User#users.folder, User#users.charnumber])),
 	CharGID = User#users.gid,
 	LID = User#users.lid,
 	case User#users.coords of % TODO: temporary? undefined handling
 		undefined ->
 			Coords = << 0:96 >>,
-			Map = 1,
-			Entry = 0;
+			MapType = 0,
+			MapNumber = 1,
+			MapEntry = 0;
 		_ ->
 			Coords = User#users.coords,
-			Map = User#users.map,
-			Entry = User#users.entry
+			MapType = User#users.maptype,
+			MapNumber = User#users.mapnumber,
+			MapEntry = User#users.mapentry
 	end,
 	Chunk = << A/binary, CharGID:32/little-unsigned-integer, B/binary, LID:16/little-unsigned-integer, 16#0100:16, C/binary,
-		Map:16/little-unsigned-integer, 0:16, Entry:16/little-unsigned-integer, 0:16, D:32/bits, Coords:96/bits, E/binary,
-		Map:16/little-unsigned-integer, 0:16, Entry:16/little-unsigned-integer, 0:16, CharFile/binary, F/binary >>,
+		MapType:32/little-unsigned-integer, MapNumber:32/little-unsigned-integer, MapEntry:32/little-unsigned-integer, D:32/bits, Coords:96/bits, E/binary,
+		MapType:32/little-unsigned-integer, MapNumber:32/little-unsigned-integer, MapEntry:32/little-unsigned-integer, CharFile/binary, F/binary >>,
 	Next = build_packet_233_contents(Rest),
 	<< Chunk/binary, Next/binary >>.
 
