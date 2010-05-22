@@ -23,13 +23,13 @@
 	{    2, [{name, "GC Floor 2"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}] },
 	{    3, [{name, "GC Floor 3"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}] },
 	{    4, [{name, "GC Floor 4"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}] },
-	{    5, [{name, "GC Floor 5"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/TODO"}] },
-	{  100, [{name, "GC Floor 2 Shops R"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/TODO"}] }, % entries 0 1 2
-	{  101, [{name, "GC Floor 2 Shops L"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/TODO"}] }, % entries 0 1 2
-	{  102, [{name, "GC Floor 3 Shops R"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/TODO"}] }, % entries 0 1 2
-	{  103, [{name, "GC Club Commune"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.club.nbl"}] }, % entries 0 1
-	{  900, [{name, "GC Space Port"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/TODO"}] },
-	{ 16#a701, [{quest, "p/quest.myroom.nbl"}, {zone, "p/zone.myroom.nbl"}] } % TODO: 6400 too? on US through a door?
+%	{    5, [{name, "GC Floor 5"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/TODO"}] },
+%	{  100, [{name, "GC Floor 2 Shops R"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/TODO"}] }, % entries 0 1 2
+%	{  101, [{name, "GC Floor 2 Shops L"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/TODO"}] }, % entries 0 1 2
+%	{  102, [{name, "GC Floor 3 Shops R"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/TODO"}] }, % entries 0 1 2
+	{  103, [{name, "GC Club Commune"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.club.nbl"}] } % entries 0 1
+%	{  900, [{name, "GC Space Port"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/TODO"}] },
+%	{ 16#a701, [{quest, "p/quest.myroom.nbl"}, {zone, "p/zone.myroom.nbl"}] } % TODO: 6400 too? on US through a door?
 ]).
 
 % TODO:
