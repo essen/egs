@@ -393,7 +393,8 @@ handle(16#0304, _, GID, Version, Packet) ->
 			ActualName = ChatName
 	end,
 	[LogName|_] = re:split(ActualName, "\\0\\0", [{return, binary}]),
-	[LogMessage|_] = re:split(ChatMessage, "\\0\\0", [{return, binary}]),
+	[TmpMessage|_] = re:split(ChatMessage, "\\0\\0", [{return, binary}]),
+	LogMessage = re:replace(TmpMessage, "\\n", " ", [global, {return, binary}]),
 	log(GID, io_lib:format("chat from ~s: ~s", [[re:replace(LogName, "\\0", "", [global, {return, binary}])], [re:replace(LogMessage, "\\0", "", [global, {return, binary}])]])),
 	lists:foreach(fun(User) -> User#users.pid ! {psu_chat, GID, ActualName, ChatModifiers, ChatMessage} end, egs_db:users_select_all());
 
