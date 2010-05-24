@@ -19,38 +19,87 @@
 %% EGS maps settings.
 
 -define(MAPS, [
-	{ [1100000,0,1], [{name, "GC Floor 1"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}] },
-	{ [1100000,0,2], [{name, "GC Floor 2"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}] },
-	{ [1100000,0,3], [{name, "GC Floor 3"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}] },
-	{ [1100000,0,4], [{name, "GC Floor 4"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}] },
-	{ [1100000,11,5], [{name, "GC Floor 5"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.club.nbl"}] },
-	{ [1100000,11,103], [{name, "GC Club Commune"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.club.nbl"}] }, % entries 0 1
+	% Colony
 
-	{ [1102000,0,1], [{name, "Neudaiz City"}, {quest, "p/quest.neudaiz.nbl"}, {zone, "p/zone.neudaiz.nbl"}] },
-%	{ [1102000,11,100], [{name, "Neudaiz City"}, {quest, "p/quest.neudaiz.nbl"}, {zone, "p/zone.neudaiz.nbl"}] },
+	{ [1100000, 0,   1], [{name, "Colony 1st Floor"},         {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone.nbl"},       {entries, [1,2,11,12,13,14,20,21]}] },
+	{ [1100000, 0,   2], [{name, "Colony 2nd Floor"},         {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone.nbl"},       {entries, [0,1,2,3,4,5,6,7,8,20,21,22,23]}] },
+	{ [1100000, 0,   3], [{name, "Colony 3rd Floor"},         {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone.nbl"},       {entries, [0,1,2,3,4,5,20,21,22,23]}] },
+	{ [1100000, 0,   4], [{name, "Colony 4th Floor"},         {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone.nbl"},       {entries, [0,1,2,3,4,5,6,20,21,22,23]}] },
+	{ [1100000,11,   5], [{name, "Colony GUARDIANS"},         {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony-extra.zone.nbl"}, {entries, [0,1,2]}] },
+	{ [1100000,11, 100], [{name, "Colony 2nd, Grind Shop"},   {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone.nbl"},       {entries, [2]}] },
+	{ [1100000,12, 100], [{name, "Colony 2nd, Synth Shop"},   {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone.nbl"},       {entries, [1]}] },
+	{ [1100000,13, 100], [{name, "Colony 2nd, Decos Shop"},   {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone.nbl"},       {entries, [0]}] },
+	{ [1100000,11, 101], [{name, "Colony 2nd, Items Shop"},   {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone.nbl"},       {entries, [0]}] },
+	{ [1100000,12, 101], [{name, "Colony 2nd, Weapons Shop"}, {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone.nbl"},       {entries, [1]}] },
+	{ [1100000,13, 101], [{name, "Colony 2nd, Armors Shop"},  {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone.nbl"},       {entries, [2]}] },
+	{ [1100000,11, 102], [{name, "Colony 3rd, Lumilass"},     {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone.nbl"},       {entries, [2]}] },
+	{ [1100000,12, 102], [{name, "Colony 3rd, Clothes Shop"}, {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone.nbl"},       {entries, [1]}] },
+	{ [1100000,13, 102], [{name, "Colony 3rd, Parts Shop"},   {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone.nbl"},       {entries, [0]}] },
+	{ [1100000,11, 103], [{name, "Colony Club"},              {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone.nbl"},       {entries, [0,1]}] },
+	{ [1100000,11, 110], [{name, "Colony R&D"},               {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony-extra.zone.nbl"}, {entries, [0,1]}] },
+	{ [1100000, 2,9000], [{name, "Colony Aurorey"},           {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone.nbl"},       {entries, [0]}] },
+	{ [1100000, 1,9001], [{name, "Colony Transfer Terminal"}, {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone.nbl"},       {entries, [0]}] }, % probably also 1 leaving next counter
+	{ [1100000, 4,9010], [{name, "Colony Dallgun"},           {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone.nbl"},       {entries, [0]}] }, % probably also 1 leaving next counter
+	{ [1100000, 3,9102], [{name, "Colony HIVE"},              {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone.nbl"},       {entries, [0,1]}] },
+	{ [1100000, 7,9200], [{name, "Colony Rykros"},            {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone.nbl"},       {entries, [0,1]}] },
+	{ [1100000, 7,9202], [{name, "Colony Falz Memoria"},      {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone.nbl"},       {entries, [0]}] },
 
-	{ [1104000,0,900], [{name, "Space Port"}, {quest, "p/quest.spaceport.nbl"}, {zone, "p/zone.spaceport.nbl"}] }
+	% Parum
+
+	{ [1101000, 0,   1], [{name, "Parum City Central"}, {quest, "data/lobby/parum.quest.nbl"}, {zone, "data/lobby/parum.zone.nbl"}, {entries, [0,1,2]}] },
+	{ [1101000, 0,   2], [{name, "Parum City West"},    {quest, "data/lobby/parum.quest.nbl"}, {zone, "data/lobby/parum.zone.nbl"}, {entries, [0,1,2,3,4,5,6,7,8]}] },
+	{ [1101000, 0,   3], [{name, "Parum City East"},    {quest, "data/lobby/parum.quest.nbl"}, {zone, "data/lobby/parum.zone.nbl"}, {entries, [0,1,2]}] },
+	{ [1101000,11,   4], [{name, "Parum GUARDIANS"},    {quest, "data/lobby/parum.quest.nbl"}, {zone, "data/lobby/parum.zone.nbl"}, {entries, [0,1,2]}] }, % TODO:broken zone
+	{ [1101000,11, 100], [{name, "Parum Synth Shop"},   {quest, "data/lobby/parum.quest.nbl"}, {zone, "data/lobby/parum.zone.nbl"}, {entries, [2]}] },
+	{ [1101000,12, 100], [{name, "Parum Clothes Shop"}, {quest, "data/lobby/parum.quest.nbl"}, {zone, "data/lobby/parum.zone.nbl"}, {entries, [1]}] },
+	{ [1101000,13, 100], [{name, "Parum Parts Shop"},   {quest, "data/lobby/parum.quest.nbl"}, {zone, "data/lobby/parum.zone.nbl"}, {entries, [0]}] },
+	{ [1101000,11, 200], [{name, "Parum GRM"},          {quest, "data/lobby/parum.quest.nbl"}, {zone, "data/lobby/parum.zone.nbl"}, {entries, [0]}] }, % TODO:broken zone
+	{ [1101000, 1,9000], [{name, "Parum Raffon"},       {quest, "data/lobby/parum.quest.nbl"}, {zone, "data/lobby/parum.zone.nbl"}, {entries, [0,1]}] },
+	{ [1101000, 2,9010], [{name, "Parum Lakeshore"},    {quest, "data/lobby/parum.quest.nbl"}, {zone, "data/lobby/parum.zone.nbl"}, {entries, [0,1]}] },
+	{ [1101000, 5,9030], [{name, "Parum Waterfall"},    {quest, "data/lobby/parum.quest.nbl"}, {zone, "data/lobby/parum.zone.nbl"}, {entries, [0]}] },
+	{ [1101000, 4,9100], [{name, "Parum Denes"},        {quest, "data/lobby/parum.quest.nbl"}, {zone, "data/lobby/parum.zone.nbl"}, {entries, [0,1]}] },
+	{ [1101000, 3,9101], [{name, "Parum Underground"},  {quest, "data/lobby/parum.quest.nbl"}, {zone, "data/lobby/parum.zone.nbl"}, {entries, [0,1,2]}] },
+	{ [1101000, 7,9200], [{name, "Parum Beach"},        {quest, "data/lobby/parum.quest.nbl"}, {zone, "data/lobby/parum.zone.nbl"}, {entries, [0,1]}] },
+	{ [1101000, 7,9201], [{name, "Parum Rozenom"},      {quest, "data/lobby/parum.quest.nbl"}, {zone, "data/lobby/parum.zone.nbl"}, {entries, [0]}] }, % probably also 1
+	{ [1101000, 7,9203], [{name, "Parum Subway"},       {quest, "data/lobby/parum.quest.nbl"}, {zone, "data/lobby/parum.zone.nbl"}, {entries, [0]}] }, % probably also 1
+	{ [1101000, 7,9209], [{name, "Parum AMF"},          {quest, "data/lobby/parum.quest.nbl"}, {zone, "data/lobby/parum.zone.nbl"}, {entries, [0,1]}] },
+
+	% Neudaiz TODO:probably all those zones broken or something
+
+	{ [1102000, 0,   1], [{name, "Neudaiz City"},         {quest, "data/lobby/neudaiz.quest.nbl"}, {zone, "data/lobby/neudaiz.zone.nbl"}, {entries, [0,1,2,3,4,5,6,7]}] },
+	{ [1102000,11,   3], [{name, "Neudaiz GUARDIANS"},    {quest, "data/lobby/neudaiz.quest.nbl"}, {zone, "data/lobby/neudaiz.zone.nbl"}, {entries, [0,1,2]}] }, % TODO:broken zone
+	{ [1102000,11, 100], [{name, "Neudaiz Synth Shop"},   {quest, "data/lobby/neudaiz.quest.nbl"}, {zone, "data/lobby/neudaiz.zone.nbl"}, {entries, [0]}] },
+	{ [1102000,12, 100], [{name, "Neudaiz Clothes Shop"}, {quest, "data/lobby/neudaiz.quest.nbl"}, {zone, "data/lobby/neudaiz.zone.nbl"}, {entries, [1]}] },
+	{ [1102000,13, 100], [{name, "Neudaiz Parts Shop"},   {quest, "data/lobby/neudaiz.quest.nbl"}, {zone, "data/lobby/neudaiz.zone.nbl"}, {entries, [2]}] },
+	{ [1102000,11, 200], [{name, "Neudaiz Yohmei"},       {quest, "data/lobby/neudaiz.quest.nbl"}, {zone, "data/lobby/neudaiz.zone.nbl"}, {entries, [0]}] }, % TODO:broken zone
+	{ [1102000, 1,9000], [{name, "Neudaiz Islands"},      {quest, "data/lobby/neudaiz.quest.nbl"}, {zone, "data/lobby/neudaiz.zone.nbl"}, {entries, [0,1,2]}] },
+	{ [1102000, 2,9010], [{name, "Neudaiz Relics"},       {quest, "data/lobby/neudaiz.quest.nbl"}, {zone, "data/lobby/neudaiz.zone.nbl"}, {entries, [0,1]}] },
+	{ [1102000, 3,9100], [{name, "Neudaiz Mizuraki"},     {quest, "data/lobby/neudaiz.quest.nbl"}, {zone, "data/lobby/neudaiz.zone.nbl"}, {entries, [0,1,2]}] },
+	{ [1102000, 4,9120], [{name, "Neudaiz Hot Springs"},  {quest, "data/lobby/neudaiz.quest.nbl"}, {zone, "data/lobby/neudaiz.zone.nbl"}, {entries, [0]}] }, % maybe also 1 clothes
+	{ [1102000, 7,9300], [{name, "Neudaiz Temple"},       {quest, "data/lobby/neudaiz.quest.nbl"}, {zone, "data/lobby/neudaiz.zone.nbl"}, {entries, [0]}] },
+	{ [1102000, 7,9301], [{name, "Neudaiz Pavilion"},     {quest, "data/lobby/neudaiz.quest.nbl"}, {zone, "data/lobby/neudaiz.zone.nbl"}, {entries, [0,2]}] }, % probably also unused 1
+	{ [1102000, 7,9302], [{name, "Neudaiz Habirao"},      {quest, "data/lobby/neudaiz.quest.nbl"}, {zone, "data/lobby/neudaiz.zone.nbl"}, {entries, [0,1]}] },
+	{ [1102000, 7,9305], [{name, "Neudaiz Saguraki"},     {quest, "data/lobby/neudaiz.quest.nbl"}, {zone, "data/lobby/neudaiz.zone.nbl"}, {entries, [0,1,2]}] },
+
+	% Moatoob TODO:probably all those zones broken too
+
+	{ [1103000, 0,   1], [{name, "Moatoob City"},             {quest, "data/lobby/moatoob.quest.nbl"}, {zone, "data/lobby/moatoob.zone.nbl"}, {entries, [0,1,2,3,4,5,6,7]}] },
+	{ [1103000,11,   2], [{name, "Moatoob GUARDIANS"},        {quest, "data/lobby/moatoob.quest.nbl"}, {zone, "data/lobby/moatoob.zone.nbl"}, {entries, [0,1,2]}] },
+	{ [1103000,11, 100], [{name, "Moatoob Parts Shop"},       {quest, "data/lobby/moatoob.quest.nbl"}, {zone, "data/lobby/moatoob.zone.nbl"}, {entries, [0]}] },
+	{ [1103000,12, 100], [{name, "Moatoob Clothes Shop"},     {quest, "data/lobby/moatoob.quest.nbl"}, {zone, "data/lobby/moatoob.zone.nbl"}, {entries, [1]}] },
+	{ [1103000,13, 100], [{name, "Moatoob Synth Shop"},       {quest, "data/lobby/moatoob.quest.nbl"}, {zone, "data/lobby/moatoob.zone.nbl"}, {entries, [2]}] },
+	{ [1103000,11, 101], [{name, "Moatoob Pub"},              {quest, "data/lobby/moatoob.quest.nbl"}, {zone, "data/lobby/moatoob.zone.nbl"}, {entries, [0,1]}] },
+	{ [1103000,11, 200], [{name, "Moatoob Tenora"},           {quest, "data/lobby/moatoob.quest.nbl"}, {zone, "data/lobby/moatoob.zone.nbl"}, {entries, [0]}] },
+	{ [1103000, 1,9010], [{name, "Moatoob Desert"},           {quest, "data/lobby/moatoob.quest.nbl"}, {zone, "data/lobby/moatoob.zone.nbl"}, {entries, [0,1]}] },
+	{ [1103000, 5,9030], [{name, "Moatoob Oasis"},            {quest, "data/lobby/moatoob.quest.nbl"}, {zone, "data/lobby/moatoob.zone.nbl"}, {entries, [0]}] }, % maybe also 1 clothes
+	{ [1103000, 6,9040], [{name, "Moatoob Glacier"},          {quest, "data/lobby/moatoob.quest.nbl"}, {zone, "data/lobby/moatoob.zone.nbl"}, {entries, [0]}] }, % probably also 1
+	{ [1103000, 3,9101], [{name, "Moatoob Basin"},            {quest, "data/lobby/moatoob.quest.nbl"}, {zone, "data/lobby/moatoob.zone.nbl"}, {entries, [0,1]}] },
+	{ [1103000, 4,9202], [{name, "Moatoob Underground Lake"}, {quest, "data/lobby/moatoob.quest.nbl"}, {zone, "data/lobby/moatoob.zone.nbl"}, {entries, [0,1,2]}] }, % maybe also 3
+	{ [1103000, 7,9300], [{name, "Moatoob Casino"},           {quest, "data/lobby/moatoob.quest.nbl"}, {zone, "data/lobby/moatoob.zone.nbl"}, {entries, [0]}] },
+	{ [1103000, 7,9302], [{name, "Moatoob Il Cabo"},          {quest, "data/lobby/moatoob.quest.nbl"}, {zone, "data/lobby/moatoob.zone.nbl"}, {entries, [0]}] }, % probably also 1
+	{ [1103000, 7,9304], [{name, "Moatoob Granigs"},          {quest, "data/lobby/moatoob.quest.nbl"}, {zone, "data/lobby/moatoob.zone.nbl"}, {entries, [0,1,2]}] },
+
+	% Spaceports
+
+	{ [1104000,0,900], [{name, "Spaceport"}, {quest, "data/lobby/spaceport.quest.nbl"}, {zone, "data/lobby/spaceport.zone.nbl"}, {entries, [0]}] }
 ]).
-
-%	{  100, [{name, "GC Floor 2 Shops R"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/TODO"}] }, % entries 0 1 2
-%	{  101, [{name, "GC Floor 2 Shops L"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/TODO"}] }, % entries 0 1 2
-%	{  102, [{name, "GC Floor 3 Shops R"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/TODO"}] }, % entries 0 1 2
-%	{ 16#a701, [{quest, "p/quest.myroom.nbl"}, {zone, "p/zone.myroom.nbl"}] } % TODO: 6400 too? on US through a door?
-
-% TODO:
-% 100 101 102 103 104 105 106 107 108 109 111 112 113 117 119 120 121 122 123 124 130 131 140
-% 200 201 202 203 204 205 206 208 210 211 212 213 217 219 220 221 222 223 224 230 231
-% 300 301 302 303 304 305 306 307 308 309 310 311 312 313 314 315 316 317 318 319 320 321 322 323 324 325
-% 400 401 402 403 404 405 406 407 408 409 410 411 412 413 414 415 416 417 418 419 420 421 422 423 424 425
-% 800 801 802
-% 900
-% 1002 1104 1105 1120 1121 1200 1301
-% 2100 2200 2202
-% 3002 3100 3101 3110 3112 3120 3132 3160 3161 3300 3301 3400 3801 3803
-% 4100? 4221 4250 4300 4301 4802 4803 4804
-% 5000 5101 5112 5113 5114 5200 5201 5202 5203 5204 5300 5301 5302 5303 5304 5402 5403 5801 5802 5803 5804 5805 5806 5807 5808
-% 6000 6301 6302 6303 6304 6803
-% 7000
-% 8000 8002
-% 9000 9001 9010 9011 9012 9020 9030 9040 9100 9101 9102 9103 9120 9130 9200 9201 9202 9203 9207 9208 9209 9300 9301 9302 9304 9305 9306 9307 9308
-% and more...

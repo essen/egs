@@ -191,7 +191,8 @@ lobby_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 	User = OldUser#users{quest=Quest, maptype=MapType, mapnumber=MapNumber, mapentry=MapEntry},
 	egs_db:users_insert(User),
 	[{status, 1}, {char, Char}, {options, Options}] = char_load(User#users.folder, User#users.charnumber),
-	[{name, _}, {quest, QuestFile}, {zone, ZoneFile}] = proplists:get_value([Quest, MapType, MapNumber], ?MAPS, [{name, "Unknown"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}]),
+	[{name, _}, {quest, QuestFile}, {zone, ZoneFile}, {entries, _}] = proplists:get_value([Quest, MapType, MapNumber], ?MAPS,
+		[{name, "dammy"}, {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone.nbl"}, {entries, []}]),
 	try
 		% broadcast spawn to other people
 		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_spawn, User} end, egs_db:users_select_others(GID)),
@@ -231,7 +232,7 @@ spaceport_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 	User = OldUser#users{quest=Quest, maptype=MapType, mapnumber=MapNumber, mapentry=MapEntry},
 	egs_db:users_insert(User),
 	[{status, 1}, {char, Char}, {options, _}] = char_load(User#users.folder, User#users.charnumber),
-	[{name, _}, {quest, QuestFile}, {zone, ZoneFile}] = proplists:get_value([Quest, MapType, MapNumber], ?MAPS, [{name, "Unknown"}, {quest, "p/quest.gc1.nbl"}, {zone, "p/zone.gc1.nbl"}]),
+	[{name, _}, {quest, QuestFile}, {zone, ZoneFile}, {entries, _}] = proplists:get_value([Quest, MapType, MapNumber], ?MAPS),
 	try
 		% 0c00
 		egs_proto:send_quest(CSocket, QuestFile),
