@@ -413,15 +413,14 @@ handle(16#0807, CSocket, GID, _, Packet) ->
 handle(16#0811, _, GID, _, _) ->
 	log(GID, "dismissed mission counter");
 
-%% @doc Unknown flags-related command handler.
-%%      Probably a new flag to save (entered a new lobby and stuff).
-%%      Just reply with a success value.
-%% @todo Find what it really does and handle it correctly.
+%% @doc Set flag handler. Associate a new flag with the character.
+%%      Just reply with a success value for now.
+%% @todo God save the flags.
 
 handle(16#0d04, CSocket, GID, _, Orig) ->
-	log(GID, "fake flags handler"),
-	<< _:352, A:144/bits, _:8, B/bits >> = Orig,
-	Packet = << 16#0d040300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, A/binary, 1, B/binary >>,
+	<< _:352, Flag:128/bits, A:16/bits, _:8, B/bits >> = Orig,
+	log(GID, io_lib:format("flag handler for ~s", [re:replace(Flag, "\\0+", "", [global, {return, binary}])])),
+	Packet = << 16#0d040300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Flag/binary, A/binary, 1, B/binary >>,
 	egs_proto:packet_send(CSocket, Packet);
 
 %% @doc Options changes handler.
