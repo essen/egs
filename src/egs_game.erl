@@ -408,6 +408,11 @@ handle(16#0807, CSocket, GID, _, Packet) ->
 			lobby_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry)
 	end;
 
+%% @doc Mission counter handler.
+
+handle(16#0811, _, GID, _, _) ->
+	log(GID, "dismissed mission counter");
+
 %% @doc Unknown flags-related command handler.
 %%      Probably a new flag to save (entered a new lobby and stuff).
 %%      Just reply with a success value.
