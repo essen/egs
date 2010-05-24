@@ -123,8 +123,8 @@ packet_split(Packet, Result) ->
 
 parse_auth_request(Packet) ->
 	<< _:352, Username:192/bits, Password:192/bits, _/bits >> = Packet,
-	[{username, re:replace(Username, "\\0+", "", [global, {return, binary}])},
-		{password, re:replace(Password, "\\0+", "", [global, {return, binary}])}].
+	[{username, re:replace(Username, "\\0", "", [global, {return, binary}])},
+		{password, re:replace(Password, "\\0", "", [global, {return, binary}])}].
 
 %% @doc Parse a character creation command. Return the character number and data.
 
