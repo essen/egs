@@ -339,7 +339,7 @@ send_player_card(CSocket, GID, Char) ->
 send_quest(CSocket, Filename) ->
 	{ok, File} = file:read_file(Filename),
 	Size = byte_size(File),
-	Packet = << 16#020e:16, 0:304, Size:32/little-unsigned-integer, 16#2032674b:32/unsigned-integer, File/binary >>,
+	Packet = << 16#020e:16, 0:304, Size:32/little-unsigned-integer, 0:32, File/binary >>,
 	packet_send(CSocket, Packet).
 
 %% @doc Send the list of available universes.
