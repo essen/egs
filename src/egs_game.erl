@@ -225,6 +225,54 @@ lobby_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 			log(GID, "send error, closing")
 	end.
 
+%% @doc Load the given map as a player room.
+%%      Always load the same room that isn't this player's room for now.
+%% @todo Load 'Your room' correctly.
+
+myroom_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
+	OldUser = egs_db:users_select(GID),
+	User = OldUser#users{quest=Quest, maptype=MapType, mapnumber=MapNumber, mapentry=MapEntry},
+	egs_db:users_insert(User),
+	[{status, 1}, {char, Char}, {options, Options}] = char_load(User#users.folder, User#users.charnumber),
+	[{name, _}, {quest, QuestFile}, {zone, ZoneFile}, {entries, _}] = 
+		[{name, "dammy"}, {quest, "data/rooms/test.quest.nbl"}, {zone, "data/rooms/test.zone.nbl"}, {entries, []}],
+	try
+		% broadcast spawn to other people
+		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_spawn, User} end, egs_db:users_select_others(GID)),
+		% load lobby and character
+		egs_proto:send_character_selected(CSocket, GID, Char, Options),
+		% 0246 0a0a 1006
+		send_packet_1005(CSocket, GID, Char),
+		% 1006 0210
+		egs_proto:send_universe_info(CSocket, GID),
+		egs_proto:send_player_card(CSocket, GID, Char),
+		% 1501 1512 0303
+		egs_proto:send_npc_info(CSocket, GID),
+		% 0c00
+		egs_proto:send_quest(CSocket, QuestFile),
+		% 0a05 0111 010d
+		send_packet_200(CSocket, GID),
+		egs_proto:send_zone(CSocket, ZoneFile),
+		egs_proto:send_map(CSocket, Quest, MapType, MapNumber, MapEntry),
+		myroom_send_packet(CSocket, "p/packet1332.bin"),
+		% 130e(a) 130e(b) 1202 1204 1206
+		egs_proto:send_load_quest(CSocket, GID),
+		myroom_send_packet(CSocket, "p/packet1309.bin"),
+		% 130a(removing moved the pm from shop to normal spot) 1318
+		send_packet_201(CSocket, GID, User, Char),
+		% 0a06 0233
+		egs_proto:send_loading_end(CSocket, GID),
+		egs_proto:send_camera_center(CSocket, GID)
+	catch
+		_ ->
+			ssl:close(CSocket),
+			log(GID, "send error, closing")
+	end.
+
+myroom_send_packet(CSocket, Filename) ->
+	{ok, << _:32, File/bits >>} = file:read_file(Filename),
+	egs_proto:packet_send(CSocket, File).
+
 %% @doc Load the given map as a spaceport.
 
 spaceport_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
@@ -361,8 +409,7 @@ handle(16#021f, CSocket, GID, _, Packet) ->
 		[{uni, 16#ffffffff}] ->
 			log(GID, "uni selection (my room)"),
 			% 0230 0220
-			% myroom_load(CSocket, GID, Version, 16#a701, 16#0100);
-			lobby_load(CSocket, GID, 1100000, 11, 103, 1);
+			myroom_load(CSocket, GID, 1120000, 0, 423, 0);
 		_ ->
 			log(GID, "uni selection (reload)"),
 			% 0230 0220
@@ -399,7 +446,8 @@ handle(16#0304, _, GID, Version, Packet) ->
 	lists:foreach(fun(User) -> User#users.pid ! {psu_chat, GID, ActualName, ChatModifiers, ChatMessage} end, egs_db:users_select_all());
 
 %% @doc Map change handler.
-%%      Spaceports are handled differently than normal lobbies.
+%%      Spaceports and my room are handled differently than normal lobbies.
+%% @todo Load 'Your room' correctly.
 
 handle(16#0807, CSocket, GID, _, Packet) ->
 	[{quest, Quest}, {maptype, MapType}, {mapnumber, MapNumber}, {mapentry, MapEntry}] = egs_proto:parse_lobby_change(Packet),
@@ -407,6 +455,8 @@ handle(16#0807, CSocket, GID, _, Packet) ->
 	case {Quest, MapType, MapNumber, MapEntry} of
 		{1104000, 0, 900, 0} ->
 			spaceport_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry);
+		{1120000, _, _, _} ->
+			myroom_load(CSocket, GID, Quest, MapType, 423, MapEntry);
 		_ ->
 			lobby_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry)
 	end;
@@ -470,7 +520,8 @@ send_packet_201(CSocket, GID, User, Char) ->
 	<< _:96, A:32/bits, _:96, B:32/bits, _:256, D:32/bits, _:2656, After/bits >> = File,
 	Packet = << 16#0201:16, 0:48, A/binary, CharGID:32/little-unsigned-integer, 0:64, B/binary, GID:32/little-unsigned-integer,
 		0:64, CharLID:32/little-unsigned-integer, CharGID:32/little-unsigned-integer, 0:96, D/binary, Quest:32/little-unsigned-integer,
-		MapType:32/little-unsigned-integer, MapNumber:32/little-unsigned-integer, MapEntry:32/little-unsigned-integer, 0:320, Char/binary, After/binary >>,
+		MapType:32/little-unsigned-integer, MapNumber:32/little-unsigned-integer, MapEntry:32/little-unsigned-integer, 0:192, Quest:32/little-unsigned-integer,
+		MapType:32/little-unsigned-integer, MapNumber:32/little-unsigned-integer, MapEntry:32/little-unsigned-integer, Char/binary, After/binary >>,
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @todo Figure out what the other things are.
