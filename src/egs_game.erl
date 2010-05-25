@@ -350,26 +350,35 @@ dispatch(CSocket, GID, Version, Packet) ->
 	<< _:32, Command:16/unsigned-integer, Channel:8/little-unsigned-integer, _/bits >> = Packet,
 	case Channel of
 		1 ->
-			broadcast(Command, CSocket, GID, Version, Packet);
+			broadcast(Command, GID, Packet);
 		_ ->
 			handle(Command, CSocket, GID, Version, Packet)
 	end.
 
 %% @doc Position change broadcast handler. Save the position and then dispatch it.
 
-broadcast(16#0503, _, GID, _, Packet) ->
+broadcast(16#0503, GID, Packet) ->
 	<< _:448, Coords:96/bits, _:96, Quest:32/little-unsigned-integer, MapType:32/little-unsigned-integer,
 		MapNumber:32/little-unsigned-integer, MapEntry:32/little-unsigned-integer, _/bits >> = Packet,
 	User = egs_db:users_select(GID),
 	NewUser = User#users{coords=Coords, quest=Quest, maptype=MapType, mapnumber=MapNumber, mapentry=MapEntry},
 	egs_db:users_insert(NewUser),
-	broadcast(default, ignore, GID, ignore, Packet);
+	broadcast(default, GID, Packet);
 
-%% @doc Default broadcast handler. Dispatch the packet to everyone (for now).
-%%      We clean up the packet and use the real GID and LID of the user, disregarding what was sent and possibly tampered with.
+%% @doc Default broadcast handler. Dispatch the command to everyone.
+%%      We clean up the command and use the real GID and LID of the user, disregarding what was sent and possibly tampered with.
+%%      Only a handful of commands are allowed to broadcast. An user tampering with it would gets disconnected instantly.
 %% @todo Don't query the user data everytime! Keep an User instead of a GID probably.
 
-broadcast(_, _, GID, _, Packet) ->
+broadcast(Command, GID, Packet)
+	when	Command =:= 16#0101;
+			Command =:= 16#0102;
+			Command =:= 16#0104;
+			Command =:= 16#0107;
+			Command =:= 16#010f;
+			Command =:= 16#050f;
+			Command =:= 16#0514;
+			Command =:= default ->
 	<< _:32, A:64/bits, _:64, B:192/bits, _:64, C/bits >> = Packet,
 	case egs_db:users_select(GID) of
 		error ->
