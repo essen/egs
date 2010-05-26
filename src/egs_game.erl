@@ -368,6 +368,16 @@ broadcast(16#0503, GID, Packet) ->
 	egs_db:users_insert(NewUser),
 	broadcast(default, GID, Packet);
 
+%% @doc Stand still broadcast handler. Save the position and then dispatch it.
+
+broadcast(16#0514, GID, Packet) ->
+	<< _:320, _:96, Direction:32/bits, Coords:96/bits, Quest:32/little-unsigned-integer, MapType:32/little-unsigned-integer,
+		MapNumber:32/little-unsigned-integer, MapEntry:32/little-unsigned-integer, _/bits >> = Packet,
+	User = egs_db:users_select(GID),
+	NewUser = User#users{direction=Direction, coords=Coords, quest=Quest, maptype=MapType, mapnumber=MapNumber, mapentry=MapEntry},
+	egs_db:users_insert(NewUser),
+	broadcast(default, GID, Packet);
+
 %% @doc Default broadcast handler. Dispatch the command to everyone.
 %%      We clean up the command and use the real GID and LID of the user, disregarding what was sent and possibly tampered with.
 %%      Only a handful of commands are allowed to broadcast. An user tampering with it would get disconnected instantly.
