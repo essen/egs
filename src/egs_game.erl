@@ -361,10 +361,10 @@ dispatch(CSocket, GID, Version, Packet) ->
 %% @doc Position change broadcast handler. Save the position and then dispatch it.
 
 broadcast(16#0503, GID, Packet) ->
-	<< _:448, Coords:96/bits, _:96, Quest:32/little-unsigned-integer, MapType:32/little-unsigned-integer,
+	<< _:320, _:96, Direction:32/bits, _:96, Coords:96/bits, Quest:32/little-unsigned-integer, MapType:32/little-unsigned-integer,
 		MapNumber:32/little-unsigned-integer, MapEntry:32/little-unsigned-integer, _/bits >> = Packet,
 	User = egs_db:users_select(GID),
-	NewUser = User#users{coords=Coords, quest=Quest, maptype=MapType, mapnumber=MapNumber, mapentry=MapEntry},
+	NewUser = User#users{direction=Direction, coords=Coords, quest=Quest, maptype=MapType, mapnumber=MapNumber, mapentry=MapEntry},
 	egs_db:users_insert(NewUser),
 	broadcast(default, GID, Packet);
 
@@ -556,18 +556,20 @@ build_packet_233_contents([]) ->
 build_packet_233_contents(Users) ->
 	[User|Rest] = Users,
 	{ok, File} = file:read_file("p/player.bin"),
-	<< A:32/bits, _:32, B:64/bits, _:32, C:32/bits, _:128, D:32/bits, _:96, E:64/bits, _:2336, F/bits >> = File,
+	<< A:32/bits, _:32, B:64/bits, _:32, C:32/bits, _:256, E:64/bits, _:2336, F/bits >> = File,
 	{ok, CharFile} = file:read_file(io_lib:format("save/~s/~b-character", [User#users.folder, User#users.charnumber])),
 	CharGID = User#users.gid,
 	LID = User#users.lid,
 	case User#users.coords of % TODO: temporary? undefined handling
 		undefined ->
+			Direction = << 0:32 >>,
 			Coords = << 0:96 >>,
 			Quest = 1100000,
 			MapType = 0,
 			MapNumber = 1,
 			MapEntry = 0;
 		_ ->
+			Direction = User#users.direction,
 			Coords = User#users.coords,
 			Quest = User#users.quest,
 			MapType = User#users.maptype,
@@ -576,7 +578,7 @@ build_packet_233_contents(Users) ->
 	end,
 	Chunk = << A/binary, CharGID:32/little-unsigned-integer, B/binary, LID:16/little-unsigned-integer, 16#0100:16, C/binary,
 		Quest:32/little-unsigned-integer, MapType:32/little-unsigned-integer, MapNumber:32/little-unsigned-integer, MapEntry:32/little-unsigned-integer,
-		D:32/bits, Coords:96/bits, E/binary,  Quest:32/little-unsigned-integer, MapType:32/little-unsigned-integer, MapNumber:32/little-unsigned-integer,
+		Direction:32/bits, Coords:96/bits, E/binary,  Quest:32/little-unsigned-integer, MapType:32/little-unsigned-integer, MapNumber:32/little-unsigned-integer,
 		MapEntry:32/little-unsigned-integer, CharFile/binary, F/binary >>,
 	Next = build_packet_233_contents(Rest),
 	<< Chunk/binary, Next/binary >>.
