@@ -361,8 +361,11 @@ dispatch(CSocket, GID, Version, Packet) ->
 %% @doc Position change broadcast handler. Save the position and then dispatch it.
 
 broadcast(16#0503, GID, Packet) ->
-	<< _:320, _:96, Direction:32/bits, _:96, Coords:96/bits, Quest:32/little-unsigned-integer, MapType:32/little-unsigned-integer,
-		MapNumber:32/little-unsigned-integer, MapEntry:32/little-unsigned-integer, _/bits >> = Packet,
+	LID = 0, % TODO: handle the LID correctly
+	<< 100:32/little-unsigned-integer, 16#050301:24/unsigned-integer, _:40, 0:32, GID:32/little-unsigned-integer, 0:192,
+		GID:32/little-unsigned-integer, LID:32/little-unsigned-integer, Direction:32/bits, _:96, Coords:96/bits,
+		Quest:32/little-unsigned-integer, MapType:32/little-unsigned-integer, MapNumber:32/little-unsigned-integer, MapEntry:32/little-unsigned-integer,
+		_:16, 0:16 >> = Packet,
 	User = egs_db:users_select(GID),
 	NewUser = User#users{direction=Direction, coords=Coords, quest=Quest, maptype=MapType, mapnumber=MapNumber, mapentry=MapEntry},
 	egs_db:users_insert(NewUser),
@@ -390,7 +393,6 @@ broadcast(Command, GID, Packet)
 			Command =:= 16#0107;
 			Command =:= 16#010f;
 			Command =:= 16#050f;
-			Command =:= 16#0514;
 			Command =:= default ->
 	<< _:32, A:64/bits, _:64, B:192/bits, _:64, C/bits >> = Packet,
 	case egs_db:users_select(GID) of
