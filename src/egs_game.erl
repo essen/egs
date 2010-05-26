@@ -348,8 +348,11 @@ close(CSocket, GID) ->
 
 dispatch(CSocket, GID, Version, Packet) ->
 	<< _:32, Command:16/unsigned-integer, Channel:8/little-unsigned-integer, _/bits >> = Packet,
-	case Channel of
-		1 ->
+	case [Command, Channel] of
+		[16#0b05, _] ->
+			% 0b05 uses the channel for something else, conflicts may occur
+			handle(Command, CSocket, GID, Version, Packet);
+		[_, 1] ->
 			broadcast(Command, GID, Packet);
 		_ ->
 			handle(Command, CSocket, GID, Version, Packet)
@@ -367,7 +370,7 @@ broadcast(16#0503, GID, Packet) ->
 
 %% @doc Default broadcast handler. Dispatch the command to everyone.
 %%      We clean up the command and use the real GID and LID of the user, disregarding what was sent and possibly tampered with.
-%%      Only a handful of commands are allowed to broadcast. An user tampering with it would gets disconnected instantly.
+%%      Only a handful of commands are allowed to broadcast. An user tampering with it would get disconnected instantly.
 %% @todo Don't query the user data everytime! Keep an User instead of a GID probably.
 
 broadcast(Command, GID, Packet)
