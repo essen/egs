@@ -362,10 +362,10 @@ dispatch(CSocket, GID, Version, Packet) ->
 
 broadcast(16#0503, GID, Packet) ->
 	LID = 0, % TODO: handle the LID correctly
-	<< 100:32/little-unsigned-integer, 16#050301:24/unsigned-integer, _:40, 0:32, GID:32/little-unsigned-integer, 0:192,
+	<< 100:32/little-unsigned-integer, 16#050301:24/unsigned-integer, _:72, GID:32/little-unsigned-integer, _:192,
 		GID:32/little-unsigned-integer, LID:32/little-unsigned-integer, Direction:32/bits, Coords:96/bits, _:96,
-		Quest:32/little-unsigned-integer, MapType:32/little-unsigned-integer, MapNumber:32/little-unsigned-integer, MapEntry:32/little-unsigned-integer,
-		_:16, 0:16 >> = Packet,
+		Quest:32/little-unsigned-integer, MapType:32/little-unsigned-integer, MapNumber:32/little-unsigned-integer,
+		MapEntry:32/little-unsigned-integer, _:32 >> = Packet,
 	User = egs_db:users_select(GID),
 	NewUser = User#users{direction=Direction, coords=Coords, quest=Quest, maptype=MapType, mapnumber=MapNumber, mapentry=MapEntry},
 	egs_db:users_insert(NewUser),
