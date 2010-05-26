@@ -433,7 +433,7 @@ handle(16#021f, CSocket, GID, _, Packet) ->
 		[{uni, 16#ffffffff}] ->
 			log(GID, "uni selection (my room)"),
 			% 0230 0220
-			myroom_load(CSocket, GID, 1120000, 10, 423, 0);
+			myroom_load(CSocket, GID, 1120000, 0, 423, 0);
 		_ ->
 			log(GID, "uni selection (reload)"),
 			% 0230 0220
