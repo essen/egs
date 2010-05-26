@@ -309,8 +309,8 @@ loop(CSocket, GID, Version) ->
 loop(CSocket, GID, Version, SoFar) ->
 	receive
 		{psu_broadcast, Packet} ->
-			<< A:192/bits, _:64, B/bits >> = Packet,
-			Broadcast = << A/binary, 16#00011300:32, GID:32/little-unsigned-integer, B/binary >>,
+			<< A:16/bits, _:8, B:40/bits, _:32, C:96/bits, _:64, D/bits >> = Packet,
+			Broadcast = << A/binary, 3, B/binary, 16#00011300:32, C/binary, 16#00011300:32, GID:32/little-unsigned-integer, D/binary >>,
 			egs_proto:packet_send(CSocket, Broadcast),
 			?MODULE:loop(CSocket, GID, Version, SoFar);
 		{psu_chat, ChatGID, ChatName, ChatModifiers, ChatMessage} ->
