@@ -19,6 +19,10 @@
 %% EGS maps settings.
 
 -define(MAPS, [
+	% Current test mission
+
+	{ [1000013, 0, 1121], [{name, "Linear Line Test"}, {quest, "data/missions/test.quest.nbl"}, {zone, "data/missions/test.zone.nbl"},  {entries, []}] },
+
 	% Colony
 
 	{ [1100000, 0,   1], [{name, "Colony 1st Floor"},         {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone-0.nbl"},  {entries, [1,2,11,12,13,14,20,21]}] },

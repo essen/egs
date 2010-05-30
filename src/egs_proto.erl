@@ -304,6 +304,17 @@ send_loading_end(CSocket, GID) ->
 	Packet = << 16#0208:16, 0:208, GID:32/little-unsigned-integer, 0:96 >>,
 	packet_send(CSocket, Packet).
 
+%% @doc Send the player's current location.
+%% @todo Figure out what the last value is. No counter without it.
+
+send_location(CSocket, GID, Quest, MapType, MapNumber, Location) ->
+	UCS2Location = << << X:8, 0:8 >> || X <- Location >>,
+	Packet = << 16#100e0300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
+		1:32/little-unsigned-integer, MapNumber:16/little-unsigned-integer, MapType:16/little-unsigned-integer,
+		Quest:32/little-unsigned-integer, UCS2Location/binary >>,
+	PaddingSize = (128 - byte_size(Packet) - 4) * 8,
+	packet_send(CSocket, << Packet/binary, 0:PaddingSize, 1:32/little-unsigned-integer >>).
+
 %% @doc Send the map ID to be loaded by the client.
 
 send_map(CSocket, Quest, MapType, MapNumber, MapEntry) ->
@@ -342,6 +353,12 @@ send_quest(CSocket, Filename) ->
 	Packet = << 16#020e:16, 0:304, Size:32/little-unsigned-integer, 0:32, File/binary >>,
 	packet_send(CSocket, Packet).
 
+%% @doc Send the trial start notification.
+
+send_trial_start(CSocket, GID) ->
+	Packet = << 16#0c090300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:128 >>,
+	packet_send(CSocket, Packet).
+
 %% @doc Send the list of available universes.
 
 send_universe_cube(CSocket) ->
@@ -364,3 +381,16 @@ send_zone(CSocket, Filename) ->
 	Size = byte_size(File),
 	Packet = << 16#020f:16, 0:336, Size:32/little-unsigned-integer, File/binary >>,
 	packet_send(CSocket, Packet).
+
+%% @doc Send the zone initialization notification.
+
+send_zone_init(CSocket, GID, ZoneType) ->
+	case ZoneType of
+		mission ->
+			Var = << 16#06000500:32, 16#01000000:32, 0:64, 16#00040000:32, 16#00010000:32, 16#00140000:32 >>;
+		_ ->
+			Var = << 16#00040000:32, 0:160, 16#00140000:32 >>
+	end,
+	Packet = << 16#02000300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96, 16#01000000:32,
+		16#ffffffff:32, Var/binary, 16#ffffffff:32, 16#ffffffff:32 >>,
+	egs_proto:packet_send(CSocket, Packet).

@@ -184,6 +184,35 @@ char_select_load(CSocket, GID, Version, Number) ->
 	ssl:setopts(CSocket, [{active, true}]),
 	?MODULE:loop(CSocket, GID, Version).
 
+%% @doc Load the given map as a mission counter.
+
+counter_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
+	OldUser = egs_db:users_select(GID),
+	User = OldUser#users{quest=Quest, maptype=MapType, mapnumber=MapNumber, mapentry=MapEntry},
+	egs_db:users_insert(User),
+	[{status, 1}, {char, Char}, {options, _}] = char_load(User#users.folder, User#users.charnumber),
+	[{name, CounterName}, {quest, QuestFile}, {zone, ZoneFile}, {entries, _}] =
+		[{name, "LL counter"}, {quest, "data/lobby/counter.quest.nbl"}, {zone, "data/lobby/counter.zone.nbl"}, {entries, []}],
+	try
+		% 0c00
+		egs_proto:send_quest(CSocket, QuestFile),
+		% 0a05 010d
+		egs_proto:send_zone_init(CSocket, GID, counter),
+		egs_proto:send_zone(CSocket, ZoneFile),
+		egs_proto:send_map(CSocket, Quest, MapType, MapNumber, MapEntry),
+		egs_proto:send_location(CSocket, GID, Quest, MapType, MapNumber, CounterName),
+		% 0215 0215 020c 1202 1204 1206 1207
+		egs_proto:send_load_quest(CSocket, GID),
+		send_packet_201(CSocket, GID, User, Char),
+		% 0a06
+		egs_proto:send_loading_end(CSocket, GID),
+		egs_proto:send_camera_center(CSocket, GID)
+	catch
+		_ ->
+			ssl:close(CSocket),
+			log(GID, "send error, closing")
+	end.
+
 %% @doc Load the given map as a standard lobby.
 
 lobby_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
@@ -208,7 +237,7 @@ lobby_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		% 0c00
 		egs_proto:send_quest(CSocket, QuestFile),
 		% 0a05 0111 010d
-		send_packet_200(CSocket, GID),
+		egs_proto:send_zone_init(CSocket, GID, lobby),
 		egs_proto:send_zone(CSocket, ZoneFile),
 		egs_proto:send_map(CSocket, Quest, MapType, MapNumber, MapEntry),
 		% 100e 020c
@@ -217,6 +246,41 @@ lobby_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		% 0a06
 		Users = egs_db:users_select_others(GID),
 		send_packet_233(CSocket, GID, Users),
+		egs_proto:send_loading_end(CSocket, GID),
+		egs_proto:send_camera_center(CSocket, GID)
+	catch
+		_ ->
+			ssl:close(CSocket),
+			log(GID, "send error, closing")
+	end.
+
+%% @doc Load the given map as a mission.
+%% @todo One of the silenced packets enable a 04xx command sent by the client and related to enemies sync. Probably 12xx.
+
+mission_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
+	OldUser = egs_db:users_select(GID),
+	User = OldUser#users{quest=Quest, maptype=MapType, mapnumber=MapNumber, mapentry=MapEntry},
+	egs_db:users_insert(User),
+	[{status, 1}, {char, Char}, {options, _}] = char_load(User#users.folder, User#users.charnumber),
+	[{name, _}, {quest, QuestFile}, {zone, ZoneFile}, {entries, _}] = proplists:get_value([Quest, MapType, MapNumber], ?MAPS),
+	try
+		% 0c00
+		egs_proto:send_quest(CSocket, QuestFile),
+		% 0215 0a05 010d
+		egs_proto:send_zone_init(CSocket, GID, mission),
+		egs_proto:send_zone(CSocket, ZoneFile),
+		egs_proto:send_map(CSocket, Quest, MapType, MapNumber, MapEntry),
+		% 100e 0215 0215 0c09 020c
+		egs_proto:send_trial_start(CSocket, GID),
+
+		% mandatory packet to make enemies appear
+		{ok, << _:32, Packet/bits >>} = file:read_file("p/packet1202.bin"),
+		egs_proto:packet_send(CSocket, Packet),
+
+		% 1204 1206 1207
+		egs_proto:send_load_quest(CSocket, GID),
+		send_packet_201(CSocket, GID, User, Char),
+		% 0a06
 		egs_proto:send_loading_end(CSocket, GID),
 		egs_proto:send_camera_center(CSocket, GID)
 	catch
@@ -251,7 +315,7 @@ myroom_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		% 0c00
 		egs_proto:send_quest(CSocket, QuestFile),
 		% 0a05 0111 010d
-		send_packet_200(CSocket, GID),
+		egs_proto:send_zone_init(CSocket, GID, myroom),
 		egs_proto:send_zone(CSocket, ZoneFile),
 		egs_proto:send_map(CSocket, Quest, MapType, MapNumber, MapEntry),
 		myroom_send_packet(CSocket, "p/packet1332.bin"),
@@ -285,7 +349,7 @@ spaceport_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		% 0c00
 		egs_proto:send_quest(CSocket, QuestFile),
 		% 0a05
-		send_packet_200(CSocket, GID),
+		egs_proto:send_zone_init(CSocket, GID, spaceport),
 		egs_proto:send_zone(CSocket, ZoneFile),
 		egs_proto:send_map(CSocket, Quest, MapType, MapNumber, MapEntry),
 		% 100e 020c
@@ -486,9 +550,36 @@ handle(16#0807, CSocket, GID, _, Packet) ->
 	end;
 
 %% @doc Mission counter handler.
+%% @todo Make the egs_proto function name more clear. This isn't a lobby! It's just the same format.
 
-handle(16#0811, _, GID, _, _) ->
-	log(GID, "dismissed mission counter");
+handle(16#0811, CSocket, GID, _, Packet) ->
+	[{quest, Quest}, {maptype, MapType}, {mapnumber, MapNumber}, {mapentry, MapEntry}] = egs_proto:parse_lobby_change(Packet),
+	log(GID, io_lib:format("mission counter (~b,~b,~b,~b)", [Quest,MapType, MapNumber, MapEntry])),
+	counter_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry);
+
+%% @doc Mission select handler?
+%% @todo Load more than one mission.
+
+handle(16#0c01, CSocket, GID, _, _) ->
+	Packet = << 16#0c020300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96 >>,
+	egs_proto:packet_send(CSocket, Packet),
+	mission_load(CSocket, GID, 1000013, 0, 1121, 0); % load test mission!
+
+%% @doc Counter quests files request handler? Send huge number of quest files.
+%% @todo Handle correctly.
+
+handle(16#0c05, CSocket, _, _, _) ->
+	{ok, << _:32, Packet/bits >>} = file:read_file("p/packet0c06.bin"),
+	egs_proto:packet_send(CSocket, Packet);
+
+%% @doc Counter available mission list request handler.
+%% @todo Temporarily allow rare mission and LL all difficulties to all players.
+
+handle(16#0c0f, CSocket, GID, _, _) ->
+	Packet = << 16#0c100300:32, 0:32, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
+		16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#01a92800:32, 3, 3, 0,
+		3, 3, 3, 3, 0, 0:40, 3, 3, 3, 3, 3, 0:176 >>,
+	egs_proto:packet_send(CSocket, Packet);
 
 %% @doc Set flag handler. Associate a new flag with the character.
 %%      Just reply with a success value for now.
@@ -518,18 +609,17 @@ handle(16#0f0a, CSocket, GID, _, Orig) ->
 	egs_proto:packet_send(CSocket, Packet),
 	log(GID, "lobby event (can only chair so far)");
 
+%% @doc Counter initialization handler?
+%% @todo Handle correctly.
+
+handle(16#1710, CSocket, GID, _, _) ->
+	Packet = << 16#17110300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96 >>,
+	egs_proto:packet_send(CSocket, Packet);
+
 %% @doc Unknown command handler. Do nothing.
 
 handle(Command, _, GID, _, _) ->
 	log(GID, io_lib:format("(game) dismissed packet ~4.16.0b", [Command])).
-
-%% @todo Figure out what the packet is.
-
-send_packet_200(CSocket, GID) ->
-	{ok, File} = file:read_file("p/packet0200.bin"),
-	<< _:288, After/bits >> = File,
-	Packet = << 16#0200:16, 0:208, GID:32/little-unsigned-integer, After/binary >>,
-	egs_proto:packet_send(CSocket, Packet).
 
 %% @todo Figure out what the other things are.
 
