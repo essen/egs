@@ -65,6 +65,18 @@ users_select_all() ->
 users_select_others(GID) ->
 	do(qlc:q([X || X <- mnesia:table(users), X#users.gid /= GID, X#users.charnumber /= undefined])).
 
+%% @doc Select all other users in the same area. Return a list of #users records.
+
+users_select_others_in_area(Self) ->
+	do(qlc:q([X || X <- mnesia:table(users),
+		X#users.gid /= Self#users.gid,
+		X#users.charnumber /= undefined,
+		X#users.instanceid =:= Self#users.instanceid,
+		X#users.quest =:= Self#users.quest,
+		X#users.maptype =:= Self#users.maptype,
+		X#users.mapnumber =:= Self#users.mapnumber
+	])).
+
 %% @doc Insert or update an user.
 
 users_insert(User) ->

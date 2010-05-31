@@ -217,7 +217,7 @@ counter_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 
 lobby_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 	OldUser = egs_db:users_select(GID),
-	User = OldUser#users{quest=Quest, maptype=MapType, mapnumber=MapNumber, mapentry=MapEntry},
+	User = OldUser#users{instanceid=undefined, quest=Quest, maptype=MapType, mapnumber=MapNumber, mapentry=MapEntry},
 	egs_db:users_insert(User),
 	[{status, 1}, {char, Char}, {options, Options}] = char_load(User#users.folder, User#users.charnumber),
 	[{name, AreaName}, {quest, QuestFile}, {zone, ZoneFile}, {entries, _}] = proplists:get_value([Quest, MapType, MapNumber], ?MAPS,
@@ -262,7 +262,7 @@ lobby_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 
 mission_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 	OldUser = egs_db:users_select(GID),
-	User = OldUser#users{quest=Quest, maptype=MapType, mapnumber=MapNumber, mapentry=MapEntry},
+	User = OldUser#users{instanceid=GID, quest=Quest, maptype=MapType, mapnumber=MapNumber, mapentry=MapEntry},
 	egs_db:users_insert(User),
 	[{status, 1}, {char, Char}, {options, _}] = char_load(User#users.folder, User#users.charnumber),
 	[{name, AreaName}, {quest, QuestFile}, {zone, ZoneFile}, {entries, _}] = proplists:get_value([Quest, MapType, MapNumber], ?MAPS),
@@ -472,7 +472,7 @@ broadcast(Command, GID, Packet)
 			LID = Self#users.lid,
 			SafePacket = << A/binary, 16#00011300:32, GID:32/little-unsigned-integer, B/binary,
 				GID:32/little-unsigned-integer, LID:32/little-unsigned-integer, C/binary >>,
-			lists:foreach(fun(User) -> User#users.pid ! {psu_broadcast, SafePacket} end, egs_db:users_select_others(GID))
+			lists:foreach(fun(User) -> User#users.pid ! {psu_broadcast, SafePacket} end, egs_db:users_select_others_in_area(Self))
 	end.
 
 %% @doc Movement (non-broadcast) handler. Do nothing.
