@@ -221,7 +221,7 @@ lobby_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 	egs_db:users_insert(User),
 	[{status, 1}, {char, Char}, {options, Options}] = char_load(User#users.folder, User#users.charnumber),
 	[{name, AreaName}, {quest, QuestFile}, {zone, ZoneFile}, {entries, _}] = proplists:get_value([Quest, MapType, MapNumber], ?MAPS,
-		[{name, "dammy"}, {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone.nbl"}, {entries, []}]),
+		[{name, "dammy"}, {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone-0.nbl"}, {entries, []}]),
 	try
 		% broadcast spawn to other people
 		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_spawn, User} end, egs_db:users_select_others(GID)),
@@ -584,6 +584,11 @@ handle(16#0811, CSocket, GID, _, Packet) ->
 	[{quest, Quest}, {maptype, MapType}, {mapnumber, MapNumber}, {mapentry, MapEntry}] = egs_proto:parse_lobby_change(Packet),
 	log(GID, io_lib:format("mission counter (~b,~b,~b,~b)", [Quest,MapType, MapNumber, MapEntry])),
 	counter_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry);
+
+%% @doc Fragmented packet received. Just ignore it.
+
+handle(16#0b05, _, _, _, _) ->
+	ignore;
 
 %% @doc Mission select handler? Packet contains the selected mission number.
 %% @todo Load more than one mission.
