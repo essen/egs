@@ -227,7 +227,9 @@ lobby_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_spawn, User} end, egs_db:users_select_others(GID)),
 		% load lobby and character
 		egs_proto:send_character_selected(CSocket, GID, Char, Options),
-		% 0246 0a0a 1006
+		% 0246
+		send_packet_0a0a(CSocket, GID),
+		% 1006
 		send_packet_1005(CSocket, GID, Char),
 		% 1006 0210
 		egs_proto:send_universe_info(CSocket, GID),
@@ -243,7 +245,7 @@ lobby_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		% 100e 020c
 		egs_proto:send_load_quest(CSocket, GID),
 		send_packet_201(CSocket, GID, User, Char),
-		% 0a06
+		send_packet_0a06(CSocket, GID),
 		Users = egs_db:users_select_others(GID),
 		send_packet_233(CSocket, GID, Users),
 		egs_proto:send_loading_end(CSocket, GID),
@@ -270,8 +272,9 @@ mission_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		egs_proto:send_zone_init(CSocket, GID, mission),
 		egs_proto:send_zone(CSocket, ZoneFile),
 		egs_proto:send_map(CSocket, Quest, MapType, MapNumber, MapEntry),
-		% 100e 0215 0215 0c09 020c
+		% 100e 0215 0215
 		egs_proto:send_trial_start(CSocket, GID),
+		% 020c
 
 		% mandatory packet to make enemies appear
 		{ok, << _:32, Packet/bits >>} = file:read_file("p/packet1202.bin"),
@@ -280,7 +283,7 @@ mission_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		% 1204 1206 1207
 		egs_proto:send_load_quest(CSocket, GID),
 		send_packet_201(CSocket, GID, User, Char),
-		% 0a06
+		send_packet_0a06(CSocket, GID),
 		egs_proto:send_loading_end(CSocket, GID),
 		egs_proto:send_camera_center(CSocket, GID)
 	catch
@@ -474,6 +477,23 @@ broadcast(Command, GID, Packet)
 handle(16#0102, _, _, _, _) ->
 	ignore;
 
+%% @doc Weapon change handler. Fake it.
+%% @todo Others probably want to see that you changed your weapon.
+
+handle(16#0105, CSocket, GID, _, Orig) ->
+	log(GID, "weapon change (and more probably)"),
+	<< _:384, Rest/bits >> = Orig,
+	Packet = << 16#01050300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer,
+		0:64, GID:32/little-unsigned-integer, Rest/binary >>,
+	egs_proto:packet_send(CSocket, Packet);
+
+%% @doc Character death handler. Abort mission and redirect to 4th floor for now.
+%% @todo Recover from death correctly.
+
+handle(16#0110, CSocket, GID, _, _) ->
+	log(GID, "death (and more probably)"),
+	lobby_load(CSocket, GID, 1100000, 0, 4, 6);
+
 %% @doc Keepalive handler. Do nothing.
 
 handle(16#021c, _, _, _, _) ->
@@ -533,6 +553,11 @@ handle(16#0304, _, GID, Version, Packet) ->
 	log(GID, io_lib:format("chat from ~s: ~s", [[re:replace(LogName, "\\0", "", [global, {return, binary}])], [re:replace(LogMessage, "\\0", "", [global, {return, binary}])]])),
 	lists:foreach(fun(User) -> User#users.pid ! {psu_chat, GID, ActualName, ChatModifiers, ChatMessage} end, egs_db:users_select_all());
 
+%% @todo Handle this packet. Ignore for now.
+
+handle(16#0402, _, _, _, _) ->
+	ignore;
+
 %% @doc Map change handler.
 %%      Spaceports and my room are handled differently than normal lobbies.
 %% @todo Load 'Your room' correctly.
@@ -557,7 +582,7 @@ handle(16#0811, CSocket, GID, _, Packet) ->
 	log(GID, io_lib:format("mission counter (~b,~b,~b,~b)", [Quest,MapType, MapNumber, MapEntry])),
 	counter_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry);
 
-%% @doc Mission select handler?
+%% @doc Mission select handler? Packet contains the selected mission number.
 %% @todo Load more than one mission.
 
 handle(16#0c01, CSocket, GID, _, _) ->
@@ -598,6 +623,20 @@ handle(16#0d07, _, GID, _, Packet) ->
 	[{options, Options}] = egs_proto:parse_options_change(Packet),
 	User = egs_db:users_select(GID),
 	file:write_file(io_lib:format("save/~s/~b-character.options", [User#users.folder, User#users.charnumber]), Options);
+
+%% @doc Hit handler.
+%% @todo Finish the work on it.
+
+handle(16#0e00, CSocket, GID, _, Orig) ->
+	<< _:448, A:224/bits, B:128/bits, _/bits >> = Orig,
+	PlayerHP = 4401,
+	TargetHP = 0,
+	Damage = 58008,
+	Packet = << 16#0e070300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
+		1:32/little-unsigned-integer, 16#01050000:32, Damage:32/little-unsigned-integer,
+		A/binary, 0:64, PlayerHP:32/little-unsigned-integer, 0:32, 16#01000200:32,
+		0:32, TargetHP:32, 0:32, B/binary, 16#04320000:32, 16#80000000:32, 16#26030000:32, 16#89068d00:32, 16#0c1c0105:32 >>,
+	egs_proto:packet_send(CSocket, Packet);
 
 %% @doc Lobby event handler. Handle chairs!
 %%      Apparently used for elevator, sit on chairs, and more?
@@ -684,6 +723,18 @@ build_packet_233_contents(Users) ->
 		MapEntry:32/little-unsigned-integer, CharFile/binary, F/binary >>,
 	Next = build_packet_233_contents(Rest),
 	<< Chunk/binary, Next/binary >>.
+
+%% @todo Inventory related. Figure out everything in this packet and handle it correctly.
+
+send_packet_0a06(CSocket, GID) ->
+	{ok, << _:32, A:96/bits, _:32, B:96/bits, _:32, C:1440/bits, _:32, D/bits >>} = file:read_file("p/packet0a06.bin"),
+	egs_proto:packet_send(CSocket, << A/binary, GID:32/little-unsigned-integer, B/binary, GID:32/little-unsigned-integer, C/binary, GID:32/little-unsigned-integer, D/binary >>).
+
+%% @todo Inventory. Figure out everything in this packet and handle it correctly.
+
+send_packet_0a0a(CSocket, GID) ->
+	{ok, << _:32, A:224/bits, _:32, B/bits >>} = file:read_file("p/packet0a0a.bin"),
+	egs_proto:packet_send(CSocket, << A/binary, GID:32/little-unsigned-integer, B/binary >>).
 
 %% @todo Figure out what the packet is.
 
