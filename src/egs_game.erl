@@ -194,6 +194,8 @@ counter_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 	[{name, AreaName}, {quest, QuestFile}, {zone, ZoneFile}, {entries, _}] =
 		[{name, "LL counter"}, {quest, "data/lobby/counter.quest.nbl"}, {zone, "data/lobby/counter.zone.nbl"}, {entries, []}],
 	try
+		% broadcast unspawn to other people
+		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(OldUser)),
 		% 0c00
 		egs_proto:send_quest(CSocket, QuestFile),
 		% 0a05 010d
@@ -209,8 +211,7 @@ counter_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		egs_proto:send_camera_center(CSocket, GID)
 	catch
 		_ ->
-			ssl:close(CSocket),
-			log(GID, "send error, closing")
+			close(CSocket, GID)
 	end.
 
 %% @doc Load the given map as a standard lobby.
@@ -223,8 +224,9 @@ lobby_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 	[{name, AreaName}, {quest, QuestFile}, {zone, ZoneFile}, {entries, _}] = proplists:get_value([Quest, MapType, MapNumber], ?MAPS,
 		[{name, "dammy"}, {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone-0.nbl"}, {entries, []}]),
 	try
-		% broadcast spawn to other people
-		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_spawn, User} end, egs_db:users_select_others(GID)),
+		% broadcast spawn and unspawn to other people
+		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(OldUser)),
+		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_spawn, User} end, egs_db:users_select_others_in_area(User)),
 		% load lobby and character
 		egs_proto:send_character_selected(CSocket, GID, Char, Options),
 		% 0246
@@ -247,14 +249,12 @@ lobby_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		egs_proto:send_load_quest(CSocket, GID),
 		send_packet_201(CSocket, GID, User, Char),
 		send_packet_0a06(CSocket, GID),
-		Users = egs_db:users_select_others(GID),
-		send_packet_233(CSocket, GID, Users),
+		send_packet_233(CSocket, GID, egs_db:users_select_others_in_area(User)),
 		egs_proto:send_loading_end(CSocket, GID),
 		egs_proto:send_camera_center(CSocket, GID)
 	catch
 		_ ->
-			ssl:close(CSocket),
-			log(GID, "send error, closing")
+			close(CSocket, GID)
 	end.
 
 %% @doc Load the given map as a mission.
@@ -290,8 +290,7 @@ mission_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		egs_proto:send_camera_center(CSocket, GID)
 	catch
 		_ ->
-			ssl:close(CSocket),
-			log(GID, "send error, closing")
+			close(CSocket, GID)
 	end.
 
 %% @doc Load the given map as a player room.
@@ -306,8 +305,9 @@ myroom_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 	[{name, _}, {quest, QuestFile}, {zone, ZoneFile}, {entries, _}] = 
 		[{name, "dammy"}, {quest, "data/rooms/test.quest.nbl"}, {zone, "data/rooms/test.zone.nbl"}, {entries, []}],
 	try
-		% broadcast spawn to other people
-		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_spawn, User} end, egs_db:users_select_others(GID)),
+		% broadcast spawn and unspawn to other people
+		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(OldUser)),
+		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_spawn, User} end, egs_db:users_select_others_in_area(User)),
 		% load lobby and character
 		egs_proto:send_character_selected(CSocket, GID, Char, Options),
 		% 0246 0a0a 1006
@@ -334,8 +334,7 @@ myroom_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		egs_proto:send_camera_center(CSocket, GID)
 	catch
 		_ ->
-			ssl:close(CSocket),
-			log(GID, "send error, closing")
+			close(CSocket, GID)
 	end.
 
 myroom_send_packet(CSocket, Filename) ->
@@ -351,6 +350,8 @@ spaceport_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 	[{status, 1}, {char, Char}, {options, _}] = char_load(User#users.folder, User#users.charnumber),
 	[{name, AreaName}, {quest, QuestFile}, {zone, ZoneFile}, {entries, _}] = proplists:get_value([Quest, MapType, MapNumber], ?MAPS),
 	try
+		% broadcast unspawn to other people
+		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(OldUser)),
 		% 0c00
 		egs_proto:send_quest(CSocket, QuestFile),
 		% 0a05
@@ -365,8 +366,7 @@ spaceport_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		egs_proto:send_camera_center(CSocket, GID)
 	catch
 		_ ->
-			ssl:close(CSocket),
-			log(GID, "send error, closing")
+			close(CSocket, GID)
 	end.
 
 %% @doc Alias for the game main's loop when the buffer is empty.
@@ -389,8 +389,11 @@ loop(CSocket, GID, Version, SoFar) ->
 		{psu_keepalive} ->
 			egs_proto:send_keepalive(CSocket, GID),
 			?MODULE:loop(CSocket, GID, Version, SoFar);
-		{psu_player_spawn, PlayerGID} ->
-			send_spawn(CSocket, GID, PlayerGID),
+		{psu_player_spawn, Spawn} ->
+			send_spawn(CSocket, GID, Spawn),
+			?MODULE:loop(CSocket, GID, Version, SoFar);
+		{psu_player_unspawn, Spawn} ->
+			send_unspawn(CSocket, GID, Spawn),
 			?MODULE:loop(CSocket, GID, Version, SoFar);
 		{ssl, _, Data} ->
 			{Packets, Rest} = egs_proto:packet_split(<< SoFar/bits, Data/bits >>),
@@ -411,6 +414,8 @@ loop(CSocket, GID, Version, SoFar) ->
 
 close(CSocket, GID) ->
 	log(GID, "quit"),
+	User = egs_db:users_select(GID),
+	lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(User)),
 	egs_db:users_delete(GID),
 	ssl:close(CSocket).
 
@@ -806,7 +811,18 @@ send_packet_1005(CSocket, GID, Char) ->
 %%       Should be something along the lines of 203 201 204.
 
 send_spawn(CSocket, GID, _) ->
-	send_packet_233(CSocket, GID, egs_db:users_select_others(GID)).
+	send_packet_233(CSocket, GID, egs_db:users_select_others_in_area(egs_db:users_select(GID))).
+
+%% @doc Send a character unspawn notification.
+%% @todo It's probably right but who knows...
+
+send_unspawn(CSocket, GID, Spawn) ->
+	PlayerGID = Spawn#users.gid,
+	PlayerLID = Spawn#users.lid,
+	Packet = << 16#02040300:32, 0:32, 16#00001200:32, PlayerGID:32/little-unsigned-integer, 0:64,
+		16#00011300:32, GID:32/little-unsigned-integer, 0:64, PlayerGID:32/little-unsigned-integer,
+		PlayerLID:32/little-unsigned-integer, 5:32/little-unsigned-integer >>,
+	egs_proto:packet_send(CSocket, Packet).
 
 %% @doc Log message to the console.
 

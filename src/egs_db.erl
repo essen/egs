@@ -60,11 +60,6 @@ users_select(GID) ->
 users_select_all() ->
 	do(qlc:q([X || X <- mnesia:table(users), X#users.charnumber /= undefined])).
 
-%% @doc Select all other users. Return a list of #users records.
-
-users_select_others(GID) ->
-	do(qlc:q([X || X <- mnesia:table(users), X#users.gid /= GID, X#users.charnumber /= undefined])).
-
 %% @doc Select all other users in the same area. Return a list of #users records.
 
 users_select_others_in_area(Self) ->
