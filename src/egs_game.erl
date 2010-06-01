@@ -652,17 +652,12 @@ handle(16#0d07, _, GID, _, Packet) ->
 
 %% @doc Hit handler.
 %% @todo Finish the work on it.
+%% @todo First value at 2C is the number of hits. We don't need to know it though.
+%% @todo We should later send this into one 0e07 packet rather than many.
 
 handle(16#0e00, CSocket, GID, _, Orig) ->
-	<< _:448, A:224/bits, B:128/bits, _/bits >> = Orig,
-	PlayerHP = 4401,
-	TargetHP = 0,
-	Damage = 58008,
-	Packet = << 16#0e070300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
-		1:32/little-unsigned-integer, 16#01050000:32, Damage:32/little-unsigned-integer,
-		A/binary, 0:64, PlayerHP:32/little-unsigned-integer, 0:32, 16#01000200:32,
-		0:32, TargetHP:32, 0:32, B/binary, 16#04320000:32, 16#80000000:32, 16#26030000:32, 16#89068d00:32, 16#0c1c0105:32 >>,
-	egs_proto:packet_send(CSocket, Packet);
+	<< _:448, Data/bits >> = Orig,
+	handle_hits(CSocket, GID, Data);
 
 %% @doc Lobby event handler. Handle chairs!
 %%      Apparently used for elevator, sit on chairs, and more?
@@ -685,6 +680,23 @@ handle(16#1710, CSocket, GID, _, _) ->
 
 handle(Command, _, GID, _, _) ->
 	log(GID, io_lib:format("(game) dismissed packet ~4.16.0b", [Command])).
+
+%% @doc Handle all hits received.
+%% @todo Finish the work on it.
+
+handle_hits(_, _, << >>) ->
+	ok;
+handle_hits(CSocket, GID, Data) ->
+	<< A:224/bits, B:128/bits, _:288/bits, Rest/bits >> = Data,
+	PlayerHP = 4401,
+	TargetHP = 0,
+	Damage = 58008,
+	Packet = << 16#0e070300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
+		1:32/little-unsigned-integer, 16#01050000:32, Damage:32/little-unsigned-integer,
+		A/binary, 0:64, PlayerHP:32/little-unsigned-integer, 0:32, 16#01000200:32,
+		0:32, TargetHP:32, 0:32, B/binary, 16#04320000:32, 16#80000000:32, 16#26030000:32, 16#89068d00:32, 16#0c1c0105:32 >>,
+	egs_proto:packet_send(CSocket, Packet),
+	handle_hits(CSocket, GID, Rest).
 
 %% @todo Figure out what the other things are.
 
