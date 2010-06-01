@@ -480,15 +480,33 @@ broadcast(Command, GID, Packet)
 handle(16#0102, _, _, _, _) ->
 	ignore;
 
-%% @doc Weapon change handler. Fake it.
+%% @doc Weapon equip, unequip, item drop, and more... handler. Do what we can.
+%%      Melee uses a format similar to: AAAA--BBCCCC----DDDDDDDDEE----FF with
+%%      AAAA the attack sound effect, BB the range, CCCC and DDDDDDDD unknown but related to angular range or similar, EE number of targets and FF the model.
+%%      Bullets and tech weapons formats are unknown but likely use a slightly different format.
 %% @todo Others probably want to see that you changed your weapon.
+%% @todo Apparently B is always ItemID+1. Not sure why.
+%% @todo Currently use a separate file for the data sent for the weapons.
 
 handle(16#0105, CSocket, GID, _, Orig) ->
-	log(GID, "weapon change (and more probably)"),
-	<< _:384, Rest/bits >> = Orig,
-	Packet = << 16#01050300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer,
-		0:64, GID:32/little-unsigned-integer, Rest/binary >>,
-	egs_proto:packet_send(CSocket, Packet);
+	<< _:384, A:32/little-unsigned-integer, ItemID:8, Action:8, B:16, C:32/little-unsigned-integer, _/bits >> = Orig,
+	case Action of
+		1 -> % equip weapon
+			log(GID, "0105 - equip weapon"),
+			{ok, File} = file:read_file("p/packet0105_1.bin"),
+			Packet = << 16#01050300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer,
+				0:64, GID:32/little-unsigned-integer, A:32/little-unsigned-integer, ItemID, Action, B:16/little-unsigned-integer, C:32/little-unsigned-integer,
+				File/binary >>,
+			egs_proto:packet_send(CSocket, Packet);
+		2 -> % unequip weapon
+			log(GID, "0105 - unequip weapon"),
+			Packet = << 16#01050300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer,
+				0:64, GID:32/little-unsigned-integer, A:32/little-unsigned-integer, ItemID, Action, B:16/little-unsigned-integer, C:32/little-unsigned-integer >>,
+			egs_proto:packet_send(CSocket, Packet);
+		_ ->
+			log(GID, "0105 - ignored"),
+			ignored
+	end;
 
 %% @doc Character death handler. Abort mission and redirect to 4th floor for now.
 %% @todo Recover from death correctly.
