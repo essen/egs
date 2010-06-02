@@ -73,6 +73,7 @@ process(CSocket, Version) ->
 	end.
 
 %% @doc Game server auth request handler.
+%% @todo Kill existing connections if the user log back in with the same account. Probably could use a sane timeout time too.
 
 process_handle(16#020d, CSocket, Version, Packet) ->
 	[{gid, GID}, {auth, Auth}] = egs_proto:parse_game_auth(Packet),
@@ -613,7 +614,7 @@ handle(16#0811, CSocket, GID, _, Packet) ->
 handle(16#0b05, _, _, _, _) ->
 	ignore;
 
-%% @doc Mission select handler? Packet contains the selected mission number.
+%% @doc Start mission handler. Packet contains the selected mission number.
 %% @todo Load more than one mission.
 
 handle(16#0c01, CSocket, GID, _, _) ->
