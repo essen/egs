@@ -514,6 +514,14 @@ handle(16#0105, CSocket, GID, _, Orig) ->
 			ignored
 	end;
 
+handle(16#010a, CSocket, GID, _, Orig) ->
+	<< _:384, A:32/little-unsigned-integer, B:32/little-unsigned-integer, C:32/little-unsigned-integer >> = Orig,
+	log(GID, io_lib:format("shop listing request (~b, ~b, ~b)", [A, B, C])),
+	{ok, File} = file:read_file("p/itemshop.bin"),
+	Packet = << 16#010a0300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32,
+		GID:32/little-unsigned-integer, 0:64, GID:32/little-unsigned-integer, 0:32, File/binary >>,
+	egs_proto:packet_send(CSocket, Packet);
+
 %% @doc Character death handler. Abort mission and redirect to 4th floor for now.
 %% @todo Recover from death correctly.
 
@@ -699,6 +707,68 @@ handle(16#1709, CSocket, GID, _, _) ->
 handle(16#1710, CSocket, GID, _, _) ->
 	Packet = << 16#17110300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96 >>,
 	egs_proto:packet_send(CSocket, Packet);
+
+%% @doc Dialog request handler. Do what we can.
+%% @todo Handle correctly.
+
+handle(16#1a01, CSocket, GID, _, Orig) ->
+	<< _:384, A:8, B:8, _:16, C:8, _/bits >> = Orig,
+	file:write_file("1a01.bin", Orig),
+	case B of
+		0 ->
+			case A of
+				0 ->
+					case C of
+						2 ->
+							log(GID, "Lumilass?"),
+							Command = << 16#1a030300:32 >>,
+							{ok, File} = file:read_file("p/lumilassA.bin"),
+							Packet = << 0:32, File/binary >>;
+						3 ->
+							log(GID, "PP cube?"),
+							Command = << 16#1a040300:32 >>,
+							{ok, File} = file:read_file("p/ppcube.bin"),
+							Packet = << 0:32, File/binary >>;
+						_ ->
+							Command = << 16#1a020300:32 >>,
+							Packet = << >>,
+							log(GID, "unhandled 1a01 B A C")
+					end;
+				80 ->
+					log(GID, "NPC dialog request?"),
+					Command = << 16#1a020300:32 >>,
+					Packet = << 0:32, 16#11001100:32, 16#03000900:32 >>;
+				90 ->
+					log(GID, "unknown 1a01 90"),
+					Command = << 16#1a020300:32 >>,
+					Packet = << 0:32, 16#05000100:32, 16#04000500:32 >>;
+				91 ->
+					log(GID, "unknown 1a01 91"),
+					Command = << 16#1a020300:32 >>,
+					Packet = << 0:32, 16#05000500:32, 16#04000700:32 >>;
+				92 ->
+					log(GID, "unknown 1a01 92"),
+					Command = << 16#1a020300:32 >>,
+					Packet = << 0:32, 16#05000800:32, 16#04000000:32 >>;
+				93 ->
+					log(GID, "unknown 1a01 93"),
+					Command = << 16#1a020300:32 >>,
+					Packet = << 0:32, 16#05001200:32, 16#04000000:32 >>;
+				_ ->
+					Command = << 16#1a020300:32 >>,
+					Packet = << >>,
+					log(GID, "unhandled 1a01 in A case")
+			end;
+		2 ->
+			log(GID, "unknown 1a01 B"),
+			Command = << 16#1a020300:32 >>,
+			Packet = << 0:32, 16#00000100:32, 0:32 >>;
+		_ ->
+			Command = << 16#1a020300:32 >>,
+			Packet = << >>,
+			log(GID, "unhandled 1a01 in B case")
+	end,
+	egs_proto:packet_send(CSocket, << Command/binary, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Packet/binary >>);
 
 %% @doc Unknown command handler. Do nothing.
 
