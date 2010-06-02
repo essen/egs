@@ -683,7 +683,7 @@ handle(16#0f0a, CSocket, GID, _, Orig) ->
 	egs_proto:packet_send(CSocket, Packet),
 	log(GID, "lobby event (can only chair so far)");
 
-%% @doc Mission selection handler? Send a party information recap.
+%% @doc Party information recap request.
 %% @todo Handle when the party already exists! And stop doing it wrong.
 
 handle(16#1705, CSocket, GID, _, _) ->
@@ -693,6 +693,12 @@ handle(16#1705, CSocket, GID, _, _) ->
 		16#00000300:32, 16#d5c0faff:32, 0:64, CharName/binary, 16#78000000:32, 16#01010000:32,
 		0:1536, 16#0100c800:32, 16#0601010a:32, 16#ffffffff:32, 0:32 >>,
 	egs_proto:packet_send(CSocket, Packet);
+
+%% @doc Mission selected handler. Send the currently selected mission.
+%% @todo Probably need to dispatch that info to other party members in the same counter.
+
+handle(16#1707, _, _, _, _) ->
+	ignore;
 
 %% @doc Party settings request handler. Item distribution is random for now.
 %% @todo Handle correctly.
