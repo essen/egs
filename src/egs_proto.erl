@@ -288,6 +288,17 @@ send_hello(CSocket, SessionID) ->
 	Packet = << 16#0202:16, 0:304, SessionID:32/little-unsigned-integer >>,
 	packet_send(CSocket, Packet).
 
+%% @doc Init quest.
+
+send_init_quest(CSocket, GID, QuestID) ->
+	Packet = << 16#0c000300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, QuestID:32/little-unsigned-integer,
+		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
+		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
+		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
+		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32 >>,
+	file:write_file("0c00.bin", Packet),
+	packet_send(CSocket, Packet).
+
 %% @doc Keepalive.
 
 send_keepalive(CSocket, GID) ->

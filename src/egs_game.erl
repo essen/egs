@@ -197,7 +197,7 @@ counter_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 	try
 		% broadcast unspawn to other people
 		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(OldUser)),
-		% 0c00
+		egs_proto:send_init_quest(CSocket, GID, 16#7fffffff),
 		egs_proto:send_quest(CSocket, QuestFile),
 		% 0a05 010d
 		egs_proto:send_zone_init(CSocket, GID, counter),
@@ -239,7 +239,7 @@ lobby_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		egs_proto:send_player_card(CSocket, GID, Char),
 		% 1501 1512 0303
 		egs_proto:send_npc_info(CSocket, GID),
-		% 0c00
+		egs_proto:send_init_quest(CSocket, GID, Quest),
 		egs_proto:send_quest(CSocket, QuestFile),
 		% 0a05 0111 010d
 		egs_proto:send_zone_init(CSocket, GID, lobby),
@@ -259,7 +259,8 @@ lobby_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 	end.
 
 %% @doc Load the given map as a mission.
-%% @todo One of the silenced packets enable a 04xx command sent by the client and related to enemies sync. Probably 12xx.
+%% @todo One of the silenced packets enable a 04xx command sent by the client and related to enemies sync. Probably 1202.
+%% @todo Maybe the quest doesn't work right because of the lack of this odd checksum-like value.
 
 mission_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 	OldUser = egs_db:users_select(GID),
@@ -268,7 +269,7 @@ mission_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 	[{status, 1}, {char, Char}, {options, _}] = char_load(User#users.folder, User#users.charnumber),
 	[{name, AreaName}, {quest, QuestFile}, {zone, ZoneFile}, {entries, _}] = proplists:get_value([Quest, MapType, MapNumber], ?MAPS),
 	try
-		% 0c00
+		egs_proto:send_init_quest(CSocket, GID, Quest),
 		egs_proto:send_quest(CSocket, QuestFile),
 		% 0215 0a05 010d
 		egs_proto:send_zone_init(CSocket, GID, mission),
@@ -318,7 +319,7 @@ myroom_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		egs_proto:send_player_card(CSocket, GID, Char),
 		% 1501 1512 0303
 		egs_proto:send_npc_info(CSocket, GID),
-		% 0c00
+		egs_proto:send_init_quest(CSocket, GID, Quest),
 		egs_proto:send_quest(CSocket, QuestFile),
 		% 0a05 0111 010d
 		egs_proto:send_zone_init(CSocket, GID, myroom),
@@ -353,7 +354,7 @@ spaceport_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 	try
 		% broadcast unspawn to other people
 		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(OldUser)),
-		% 0c00
+		egs_proto:send_init_quest(CSocket, GID, Quest),
 		egs_proto:send_quest(CSocket, QuestFile),
 		% 0a05
 		egs_proto:send_zone_init(CSocket, GID, spaceport),
@@ -625,7 +626,7 @@ handle(16#0b05, _, _, _, _) ->
 %% @doc Start mission handler. Packet contains the selected mission number.
 %% @todo Load more than one mission.
 
-handle(16#0c01, CSocket, GID, _, _) ->
+handle(16#0c01, CSocket, GID, _, Orig) ->
 	Packet = << 16#0c020300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96 >>,
 	egs_proto:packet_send(CSocket, Packet),
 	mission_load(CSocket, GID, 1000013, 0, 1121, 0); % load test mission!
