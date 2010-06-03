@@ -425,13 +425,13 @@ close(CSocket, GID) ->
 	ssl:close(CSocket).
 
 %% @doc Dispatch the command to the right handler.
+%%      Command 0b05 uses the channel for something else. Conflicts could occur. Better to just ignore it anyway.
 
 dispatch(CSocket, GID, Version, Orig) ->
 	<< _:32, Command:16/unsigned-integer, Channel:8/little-unsigned-integer, _/bits >> = Orig,
 	case [Command, Channel] of
 		[16#0b05, _] ->
-			% 0b05 uses the channel for something else, conflicts may occur
-			handle(Command, CSocket, GID, Version, Orig);
+			ignore;
 		[_, 1] ->
 			broadcast(Command, GID, Orig);
 		_ ->
@@ -619,11 +619,6 @@ handle(16#0811, CSocket, GID, _, Orig) ->
 	[{quest, Quest}, {maptype, MapType}, {mapnumber, MapNumber}, {mapentry, MapEntry}] = egs_proto:parse_lobby_change(Orig),
 	log(GID, "mission counter (~b,~b,~b,~b)", [Quest,MapType, MapNumber, MapEntry]),
 	counter_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry);
-
-%% @doc Fragmented packet received. Just ignore it.
-
-handle(16#0b05, _, _, _, _) ->
-	ignore;
 
 %% @doc Start mission handler. Packet contains the selected mission number.
 %% @todo Load more than one mission.
