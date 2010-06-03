@@ -45,7 +45,7 @@ accept(LSocket) ->
 			ssl:ssl_accept(CSocket),
 			try
 				log(0, "hello (new connection)"),
-				egs_proto:send_hello(CSocket),
+				egs_proto:packet_send(CSocket, << 16#02020300:32, 0:352 >>),
 				Pid = spawn_link(?MODULE, process, [CSocket, 0]),
 				ssl:controlling_process(CSocket, Pid)
 			catch
@@ -626,7 +626,7 @@ handle(16#0b05, _, _, _, _) ->
 %% @doc Start mission handler. Packet contains the selected mission number.
 %% @todo Load more than one mission.
 
-handle(16#0c01, CSocket, GID, _, Orig) ->
+handle(16#0c01, CSocket, GID, _, _) ->
 	Packet = << 16#0c020300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96 >>,
 	egs_proto:packet_send(CSocket, Packet),
 	mission_load(CSocket, GID, 1000013, 0, 1121, 0); % load test mission!

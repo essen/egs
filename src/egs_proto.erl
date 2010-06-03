@@ -277,17 +277,6 @@ send_global(CSocket, Type, Message, Duration) ->
 			ignore
 	end.
 
-%% @doc Say hello. Used by the game server where a temporary session ID isn't needed.
-
-send_hello(CSocket) ->
-	send_hello(CSocket, 0).
-
-%% @doc Say hello and send a temporary session ID to the client. Used by the login server.
-
-send_hello(CSocket, SessionID) ->
-	Packet = << 16#0202:16, 0:304, SessionID:32/little-unsigned-integer >>,
-	packet_send(CSocket, Packet).
-
 %% @doc Init quest.
 
 send_init_quest(CSocket, GID, QuestID) ->

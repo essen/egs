@@ -58,7 +58,7 @@ accept(LSocket, SessionID) ->
 
 process(CSocket, SessionID) ->
 	log(SessionID, "hello"),
-	egs_proto:send_hello(CSocket, SessionID),
+	egs_proto:packet_send(CSocket, << 16#02020300:32, 0:288, SessionID:32/little-unsigned-integer >>),
 	?MODULE:loop(CSocket, SessionID).
 
 %% @doc Main loop for the login server.
