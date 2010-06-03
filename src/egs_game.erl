@@ -154,6 +154,11 @@ char_select_handle(16#0d06, CSocket, GID, Version, _) ->
 		char_load(User#users.folder, 3)),
 	?MODULE:char_select(CSocket, GID, Version);
 
+%% @doc Silently ignore packet 0818. Gives CPU/GPU information.
+
+char_select_handle(16#0818, CSocket, GID, Version, _) ->
+	?MODULE:char_select(CSocket, GID, Version);
+
 %% @doc Unknown command handler. Do nothing.
 
 char_select_handle(Command, CSocket, GID, Version, _) ->
