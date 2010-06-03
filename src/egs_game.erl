@@ -72,7 +72,6 @@ process(CSocket, Version) ->
 	end.
 
 %% @doc Game server auth request handler.
-%% @todo Kill existing connections if the user log back in with the same account. Probably could use a sane timeout time too.
 
 process_handle(16#020d, CSocket, Version, Orig) ->
 	[{gid, GID}, {auth, Auth}] = egs_proto:parse_game_auth(Orig),
