@@ -234,11 +234,13 @@ send_chat(CSocket, _, FromGID, FromName, Modifiers, Message) ->
 	packet_send(CSocket, Packet).
 
 %% @doc Send the character flags list.
+%%      Sent without fragmentation on official for unknown reasons. Do the same here.
 
 send_flags(CSocket, GID) ->
 	{ok, Flags} = file:read_file("p/flags.bin"),
-	Packet = << 16#0d05:16, 0:80, GID:32/little-unsigned-integer, 0:96, GID:32/little-unsigned-integer, 0:64, Flags/binary >>,
-	packet_send(CSocket, Packet).
+	Packet = << 16#0d050300:32, 0:32, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Flags/binary >>,
+	Size = 4 + byte_size(Packet),
+	ssl:send(CSocket, << Size:32/little-unsigned-integer, Packet/binary >>).
 
 %% @doc Send the IP and port of the game server the player is sent to.
 
