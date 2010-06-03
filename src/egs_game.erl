@@ -44,7 +44,6 @@ accept(LSocket) ->
 		{ok, CSocket} ->
 			ssl:ssl_accept(CSocket),
 			try
-				log(0, "hello (new connection)"),
 				egs_proto:packet_send(CSocket, << 16#02020300:32, 0:352 >>),
 				Pid = spawn_link(?MODULE, process, [CSocket, 0]),
 				ssl:controlling_process(CSocket, Pid)
@@ -69,7 +68,7 @@ process(CSocket, Version) ->
 			reload,
 			?MODULE:process(CSocket, Version);
 		{error, closed} ->
-			log(0, "recv error, closing")
+			closed
 	end.
 
 %% @doc Game server auth request handler.
@@ -84,14 +83,14 @@ process_handle(16#020d, CSocket, Version, Packet) ->
 		User ->
 			case User#users.auth of
 				Auth ->
-					log(GID, "good auth, proceed"),
+					log(GID, "auth success"),
 					LID = 1 + egs_db:next(lobby) rem 1023,
 					Time = calendar:datetime_to_gregorian_seconds(calendar:universal_time()),
 					egs_db:users_insert(#users{gid=GID, pid=self(), socket=CSocket, auth=success, time=Time, folder=User#users.folder, lid=LID}),
 					egs_proto:send_flags(CSocket, GID),
 					?MODULE:char_select(CSocket, GID, Version);
 				_ ->
-					log(GID, "bad auth, closing"),
+					log(GID, "quit, auth failed"),
 					egs_db:users_delete(GID),
 					ssl:close(CSocket)
 			end
@@ -106,7 +105,7 @@ process_handle(16#080e, CSocket, _, Packet) ->
 %% @doc Unknown command handler. Do nothing.
 
 process_handle(Command, CSocket, Version, _) ->
-	log(0, io_lib:format("(process) dismissed packet ~4.16.0b", [Command])),
+	log(0, "(process) dismissed packet ~4.16.0b", [Command]),
 	?MODULE:process(CSocket, Version).
 
 %% @doc Character selection screen loop.
@@ -122,7 +121,7 @@ char_select(CSocket, GID, Version) ->
 			reload,
 			?MODULE:char_select(CSocket, GID, Version);
 		{error, closed} ->
-			log(GID, "recv error, closing"),
+			log(GID, "quit"),
 			egs_db:users_delete(GID)
 	end.
 
@@ -147,7 +146,6 @@ char_select_handle(16#0d02, CSocket, GID, Version, Packet) ->
 %% @doc Character selection screen request.
 
 char_select_handle(16#0d06, CSocket, GID, Version, _) ->
-	log(GID, "send character selection screen"),
 	User = egs_db:users_select(GID),
 	egs_proto:send_character_list(CSocket, GID,
 		char_load(User#users.folder, 0),
@@ -159,7 +157,7 @@ char_select_handle(16#0d06, CSocket, GID, Version, _) ->
 %% @doc Unknown command handler. Do nothing.
 
 char_select_handle(Command, CSocket, GID, Version, _) ->
-	log(GID, io_lib:format("(char_select) dismissed packet ~4.16.0b", [Command])),
+	log(GID, "(char_select) dismissed packet ~4.16.0b", [Command]),
 	?MODULE:char_select(CSocket, GID, Version).
 
 %% @doc Load the given character's data.
@@ -517,17 +515,17 @@ handle(16#0105, CSocket, GID, _, Orig) ->
 
 handle(16#010a, CSocket, GID, _, Orig) ->
 	<< _:384, A:32/little-unsigned-integer, B:32/little-unsigned-integer, C:32/little-unsigned-integer >> = Orig,
-	log(GID, io_lib:format("shop listing request (~b, ~b, ~b)", [A, B, C])),
+	log(GID, "shop listing request (~b, ~b, ~b)", [A, B, C]),
 	{ok, File} = file:read_file("p/itemshop.bin"),
 	Packet = << 16#010a0300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32,
 		GID:32/little-unsigned-integer, 0:64, GID:32/little-unsigned-integer, 0:32, File/binary >>,
 	egs_proto:packet_send(CSocket, Packet);
 
-%% @doc Character death handler. Abort mission and redirect to 4th floor for now.
+%% @doc Character death, and more, handler. Abort mission and redirect to 4th floor for now.
 %% @todo Recover from death correctly.
 
 handle(16#0110, CSocket, GID, _, _) ->
-	log(GID, "death (and more probably)"),
+	log(GID, "death (and more)"),
 	lobby_load(CSocket, GID, 1100000, 0, 4, 6);
 
 %% @doc Keepalive handler. Do nothing.
@@ -537,8 +535,7 @@ handle(16#021c, _, _, _, _) ->
 
 %% @doc Uni cube handler.
 
-handle(16#021d, CSocket, GID, _, _) ->
-	log(GID, "uni cube"),
+handle(16#021d, CSocket, _, _, _) ->
 	egs_proto:send_universe_cube(CSocket);
 
 %% @doc Uni selection handler.
@@ -548,8 +545,8 @@ handle(16#021d, CSocket, GID, _, _) ->
 
 handle(16#021f, CSocket, GID, _, Packet) ->
 	case egs_proto:parse_uni_select(Packet) of
-		[{uni, 0}] ->
-			log(GID, "uni selection cancelled");
+		[{uni, 0}] -> % cancelled uni selection
+			ignore;
 		[{uni, 16#ffffffff}] ->
 			log(GID, "uni selection (my room)"),
 			% 0230 0220
@@ -586,7 +583,7 @@ handle(16#0304, _, GID, Version, Packet) ->
 	[LogName|_] = re:split(ActualName, "\\0\\0", [{return, binary}]),
 	[TmpMessage|_] = re:split(ChatMessage, "\\0\\0", [{return, binary}]),
 	LogMessage = re:replace(TmpMessage, "\\n", " ", [global, {return, binary}]),
-	log(GID, io_lib:format("chat from ~s: ~s", [[re:replace(LogName, "\\0", "", [global, {return, binary}])], [re:replace(LogMessage, "\\0", "", [global, {return, binary}])]])),
+	log(GID, "chat from ~s: ~s", [[re:replace(LogName, "\\0", "", [global, {return, binary}])], [re:replace(LogMessage, "\\0", "", [global, {return, binary}])]]),
 	lists:foreach(fun(User) -> User#users.pid ! {psu_chat, GID, ActualName, ChatModifiers, ChatMessage} end, egs_db:users_select_all());
 
 %% @todo Handle this packet. Ignore for now.
@@ -600,7 +597,7 @@ handle(16#0402, _, _, _, _) ->
 
 handle(16#0807, CSocket, GID, _, Packet) ->
 	[{quest, Quest}, {maptype, MapType}, {mapnumber, MapNumber}, {mapentry, MapEntry}] = egs_proto:parse_lobby_change(Packet),
-	log(GID, io_lib:format("lobby change (~b,~b,~b,~b)", [Quest,MapType, MapNumber, MapEntry])),
+	log(GID, "lobby change (~b,~b,~b,~b)", [Quest,MapType, MapNumber, MapEntry]),
 	case {Quest, MapType, MapNumber, MapEntry} of
 		{1104000, 0, 900, 0} ->
 			spaceport_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry);
@@ -615,7 +612,7 @@ handle(16#0807, CSocket, GID, _, Packet) ->
 
 handle(16#0811, CSocket, GID, _, Packet) ->
 	[{quest, Quest}, {maptype, MapType}, {mapnumber, MapNumber}, {mapentry, MapEntry}] = egs_proto:parse_lobby_change(Packet),
-	log(GID, io_lib:format("mission counter (~b,~b,~b,~b)", [Quest,MapType, MapNumber, MapEntry])),
+	log(GID, "mission counter (~b,~b,~b,~b)", [Quest,MapType, MapNumber, MapEntry]),
 	counter_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry);
 
 %% @doc Fragmented packet received. Just ignore it.
@@ -653,7 +650,7 @@ handle(16#0c0f, CSocket, GID, _, _) ->
 
 handle(16#0d04, CSocket, GID, _, Orig) ->
 	<< _:352, Flag:128/bits, A:16/bits, _:8, B/bits >> = Orig,
-	log(GID, io_lib:format("flag handler for ~s", [re:replace(Flag, "\\0+", "", [global, {return, binary}])])),
+	log(GID, "flag handler for ~s", [re:replace(Flag, "\\0+", "", [global, {return, binary}])]),
 	Packet = << 16#0d040300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Flag/binary, A/binary, 1, B/binary >>,
 	egs_proto:packet_send(CSocket, Packet);
 
@@ -780,7 +777,7 @@ handle(16#1a01, CSocket, GID, _, Orig) ->
 %% @doc Unknown command handler. Do nothing.
 
 handle(Command, _, GID, _, _) ->
-	log(GID, io_lib:format("(game) dismissed packet ~4.16.0b", [Command])).
+	log(GID, "dismissed packet ~4.16.0b", [Command]).
 
 %% @doc Handle all hits received.
 %% @todo Finish the work on it.
@@ -906,3 +903,7 @@ send_unspawn(CSocket, GID, Spawn) ->
 
 log(GID, Message) ->
 	io:format("game (~.10b): ~s~n", [GID, Message]).
+
+log(GID, Message, Format) ->
+	RealMessage = io_lib:format(Message, Format),
+	log(GID, RealMessage).
