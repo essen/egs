@@ -77,14 +77,14 @@ loop(CSocket, SessionID) ->
 			reload,
 			?MODULE:loop(CSocket, SessionID);
 		{error, closed} ->
-			log(SessionID, "recv error, closing"),
+			log(SessionID, "quit"),
 			egs_db:users_delete(SessionID)
 	end.
 
 %% @doc Game server info request handler.
 
 handle(16#0217, CSocket, SessionID, _) ->
-	log(SessionID, "send game server info"),
+	log(SessionID, "forward to game server"),
 	IP = ?GAME_IP,
 	Port = ?GAME_PORT,
 	Packet = << 16#02160300:32, 0:192, SessionID:32/little-unsigned-integer, 0:64, IP/binary, Port:32/little-unsigned-integer >>,
@@ -102,7 +102,7 @@ handle(16#0219, CSocket, SessionID, Orig) ->
 	<< _:352, UsernameBlob:192/bits, PasswordBlob:192/bits, _/bits >> = Orig,
 	Username = re:replace(UsernameBlob, "\\0", "", [global, {return, binary}]),
 	Password = re:replace(PasswordBlob, "\\0", "", [global, {return, binary}]),
-	log(SessionID, io_lib:format("auth success for ~s ~s", [Username, Password])),
+	log(SessionID, "auth success for ~s ~s", [Username, Password]),
 	Auth = crypto:rand_bytes(4),
 	Folder = << Username/binary, "-", Password/binary >>,
 	Time = calendar:datetime_to_gregorian_seconds(calendar:universal_time()),
@@ -116,7 +116,7 @@ handle(16#0219, CSocket, SessionID, Orig) ->
 
 handle(Command, CSocket, SessionID, Orig) when Command =:= 16#0226; Command =:= 16#023f ->
 	<< _:352, Page:8/little-unsigned-integer, _/bits >> = Orig,
-	log(SessionID, io_lib:format("send MOTD page ~.10b", [Page + 1])),
+	log(SessionID, "send MOTD page ~.10b", [Page + 1]),
 	{ok, File} = file:read_file("conf/motd.txt"),
 	Tokens = re:split(File, "\n."),
 	MOTD = << << Line/binary, "\n", 0 >> || Line <- lists:sublist(Tokens, 1 + Page * 15, 15) >>,
@@ -127,9 +127,13 @@ handle(Command, CSocket, SessionID, Orig) when Command =:= 16#0226; Command =:= 
 %% @doc Unknown command handler. Do nothing.
 
 handle(Command, _, SessionID, _) ->
-	log(SessionID, io_lib:format("(login) dismissed packet ~4.16.0b", [Command])).
+	log(SessionID, "dismissed packet ~4.16.0b", [Command]).
 
 %% @doc Log message to the console.
 
 log(SessionID, Message) ->
 	io:format("login (~.10b): ~s~n", [SessionID, Message]).
+
+log(SessionID, Message, Format) ->
+	RealMessage = io_lib:format(Message, Format),
+	log(SessionID, RealMessage).
