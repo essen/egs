@@ -65,9 +65,9 @@ process(CSocket, SessionID) ->
 
 loop(CSocket, SessionID) ->
 	case egs_proto:packet_recv(CSocket, 5000) of
-		{ok, Packet} ->
-			<< _:32, Command:16/unsigned-integer, _/bits >> = Packet,
-			case handle(Command, CSocket, SessionID, Packet) of
+		{ok, Orig} ->
+			<< _:32, Command:16/unsigned-integer, _/bits >> = Orig,
+			case handle(Command, CSocket, SessionID, Orig) of
 				closed ->
 					ignore;
 				_ ->

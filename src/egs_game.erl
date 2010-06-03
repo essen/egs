@@ -61,9 +61,9 @@ accept(LSocket) ->
 
 process(CSocket, Version) ->
 	case egs_proto:packet_recv(CSocket, 5000) of
-		{ok, Packet} ->
-			<< _:32, Command:16/unsigned-integer, _/bits >> = Packet,
-			process_handle(Command, CSocket, Version, Packet);
+		{ok, Orig} ->
+			<< _:32, Command:16/unsigned-integer, _/bits >> = Orig,
+			process_handle(Command, CSocket, Version, Orig);
 		{error, timeout} ->
 			reload,
 			?MODULE:process(CSocket, Version);
@@ -74,8 +74,8 @@ process(CSocket, Version) ->
 %% @doc Game server auth request handler.
 %% @todo Kill existing connections if the user log back in with the same account. Probably could use a sane timeout time too.
 
-process_handle(16#020d, CSocket, Version, Packet) ->
-	[{gid, GID}, {auth, Auth}] = egs_proto:parse_game_auth(Packet),
+process_handle(16#020d, CSocket, Version, Orig) ->
+	[{gid, GID}, {auth, Auth}] = egs_proto:parse_game_auth(Orig),
 	case egs_db:users_select(GID) of
 		error ->
 			log(GID, "can't find user, closing"),
@@ -98,8 +98,8 @@ process_handle(16#020d, CSocket, Version, Packet) ->
 
 %% @doc Platform information handler. Obtain the game version.
 
-process_handle(16#080e, CSocket, _, Packet) ->
-	[{version, RealVersion}] = egs_proto:parse_platform_info(Packet),
+process_handle(16#080e, CSocket, _, Orig) ->
+	[{version, RealVersion}] = egs_proto:parse_platform_info(Orig),
 	?MODULE:process(CSocket, RealVersion);
 
 %% @doc Unknown command handler. Do nothing.
@@ -113,9 +113,9 @@ process_handle(Command, CSocket, Version, _) ->
 
 char_select(CSocket, GID, Version) ->
 	case egs_proto:packet_recv(CSocket, 5000) of
-		{ok, Packet} ->
-			<< _:32, Command:16/unsigned-integer, _/bits >> = Packet,
-			char_select_handle(Command, CSocket, GID, Version, Packet);
+		{ok, Orig} ->
+			<< _:32, Command:16/unsigned-integer, _/bits >> = Orig,
+			char_select_handle(Command, CSocket, GID, Version, Orig);
 		{error, timeout} ->
 			egs_proto:send_keepalive(CSocket, GID),
 			reload,
@@ -127,17 +127,17 @@ char_select(CSocket, GID, Version) ->
 
 %% @doc Character selection handler.
 
-char_select_handle(16#020b, CSocket, GID, Version, Packet) ->
+char_select_handle(16#020b, CSocket, GID, Version, Orig) ->
 	log(GID, "character selection"),
-	[{number, Number}] = egs_proto:parse_character_select(Packet),
+	[{number, Number}] = egs_proto:parse_character_select(Orig),
 	char_select_load(CSocket, GID, Version, Number);
 
 %% @doc Character creation handler.
 
-char_select_handle(16#0d02, CSocket, GID, Version, Packet) ->
+char_select_handle(16#0d02, CSocket, GID, Version, Orig) ->
 	log(GID, "character creation"),
 	User = egs_db:users_select(GID),
-	[{number, Number}, {char, Char}] = egs_proto:parse_character_create(Packet),
+	[{number, Number}, {char, Char}] = egs_proto:parse_character_create(Orig),
 	_ = file:make_dir(io_lib:format("save/~s", [User#users.folder])),
 	file:write_file(io_lib:format("save/~s/~b-character", [User#users.folder, Number]), Char),
 	file:write_file(io_lib:format("save/~s/~b-character.options", [User#users.folder, Number]), << 0:192 >>),
@@ -383,10 +383,10 @@ loop(CSocket, GID, Version) ->
 
 loop(CSocket, GID, Version, SoFar) ->
 	receive
-		{psu_broadcast, Packet} ->
-			<< A:64/bits, _:32, B:96/bits, _:64, C/bits >> = Packet,
-			Broadcast = << A/binary, 16#00011300:32, B/binary, 16#00011300:32, GID:32/little-unsigned-integer, C/binary >>,
-			egs_proto:packet_send(CSocket, Broadcast),
+		{psu_broadcast, Orig} ->
+			<< A:64/bits, _:32, B:96/bits, _:64, C/bits >> = Orig,
+			Packet = << A/binary, 16#00011300:32, B/binary, 16#00011300:32, GID:32/little-unsigned-integer, C/binary >>,
+			egs_proto:packet_send(CSocket, Packet),
 			?MODULE:loop(CSocket, GID, Version, SoFar);
 		{psu_chat, ChatGID, ChatName, ChatModifiers, ChatMessage} ->
 			egs_proto:send_chat(CSocket, Version, ChatGID, ChatName, ChatModifiers, ChatMessage),
@@ -402,7 +402,7 @@ loop(CSocket, GID, Version, SoFar) ->
 			?MODULE:loop(CSocket, GID, Version, SoFar);
 		{ssl, _, Data} ->
 			{Packets, Rest} = egs_proto:packet_split(<< SoFar/bits, Data/bits >>),
-			[dispatch(CSocket, GID, Version, P) || P <- Packets],
+			[dispatch(CSocket, GID, Version, Orig) || Orig <- Packets],
 			?MODULE:loop(CSocket, GID, Version, Rest);
 		{ssl_closed, _} ->
 			close(CSocket, GID);
@@ -426,47 +426,47 @@ close(CSocket, GID) ->
 
 %% @doc Dispatch the command to the right handler.
 
-dispatch(CSocket, GID, Version, Packet) ->
-	<< _:32, Command:16/unsigned-integer, Channel:8/little-unsigned-integer, _/bits >> = Packet,
+dispatch(CSocket, GID, Version, Orig) ->
+	<< _:32, Command:16/unsigned-integer, Channel:8/little-unsigned-integer, _/bits >> = Orig,
 	case [Command, Channel] of
 		[16#0b05, _] ->
 			% 0b05 uses the channel for something else, conflicts may occur
-			handle(Command, CSocket, GID, Version, Packet);
+			handle(Command, CSocket, GID, Version, Orig);
 		[_, 1] ->
-			broadcast(Command, GID, Packet);
+			broadcast(Command, GID, Orig);
 		_ ->
-			handle(Command, CSocket, GID, Version, Packet)
+			handle(Command, CSocket, GID, Version, Orig)
 	end.
 
 %% @doc Position change broadcast handler. Save the position and then dispatch it.
 
-broadcast(16#0503, GID, Packet) ->
+broadcast(16#0503, GID, Orig) ->
 	LID = 0, % TODO: handle the LID correctly
 	<< 100:32/little-unsigned-integer, 16#050301:24/unsigned-integer, _:72, GID:32/little-unsigned-integer, _:192,
 		GID:32/little-unsigned-integer, LID:32/little-unsigned-integer, Direction:32/bits, Coords:96/bits, _:96,
 		Quest:32/little-unsigned-integer, MapType:32/little-unsigned-integer, MapNumber:32/little-unsigned-integer,
-		MapEntry:32/little-unsigned-integer, _:32 >> = Packet,
+		MapEntry:32/little-unsigned-integer, _:32 >> = Orig,
 	User = egs_db:users_select(GID),
 	NewUser = User#users{direction=Direction, coords=Coords, quest=Quest, maptype=MapType, mapnumber=MapNumber, mapentry=MapEntry},
 	egs_db:users_insert(NewUser),
-	broadcast(default, GID, Packet);
+	broadcast(default, GID, Orig);
 
 %% @doc Stand still broadcast handler. Save the position and then dispatch it.
 
-broadcast(16#0514, GID, Packet) ->
+broadcast(16#0514, GID, Orig) ->
 	<< _:320, _:96, Direction:32/bits, Coords:96/bits, Quest:32/little-unsigned-integer, MapType:32/little-unsigned-integer,
-		MapNumber:32/little-unsigned-integer, MapEntry:32/little-unsigned-integer, _/bits >> = Packet,
+		MapNumber:32/little-unsigned-integer, MapEntry:32/little-unsigned-integer, _/bits >> = Orig,
 	User = egs_db:users_select(GID),
 	NewUser = User#users{direction=Direction, coords=Coords, quest=Quest, maptype=MapType, mapnumber=MapNumber, mapentry=MapEntry},
 	egs_db:users_insert(NewUser),
-	broadcast(default, GID, Packet);
+	broadcast(default, GID, Orig);
 
 %% @doc Default broadcast handler. Dispatch the command to everyone.
 %%      We clean up the command and use the real GID and LID of the user, disregarding what was sent and possibly tampered with.
 %%      Only a handful of commands are allowed to broadcast. An user tampering with it would get disconnected instantly.
 %% @todo Don't query the user data everytime! Keep an User instead of a GID probably.
 
-broadcast(Command, GID, Packet)
+broadcast(Command, GID, Orig)
 	when	Command =:= 16#0101;
 			Command =:= 16#0102;
 			Command =:= 16#0104;
@@ -474,15 +474,15 @@ broadcast(Command, GID, Packet)
 			Command =:= 16#010f;
 			Command =:= 16#050f;
 			Command =:= default ->
-	<< _:32, A:64/bits, _:64, B:192/bits, _:64, C/bits >> = Packet,
+	<< _:32, A:64/bits, _:64, B:192/bits, _:64, C/bits >> = Orig,
 	case egs_db:users_select(GID) of
 		error ->
 			ignore;
 		Self ->
 			LID = Self#users.lid,
-			SafePacket = << A/binary, 16#00011300:32, GID:32/little-unsigned-integer, B/binary,
+			Packet = << A/binary, 16#00011300:32, GID:32/little-unsigned-integer, B/binary,
 				GID:32/little-unsigned-integer, LID:32/little-unsigned-integer, C/binary >>,
-			lists:foreach(fun(User) -> User#users.pid ! {psu_broadcast, SafePacket} end, egs_db:users_select_others_in_area(Self))
+			lists:foreach(fun(User) -> User#users.pid ! {psu_broadcast, Packet} end, egs_db:users_select_others_in_area(Self))
 	end.
 
 %% @doc Movement (non-broadcast) handler. Do nothing.
@@ -548,8 +548,8 @@ handle(16#021d, CSocket, _, _, _) ->
 %%      When selecting 'Reload', load first floor.
 %% @todo Load 'Your room' correctly.
 
-handle(16#021f, CSocket, GID, _, Packet) ->
-	case egs_proto:parse_uni_select(Packet) of
+handle(16#021f, CSocket, GID, _, Orig) ->
+	case egs_proto:parse_uni_select(Orig) of
 		[{uni, 0}] -> % cancelled uni selection
 			ignore;
 		[{uni, 16#ffffffff}] ->
@@ -572,8 +572,8 @@ handle(16#0302, _, GID, _, _) ->
 %%      We must take extra precautions to handle different versions of the game correctly.
 %% @todo Only broadcast to people in the same map.
 
-handle(16#0304, _, GID, Version, Packet) ->
-	[{gid, _}, {name, ChatName}, {modifiers, ChatModifiers}, {message, ChatMessage}] = egs_proto:parse_chat(Version, Packet),
+handle(16#0304, _, GID, Version, Orig) ->
+	[{gid, _}, {name, ChatName}, {modifiers, ChatModifiers}, {message, ChatMessage}] = egs_proto:parse_chat(Version, Orig),
 	case ChatName of
 		missing ->
 			case egs_db:users_select(GID) of
@@ -600,8 +600,8 @@ handle(16#0402, _, _, _, _) ->
 %%      Spaceports and my room are handled differently than normal lobbies.
 %% @todo Load 'Your room' correctly.
 
-handle(16#0807, CSocket, GID, _, Packet) ->
-	[{quest, Quest}, {maptype, MapType}, {mapnumber, MapNumber}, {mapentry, MapEntry}] = egs_proto:parse_lobby_change(Packet),
+handle(16#0807, CSocket, GID, _, Orig) ->
+	[{quest, Quest}, {maptype, MapType}, {mapnumber, MapNumber}, {mapentry, MapEntry}] = egs_proto:parse_lobby_change(Orig),
 	log(GID, "lobby change (~b,~b,~b,~b)", [Quest,MapType, MapNumber, MapEntry]),
 	case {Quest, MapType, MapNumber, MapEntry} of
 		{1104000, 0, 900, 0} ->
@@ -615,8 +615,8 @@ handle(16#0807, CSocket, GID, _, Packet) ->
 %% @doc Mission counter handler.
 %% @todo Make the egs_proto function name more clear. This isn't a lobby! It's just the same format.
 
-handle(16#0811, CSocket, GID, _, Packet) ->
-	[{quest, Quest}, {maptype, MapType}, {mapnumber, MapNumber}, {mapentry, MapEntry}] = egs_proto:parse_lobby_change(Packet),
+handle(16#0811, CSocket, GID, _, Orig) ->
+	[{quest, Quest}, {maptype, MapType}, {mapnumber, MapNumber}, {mapentry, MapEntry}] = egs_proto:parse_lobby_change(Orig),
 	log(GID, "mission counter (~b,~b,~b,~b)", [Quest,MapType, MapNumber, MapEntry]),
 	counter_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry);
 
@@ -661,9 +661,9 @@ handle(16#0d04, CSocket, GID, _, Orig) ->
 
 %% @doc Options changes handler.
 
-handle(16#0d07, _, GID, _, Packet) ->
+handle(16#0d07, _, GID, _, Orig) ->
 	log(GID, "options changes"),
-	[{options, Options}] = egs_proto:parse_options_change(Packet),
+	[{options, Options}] = egs_proto:parse_options_change(Orig),
 	User = egs_db:users_select(GID),
 	file:write_file(io_lib:format("save/~s/~b-character.options", [User#users.folder, User#users.charnumber]), Options);
 
