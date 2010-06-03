@@ -85,31 +85,44 @@ loop(CSocket, SessionID) ->
 
 handle(16#0217, CSocket, SessionID, _) ->
 	log(SessionID, "send game server info"),
-	egs_proto:send_game_server_info(CSocket, SessionID, ?GAME_IP, ?GAME_PORT),
+	IP = ?GAME_IP,
+	Port = ?GAME_PORT,
+	Packet = << 16#02160300:32, 0:192, SessionID:32/little-unsigned-integer, 0:64, IP/binary, Port:32/little-unsigned-integer >>,
+	egs_proto:packet_send(CSocket, Packet),
 	ssl:close(CSocket),
 	closed;
 
 %% @doc Authentication request handler. Currently always succeed.
 %%      Use the temporary session ID as the GID for now.
 %%      Use username and password as a folder name for saving character data.
-%% @todo Handle real GIDs whenever there's real authentication.
+%% @todo Handle real GIDs whenever there's real authentication. GID is the second SessionID in the reply.
+%% @todo Apparently it's possible to ask a question in the reply here. Used for free course on JP.
 
-handle(16#0219, CSocket, SessionID, Packet) ->
-	[{username, Username}, {password, Password}] = egs_proto:parse_auth_request(Packet),
+handle(16#0219, CSocket, SessionID, Orig) ->
+	<< _:352, UsernameBlob:192/bits, PasswordBlob:192/bits, _/bits >> = Orig,
+	Username = re:replace(UsernameBlob, "\\0", "", [global, {return, binary}]),
+	Password = re:replace(PasswordBlob, "\\0", "", [global, {return, binary}]),
 	log(SessionID, io_lib:format("auth success for ~s ~s", [Username, Password])),
 	Auth = crypto:rand_bytes(4),
 	Folder = << Username/binary, "-", Password/binary >>,
 	Time = calendar:datetime_to_gregorian_seconds(calendar:universal_time()),
 	egs_db:users_insert(#users{gid=SessionID, pid=self(), socket=CSocket, auth=Auth, time=Time, folder=Folder}),
-	egs_proto:send_auth_success(CSocket, SessionID, SessionID, Auth);
+	Packet = << 16#02230300:32, 0:192, SessionID:32/little-unsigned-integer, 0:64, SessionID:32/little-unsigned-integer, Auth:32/bits >>,
+	egs_proto:packet_send(CSocket, Packet);
 
-%% @doc MOTD request handler. Handles both forms of MOTD requests, US and JP.
-%%      Currently ignore the language and send the same MOTD file to everyone.
+%% @doc MOTD request handler. Handles both forms of MOTD requests, US and JP. Page number starts at 0.
+%% @todo Currently ignore the language and send the same MOTD file to everyone. Language is 8 bits next to Page.
+%% @todo Use a normal ASCII file rather than an UCS2 one?
 
-handle(Command, CSocket, SessionID, Packet) when Command =:= 16#0226; Command =:= 16#023f ->
-	[{page, Page}, {language, _}] = egs_proto:parse_motd_request(Packet),
+handle(Command, CSocket, SessionID, Orig) when Command =:= 16#0226; Command =:= 16#023f ->
+	<< _:352, Page:8/little-unsigned-integer, _/bits >> = Orig,
 	log(SessionID, io_lib:format("send MOTD page ~.10b", [Page + 1])),
-	egs_proto:send_motd(CSocket, Page);
+	{ok, File} = file:read_file("conf/motd.txt"),
+	Tokens = re:split(File, "\n."),
+	MOTD = << << Line/binary, "\n", 0 >> || Line <- lists:sublist(Tokens, 1 + Page * 15, 15) >>,
+	NbPages = 1 + length(Tokens) div 15,
+	Packet = << 16#0225:16, 0:304, NbPages:8, Page:8, 16#8200:16/unsigned-integer, MOTD/binary, 0:16 >>,
+	egs_proto:packet_send(CSocket, Packet);
 
 %% @doc Unknown command handler. Do nothing.
 

@@ -119,13 +119,6 @@ packet_split(Packet, Result) ->
 			end
 	end.
 
-%% @doc Parse a login authentication command. Return the username and password.
-
-parse_auth_request(Packet) ->
-	<< _:352, Username:192/bits, Password:192/bits, _/bits >> = Packet,
-	[{username, re:replace(Username, "\\0", "", [global, {return, binary}])},
-		{password, re:replace(Password, "\\0", "", [global, {return, binary}])}].
-
 %% @doc Parse a character creation command. Return the character number and data.
 
 parse_character_create(Packet) ->
@@ -163,12 +156,6 @@ parse_lobby_change(Packet) ->
 		MapNumber:16/little-unsigned-integer, MapEntry:16/little-unsigned-integer, _/bits >> = Packet,
 	[{quest, Quest}, {maptype, MapType}, {mapnumber, MapNumber}, {mapentry, MapEntry}].
 
-%% @doc Parse the MOTD request command.
-
-parse_motd_request(Packet) ->
-	<< _:352, Page:8/little-unsigned-integer, Language:8/little-unsigned-integer, _/bits >> = Packet,
-	[{page, Page}, {language, Language}].
-
 %% @doc Parse the options change command. Retrieve the options for saving.
 
 parse_options_change(Packet) ->
@@ -186,13 +173,6 @@ parse_platform_info(Packet) ->
 parse_uni_select(Packet) ->
 	<< _:352, Uni:32/little-unsigned-integer, _/bits >> = Packet,
 	[{uni, Uni}].
-
-%% @doc Indicate that the authentication was successful and send the real GUARDIANS ID.
-%% @todo Apparently it's possible to ask a question here too. Used for free course on JP.
-
-send_auth_success(CSocket, SessionID, GID, Auth) ->
-	Packet = << 16#0223:16, 0:208, SessionID:32/little-unsigned-integer, 0:64, GID:32/little-unsigned-integer, Auth:32/bits >>,
-	packet_send(CSocket, Packet).
 
 %% @doc Center the camera on the player, if possible.
 %% @todo Probably.
@@ -241,12 +221,6 @@ send_flags(CSocket, GID) ->
 	Packet = << 16#0d050300:32, 0:32, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Flags/binary >>,
 	Size = 4 + byte_size(Packet),
 	ssl:send(CSocket, << Size:32/little-unsigned-integer, Packet/binary >>).
-
-%% @doc Send the IP and port of the game server the player is sent to.
-
-send_game_server_info(CSocket, GID, IP, Port) ->
-	Packet = << 16#0216:16, 0:208, GID:32/little-unsigned-integer, 0:64, IP/binary, Port:32/little-unsigned-integer >>,
-	packet_send(CSocket, Packet).
 
 %% @doc Shortcut for send_global/4.
 
@@ -322,16 +296,6 @@ send_location(CSocket, GID, Quest, MapType, MapNumber, Location) ->
 send_map(CSocket, Quest, MapType, MapNumber, MapEntry) ->
 	Packet = << 16#0205:16, 0:304, Quest:32/little-unsigned-integer, MapType:32/little-unsigned-integer,
 		MapNumber:32/little-unsigned-integer, MapEntry:32/little-unsigned-integer, 0:64 >>,
-	packet_send(CSocket, Packet).
-
-%% @doc Send the requested MOTD page to the client. Pages start at 0.
-
-send_motd(CSocket, Page) ->
-	{ok, File} = file:read_file("conf/motd.txt"),
-	Tokens = re:split(File, "\n."),
-	MOTD = << << Line/binary, "\n", 0 >> || Line <- lists:sublist(Tokens, 1 + Page * 15, 15) >>,
-	NbPages = 1 + length(Tokens) div 15,
-	Packet = << 16#0225:16, 0:304, NbPages:8, Page:8, 16#8200:16/unsigned-integer, MOTD/binary, 0:16 >>,
 	packet_send(CSocket, Packet).
 
 %% @doc Send the player's NPC and PM information.
