@@ -68,10 +68,10 @@ loop(CSocket, SessionID) ->
 		{ok, Packet} ->
 			<< _:32, Command:16/unsigned-integer, _/bits >> = Packet,
 			case handle(Command, CSocket, SessionID, Packet) of
-				ok ->
-					?MODULE:loop(CSocket, SessionID);
 				closed ->
-					ignore
+					ignore;
+				_ ->
+					?MODULE:loop(CSocket, SessionID)
 			end;
 		{error, timeout} ->
 			reload,
@@ -124,7 +124,12 @@ handle(Command, CSocket, SessionID, Orig) when Command =:= 16#0226; Command =:= 
 	Packet = << 16#0225:16, 0:304, NbPages:8, Page:8, 16#8200:16/unsigned-integer, MOTD/binary, 0:16 >>,
 	egs_proto:packet_send(CSocket, Packet);
 
-%% @doc Unknown command handler. Do nothing.
+%% @doc Silently ignore packets 0227 and 080e.
+
+handle(Command, _, _, _) when Command =:= 16#0227; Command =:= 16#080e ->
+	ignore;
+
+%% @doc Unknown command handler. Print a log message about it.
 
 handle(Command, _, SessionID, _) ->
 	log(SessionID, "dismissed packet ~4.16.0b", [Command]).
