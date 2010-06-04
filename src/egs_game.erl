@@ -565,11 +565,13 @@ handle(16#021f, CSocket, GID, _, Orig) ->
 			ignore;
 		16#ffffffff ->
 			log(GID, "uni selection (my room)"),
-			% 0230 0220
+			send_packet_0230(CSocket, GID),
+			% 0220
 			myroom_load(CSocket, GID, 1120000, 0, 423, 0);
 		_ ->
 			log(GID, "uni selection (reload)"),
-			% 0230 0220
+			send_packet_0230(CSocket, GID),
+			% 0220
 			lobby_load(CSocket, GID, 1100000, 0, 1, 1)
 	end;
 
@@ -606,6 +608,7 @@ handle(16#0402, _, _, _, _) ->
 %% @doc Map change handler.
 %%      Spaceports and my room are handled differently than normal lobbies.
 %% @todo Load 'Your room' correctly.
+%% @todo When changing lobby to the room, 0230 must also be sent. Same when going from room to lobby.
 
 handle(16#0807, CSocket, GID, _, Orig) ->
 	<< _:352, Quest:32/little-unsigned-integer, MapType:16/little-unsigned-integer,
@@ -885,6 +888,12 @@ send_packet_020c(CSocket) ->
 
 send_packet_021b(CSocket, GID) ->
 	Packet = << 16#021b0300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64 >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @todo Not sure. Sent when going to or from room.
+
+send_packet_0230(CSocket, GID) ->
+	Packet = << 16#02300300:32, 0:32, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64 >>,
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @todo Inventory related. No idea what it does.
