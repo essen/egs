@@ -227,7 +227,8 @@ send_loading_end(CSocket, GID) ->
 	packet_send(CSocket, Packet).
 
 %% @doc Send the player's current location.
-%% @todo Figure out what the last value is. No counter without it.
+%% @todo Figure out what the last value is. No counter without it. The value before that is also different for counters.
+%% @todo Handle correctly after unifying the area loading code.
 
 send_location(CSocket, GID, Quest, MapType, MapNumber, Location) ->
 	UCS2Location = << << X:8, 0:8 >> || X <- Location >>,
