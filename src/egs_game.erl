@@ -218,7 +218,7 @@ counter_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		egs_proto:send_quest(CSocket, QuestFile),
 		send_packet_0a05(CSocket, GID),
 		% 010d
-		egs_proto:send_zone_init(CSocket, GID, counter),
+		egs_proto:send_zone_init(CSocket, GID, mission),
 		egs_proto:send_zone(CSocket, ZoneFile),
 		egs_proto:send_map(CSocket, MapType, MapNumber, MapEntry),
 		egs_proto:send_location(CSocket, GID, Quest, MapType, MapNumber, AreaName),
