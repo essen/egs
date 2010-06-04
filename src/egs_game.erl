@@ -517,6 +517,9 @@ handle(16#0105, CSocket, GID, _, Orig) ->
 			ignored
 	end;
 
+%% @doc Shop listing request. Currently return the normal item shop for everything.
+%% @todo Return the other shops appropriately.
+
 handle(16#010a, CSocket, GID, _, Orig) ->
 	<< _:384, A:32/little-unsigned-integer, B:32/little-unsigned-integer, C:32/little-unsigned-integer >> = Orig,
 	log(GID, "shop listing request (~b, ~b, ~b)", [A, B, C]),
