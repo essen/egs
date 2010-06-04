@@ -718,6 +718,14 @@ handle(16#1709, CSocket, GID, _, _) ->
 	Packet = << 16#170a0300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#01010c08:32 >>,
 	egs_proto:packet_send(CSocket, Packet);
 
+%% @doc Counter-related handler.
+%% @todo Find what the heck this packet is.
+
+handle(16#170b, CSocket, GID, _, _) ->
+	{ok, File} = file:read_file("p/packet170c.bin"),
+	Packet = << 16#170c0300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, File/binary >>,
+	egs_proto:packet_send(CSocket, Packet);
+
 %% @doc Counter initialization handler?
 %% @todo Handle correctly.
 
