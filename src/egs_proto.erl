@@ -289,7 +289,7 @@ send_map(CSocket, Quest, MapType, MapNumber, MapEntry) ->
 
 send_npc_info(CSocket, GID) ->
 	{ok, File} = file:read_file("p/npc.bin"),
-	Packet = << 16#16020300:16, 0:192, GID:32/little-unsigned-integer, 0:96, File/binary >>,
+	Packet = << 16#16020300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96, File/binary >>,
 	packet_send(CSocket, Packet).
 
 %% @doc Send the player's partner card.
