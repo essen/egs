@@ -231,7 +231,7 @@ counter_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		send_packet_1207(CSocket, GID),
 		egs_proto:send_load_quest(CSocket, GID),
 		send_packet_201(CSocket, GID, User, Char),
-		% 0a06
+		send_packet_0a06(CSocket, GID),
 		egs_proto:send_loading_end(CSocket, GID),
 		egs_proto:send_camera_center(CSocket, GID)
 	catch

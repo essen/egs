@@ -221,7 +221,7 @@ send_load_quest(CSocket, GID) ->
 	packet_send(CSocket, Packet).
 
 %% @doc Indicate to the client that loading should finish.
-%% @todo Last value seems to be 2 most of the time. Never 0 though.
+%% @todo Last value seems to be 2 most of the time. Never 0 though. Apparently counters have it at 4.
 
 send_loading_end(CSocket, GID) ->
 	Packet = << 16#02080300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 2:32/little-unsigned-integer >>,
