@@ -131,12 +131,6 @@ parse_chat(_, Packet) ->
 	<< _:384, FromGID:32/unsigned-integer, Modifiers:128/bits, FromName:512/bits, Message/bits >> = Packet,
 	[{gid, FromGID}, {name, FromName}, {modifiers, Modifiers}, {message, Message}].
 
-%% @doc Parse the options change command. Retrieve the options for saving.
-
-parse_options_change(Packet) ->
-	<< _:352, Options/bits >> = Packet,
-	[{options, Options}].
-
 %% @doc Center the camera on the player, if possible.
 %% @todo Probably.
 

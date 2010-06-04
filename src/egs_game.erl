@@ -659,7 +659,7 @@ handle(16#0d04, CSocket, GID, _, Orig) ->
 
 handle(16#0d07, _, GID, _, Orig) ->
 	log(GID, "options changes"),
-	[{options, Options}] = egs_proto:parse_options_change(Orig),
+	<< _:352, Options/bits >> = Orig,
 	User = egs_db:users_select(GID),
 	file:write_file(io_lib:format("save/~s/~b-character.options", [User#users.folder, User#users.charnumber]), Options);
 
