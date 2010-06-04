@@ -119,12 +119,6 @@ packet_split(Packet, Result) ->
 			end
 	end.
 
-%% @doc Parse a character creation command. Return the character number and data.
-
-parse_character_create(Packet) ->
-	<< _:352, Number:32/little-unsigned-integer, Char/bits >> = Packet,
-	[{number, Number}, {char, Char}].
-
 %% @doc Parse a character selection command. Return the selected character's number.
 
 parse_character_select(Packet) ->

@@ -136,7 +136,7 @@ char_select_handle(16#020b, CSocket, GID, Version, Orig) ->
 char_select_handle(16#0d02, CSocket, GID, Version, Orig) ->
 	log(GID, "character creation"),
 	User = egs_db:users_select(GID),
-	[{number, Number}, {char, Char}] = egs_proto:parse_character_create(Orig),
+	<< _:352, Number:32/little-unsigned-integer, Char/bits >> = Orig,
 	_ = file:make_dir(io_lib:format("save/~s", [User#users.folder])),
 	file:write_file(io_lib:format("save/~s/~b-character", [User#users.folder, Number]), Char),
 	file:write_file(io_lib:format("save/~s/~b-character.options", [User#users.folder, Number]), << 0:192 >>),
