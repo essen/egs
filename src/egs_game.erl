@@ -601,7 +601,8 @@ handle(16#0402, _, _, _, _) ->
 %% @todo Load 'Your room' correctly.
 
 handle(16#0807, CSocket, GID, _, Orig) ->
-	[{quest, Quest}, {maptype, MapType}, {mapnumber, MapNumber}, {mapentry, MapEntry}] = egs_proto:parse_lobby_change(Orig),
+	<< _:352, Quest:32/little-unsigned-integer, MapType:16/little-unsigned-integer,
+		MapNumber:16/little-unsigned-integer, MapEntry:16/little-unsigned-integer, _/bits >> = Orig,
 	log(GID, "lobby change (~b,~b,~b,~b)", [Quest,MapType, MapNumber, MapEntry]),
 	case {Quest, MapType, MapNumber, MapEntry} of
 		{1104000, 0, 900, 0} ->
@@ -613,10 +614,10 @@ handle(16#0807, CSocket, GID, _, Orig) ->
 	end;
 
 %% @doc Mission counter handler.
-%% @todo Make the egs_proto function name more clear. This isn't a lobby! It's just the same format.
 
 handle(16#0811, CSocket, GID, _, Orig) ->
-	[{quest, Quest}, {maptype, MapType}, {mapnumber, MapNumber}, {mapentry, MapEntry}] = egs_proto:parse_lobby_change(Orig),
+	<< _:352, Quest:32/little-unsigned-integer, MapType:16/little-unsigned-integer,
+		MapNumber:16/little-unsigned-integer, MapEntry:16/little-unsigned-integer, _/bits >> = Orig,
 	log(GID, "mission counter (~b,~b,~b,~b)", [Quest,MapType, MapNumber, MapEntry]),
 	counter_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry);
 

@@ -131,13 +131,6 @@ parse_chat(_, Packet) ->
 	<< _:384, FromGID:32/unsigned-integer, Modifiers:128/bits, FromName:512/bits, Message/bits >> = Packet,
 	[{gid, FromGID}, {name, FromName}, {modifiers, Modifiers}, {message, Message}].
 
-%% @doc Parse a lobby change command.
-
-parse_lobby_change(Packet) ->
-	<< _:352, Quest:32/little-unsigned-integer, MapType:16/little-unsigned-integer,
-		MapNumber:16/little-unsigned-integer, MapEntry:16/little-unsigned-integer, _/bits >> = Packet,
-	[{quest, Quest}, {maptype, MapType}, {mapnumber, MapNumber}, {mapentry, MapEntry}].
-
 %% @doc Parse the options change command. Retrieve the options for saving.
 
 parse_options_change(Packet) ->
