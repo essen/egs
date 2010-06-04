@@ -293,7 +293,7 @@ send_universe_info(CSocket, GID) ->
 send_zone(CSocket, Filename) ->
 	{ok, File} = file:read_file(Filename),
 	Size = byte_size(File),
-	Packet = << 16#020f:16, 0:336, Size:32/little-unsigned-integer, File/binary >>,
+	Packet = << 16#020f0300:32, 0:288, 16#00ff0000:32, Size:32/little-unsigned-integer, File/binary >>,
 	packet_send(CSocket, Packet).
 
 %% @doc Send the zone initialization notification.
