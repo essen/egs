@@ -329,7 +329,7 @@ myroom_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		send_packet_1005(CSocket, GID, Char),
 		% 1006 0210
 		egs_proto:send_universe_info(CSocket, GID),
-		egs_proto:send_player_card(CSocket, GID, Char),
+		egs_proto:send_player_card(CSocket, GID, Char, User#users.charnumber),
 		% 1501 1512 0303
 		egs_proto:send_npc_info(CSocket, GID),
 		egs_proto:send_init_quest(CSocket, GID, Quest),
