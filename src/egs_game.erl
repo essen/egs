@@ -216,7 +216,8 @@ counter_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(OldUser)),
 		egs_proto:send_init_quest(CSocket, GID, 16#7fffffff),
 		egs_proto:send_quest(CSocket, QuestFile),
-		% 0a05 010d
+		send_packet_0a05(CSocket, GID),
+		% 010d
 		egs_proto:send_zone_init(CSocket, GID, counter),
 		egs_proto:send_zone(CSocket, ZoneFile),
 		egs_proto:send_map(CSocket, Quest, MapType, MapNumber, MapEntry),
@@ -247,7 +248,8 @@ lobby_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_spawn, User} end, egs_db:users_select_others_in_area(User)),
 		egs_proto:send_init_quest(CSocket, GID, Quest),
 		egs_proto:send_quest(CSocket, QuestFile),
-		% 0a05 0111 010d
+		send_packet_0a05(CSocket, GID),
+		% 0111 010d
 		egs_proto:send_zone_init(CSocket, GID, lobby),
 		egs_proto:send_zone(CSocket, ZoneFile),
 		egs_proto:send_map(CSocket, Quest, MapType, MapNumber, MapEntry),
@@ -277,7 +279,9 @@ mission_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 	try
 		egs_proto:send_init_quest(CSocket, GID, Quest),
 		egs_proto:send_quest(CSocket, QuestFile),
-		% 0215 0a05 010d
+		% 0215
+		send_packet_0a05(CSocket, GID),
+		% 010d
 		egs_proto:send_zone_init(CSocket, GID, mission),
 		egs_proto:send_zone(CSocket, ZoneFile),
 		egs_proto:send_map(CSocket, Quest, MapType, MapNumber, MapEntry),
@@ -327,7 +331,8 @@ myroom_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		egs_proto:send_npc_info(CSocket, GID),
 		egs_proto:send_init_quest(CSocket, GID, Quest),
 		egs_proto:send_quest(CSocket, QuestFile),
-		% 0a05 0111 010d
+		send_packet_0a05(CSocket, GID),
+		% 0111 010d
 		egs_proto:send_zone_init(CSocket, GID, myroom),
 		egs_proto:send_zone(CSocket, ZoneFile),
 		egs_proto:send_map(CSocket, Quest, MapType, MapNumber, MapEntry),
@@ -362,7 +367,7 @@ spaceport_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(OldUser)),
 		egs_proto:send_init_quest(CSocket, GID, Quest),
 		egs_proto:send_quest(CSocket, QuestFile),
-		% 0a05
+		send_packet_0a05(CSocket, GID),
 		egs_proto:send_zone_init(CSocket, GID, spaceport),
 		egs_proto:send_zone(CSocket, ZoneFile),
 		egs_proto:send_map(CSocket, Quest, MapType, MapNumber, MapEntry),
@@ -863,6 +868,12 @@ build_packet_233_contents(Users) ->
 
 send_packet_021b(CSocket, GID) ->
 	Packet = << 16#021b0300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64 >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @todo Inventory related. No idea what it does.
+
+send_packet_0a05(CSocket, GID) ->
+	Packet = << 16#0a050300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64 >>,
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @todo Inventory related. Figure out everything in this packet and handle it correctly.
