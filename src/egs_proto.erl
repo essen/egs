@@ -168,12 +168,6 @@ parse_platform_info(Packet) ->
 	<< _:416, Version:32/little-unsigned-integer, _/bits >> = Packet,
 	[{version, Version}].
 
-%% @doc Parse the uni selection command.
-
-parse_uni_select(Packet) ->
-	<< _:352, Uni:32/little-unsigned-integer, _/bits >> = Packet,
-	[{uni, Uni}].
-
 %% @doc Center the camera on the player, if possible.
 %% @todo Probably.
 

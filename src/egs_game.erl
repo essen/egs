@@ -548,10 +548,11 @@ handle(16#021d, CSocket, _, _, _) ->
 %% @todo Load 'Your room' correctly.
 
 handle(16#021f, CSocket, GID, _, Orig) ->
-	case egs_proto:parse_uni_select(Orig) of
-		[{uni, 0}] -> % cancelled uni selection
+	<< _:352, Uni:32/little-unsigned-integer, _/bits >> = Orig,
+	case Uni of
+		0 -> % cancelled uni selection
 			ignore;
-		[{uni, 16#ffffffff}] ->
+		16#ffffffff ->
 			log(GID, "uni selection (my room)"),
 			% 0230 0220
 			myroom_load(CSocket, GID, 1120000, 0, 423, 0);
