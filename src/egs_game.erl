@@ -193,7 +193,8 @@ char_select_load(CSocket, GID, Version, Number) ->
 	% 0210
 	egs_proto:send_universe_info(CSocket, GID),
 	egs_proto:send_player_card(CSocket, GID, Char, Number),
-	% 1501 1512 0303
+	send_packet_1501(CSocket, GID),
+	% 1512 0303
 	egs_proto:send_npc_info(CSocket, GID),
 	% 021b
 	lobby_load(CSocket, GID, 1100000, 0, 1, 1),
@@ -887,6 +888,12 @@ send_packet_1005(CSocket, GID, Char) ->
 
 send_packet_1006(CSocket, GID, N) ->
 	Packet = << 16#10060300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, N:32/little-unsigned-integer >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @todo Send an empty partner card list.
+
+send_packet_1501(CSocket, GID) ->
+	Packet = << 16#15010300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96 >>,
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @todo Figure out what the other things are and do it right.
