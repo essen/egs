@@ -98,8 +98,8 @@ process_handle(16#020d, CSocket, Version, Orig) ->
 %% @doc Platform information handler. Obtain the game version.
 
 process_handle(16#080e, CSocket, _, Orig) ->
-	[{version, RealVersion}] = egs_proto:parse_platform_info(Orig),
-	?MODULE:process(CSocket, RealVersion);
+	<< _:416, Version:32/little-unsigned-integer, _/bits >> = Orig,
+	?MODULE:process(CSocket, Version);
 
 %% @doc Unknown command handler. Do nothing.
 

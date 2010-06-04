@@ -162,12 +162,6 @@ parse_options_change(Packet) ->
 	<< _:352, Options/bits >> = Packet,
 	[{options, Options}].
 
-%% @doc Parse the platform information command. Retrieve the game version for later use.
-
-parse_platform_info(Packet) ->
-	<< _:416, Version:32/little-unsigned-integer, _/bits >> = Packet,
-	[{version, Version}].
-
 %% @doc Center the camera on the player, if possible.
 %% @todo Probably.
 
