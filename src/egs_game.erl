@@ -176,13 +176,25 @@ char_load(Folder, Number) ->
 			[{status, 0}, {char, << 0:2208 >>}]
 	end.
 
-%% @doc Load the selected character and start the main game's loop.
+%% @doc Load the selected character in the start lobby and start the main game's loop.
 
 char_select_load(CSocket, GID, Version, Number) ->
 	User = egs_db:users_select(GID),
-	[{status, _}, {char, << Name:512/bits, _/bits >>}|_] = char_load(User#users.folder, Number),
+	[{status, 1}, {char, Char}, {options, Options}] = char_load(User#users.folder, Number),
+	<< Name:512/bits, _/bits >> = Char,
 	NewRow = User#users{charnumber=Number, charname=Name},
 	egs_db:users_insert(NewRow),
+	egs_proto:send_character_selected(CSocket, GID, Char, Options),
+	% 0246
+	send_packet_0a0a(CSocket, GID),
+	% 1006
+	send_packet_1005(CSocket, GID, Char),
+	% 1006 0210
+	egs_proto:send_universe_info(CSocket, GID),
+	egs_proto:send_player_card(CSocket, GID, Char),
+	% 1501 1512 0303
+	egs_proto:send_npc_info(CSocket, GID),
+	% 021b
 	lobby_load(CSocket, GID, 1100000, 0, 1, 1),
 	ssl:setopts(CSocket, [{active, true}]),
 	?MODULE:loop(CSocket, GID, Version).
@@ -223,24 +235,13 @@ lobby_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 	OldUser = egs_db:users_select(GID),
 	User = OldUser#users{instanceid=undefined, quest=Quest, maptype=MapType, mapnumber=MapNumber, mapentry=MapEntry},
 	egs_db:users_insert(User),
-	[{status, 1}, {char, Char}, {options, Options}] = char_load(User#users.folder, User#users.charnumber),
+	[{status, 1}, {char, Char}, {options, _}] = char_load(User#users.folder, User#users.charnumber),
 	[{name, AreaName}, {quest, QuestFile}, {zone, ZoneFile}, {entries, _}] = proplists:get_value([Quest, MapType, MapNumber], ?MAPS,
 		[{name, "dammy"}, {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone-0.nbl"}, {entries, []}]),
 	try
 		% broadcast spawn and unspawn to other people
 		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(OldUser)),
 		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_spawn, User} end, egs_db:users_select_others_in_area(User)),
-		% load lobby and character
-		egs_proto:send_character_selected(CSocket, GID, Char, Options),
-		% 0246
-		send_packet_0a0a(CSocket, GID),
-		% 1006
-		send_packet_1005(CSocket, GID, Char),
-		% 1006 0210
-		egs_proto:send_universe_info(CSocket, GID),
-		egs_proto:send_player_card(CSocket, GID, Char),
-		% 1501 1512 0303
-		egs_proto:send_npc_info(CSocket, GID),
 		egs_proto:send_init_quest(CSocket, GID, Quest),
 		egs_proto:send_quest(CSocket, QuestFile),
 		% 0a05 0111 010d
