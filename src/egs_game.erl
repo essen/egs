@@ -894,6 +894,7 @@ send_packet_0a05(CSocket, GID) ->
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @todo Inventory related. Figure out everything in this packet and handle it correctly.
+%% @todo It sends 60 values so it's probably some kind of options for all 60 items in the inventory?
 
 send_packet_0a06(CSocket, GID) ->
 	{ok, << _:32, A:96/bits, _:32, B:96/bits, _:32, C:1440/bits, _:32, D/bits >>} = file:read_file("p/packet0a06.bin"),
