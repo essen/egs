@@ -217,7 +217,7 @@ send_keepalive(CSocket) ->
 %% @doc Make the client load the quest previously sent.
 
 send_load_quest(CSocket, GID) ->
-	Packet = << 16#1212:16, 0:208, GID:32/little-unsigned-integer, 0:64 >>,
+	Packet = << 16#12120300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:19264 >>,
 	packet_send(CSocket, Packet).
 
 %% @doc Indicate to the client that loading should finish.
