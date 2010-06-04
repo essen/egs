@@ -880,7 +880,7 @@ send_packet_1005(CSocket, GID, Char) ->
 	{ok, File} = file:read_file("p/packet1005.bin"),
 	<< _:352, Before:160/bits, _:608, After/bits >> = File,
 	<< Name:512/bits, _/bits >> = Char,
-	Packet = << 16#1005:16, 0:208, GID:32/little-unsigned-integer, 0:64, Before/binary, GID:32/little-unsigned-integer, 0:64, Name/binary, After/binary >>,
+	Packet = << 16#10050300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Before/binary, GID:32/little-unsigned-integer, 0:64, Name/binary, After/binary >>,
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @todo Figure out what the packet is.
