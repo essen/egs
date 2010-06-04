@@ -259,11 +259,12 @@ send_player_card(CSocket, GID, Char, Number) ->
 	packet_send(CSocket, Packet).
 
 %% @doc Send the quest file to be loaded.
+%% @todo Probably should try sending the checksum like value (right before the file) and see if it magically fixes anything.
 
 send_quest(CSocket, Filename) ->
 	{ok, File} = file:read_file(Filename),
 	Size = byte_size(File),
-	Packet = << 16#020e:16, 0:304, Size:32/little-unsigned-integer, 0:32, File/binary >>,
+	Packet = << 16#020e0300:32, 0:288, Size:32/little-unsigned-integer, 0:32, File/binary, 0:32 >>,
 	packet_send(CSocket, Packet).
 
 %% @doc Send the trial start notification.
