@@ -249,7 +249,8 @@ lobby_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		egs_proto:send_init_quest(CSocket, GID, Quest),
 		egs_proto:send_quest(CSocket, QuestFile),
 		send_packet_0a05(CSocket, GID),
-		% 0111 010d
+		send_packet_0111(CSocket, GID),
+		% 010d
 		egs_proto:send_zone_init(CSocket, GID, lobby),
 		egs_proto:send_zone(CSocket, ZoneFile),
 		egs_proto:send_map(CSocket, Quest, MapType, MapNumber, MapEntry),
@@ -332,7 +333,8 @@ myroom_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		egs_proto:send_init_quest(CSocket, GID, Quest),
 		egs_proto:send_quest(CSocket, QuestFile),
 		send_packet_0a05(CSocket, GID),
-		% 0111 010d
+		send_packet_0111(CSocket, GID),
+		% 010d
 		egs_proto:send_zone_init(CSocket, GID, myroom),
 		egs_proto:send_zone(CSocket, ZoneFile),
 		egs_proto:send_map(CSocket, Quest, MapType, MapNumber, MapEntry),
@@ -863,6 +865,13 @@ build_packet_233_contents(Users) ->
 		MapEntry:32/little-unsigned-integer, CharFile/binary, F/binary >>,
 	Next = build_packet_233_contents(Rest),
 	<< Chunk/binary, Next/binary >>.
+
+%% @todo Possibly related to 010d. Just send seemingly safe values.
+
+send_packet_0111(CSocket, GID) ->
+	Packet = << 16#01110300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
+		GID:32/little-unsigned-integer, 0:32, 6:32/little-unsigned-integer, 0:32 >>,
+	egs_proto:packet_send(CSocket, Packet).
 
 %% @todo End of character loading. Just send it.
 
