@@ -187,9 +187,10 @@ char_select_load(CSocket, GID, Version, Number) ->
 	egs_proto:send_character_selected(CSocket, GID, Char, Options),
 	% 0246
 	send_packet_0a0a(CSocket, GID),
-	% 1006
+	send_packet_1006(CSocket, GID, 5),
 	send_packet_1005(CSocket, GID, Char),
-	% 1006 0210
+	send_packet_1006(CSocket, GID, 12),
+	% 0210
 	egs_proto:send_universe_info(CSocket, GID),
 	egs_proto:send_player_card(CSocket, GID, Char),
 	% 1501 1512 0303
@@ -880,6 +881,12 @@ send_packet_1005(CSocket, GID, Char) ->
 	<< _:352, Before:160/bits, _:608, After/bits >> = File,
 	<< Name:512/bits, _/bits >> = Char,
 	Packet = << 16#1005:16, 0:208, GID:32/little-unsigned-integer, 0:64, Before/binary, GID:32/little-unsigned-integer, 0:64, Name/binary, After/binary >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @todo Figure out what the packet is.
+
+send_packet_1006(CSocket, GID, N) ->
+	Packet = << 16#10060300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, N:32/little-unsigned-integer >>,
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @todo Figure out what the other things are and do it right.
