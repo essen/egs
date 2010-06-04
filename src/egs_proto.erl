@@ -131,12 +131,6 @@ parse_chat(_, Packet) ->
 	<< _:384, FromGID:32/unsigned-integer, Modifiers:128/bits, FromName:512/bits, Message/bits >> = Packet,
 	[{gid, FromGID}, {name, FromName}, {modifiers, Modifiers}, {message, Message}].
 
-%% @doc Parse the game server auth command. Used when first connecting to a game server.
-
-parse_game_auth(Packet) ->
-	<< _:352, GID:32/little-unsigned-integer, Auth:32/bits, _/bits >> = Packet,
-	[{gid, GID}, {auth, Auth}].
-
 %% @doc Parse a lobby change command.
 
 parse_lobby_change(Packet) ->

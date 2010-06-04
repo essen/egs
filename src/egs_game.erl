@@ -74,7 +74,7 @@ process(CSocket, Version) ->
 %% @doc Game server auth request handler.
 
 process_handle(16#020d, CSocket, Version, Orig) ->
-	[{gid, GID}, {auth, Auth}] = egs_proto:parse_game_auth(Orig),
+	<< _:352, GID:32/little-unsigned-integer, Auth:32/bits, _/bits >> = Orig,
 	case egs_db:users_select(GID) of
 		error ->
 			log(GID, "can't find user, closing"),
