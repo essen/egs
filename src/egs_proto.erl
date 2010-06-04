@@ -252,9 +252,9 @@ send_npc_info(CSocket, GID) ->
 
 %% @doc Send the player's partner card.
 
-send_player_card(CSocket, GID, Char) ->
+send_player_card(CSocket, GID, Char, Number) ->
 	<< CharInfo:576/bits, _/bits >> = Char,
-	Packet = << 16#1500:16, 0:208, GID:32/little-unsigned-integer, 0:64, CharInfo/binary, 0:3072, 16#01040103:32, 0:64 >>,
+	Packet = << 16#15000300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, CharInfo/binary, 0:3072, 16#010401:24, Number:8, 0:64 >>,
 	packet_send(CSocket, Packet).
 
 %% @doc Send the quest file to be loaded.

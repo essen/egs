@@ -192,7 +192,7 @@ char_select_load(CSocket, GID, Version, Number) ->
 	send_packet_1006(CSocket, GID, 12),
 	% 0210
 	egs_proto:send_universe_info(CSocket, GID),
-	egs_proto:send_player_card(CSocket, GID, Char),
+	egs_proto:send_player_card(CSocket, GID, Char, Number),
 	% 1501 1512 0303
 	egs_proto:send_npc_info(CSocket, GID),
 	% 021b
