@@ -116,7 +116,7 @@ char_select(CSocket, GID, Version) ->
 			<< _:32, Command:16/unsigned-integer, _/bits >> = Orig,
 			char_select_handle(Command, CSocket, GID, Version, Orig);
 		{error, timeout} ->
-			egs_proto:send_keepalive(CSocket, GID),
+			egs_proto:send_keepalive(CSocket),
 			reload,
 			?MODULE:char_select(CSocket, GID, Version);
 		{error, closed} ->
@@ -395,7 +395,7 @@ loop(CSocket, GID, Version, SoFar) ->
 			egs_proto:send_chat(CSocket, Version, ChatGID, ChatName, ChatModifiers, ChatMessage),
 			?MODULE:loop(CSocket, GID, Version, SoFar);
 		{psu_keepalive} ->
-			egs_proto:send_keepalive(CSocket, GID),
+			egs_proto:send_keepalive(CSocket),
 			?MODULE:loop(CSocket, GID, Version, SoFar);
 		{psu_player_spawn, Spawn} ->
 			send_spawn(CSocket, GID, Spawn),
@@ -538,11 +538,6 @@ handle(16#010a, CSocket, GID, _, Orig) ->
 handle(16#0110, CSocket, GID, _, _) ->
 	log(GID, "death (and more)"),
 	lobby_load(CSocket, GID, 1100000, 0, 4, 6);
-
-%% @doc Keepalive handler. Do nothing.
-
-handle(16#021c, _, _, _, _) ->
-	ignore;
 
 %% @doc Uni cube handler.
 

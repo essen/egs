@@ -207,10 +207,11 @@ send_init_quest(CSocket, GID, QuestID) ->
 		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32 >>,
 	packet_send(CSocket, Packet).
 
-%% @doc Keepalive.
+%% @doc Keepalive. Just send an empty packet, the game doesn't really care.
+%% @todo If there's an actual keepalive command, use it instead.
 
-send_keepalive(CSocket, GID) ->
-	Packet = << 16#2b1b:16, 0:208, GID:32/little-unsigned-integer, 0:64 >>,
+send_keepalive(CSocket) ->
+	Packet = << 0:32 >>,
 	packet_send(CSocket, Packet).
 
 %% @doc Make the client load the quest previously sent.
