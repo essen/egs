@@ -133,7 +133,7 @@ send_character_list(CSocket, GID, Data0, Data1, Data2, Data3) ->
 	[{status, Status1}, {char, Char1}|_] = Data1,
 	[{status, Status2}, {char, Char2}|_] = Data2,
 	[{status, Status3}, {char, Char3}|_] = Data3,
-	Packet = << 16#0d03:16/unsigned-integer, 0:80, GID:32/little-unsigned-integer, 0:96, GID:32/little-unsigned-integer, 0:104,
+	Packet = << 16#0d030300:32/unsigned-integer, 0:32, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:104,
 		Status0:8/unsigned-integer, 0:48, Char0/binary, 0:520,
 		Status1:8/unsigned-integer, 0:48, Char1/binary, 0:520,
 		Status2:8/unsigned-integer, 0:48, Char2/binary, 0:520,
@@ -141,9 +141,10 @@ send_character_list(CSocket, GID, Data0, Data1, Data2, Data3) ->
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @doc Send the data for the selected character.
+%% @todo The large chunk of 0s can have some values set... but what are they used for?
 
 send_character_selected(CSocket, GID, Char, Options) ->
-	Packet = << 16#0d01:16, 0:208, GID:32/little-unsigned-integer, 0:64, Char/binary, 0:8128, Options/binary >>,
+	Packet = << 16#0d010300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Char/binary, 0:8128, Options/binary >>,
 	packet_send(CSocket, Packet).
 
 %% @doc Send a chat command. AOTI v2.000 version of the command.
