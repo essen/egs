@@ -225,7 +225,10 @@ counter_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		send_packet_0215(CSocket, GID, 0),
 		send_packet_0215(CSocket, GID, 0),
 		send_packet_020c(CSocket),
-		% 1202 1204 1206 1207
+		send_packet_1202(CSocket, GID),
+		send_packet_1204(CSocket, GID),
+		send_packet_1206(CSocket, GID),
+		send_packet_1207(CSocket, GID),
 		egs_proto:send_load_quest(CSocket, GID),
 		send_packet_201(CSocket, GID, User, Char),
 		% 0a06
@@ -293,12 +296,10 @@ mission_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		% 0215 0215
 		egs_proto:send_trial_start(CSocket, GID),
 		send_packet_020c(CSocket),
-
-		% mandatory packet to make enemies appear
-		{ok, << _:32, Packet/bits >>} = file:read_file("p/packet1202.bin"),
-		egs_proto:packet_send(CSocket, Packet),
-
-		% 1204 1206 1207
+		send_packet_1202(CSocket, GID),
+		send_packet_1204(CSocket, GID),
+		send_packet_1206(CSocket, GID),
+		send_packet_1207(CSocket, GID),
 		egs_proto:send_load_quest(CSocket, GID),
 		send_packet_201(CSocket, GID, User, Char),
 		send_packet_0a06(CSocket, GID),
@@ -935,6 +936,32 @@ send_packet_1005(CSocket, GID, Char) ->
 
 send_packet_1006(CSocket, GID, N) ->
 	Packet = << 16#10060300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, N:32/little-unsigned-integer >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @todo Figure out what this packet does. Sane values for counter and missions for now.
+
+send_packet_1202(CSocket, GID) ->
+	Packet = << 16#12020300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96, 16#10000000:32, 0:64, 16#14000000:32, 0:32 >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @todo Figure out what this packet does. Seems it's the same values all the time.
+
+send_packet_1204(CSocket, GID) ->
+	Packet = << 16#12040300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96, 16#20000000:32, 0:256 >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @todo Figure out what this packet does. Sane values for counter and missions for now.
+
+send_packet_1206(CSocket, GID) ->
+	Packet = << 16#12060300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96, 16#80020000:32, 0:5120 >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @todo Figure out what this packet does. Sane values for counter and missions for now.
+
+send_packet_1207(CSocket, GID) ->
+	Chunk = << 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 0:224, 16#0000ffff:32, 16#ff000000:32, 16#64000a00:32 >>,
+	Packet = << 16#12070300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
+		Chunk/binary, Chunk/binary, Chunk/binary, Chunk/binary, Chunk/binary, Chunk/binary >>,
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @todo Send an empty partner card list.
