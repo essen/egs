@@ -222,7 +222,8 @@ counter_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		egs_proto:send_zone(CSocket, ZoneFile),
 		egs_proto:send_map(CSocket, 0, 0, 0),
 		egs_proto:send_location(CSocket, GID, 16#7fffffff, 0, 0, AreaName),
-		% 0215 0215
+		send_packet_0215(CSocket, GID, 0),
+		send_packet_0215(CSocket, GID, 0),
 		send_packet_020c(CSocket),
 		% 1202 1204 1206 1207
 		egs_proto:send_load_quest(CSocket, GID),
@@ -882,6 +883,12 @@ send_packet_0111(CSocket, GID) ->
 
 send_packet_020c(CSocket) ->
 	Packet = << 16#020c020c:32, 16#fffff20c:32, 0:256 >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @todo No idea what this do. Nor why it's sent twice when loading a counter.
+
+send_packet_0215(CSocket, GID, N) ->
+	Packet = << 16#02150300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, N:32/little-unsigned-integer >>,
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @todo End of character loading. Just send it.
