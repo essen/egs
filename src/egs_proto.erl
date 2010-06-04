@@ -123,7 +123,7 @@ packet_split(Packet, Result) ->
 %% @todo Probably.
 
 send_camera_center(CSocket, GID) ->
-	Packet = << 16#0236:16, 0:208, GID:32/little-unsigned-integer, 0:64 >>,
+	Packet = << 16#02360300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64 >>,
 	packet_send(CSocket, Packet).
 
 %% @doc Send the character list for selection.
