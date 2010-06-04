@@ -197,7 +197,7 @@ char_select_load(CSocket, GID, Version, Number) ->
 	send_packet_1512(CSocket, GID),
 	% 0303
 	egs_proto:send_npc_info(CSocket, GID),
-	% 021b
+	send_packet_021b(CSocket, GID),
 	lobby_load(CSocket, GID, 1100000, 0, 1, 1),
 	ssl:setopts(CSocket, [{active, true}]),
 	?MODULE:loop(CSocket, GID, Version).
@@ -858,6 +858,12 @@ build_packet_233_contents(Users) ->
 		MapEntry:32/little-unsigned-integer, CharFile/binary, F/binary >>,
 	Next = build_packet_233_contents(Rest),
 	<< Chunk/binary, Next/binary >>.
+
+%% @todo End of character loading. Just send it.
+
+send_packet_021b(CSocket, GID) ->
+	Packet = << 16#021b0300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64 >>,
+	egs_proto:packet_send(CSocket, Packet).
 
 %% @todo Inventory related. Figure out everything in this packet and handle it correctly.
 
