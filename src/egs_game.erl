@@ -222,7 +222,9 @@ counter_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		egs_proto:send_zone(CSocket, ZoneFile),
 		egs_proto:send_map(CSocket, MapType, MapNumber, MapEntry),
 		egs_proto:send_location(CSocket, GID, Quest, MapType, MapNumber, AreaName),
-		% 0215 0215 020c 1202 1204 1206 1207
+		% 0215 0215
+		send_packet_020c(CSocket),
+		% 1202 1204 1206 1207
 		egs_proto:send_load_quest(CSocket, GID),
 		send_packet_201(CSocket, GID, User, Char),
 		% 0a06
@@ -255,7 +257,7 @@ lobby_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		egs_proto:send_zone(CSocket, ZoneFile),
 		egs_proto:send_map(CSocket, MapType, MapNumber, MapEntry),
 		egs_proto:send_location(CSocket, GID, Quest, MapType, MapNumber, AreaName),
-		% 020c
+		send_packet_020c(CSocket),
 		egs_proto:send_load_quest(CSocket, GID),
 		send_packet_201(CSocket, GID, User, Char),
 		send_packet_0a06(CSocket, GID),
@@ -289,7 +291,7 @@ mission_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		egs_proto:send_location(CSocket, GID, Quest, MapType, MapNumber, AreaName),
 		% 0215 0215
 		egs_proto:send_trial_start(CSocket, GID),
-		% 020c
+		send_packet_020c(CSocket),
 
 		% mandatory packet to make enemies appear
 		{ok, << _:32, Packet/bits >>} = file:read_file("p/packet1202.bin"),
@@ -374,7 +376,7 @@ spaceport_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		egs_proto:send_zone(CSocket, ZoneFile),
 		egs_proto:send_map(CSocket, MapType, MapNumber, MapEntry),
 		egs_proto:send_location(CSocket, GID, Quest, MapType, MapNumber, AreaName),
-		% 020c
+		send_packet_020c(CSocket),
 		send_packet_201(CSocket, GID, User, Char),
 		% 0a06
 		egs_proto:send_loading_end(CSocket, GID),
@@ -871,6 +873,12 @@ build_packet_233_contents(Users) ->
 send_packet_0111(CSocket, GID) ->
 	Packet = << 16#01110300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
 		GID:32/little-unsigned-integer, 0:32, 6:32/little-unsigned-integer, 0:32 >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @todo No idea what this one does. For unknown reasons it uses channel 2.
+
+send_packet_020c(CSocket) ->
+	Packet = << 16#020c020c:32, 16#fffff20c:32, 0:256 >>,
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @todo End of character loading. Just send it.
