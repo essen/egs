@@ -573,23 +573,19 @@ handle(16#0302, _, GID, _, _) ->
 %% @todo Only broadcast to people in the same map.
 
 handle(16#0304, _, GID, Version, Orig) ->
-	[{gid, _}, {name, ChatName}, {modifiers, ChatModifiers}, {message, ChatMessage}] = egs_proto:parse_chat(Version, Orig),
-	case ChatName of
-		missing ->
-			case egs_db:users_select(GID) of
-				error ->
-					ActualName = ChatName;
-				User ->
-					ActualName = User#users.charname
-			end;
-		_ ->
-			ActualName = ChatName
+	case Version of
+		0 -> % AOTI v2.000
+			<< _:416, Modifiers:128/bits, Message/bits >> = Orig,
+			User = egs_db:users_select(GID),
+			Name = User#users.charname;
+		_ -> % Above
+			<< _:416, Modifiers:128/bits, Name:512/bits, Message/bits >> = Orig
 	end,
-	[LogName|_] = re:split(ActualName, "\\0\\0", [{return, binary}]),
-	[TmpMessage|_] = re:split(ChatMessage, "\\0\\0", [{return, binary}]),
+	[LogName|_] = re:split(Name, "\\0\\0", [{return, binary}]),
+	[TmpMessage|_] = re:split(Message, "\\0\\0", [{return, binary}]),
 	LogMessage = re:replace(TmpMessage, "\\n", " ", [global, {return, binary}]),
 	log(GID, "chat from ~s: ~s", [[re:replace(LogName, "\\0", "", [global, {return, binary}])], [re:replace(LogMessage, "\\0", "", [global, {return, binary}])]]),
-	lists:foreach(fun(User) -> User#users.pid ! {psu_chat, GID, ActualName, ChatModifiers, ChatMessage} end, egs_db:users_select_all());
+	lists:foreach(fun(User) -> User#users.pid ! {psu_chat, GID, Name, Modifiers, Message} end, egs_db:users_select_all());
 
 %% @todo Handle this packet. Ignore for now.
 

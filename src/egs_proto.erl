@@ -119,18 +119,6 @@ packet_split(Packet, Result) ->
 			end
 	end.
 
-%% @doc Parse a chat command. AOTI v2.000 version of the command.
-
-parse_chat(0, Packet) ->
-	<< _:384, FromGID:32/unsigned-integer, Modifiers:128/bits, Message/bits >> = Packet,
-	[{gid, FromGID}, {name, missing}, {modifiers, Modifiers}, {message, Message}];
-
-%% @doc Parse a chat command. AOTI since an unknown version of the game.
-
-parse_chat(_, Packet) ->
-	<< _:384, FromGID:32/unsigned-integer, Modifiers:128/bits, FromName:512/bits, Message/bits >> = Packet,
-	[{gid, FromGID}, {name, FromName}, {modifiers, Modifiers}, {message, Message}].
-
 %% @doc Center the camera on the player, if possible.
 %% @todo Probably.
 
