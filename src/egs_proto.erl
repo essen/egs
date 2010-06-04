@@ -282,7 +282,7 @@ send_universe_cube(CSocket) ->
 %% @todo Currently only have universe number 2, named EGS Test.
 
 send_universe_info(CSocket, GID) ->
-	Packet = << 16#0222:16, 0:80, GID:32/little-unsigned-integer, 0:96, GID:32/little-unsigned-integer, 0:64,
+	Packet = << 16#02220300:32, 0:32, 16#00001200:32, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
 		2:32/little-unsigned-integer, 0:32, 16#45, 0, 16#47, 0, 16#53, 0, 16#20, 0, 16#54, 0, 16#65, 0, 16#73, 0, 16#74, 0:24 >>,
 	packet_send(CSocket, Packet).
 
