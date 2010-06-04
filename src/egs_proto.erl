@@ -119,12 +119,6 @@ packet_split(Packet, Result) ->
 			end
 	end.
 
-%% @doc Parse a character selection command. Return the selected character's number.
-
-parse_character_select(Packet) ->
-	<< _:352, Number:32/little-unsigned-integer, _/bits >> = Packet,
-	[{number, Number}].
-
 %% @doc Parse a chat command. AOTI v2.000 version of the command.
 
 parse_chat(0, Packet) ->

@@ -128,7 +128,7 @@ char_select(CSocket, GID, Version) ->
 
 char_select_handle(16#020b, CSocket, GID, Version, Orig) ->
 	log(GID, "character selection"),
-	[{number, Number}] = egs_proto:parse_character_select(Orig),
+	<< _:352, Number:32/little-unsigned-integer, _/bits >> = Orig,
 	char_select_load(CSocket, GID, Version, Number);
 
 %% @doc Character creation handler.
