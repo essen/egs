@@ -220,7 +220,7 @@ counter_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		% 010d
 		egs_proto:send_zone_init(CSocket, GID, counter),
 		egs_proto:send_zone(CSocket, ZoneFile),
-		egs_proto:send_map(CSocket, Quest, MapType, MapNumber, MapEntry),
+		egs_proto:send_map(CSocket, MapType, MapNumber, MapEntry),
 		egs_proto:send_location(CSocket, GID, Quest, MapType, MapNumber, AreaName),
 		% 0215 0215 020c 1202 1204 1206 1207
 		egs_proto:send_load_quest(CSocket, GID),
@@ -253,7 +253,7 @@ lobby_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		% 010d
 		egs_proto:send_zone_init(CSocket, GID, lobby),
 		egs_proto:send_zone(CSocket, ZoneFile),
-		egs_proto:send_map(CSocket, Quest, MapType, MapNumber, MapEntry),
+		egs_proto:send_map(CSocket, MapType, MapNumber, MapEntry),
 		egs_proto:send_location(CSocket, GID, Quest, MapType, MapNumber, AreaName),
 		% 020c
 		egs_proto:send_load_quest(CSocket, GID),
@@ -285,7 +285,7 @@ mission_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		% 010d
 		egs_proto:send_zone_init(CSocket, GID, mission),
 		egs_proto:send_zone(CSocket, ZoneFile),
-		egs_proto:send_map(CSocket, Quest, MapType, MapNumber, MapEntry),
+		egs_proto:send_map(CSocket, MapType, MapNumber, MapEntry),
 		egs_proto:send_location(CSocket, GID, Quest, MapType, MapNumber, AreaName),
 		% 0215 0215
 		egs_proto:send_trial_start(CSocket, GID),
@@ -337,7 +337,7 @@ myroom_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		% 010d
 		egs_proto:send_zone_init(CSocket, GID, myroom),
 		egs_proto:send_zone(CSocket, ZoneFile),
-		egs_proto:send_map(CSocket, Quest, MapType, MapNumber, MapEntry),
+		egs_proto:send_map(CSocket, MapType, MapNumber, MapEntry),
 		myroom_send_packet(CSocket, "p/packet1332.bin"),
 		% 130e(a) 130e(b) 1202 1204 1206
 		egs_proto:send_load_quest(CSocket, GID),
@@ -372,7 +372,7 @@ spaceport_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		send_packet_0a05(CSocket, GID),
 		egs_proto:send_zone_init(CSocket, GID, spaceport),
 		egs_proto:send_zone(CSocket, ZoneFile),
-		egs_proto:send_map(CSocket, Quest, MapType, MapNumber, MapEntry),
+		egs_proto:send_map(CSocket, MapType, MapNumber, MapEntry),
 		egs_proto:send_location(CSocket, GID, Quest, MapType, MapNumber, AreaName),
 		% 020c
 		send_packet_201(CSocket, GID, User, Char),

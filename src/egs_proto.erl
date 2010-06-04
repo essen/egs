@@ -238,9 +238,10 @@ send_location(CSocket, GID, Quest, MapType, MapNumber, Location) ->
 	packet_send(CSocket, << Packet/binary, 0:PaddingSize, 1:32/little-unsigned-integer >>).
 
 %% @doc Send the map ID to be loaded by the client.
+%% @todo Last two values are unknown.
 
-send_map(CSocket, Quest, MapType, MapNumber, MapEntry) ->
-	Packet = << 16#0205:16, 0:304, Quest:32/little-unsigned-integer, MapType:32/little-unsigned-integer,
+send_map(CSocket, MapType, MapNumber, MapEntry) ->
+	Packet = << 16#02050300:32, 0:288, 16#ffffffff:32, MapType:32/little-unsigned-integer,
 		MapNumber:32/little-unsigned-integer, MapEntry:32/little-unsigned-integer, 0:64 >>,
 	packet_send(CSocket, Packet).
 
