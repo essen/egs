@@ -647,7 +647,8 @@ handle(16#0c01, CSocket, GID, _, Orig) ->
 %% @todo Handle correctly.
 
 handle(16#0c05, CSocket, _, _, _) ->
-	{ok, << _:32, Packet/bits >>} = file:read_file("p/packet0c06.bin"),
+	{ok, << File/bits >>} = file:read_file("data/missions/colony.counter.ll.pack"),
+	Packet = << 16#0c060300:32, 0:288, 1:32/little-unsigned-integer, File/binary, 0:32 >>,
 	egs_proto:packet_send(CSocket, Packet);
 
 %% @doc Lobby transport handler? Just ignore the meseta price and send the player where he wanna be!
