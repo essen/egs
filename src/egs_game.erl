@@ -221,7 +221,7 @@ counter_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		egs_proto:send_zone_init(CSocket, GID, mission),
 		egs_proto:send_zone(CSocket, ZoneFile),
 		egs_proto:send_map(CSocket, 0, 0, 0),
-		egs_proto:send_location(CSocket, GID, 16#7fffffff, 0, 0, AreaName),
+		egs_proto:send_location(CSocket, GID, 16#7fffffff, 0, 0, AreaName, MapEntry),
 		send_packet_0215(CSocket, GID, 0),
 		send_packet_0215(CSocket, GID, 0),
 		send_packet_020c(CSocket),
@@ -248,7 +248,7 @@ lobby_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 	egs_db:users_insert(User),
 	[{status, 1}, {char, Char}, {options, _}] = char_load(User#users.folder, User#users.charnumber),
 	[{type, AreaType}, {name, AreaName}, {quest, QuestFile}, {zone, ZoneFile}, {entries, _}] = proplists:get_value([Quest, MapType, MapNumber], ?MAPS,
-		[{name, "dammy"}, {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone-0.nbl"}, {entries, []}]),
+		[{type, lobby}, {name, "dammy"}, {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone-0.nbl"}, {entries, []}]),
 	try
 		% broadcast spawn and unspawn to other people
 		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(OldUser)),
@@ -271,7 +271,7 @@ lobby_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		egs_proto:send_zone_init(CSocket, GID, lobby),
 		egs_proto:send_zone(CSocket, ZoneFile),
 		egs_proto:send_map(CSocket, MapType, MapNumber, MapEntry),
-		egs_proto:send_location(CSocket, GID, Quest, MapType, MapNumber, AreaName),
+		egs_proto:send_location(CSocket, GID, Quest, MapType, MapNumber, AreaName, 16#ffffffff),
 		send_packet_020c(CSocket),
 		case AreaType of
 			lobby ->
@@ -308,7 +308,7 @@ mission_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		egs_proto:send_zone_init(CSocket, GID, mission),
 		egs_proto:send_zone(CSocket, ZoneFile),
 		egs_proto:send_map(CSocket, MapType, MapNumber, MapEntry),
-		egs_proto:send_location(CSocket, GID, Quest, MapType, MapNumber, AreaName),
+		egs_proto:send_location(CSocket, GID, Quest, MapType, MapNumber, AreaName, 16#ffffffff),
 		send_packet_0215(CSocket, GID, 0),
 		send_packet_0215(CSocket, GID, 0),
 		egs_proto:send_trial_start(CSocket, GID),
@@ -651,7 +651,7 @@ handle(16#0c05, CSocket, GID, _, _) ->
 	[{lobby, _}, {data, Data}] = proplists:get_value(User#users.quest, ?COUNTERS),
 	[{filename, Filename}, {options, _}] = proplists:get_value(User#users.mapentry, Data),
 	{ok, << File/bits >>} = file:read_file(Filename),
-	Packet = << 16#0c060300:32, 0:288, 1:32/little-unsigned-integer, File/binary, 0:32 >>,
+	Packet = << 16#0c060300:32, 0:288, 1:32/little-unsigned-integer, File/binary >>,
 	egs_proto:packet_send(CSocket, Packet);
 
 %% @doc Lobby transport handler? Just ignore the meseta price and send the player where he wanna be!
