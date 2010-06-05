@@ -627,7 +627,7 @@ handle(16#0811, CSocket, GID, _, Orig) ->
 
 handle(16#0812, CSocket, GID, _, _) ->
 	User = egs_db:users_select(GID),
-	[QuestID, ZoneID] = proplists:get_value(User#users.quest, ?COUNTERS, [1100000, 0]),
+	[{lobby, [QuestID, ZoneID]}, {data, _}] = proplists:get_value(User#users.quest, ?COUNTERS, [1100000, 0]),
 	lobby_load(CSocket, GID, QuestID, ZoneID, User#users.maptype, User#users.mapnumber);
 
 %% @doc Start mission handler.
@@ -646,8 +646,11 @@ handle(16#0c01, CSocket, GID, _, Orig) ->
 %% @doc Counter quests files request handler? Send huge number of quest files.
 %% @todo Handle correctly.
 
-handle(16#0c05, CSocket, _, _, _) ->
-	{ok, << File/bits >>} = file:read_file("data/missions/colony.counter.ll.pack"),
+handle(16#0c05, CSocket, GID, _, _) ->
+	User = egs_db:users_select(GID),
+	[{lobby, _}, {data, Data}] = proplists:get_value(User#users.quest, ?COUNTERS),
+	Filename = proplists:get_value(User#users.mapentry, Data),
+	{ok, << File/bits >>} = file:read_file(Filename),
 	Packet = << 16#0c060300:32, 0:288, 1:32/little-unsigned-integer, File/binary, 0:32 >>,
 	egs_proto:packet_send(CSocket, Packet);
 

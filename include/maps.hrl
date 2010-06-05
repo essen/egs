@@ -108,9 +108,13 @@
 	{ [1104000,0,900], [{type, spaceport}, {name, "Spaceport"}, {quest, "data/lobby/spaceport.quest.nbl"}, {zone, "data/lobby/spaceport.zone.nbl"}, {entries, [0]}] }
 ]).
 
-%% EGS counters settings. Associate counter QuestID with the QuestID and ZoneID of the lobby containing the counter.
+%% EGS counters settings.
 
 -define(COUNTERS, [
-	{  10497, [1100000, 0] }, % Colony 4th Floor
-	{ 731394, [1100000,11] }  % Colony 3rd, Lumilass
+	% Colony mission counters
+	{  10497, [{lobby, [1100000, 0]}, {data, [
+		{0, "data/missions/colony.counter.ll.pack"}
+	]}] },
+	% Lumilass
+	{ 731394, [{lobby, [1100000,11]}, {data, none}] }
 ]).
