@@ -374,13 +374,13 @@ spaceport_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		egs_proto:send_init_quest(CSocket, GID, Quest),
 		egs_proto:send_quest(CSocket, QuestFile),
 		send_packet_0a05(CSocket, GID),
-		egs_proto:send_zone_init(CSocket, GID, spaceport),
+		egs_proto:send_zone_init(CSocket, GID, lobby),
 		egs_proto:send_zone(CSocket, ZoneFile),
 		egs_proto:send_map(CSocket, MapType, MapNumber, MapEntry),
 		egs_proto:send_location(CSocket, GID, Quest, MapType, MapNumber, AreaName),
 		send_packet_020c(CSocket),
 		send_packet_201(CSocket, GID, User, Char),
-		% 0a06
+		send_packet_0a06(CSocket, GID),
 		egs_proto:send_loading_end(CSocket, GID),
 		egs_proto:send_camera_center(CSocket, GID)
 	catch
