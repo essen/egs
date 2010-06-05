@@ -302,14 +302,15 @@ mission_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 	try
 		egs_proto:send_init_quest(CSocket, GID, Quest),
 		egs_proto:send_quest(CSocket, QuestFile),
-		% 0215
+		send_packet_0215(CSocket, GID, 16#ffffffff),
 		send_packet_0a05(CSocket, GID),
 		% 010d
 		egs_proto:send_zone_init(CSocket, GID, mission),
 		egs_proto:send_zone(CSocket, ZoneFile),
 		egs_proto:send_map(CSocket, MapType, MapNumber, MapEntry),
 		egs_proto:send_location(CSocket, GID, Quest, MapType, MapNumber, AreaName),
-		% 0215 0215
+		send_packet_0215(CSocket, GID, 0),
+		send_packet_0215(CSocket, GID, 0),
 		egs_proto:send_trial_start(CSocket, GID),
 		send_packet_020c(CSocket),
 		send_packet_1202(CSocket, GID),
