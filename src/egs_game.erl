@@ -649,7 +649,7 @@ handle(16#0c01, CSocket, GID, _, Orig) ->
 handle(16#0c05, CSocket, GID, _, _) ->
 	User = egs_db:users_select(GID),
 	[{lobby, _}, {data, Data}] = proplists:get_value(User#users.quest, ?COUNTERS),
-	Filename = proplists:get_value(User#users.mapentry, Data),
+	[{filename, Filename}, {options, _}] = proplists:get_value(User#users.mapentry, Data),
 	{ok, << File/bits >>} = file:read_file(Filename),
 	Packet = << 16#0c060300:32, 0:288, 1:32/little-unsigned-integer, File/binary, 0:32 >>,
 	egs_proto:packet_send(CSocket, Packet);
@@ -672,9 +672,11 @@ handle(16#0c0e, CSocket, GID, _, _) ->
 %% @todo Temporarily allow rare mission and LL all difficulties to all players.
 
 handle(16#0c0f, CSocket, GID, _, _) ->
+	User = egs_db:users_select(GID),
+	[{lobby, _}, {data, Data}] = proplists:get_value(User#users.quest, ?COUNTERS),
+	[{filename, _}, {options, Options}] = proplists:get_value(User#users.mapentry, Data),
 	Packet = << 16#0c100300:32, 0:32, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
-		16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#01a92800:32, 3, 3, 0,
-		3, 3, 3, 3, 0, 0:40, 3, 3, 3, 3, 3, 0:176 >>,
+		16#00011300:32, GID:32/little-unsigned-integer, 0:64, Options/binary >>,
 	egs_proto:packet_send(CSocket, Packet);
 
 %% @doc Set flag handler. Associate a new flag with the character.

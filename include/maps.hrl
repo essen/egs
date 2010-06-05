@@ -113,7 +113,7 @@
 -define(COUNTERS, [
 	% Colony mission counters
 	{  10497, [{lobby, [1100000, 0]}, {data, [
-		{0, "data/missions/colony.counter.ll.pack"}
+		{0, [{filename, "data/missions/colony.counter.ll.pack"}, {options, << 16#01a92800:32, 3, 3, 0, 3, 3, 3, 3, 0, 0:40, 3, 3, 3, 3, 3, 0:176 >>}]}
 	]}] },
 	% Lumilass
 	{ 731394, [{lobby, [1100000,11]}, {data, none}] }
