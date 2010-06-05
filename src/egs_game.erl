@@ -655,6 +655,13 @@ handle(16#0c05, CSocket, _, _, _) ->
 	{ok, << _:32, Packet/bits >>} = file:read_file("p/packet0c06.bin"),
 	egs_proto:packet_send(CSocket, Packet);
 
+%% @doc Lobby transport handler? Just ignore the meseta price and send the player where he wanna be!
+%% @todo Handle correctly.
+
+handle(16#0c07, CSocket, GID, _, _) ->
+	Packet = << 16#0c080300:32, 16#ffff0000:32, 0:128, 16#00011300:32, GID:32/little-unsigned-integer, 0:96 >>,
+	egs_proto:packet_send(CSocket, Packet);
+
 %% @doc Counter available mission list request handler.
 %% @todo Temporarily allow rare mission and LL all difficulties to all players.
 

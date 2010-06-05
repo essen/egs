@@ -142,9 +142,14 @@ send_character_list(CSocket, GID, Data0, Data1, Data2, Data3) ->
 
 %% @doc Send the data for the selected character.
 %% @todo The large chunk of 0s can have some values set... but what are they used for?
+%% @todo The values after the Char variable are the flags. Probably use bits to define what flag is and isn't set. Handle correctly.
 
 send_character_selected(CSocket, GID, Char, Options) ->
-	Packet = << 16#0d010300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Char/binary, 0:8128, Options/binary >>,
+	Packet = << 16#0d010300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Char/binary,
+		16#ffbbef1c:32, 16#f8ff0700:32, 16#fc810916:32, 16#7802134c:32,
+		16#b0c0040f:32, 16#7cf0e583:32, 16#b7bce0c6:32, 16#7ff8f963:32,
+		16#3fd7ffff:32, 16#fff7ffff:32, 16#f3ff63e0:32, 16#1fe00000:32,
+		0:7744, Options/binary >>,
 	packet_send(CSocket, Packet).
 
 %% @doc Send a chat command. AOTI v2.000 version of the command.
