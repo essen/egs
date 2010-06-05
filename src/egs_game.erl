@@ -240,29 +240,45 @@ counter_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 	end.
 
 %% @doc Load the given map as a standard lobby.
+%% @todo Probably save the map type in the users table.
 
 lobby_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 	OldUser = egs_db:users_select(GID),
 	User = OldUser#users{instanceid=undefined, quest=Quest, maptype=MapType, mapnumber=MapNumber, mapentry=MapEntry},
 	egs_db:users_insert(User),
 	[{status, 1}, {char, Char}, {options, _}] = char_load(User#users.folder, User#users.charnumber),
-	[{name, AreaName}, {quest, QuestFile}, {zone, ZoneFile}, {entries, _}] = proplists:get_value([Quest, MapType, MapNumber], ?MAPS,
+	[{type, AreaType}, {name, AreaName}, {quest, QuestFile}, {zone, ZoneFile}, {entries, _}] = proplists:get_value([Quest, MapType, MapNumber], ?MAPS,
 		[{name, "dammy"}, {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone-0.nbl"}, {entries, []}]),
 	try
 		% broadcast spawn and unspawn to other people
 		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(OldUser)),
-		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_spawn, User} end, egs_db:users_select_others_in_area(User)),
+		case AreaType of
+			lobby ->
+				lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_spawn, User} end, egs_db:users_select_others_in_area(User));
+			_ ->
+				ignore
+		end,
 		egs_proto:send_init_quest(CSocket, GID, Quest),
 		egs_proto:send_quest(CSocket, QuestFile),
 		send_packet_0a05(CSocket, GID),
-		send_packet_0111(CSocket, GID),
-		% 010d
+		case AreaType of
+			lobby ->
+				send_packet_0111(CSocket, GID);
+				% 010d
+			_ ->
+				ignore
+		end,
 		egs_proto:send_zone_init(CSocket, GID, lobby),
 		egs_proto:send_zone(CSocket, ZoneFile),
 		egs_proto:send_map(CSocket, MapType, MapNumber, MapEntry),
 		egs_proto:send_location(CSocket, GID, Quest, MapType, MapNumber, AreaName),
 		send_packet_020c(CSocket),
-		egs_proto:send_load_quest(CSocket, GID),
+		case AreaType of
+			lobby ->
+				egs_proto:send_load_quest(CSocket, GID);
+			_ ->
+				ignore
+		end,
 		send_packet_201(CSocket, GID, User, Char),
 		send_packet_0a06(CSocket, GID),
 		send_packet_233(CSocket, GID, egs_db:users_select_others_in_area(User)),
@@ -282,7 +298,7 @@ mission_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 	User = OldUser#users{instanceid=GID, quest=Quest, maptype=MapType, mapnumber=MapNumber, mapentry=MapEntry},
 	egs_db:users_insert(User),
 	[{status, 1}, {char, Char}, {options, _}] = char_load(User#users.folder, User#users.charnumber),
-	[{name, AreaName}, {quest, QuestFile}, {zone, ZoneFile}, {entries, _}] = proplists:get_value([Quest, MapType, MapNumber], ?MAPS),
+	[{type, _}, {name, AreaName}, {quest, QuestFile}, {zone, ZoneFile}, {entries, _}] = proplists:get_value([Quest, MapType, MapNumber], ?MAPS),
 	try
 		egs_proto:send_init_quest(CSocket, GID, Quest),
 		egs_proto:send_quest(CSocket, QuestFile),
@@ -359,34 +375,6 @@ myroom_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 myroom_send_packet(CSocket, Filename) ->
 	{ok, << _:32, File/bits >>} = file:read_file(Filename),
 	egs_proto:packet_send(CSocket, File).
-
-%% @doc Load the given map as a spaceport.
-
-spaceport_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
-	OldUser = egs_db:users_select(GID),
-	User = OldUser#users{quest=Quest, maptype=MapType, mapnumber=MapNumber, mapentry=MapEntry},
-	egs_db:users_insert(User),
-	[{status, 1}, {char, Char}, {options, _}] = char_load(User#users.folder, User#users.charnumber),
-	[{name, AreaName}, {quest, QuestFile}, {zone, ZoneFile}, {entries, _}] = proplists:get_value([Quest, MapType, MapNumber], ?MAPS),
-	try
-		% broadcast unspawn to other people
-		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(OldUser)),
-		egs_proto:send_init_quest(CSocket, GID, Quest),
-		egs_proto:send_quest(CSocket, QuestFile),
-		send_packet_0a05(CSocket, GID),
-		egs_proto:send_zone_init(CSocket, GID, lobby),
-		egs_proto:send_zone(CSocket, ZoneFile),
-		egs_proto:send_map(CSocket, MapType, MapNumber, MapEntry),
-		egs_proto:send_location(CSocket, GID, Quest, MapType, MapNumber, AreaName),
-		send_packet_020c(CSocket),
-		send_packet_201(CSocket, GID, User, Char),
-		send_packet_0a06(CSocket, GID),
-		egs_proto:send_loading_end(CSocket, GID),
-		egs_proto:send_camera_center(CSocket, GID)
-	catch
-		_ ->
-			close(CSocket, GID)
-	end.
 
 %% @doc Alias for the game main's loop when the buffer is empty.
 
@@ -608,7 +596,7 @@ handle(16#0402, _, _, _, _) ->
 	ignore;
 
 %% @doc Map change handler.
-%%      Spaceports and my room are handled differently than normal lobbies.
+%%      Rooms are handled differently than normal lobbies.
 %% @todo Load 'Your room' correctly.
 %% @todo When changing lobby to the room, 0230 must also be sent. Same when going from room to lobby.
 %% @todo The mission loading here is a temporary one-mission only choice.
@@ -620,8 +608,6 @@ handle(16#0807, CSocket, GID, _, Orig) ->
 	case {Quest, MapType, MapNumber, MapEntry} of
 		{1000013, _, _, _} ->
 			mission_load(CSocket, GID, 1000013, 0, 1121, 0);
-		{1104000, 0, 900, 0} ->
-			spaceport_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry);
 		{1120000, _, _, _} ->
 			myroom_load(CSocket, GID, Quest, MapType, 423, MapEntry);
 		_ ->
