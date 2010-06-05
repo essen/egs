@@ -633,6 +633,13 @@ handle(16#0811, CSocket, GID, _, Orig) ->
 	log(GID, "mission counter (~b,~b,~b,~b)", [Quest,MapType, MapNumber, MapEntry]),
 	counter_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry);
 
+%% @doc Leave mission counter handler. Lobby values depend on which counter was entered.
+
+handle(16#0812, CSocket, GID, _, _) ->
+	User = egs_db:users_select(GID),
+	[QuestID, ZoneID] = proplists:get_value(User#users.quest, ?COUNTERS, [1100000, 0]),
+	lobby_load(CSocket, GID, QuestID, ZoneID, User#users.maptype, User#users.mapnumber);
+
 %% @doc Start mission handler. Packet contains the selected mission number.
 %% @todo Load more than one mission.
 

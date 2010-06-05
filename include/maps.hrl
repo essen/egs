@@ -36,7 +36,7 @@
 	{ [1100000,11, 101], [{name, "Colony 2nd, Items Shop"},   {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone-11.nbl"}, {entries, [0]}] },
 	{ [1100000,12, 101], [{name, "Colony 2nd, Weapons Shop"}, {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone-12.nbl"}, {entries, [1]}] },
 	{ [1100000,13, 101], [{name, "Colony 2nd, Armors Shop"},  {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone-13.nbl"}, {entries, [2]}] },
-	{ [1100000,11, 102], [{name, "Colony 3rd, Lumilass"},     {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone-11.nbl"}, {entries, [2]}] },
+	{ [1100000,11, 102], [{name, "Colony 3rd, Lumilass"},     {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone-11.nbl"}, {entries, [2,7,8]}] },
 	{ [1100000,12, 102], [{name, "Colony 3rd, Clothes Shop"}, {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone-12.nbl"}, {entries, [1]}] },
 	{ [1100000,13, 102], [{name, "Colony 3rd, Parts Shop"},   {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone-13.nbl"}, {entries, [0]}] },
 	{ [1100000,11, 103], [{name, "Colony Club"},              {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone-11.nbl"}, {entries, [0,1]}] },
@@ -106,4 +106,11 @@
 	% Spaceports
 
 	{ [1104000,0,900], [{name, "Spaceport"}, {quest, "data/lobby/spaceport.quest.nbl"}, {zone, "data/lobby/spaceport.zone.nbl"}, {entries, [0]}] }
+]).
+
+%% EGS counters settings. Associate counter QuestID with the QuestID and ZoneID of the lobby containing the counter.
+
+-define(COUNTERS, [
+	{  10497, [1100000, 0] }, % Colony 4th Floor
+	{ 731394, [1100000,11] }  % Colony 3rd, Lumilass
 ]).
