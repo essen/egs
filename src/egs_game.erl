@@ -611,12 +611,15 @@ handle(16#0402, _, _, _, _) ->
 %%      Spaceports and my room are handled differently than normal lobbies.
 %% @todo Load 'Your room' correctly.
 %% @todo When changing lobby to the room, 0230 must also be sent. Same when going from room to lobby.
+%% @todo The mission loading here is a temporary one-mission only choice.
 
 handle(16#0807, CSocket, GID, _, Orig) ->
 	<< _:352, Quest:32/little-unsigned-integer, MapType:16/little-unsigned-integer,
 		MapNumber:16/little-unsigned-integer, MapEntry:16/little-unsigned-integer, _/bits >> = Orig,
 	log(GID, "lobby change (~b,~b,~b,~b)", [Quest,MapType, MapNumber, MapEntry]),
 	case {Quest, MapType, MapNumber, MapEntry} of
+		{1000013, _, _, _} ->
+			mission_load(CSocket, GID, 1000013, 0, 1121, 0);
 		{1104000, 0, 900, 0} ->
 			spaceport_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry);
 		{1120000, _, _, _} ->
@@ -640,13 +643,18 @@ handle(16#0812, CSocket, GID, _, _) ->
 	[QuestID, ZoneID] = proplists:get_value(User#users.quest, ?COUNTERS, [1100000, 0]),
 	lobby_load(CSocket, GID, QuestID, ZoneID, User#users.maptype, User#users.mapnumber);
 
-%% @doc Start mission handler. Packet contains the selected mission number.
+%% @doc Start mission handler.
 %% @todo Load more than one mission.
+%% @todo Forward the mission start to other players of the same party, whatever their location is.
 
-handle(16#0c01, CSocket, GID, _, _) ->
+handle(16#0c01, CSocket, GID, _, Orig) ->
+	<< _:352, Quest:32/little-unsigned-integer >> = Orig,
+	log(GID, "start mission ~b", [Quest]),
+	send_packet_170c(CSocket, GID),
+	egs_proto:packet_send(CSocket, << 16#10200300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64 >>),
+	send_packet_1015(CSocket),
 	Packet = << 16#0c020300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96 >>,
-	egs_proto:packet_send(CSocket, Packet),
-	mission_load(CSocket, GID, 1000013, 0, 1121, 0); % load test mission!
+	egs_proto:packet_send(CSocket, Packet);
 
 %% @doc Counter quests files request handler? Send huge number of quest files.
 %% @todo Handle correctly.
@@ -660,6 +668,13 @@ handle(16#0c05, CSocket, _, _, _) ->
 
 handle(16#0c07, CSocket, GID, _, _) ->
 	Packet = << 16#0c080300:32, 16#ffff0000:32, 0:128, 16#00011300:32, GID:32/little-unsigned-integer, 0:96 >>,
+	egs_proto:packet_send(CSocket, Packet);
+
+%% @doc Abort mission handler.
+%% @todo Warp the player to the lobby if he's in a mission. No need if he's in a counter though.
+
+handle(16#0c0e, CSocket, GID, _, _) ->
+	Packet = << 16#10060300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#0b000000:32 >>,
 	egs_proto:packet_send(CSocket, Packet);
 
 %% @doc Counter available mission list request handler.
@@ -733,12 +748,9 @@ handle(16#1709, CSocket, GID, _, _) ->
 	egs_proto:packet_send(CSocket, Packet);
 
 %% @doc Counter-related handler.
-%% @todo Find what the heck this packet is.
 
 handle(16#170b, CSocket, GID, _, _) ->
-	{ok, File} = file:read_file("p/packet170c.bin"),
-	Packet = << 16#170c0300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, File/binary >>,
-	egs_proto:packet_send(CSocket, Packet);
+	send_packet_170c(CSocket, GID);
 
 %% @doc Counter initialization handler?
 %% @todo Handle correctly.
@@ -960,6 +972,11 @@ send_packet_1006(CSocket, GID, N) ->
 	Packet = << 16#10060300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, N:32/little-unsigned-integer >>,
 	egs_proto:packet_send(CSocket, Packet).
 
+%% @todo Handle correctly.
+
+send_packet_1015(CSocket) ->
+	myroom_send_packet(CSocket, "p/packet1015_mission.bin").
+
 %% @todo Figure out what this packet does. Sane values for counter and missions for now.
 
 send_packet_1202(CSocket, GID) ->
@@ -996,6 +1013,13 @@ send_packet_1501(CSocket, GID) ->
 
 send_packet_1512(CSocket, GID) ->
 	Packet = << 16#15120300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:46144 >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @todo Find what the heck this packet is.
+
+send_packet_170c(CSocket, GID) ->
+	{ok, File} = file:read_file("p/packet170c.bin"),
+	Packet = << 16#170c0300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, File/binary >>,
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @todo Figure out what the other things are and do it right.
