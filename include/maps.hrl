@@ -179,11 +179,9 @@
 ]).
 
 %% EGS counters settings.
+%% Various appearance configuration counters don't have any quest-related data. They use the CounterID 65535.
 
 -define(COUNTERS, [
-	% Colony mission counters
-	{0, [{lobby, [1100000, 0]}, {filename, "data/missions/colony.counter.ll.pack"},    {options, << 16#01a92800:32, 3, 3, 0,             3, 3, 3, 3, 0:48, 3, 3, 3, 3, 3, 0:176 >>}]},
-	{1, [{lobby, [1100000, 0]}, {filename, "data/missions/colony.counter.docks.pack"}, {options, << 16#01805400:32, 3, 3, 0, 0, 0, 0,    3, 3, 3, 3, 0:40, 3, 3, 3, 3, 0:40, 3, 0, 3, 0, 0:448 >>}]},
-	% Lumilass
-	{ 731394, [{lobby, [1100000,11]}, {data, none}] }
+	{0, [{quests, "data/missions/colony.counter.ll.pack"},    {options, << 16#01a92800:32, 3, 3, 0,             3, 3, 3, 3, 0:48, 3, 3, 3, 3, 3, 0:176 >>}]},
+	{1, [{quests, "data/missions/colony.counter.docks.pack"}, {options, << 16#01805400:32, 3, 3, 0, 0, 0, 0,    3, 3, 3, 3, 0:40, 3, 3, 3, 3, 0:40, 3, 0, 3, 0, 0:448 >>}]}
 ]).

@@ -206,7 +206,7 @@ char_select_load(CSocket, GID, Version, Number) ->
 
 counter_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID) ->
 	OldUser = egs_db:users_select(GID),
-	User = OldUser#users{questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID},
+	User = OldUser#users{questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID, savedquestid=OldUser#users.questid, savedzoneid=OldUser#users.zoneid},
 	egs_db:users_insert(User),
 	[{status, 1}, {char, Char}, {options, _}] = char_load(User#users.folder, User#users.charnumber),
 	AreaName = "Mission counter",
@@ -631,8 +631,7 @@ handle(16#0811, CSocket, GID, _, Orig) ->
 
 handle(16#0812, CSocket, GID, _, _) ->
 	User = egs_db:users_select(GID),
-	[{lobby, [QuestID, ZoneID]}|_] = proplists:get_value(User#users.entryid, ?COUNTERS),
-	lobby_load(CSocket, GID, QuestID, ZoneID, User#users.zoneid, User#users.mapid);
+	lobby_load(CSocket, GID, User#users.savedquestid, User#users.savedzoneid, User#users.zoneid, User#users.mapid);
 
 %% @doc Start mission handler.
 %% @todo Load more than one mission.
@@ -652,7 +651,7 @@ handle(16#0c01, CSocket, GID, _, Orig) ->
 
 handle(16#0c05, CSocket, GID, _, _) ->
 	User = egs_db:users_select(GID),
-	[{lobby, _}, {filename, Filename}|_] = proplists:get_value(User#users.entryid, ?COUNTERS),
+	[{quests, Filename}, {options, _}] = proplists:get_value(User#users.entryid, ?COUNTERS),
 	{ok, << File/bits >>} = file:read_file(Filename),
 	Packet = << 16#0c060300:32, 0:288, 1:32/little-unsigned-integer, File/binary >>,
 	egs_proto:packet_send(CSocket, Packet);
@@ -676,7 +675,7 @@ handle(16#0c0e, CSocket, GID, _, _) ->
 
 handle(16#0c0f, CSocket, GID, _, _) ->
 	User = egs_db:users_select(GID),
-	[{lobby, _}, {filename, _}, {options, Options}] = proplists:get_value(User#users.entryid, ?COUNTERS),
+	[{quests, _}, {options, Options}] = proplists:get_value(User#users.entryid, ?COUNTERS),
 	Packet = << 16#0c100300:32, 0:32, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
 		16#00011300:32, GID:32/little-unsigned-integer, 0:64, Options/binary >>,
 	egs_proto:packet_send(CSocket, Packet);
