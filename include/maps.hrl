@@ -112,10 +112,8 @@
 
 -define(COUNTERS, [
 	% Colony mission counters
-	{  10497, [{lobby, [1100000, 0]}, {data, [
-		{  0, [{filename, "data/missions/colony.counter.ll.pack"},    {options, << 16#01a92800:32, 3, 3, 0,             3, 3, 3, 3, 0:48, 3, 3, 3, 3, 3, 0:176 >>}]},
-		{  1, [{filename, "data/missions/colony.counter.docks.pack"}, {options, << 16#01805400:32, 3, 3, 0, 0, 0, 0,    3, 3, 3, 3, 0:40, 3, 3, 3, 3, 0:40, 3, 0, 3, 0, 0:448 >>}]}
-	]}] },
+	{0, [{lobby, [1100000, 0]}, {filename, "data/missions/colony.counter.ll.pack"},    {options, << 16#01a92800:32, 3, 3, 0,             3, 3, 3, 3, 0:48, 3, 3, 3, 3, 3, 0:176 >>}]},
+	{1, [{lobby, [1100000, 0]}, {filename, "data/missions/colony.counter.docks.pack"}, {options, << 16#01805400:32, 3, 3, 0, 0, 0, 0,    3, 3, 3, 3, 0:40, 3, 3, 3, 3, 0:40, 3, 0, 3, 0, 0:448 >>}]},
 	% Lumilass
 	{ 731394, [{lobby, [1100000,11]}, {data, none}] }
 ]).

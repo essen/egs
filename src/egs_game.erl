@@ -620,14 +620,14 @@ handle(16#0807, CSocket, GID, _, Orig) ->
 handle(16#0811, CSocket, GID, _, Orig) ->
 	<< _:352, Quest:32/little-unsigned-integer, MapType:16/little-unsigned-integer,
 		MapNumber:16/little-unsigned-integer, MapEntry:16/little-unsigned-integer, _/bits >> = Orig,
-	log(GID, "mission counter (~b,~b,~b,~b)", [Quest,MapType, MapNumber, MapEntry]),
+	log(GID, "mission counter (~b,~b,~b,~b)", [Quest, MapType, MapNumber, MapEntry]),
 	counter_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry);
 
 %% @doc Leave mission counter handler. Lobby values depend on which counter was entered.
 
 handle(16#0812, CSocket, GID, _, _) ->
 	User = egs_db:users_select(GID),
-	[{lobby, [QuestID, ZoneID]}, {data, _}] = proplists:get_value(User#users.quest, ?COUNTERS, [1100000, 0]),
+	[{lobby, [QuestID, ZoneID]}|_] = proplists:get_value(User#users.mapentry, ?COUNTERS),
 	lobby_load(CSocket, GID, QuestID, ZoneID, User#users.maptype, User#users.mapnumber);
 
 %% @doc Start mission handler.
@@ -648,8 +648,7 @@ handle(16#0c01, CSocket, GID, _, Orig) ->
 
 handle(16#0c05, CSocket, GID, _, _) ->
 	User = egs_db:users_select(GID),
-	[{lobby, _}, {data, Data}] = proplists:get_value(User#users.quest, ?COUNTERS),
-	[{filename, Filename}, {options, _}] = proplists:get_value(User#users.mapentry, Data),
+	[{lobby, _}, {filename, Filename}|_] = proplists:get_value(User#users.mapentry, ?COUNTERS),
 	{ok, << File/bits >>} = file:read_file(Filename),
 	Packet = << 16#0c060300:32, 0:288, 1:32/little-unsigned-integer, File/binary >>,
 	egs_proto:packet_send(CSocket, Packet);
@@ -673,8 +672,7 @@ handle(16#0c0e, CSocket, GID, _, _) ->
 
 handle(16#0c0f, CSocket, GID, _, _) ->
 	User = egs_db:users_select(GID),
-	[{lobby, _}, {data, Data}] = proplists:get_value(User#users.quest, ?COUNTERS),
-	[{filename, _}, {options, Options}] = proplists:get_value(User#users.mapentry, Data),
+	[{lobby, _}, {filename, _}, {options, Options}] = proplists:get_value(User#users.mapentry, ?COUNTERS),
 	Packet = << 16#0c100300:32, 0:32, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
 		16#00011300:32, GID:32/little-unsigned-integer, 0:64, Options/binary >>,
 	egs_proto:packet_send(CSocket, Packet);
