@@ -752,7 +752,7 @@ handle(16#170b, CSocket, GID, _, _) ->
 handle(16#1710, CSocket, GID, _, _) ->
 	User = egs_db:users_select(GID),
 	[{quests, _}, {bg, Background}, {options, _}] = proplists:get_value(User#users.entryid, ?COUNTERS),
-	Packet = << 16#17110300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Background:32 >>,
+	Packet = << 16#17110300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Background:32/little-unsigned-integer >>,
 	egs_proto:packet_send(CSocket, Packet);
 
 %% @doc Dialog request handler. Do what we can.

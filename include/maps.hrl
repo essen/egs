@@ -180,21 +180,22 @@
 
 %% EGS counters settings.
 %% Various appearance configuration counters don't have any quest-related data. They use the CounterID 65535.
+%% Background values include: 01 parum, 02 moatoob, 03 neudaiz, 04 guardians hq, 05 parum guardians, 06 moatoob guardians, 07 neudaiz guardians, 08 pitch black, ff destroyed colony
 
 -define(COUNTERS, [
 	% Linear Line: Phantom Ruins, Unsafe Passage, Unsafe Passage (AOTI, missing)
 
-	{  0, [{quests, "data/missions/colony.counter.ll.pack"}, {bg, 16#ffbda10b}, {options, << 16#01a92800:32, 3, 3, 0,
+	{  0, [{quests, "data/missions/colony.counter.ll.pack"}, {bg, 255}, {options, << 16#01a92800:32, 3, 3, 0,
 		3, 3, 3, 3, 0, % Phantom Ruins C-S
 		3, 3, 3, 3, 3, % Unsafe Passage C-S2 variant 1
 		3, 3, 3, 3, 3, % Unsafe Passage C-S2 variant 2
 		3, 3, 3, 3, 3, % Unsafe Passage C-S2 variant 3
 	0:136 >>}]},
 
-	% Space docks: Phantom Ruins, Dark Satellite C-S, S2, S3, Familiar Trees (missing), Boss quest category (missing), Unit category (missing), Enemy category (missing)
+	% Space docks: Phantom Ruins, Dark Satellite, Familiar Trees (missing), Boss quest category (missing), Unit category (missing), Enemy category (missing)
 
-	{  1, [{quests, "data/missions/colony.counter.docks.pack"}, {bg, 16#ff4f140b}, {options, << 16#01805400:32, 3, 3, 0, 0, 0, 0,
-		3, 3, 3, 3, 0, % Phantom Ruins
+	{  1, [{quests, "data/missions/colony.counter.docks.pack"}, {bg, 255}, {options, << 16#01805400:32, 3, 3, 0, 0, 0, 0,
+		3, 3, 3, 3, 0, % Phantom Ruins C-S
 		3, 3, 3, 3, % Dark Satellite C-S variant 1
 		3, 3, 3, 3, % Dark Satellite C-S variant 2
 		3, 3, 3, 3, % Dark Satellite C-S variant 3
@@ -202,10 +203,56 @@
 		3, 3, 3, % Dark Satellite S3 variant 1-3
 	0:440 >>}]},
 
+	% Transfer Terminal (entry 0)
+
+	{ 10, [{quests, "data/missions/colony.counter.terminal-0.pack"}, {bg, 255}, {options, << 16#01d10400:32, 0:32 >>}]},
+
+	% Transfer Terminal (entry 1): Phantom Ruins, Fight for Food, Fight for Food (AOTI, missing)
+
+	{ 11, [{quests, "data/missions/colony.counter.terminal-1.pack"}, {bg, 255}, {options, << 16#01fc2800:32, 3, 3, 0,
+		3, 3, 3, 3, 0, % Phantom Ruins C-S
+		3, 3, 3, % Fight for Food C-A variant 1
+		3, 3, 3, % Fight for Food C-A variant 2
+		3, 3, 3, % Fight for Food C-A variant 3
+		3, 3, 3, % Fight for Food S variant 1-3
+		3, 3, 3, % Fight for Food S2 variant 1-3
+	0:136 >>}]},
+
+	% Aurorey
+
+	{ 15, [{quests, "data/missions/colony.counter.aurorey.pack"}, {bg, 255}, {options, << 16#01010400:32, 0:32 >>}]},
+
+	% HIVE (entry 0)
+
+	{ 20, [{quests, "data/missions/colony.counter.hive-0.pack"}, {bg, 255}, {options, << 16#01050400:32, 0:32 >>}]},
+
+	% HIVE (entry 1): Phantom Ruins, SEED Awakened
+
+	{ 21, [{quests, "data/missions/colony.counter.hive-1.pack"}, {bg, 255}, {options, << 16#017e1c00:32, 3, 3,
+		3, 3, 3, 3, 0, % Phantom Ruins C-S
+		3, 3, 3, 3, % SEED Awakened C-S variant 1
+		3, 3, 3, 3, % SEED Awakened C-S variant 2
+		3, 3, 3, 3, % SEED Awakened C-S variant 3
+		3, 3, 3, % SEED Awakened S2 variant 1-3
+		3, 3, 3, % SEED Awakened S3 variant 1-3
+	0:24 >>}]},
+
+	% Dallgun: Phantom Ruins, The Black Nest, True Darkness, (empty name, missing)
+
+	{ 25, [{quests, "data/missions/colony.counter.dallgun.pack"}, {bg, 255}, {options, << 16#01003c00:32, 3, 3, 3, 0,
+		3, 3, 3, 3, 0, % Phantom Ruins C-S
+		3, 3, 3, 3, 3, 0, % The Black Nest C-S2 variant 1
+		3, 3, 3, 3, 3, 0, % The Black Nest C-S2 variant 2
+		3, 3, 3, 3, 3, 0, % The Black Nest C-S2 variant 3
+		3, 3, 3, 3, 3, % True Darkness C-S2 variant 1
+		3, 3, 3, 3, 3, % True Darkness C-S2 variant 2
+		3, 3, 3, 3, 3, % True Darkness C-S2 variant 3
+	0:144 >>}]},
+
 	% GUARDIANS HQ: Episode 2 C rank, B rank, A rank, Episode 3 C rank, B rank, A rank, Winter event 1 (missing), Winter event 2 (missing)
 	% MAG event (missing), Side story C rank, Side story B rank, Side story A rank, Old event missions
 
-	{115, [{quests, "data/missions/colony.counter.guardians.pack"}, {bg, 16#0418f40b}, {options, << 16#01807800:32, 3, 3, 3, 3, 3, 3, 0, 0, 0, 3, 3, 3, 3,
+	{115, [{quests, "data/missions/colony.counter.guardians.pack"}, {bg, 4}, {options, << 16#01807800:32, 3, 3, 3, 3, 3, 3, 0, 0, 0, 3, 3, 3, 3,
 		3, 3, 3, 3, 3, 3, 3, 3, 3, 3, % Episode 2 Difficulty C Chapters 1-10
 		3, 3, 3, 3, 3, 3, 3, 3, 3, 3, % Episode 2 Difficulty B Chapters 1-10
 		3, 3, 3, 3, 3, 3, 3, 3, 3, 3, % Episode 2 Difficulty A Chapters 1-10
@@ -221,5 +268,26 @@
 		3, % Dark Crystal Seeker
 		3, % Hit the Counter! (Shred the Darkness)
 		3, % Photon Eraser Return
-	0:32 >>}]}
+	0:32 >>}]},
+
+	% Colony R&D: Clothes'n'Parts male/female
+
+	{177, [{quests, "data/missions/colony.counter.rd.pack"}, {bg, 4}, {options, << 16#01000800:32, 3, 0:24, 3, 3, 0:16 >>}]},
+
+	% Rykros (entry 0)
+
+	{200, [{quests, "data/missions/colony.counter.rykros-0.pack"}, {bg, 255}, {options, << 16#01000400:32, 0:32 >>}]},
+
+	% Rykros (entry 1): Phantom Ruins, The Dark God
+
+	{201, [{quests, "data/missions/colony.counter.rykros-1.pack"}, {bg, 255}, {options, << 16#01d11c00:32, 3, 3,
+		3, 3, 3, 3, 0, % Phantom Ruins C-S
+		3, 3, 3, 3, 3, 0, % The Dark God C-S2 variant 1
+		3, 3, 3, 3, 3, 0, % The Dark God C-S2 variant 2
+		3, 3, 3, 3, 3, 0, % The Dark God C-S2 variant 3
+	0:24 >>}]},
+
+	% Falz Memoria
+
+	{203, [{quests, "data/missions/colony.counter.memoria.pack"}, {bg, 255}, {options, << 16#01013800:32, 0:448 >>}]}
 ]).
