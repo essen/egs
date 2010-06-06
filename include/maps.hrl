@@ -182,13 +182,44 @@
 %% Various appearance configuration counters don't have any quest-related data. They use the CounterID 65535.
 
 -define(COUNTERS, [
-	% Phantom Ruins, Unsafe Passage
-	{  0, [{quests, "data/missions/colony.counter.ll.pack"},        {bg, 16#ffbda10b}, {options, << 16#01a92800:32, 3, 3, 0,             3, 3, 3, 3, 0:48, 3, 3, 3, 3, 3, 0:176 >>}]},
-	% Phantom Ruins, Dark Satellite C-S, S2, S3, Familiar Trees (crash), Boss quest category (crash), Unit category (crash), Enemy category (crash)
-	{  1, [{quests, "data/missions/colony.counter.docks.pack"},     {bg, 16#ff4f140b}, {options, << 16#01805400:32, 3, 3, 0, 0, 0, 0,    3, 3, 3, 3, 0:40, 3, 3, 3, 3, 0:40, 3, 0, 3, 0, 0:448 >>}]},
-	% Episode 2 C rank, B rank, A rank, Episode 3 C rank, B rank, A rank, Winter event 1, Winter event 2, MAG event, Side story C rank, Side story B rank, Side story A rank, Old event missions
-	{115, [{quests, "data/missions/colony.counter.guardians.pack"}, {bg, 16#0418f40b}, {options, << 16#01807800:32, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,     
-			3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, % EP2
-			3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, % EP3
-			0:248, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0:48, 3, 3, 3, 0:32 >>}]} % Side story, MAG' and stuff
+	% Linear Line: Phantom Ruins, Unsafe Passage, Unsafe Passage (AOTI, missing)
+
+	{  0, [{quests, "data/missions/colony.counter.ll.pack"}, {bg, 16#ffbda10b}, {options, << 16#01a92800:32, 3, 3, 0,
+		3, 3, 3, 3, 0, % Phantom Ruins C-S
+		3, 3, 3, 3, 3, % Unsafe Passage C-S2 variant 1
+		3, 3, 3, 3, 3, % Unsafe Passage C-S2 variant 2
+		3, 3, 3, 3, 3, % Unsafe Passage C-S2 variant 3
+	0:136 >>}]},
+
+	% Space docks: Phantom Ruins, Dark Satellite C-S, S2, S3, Familiar Trees (missing), Boss quest category (missing), Unit category (missing), Enemy category (missing)
+
+	{  1, [{quests, "data/missions/colony.counter.docks.pack"}, {bg, 16#ff4f140b}, {options, << 16#01805400:32, 3, 3, 0, 0, 0, 0,
+		3, 3, 3, 3, 0, % Phantom Ruins
+		3, 3, 3, 3, % Dark Satellite C-S variant 1
+		3, 3, 3, 3, % Dark Satellite C-S variant 2
+		3, 3, 3, 3, % Dark Satellite C-S variant 3
+		3, 3, 3, % Dark Satellite S2 variant 1-3
+		3, 3, 3, % Dark Satellite S3 variant 1-3
+	0:440 >>}]},
+
+	% GUARDIANS HQ: Episode 2 C rank, B rank, A rank, Episode 3 C rank, B rank, A rank, Winter event 1 (missing), Winter event 2 (missing)
+	% MAG event (missing), Side story C rank, Side story B rank, Side story A rank, Old event missions
+
+	{115, [{quests, "data/missions/colony.counter.guardians.pack"}, {bg, 16#0418f40b}, {options, << 16#01807800:32, 3, 3, 3, 3, 3, 3, 0, 0, 0, 3, 3, 3, 3,
+		3, 3, 3, 3, 3, 3, 3, 3, 3, 3, % Episode 2 Difficulty C Chapters 1-10
+		3, 3, 3, 3, 3, 3, 3, 3, 3, 3, % Episode 2 Difficulty B Chapters 1-10
+		3, 3, 3, 3, 3, 3, 3, 3, 3, 3, % Episode 2 Difficulty A Chapters 1-10
+		3, 3, 3, 3, 3, 3, 3, 3, % Episode 3 Difficulty C Chapters 1-8
+		3, 3, 3, 3, 3, 3, 3, 3, % Episode 3 Difficulty B Chapters 1-8
+		3, 3, 3, 3, 3, 3, 3, 3, % Episode 3 Difficulty A Chapters 1-8
+		0:248,
+		3, 3, 3, % Side-story C-A
+		3, 3, 3, 3, 3, % MAG' C-S2
+		3, % Gifts from Beyond+
+		0:40,
+		3, % Hit the Counter! (MAG)
+		3, % Dark Crystal Seeker
+		3, % Hit the Counter! (Shred the Darkness)
+		3, % Photon Eraser Return
+	0:32 >>}]}
 ]).
