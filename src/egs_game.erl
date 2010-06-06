@@ -651,7 +651,7 @@ handle(16#0c01, CSocket, GID, _, Orig) ->
 
 handle(16#0c05, CSocket, GID, _, _) ->
 	User = egs_db:users_select(GID),
-	[{quests, Filename}, {options, _}] = proplists:get_value(User#users.entryid, ?COUNTERS),
+	[{quests, Filename}, {bg, _}, {options, _}] = proplists:get_value(User#users.entryid, ?COUNTERS),
 	{ok, << File/bits >>} = file:read_file(Filename),
 	Packet = << 16#0c060300:32, 0:288, 1:32/little-unsigned-integer, File/binary >>,
 	egs_proto:packet_send(CSocket, Packet);
@@ -675,7 +675,7 @@ handle(16#0c0e, CSocket, GID, _, _) ->
 
 handle(16#0c0f, CSocket, GID, _, _) ->
 	User = egs_db:users_select(GID),
-	[{quests, _}, {options, Options}] = proplists:get_value(User#users.entryid, ?COUNTERS),
+	[{quests, _}, {bg, _}, {options, Options}] = proplists:get_value(User#users.entryid, ?COUNTERS),
 	Packet = << 16#0c100300:32, 0:32, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
 		16#00011300:32, GID:32/little-unsigned-integer, 0:64, Options/binary >>,
 	egs_proto:packet_send(CSocket, Packet);
@@ -746,11 +746,13 @@ handle(16#1709, CSocket, GID, _, _) ->
 handle(16#170b, CSocket, GID, _, _) ->
 	send_packet_170c(CSocket, GID);
 
-%% @doc Counter initialization handler?
+%% @doc Counter initialization handler? Send the code for the background image to use.
 %% @todo Handle correctly.
 
 handle(16#1710, CSocket, GID, _, _) ->
-	Packet = << 16#17110300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96 >>,
+	User = egs_db:users_select(GID),
+	[{quests, _}, {bg, Background}, {options, _}] = proplists:get_value(User#users.entryid, ?COUNTERS),
+	Packet = << 16#17110300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Background:32 >>,
 	egs_proto:packet_send(CSocket, Packet);
 
 %% @doc Dialog request handler. Do what we can.
