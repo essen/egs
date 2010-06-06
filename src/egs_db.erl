@@ -67,9 +67,9 @@ users_select_others_in_area(Self) ->
 		X#users.gid /= Self#users.gid,
 		X#users.charnumber /= undefined,
 		X#users.instanceid =:= Self#users.instanceid,
-		X#users.quest =:= Self#users.quest,
-		X#users.maptype =:= Self#users.maptype,
-		X#users.mapnumber =:= Self#users.mapnumber
+		X#users.questid =:= Self#users.questid,
+		X#users.zoneid =:= Self#users.zoneid,
+		X#users.mapid =:= Self#users.mapid
 	])).
 
 %% @doc Insert or update an user.

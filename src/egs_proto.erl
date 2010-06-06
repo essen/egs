@@ -236,11 +236,11 @@ send_loading_end(CSocket, GID) ->
 %% @todo Figure out what the last value is. No counter without it. The value before that is also different for counters.
 %% @todo Handle correctly after unifying the area loading code.
 
-send_location(CSocket, GID, Quest, MapType, MapNumber, Location, CounterID) ->
+send_location(CSocket, GID, QuestID, ZoneID, MapID, Location, CounterID) ->
 	UCS2Location = << << X:8, 0:8 >> || X <- Location >>,
 	Packet = << 16#100e0300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
-		1:32/little-unsigned-integer, MapNumber:16/little-unsigned-integer, MapType:16/little-unsigned-integer,
-		Quest:32/little-unsigned-integer, UCS2Location/binary >>,
+		1:32/little-unsigned-integer, MapID:16/little-unsigned-integer, ZoneID:16/little-unsigned-integer,
+		QuestID:32/little-unsigned-integer, UCS2Location/binary >>,
 	PaddingSize = (128 - byte_size(Packet) - 8) * 8,
 	case CounterID of
 		16#ffffffff ->

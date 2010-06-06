@@ -204,13 +204,14 @@ char_select_load(CSocket, GID, Version, Number) ->
 
 %% @doc Load the given map as a mission counter.
 
-counter_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
+counter_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID) ->
 	OldUser = egs_db:users_select(GID),
-	User = OldUser#users{quest=Quest, maptype=MapType, mapnumber=MapNumber, mapentry=MapEntry},
+	User = OldUser#users{questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID},
 	egs_db:users_insert(User),
 	[{status, 1}, {char, Char}, {options, _}] = char_load(User#users.folder, User#users.charnumber),
-	[{name, AreaName}, {quest, QuestFile}, {zone, ZoneFile}, {entries, _}] =
-		[{name, "LL counter"}, {quest, "data/lobby/counter.quest.nbl"}, {zone, "data/lobby/counter.zone.nbl"}, {entries, []}],
+	AreaName = "Mission counter",
+	QuestFile = "data/lobby/counter.quest.nbl",
+	ZoneFile = "data/lobby/counter.zone.nbl",
 	try
 		% broadcast unspawn to other people
 		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(OldUser)),
@@ -221,7 +222,7 @@ counter_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		egs_proto:send_zone_init(CSocket, GID, mission),
 		egs_proto:send_zone(CSocket, ZoneFile),
 		egs_proto:send_map(CSocket, 0, 0, 0),
-		egs_proto:send_location(CSocket, GID, 16#7fffffff, 0, 0, AreaName, MapEntry),
+		egs_proto:send_location(CSocket, GID, 16#7fffffff, 0, 0, AreaName, EntryID),
 		send_packet_0215(CSocket, GID, 0),
 		send_packet_0215(CSocket, GID, 0),
 		send_packet_020c(CSocket),
@@ -242,12 +243,12 @@ counter_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 %% @doc Load the given map as a standard lobby.
 %% @todo Probably save the map type in the users table.
 
-lobby_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
+lobby_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID) ->
 	OldUser = egs_db:users_select(GID),
-	User = OldUser#users{instanceid=undefined, quest=Quest, maptype=MapType, mapnumber=MapNumber, mapentry=MapEntry},
+	User = OldUser#users{instanceid=undefined, questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID},
 	egs_db:users_insert(User),
 	[{status, 1}, {char, Char}, {options, _}] = char_load(User#users.folder, User#users.charnumber),
-	[{type, AreaType}, {name, AreaName}, {quest, QuestFile}, {zone, ZoneFile}, {entries, _}] = proplists:get_value([Quest, MapType, MapNumber], ?MAPS,
+	[{type, AreaType}, {name, AreaName}, {quest, QuestFile}, {zone, ZoneFile}, {entries, _}] = proplists:get_value([QuestID, ZoneID, MapID], ?MAPS,
 		[{type, lobby}, {name, "dammy"}, {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone-0.nbl"}, {entries, []}]),
 	try
 		% broadcast spawn and unspawn to other people
@@ -258,7 +259,7 @@ lobby_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 			_ ->
 				ignore
 		end,
-		egs_proto:send_init_quest(CSocket, GID, Quest),
+		egs_proto:send_init_quest(CSocket, GID, QuestID),
 		egs_proto:send_quest(CSocket, QuestFile),
 		send_packet_0a05(CSocket, GID),
 		case AreaType of
@@ -270,8 +271,8 @@ lobby_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		end,
 		egs_proto:send_zone_init(CSocket, GID, lobby),
 		egs_proto:send_zone(CSocket, ZoneFile),
-		egs_proto:send_map(CSocket, MapType, MapNumber, MapEntry),
-		egs_proto:send_location(CSocket, GID, Quest, MapType, MapNumber, AreaName, 16#ffffffff),
+		egs_proto:send_map(CSocket, ZoneID, MapID, EntryID),
+		egs_proto:send_location(CSocket, GID, QuestID, ZoneID, MapID, AreaName, 16#ffffffff),
 		send_packet_020c(CSocket),
 		case AreaType of
 			lobby ->
@@ -293,22 +294,22 @@ lobby_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 %% @todo One of the silenced packets enable a 04xx command sent by the client and related to enemies sync. Probably 1202.
 %% @todo Maybe the quest doesn't work right because of the lack of this odd checksum-like value.
 
-mission_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
+mission_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID) ->
 	OldUser = egs_db:users_select(GID),
-	User = OldUser#users{instanceid=GID, quest=Quest, maptype=MapType, mapnumber=MapNumber, mapentry=MapEntry},
+	User = OldUser#users{instanceid=GID, questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID},
 	egs_db:users_insert(User),
 	[{status, 1}, {char, Char}, {options, _}] = char_load(User#users.folder, User#users.charnumber),
-	[{type, _}, {name, AreaName}, {quest, QuestFile}, {zone, ZoneFile}, {entries, _}] = proplists:get_value([Quest, MapType, MapNumber], ?MAPS),
+	[{type, _}, {name, AreaName}, {quest, QuestFile}, {zone, ZoneFile}, {entries, _}] = proplists:get_value([QuestID, ZoneID, MapID], ?MAPS),
 	try
-		egs_proto:send_init_quest(CSocket, GID, Quest),
+		egs_proto:send_init_quest(CSocket, GID, QuestID),
 		egs_proto:send_quest(CSocket, QuestFile),
 		send_packet_0215(CSocket, GID, 16#ffffffff),
 		send_packet_0a05(CSocket, GID),
 		% 010d
 		egs_proto:send_zone_init(CSocket, GID, mission),
 		egs_proto:send_zone(CSocket, ZoneFile),
-		egs_proto:send_map(CSocket, MapType, MapNumber, MapEntry),
-		egs_proto:send_location(CSocket, GID, Quest, MapType, MapNumber, AreaName, 16#ffffffff),
+		egs_proto:send_map(CSocket, ZoneID, MapID, EntryID),
+		egs_proto:send_location(CSocket, GID, QuestID, ZoneID, MapID, AreaName, 16#ffffffff),
 		send_packet_0215(CSocket, GID, 0),
 		send_packet_0215(CSocket, GID, 0),
 		egs_proto:send_trial_start(CSocket, GID),
@@ -331,9 +332,9 @@ mission_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 %%      Always load the same room that isn't this player's room for now.
 %% @todo Load 'Your room' correctly.
 
-myroom_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
+myroom_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID) ->
 	OldUser = egs_db:users_select(GID),
-	User = OldUser#users{quest=Quest, maptype=MapType, mapnumber=MapNumber, mapentry=MapEntry},
+	User = OldUser#users{questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID},
 	egs_db:users_insert(User),
 	[{status, 1}, {char, Char}, {options, Options}] = char_load(User#users.folder, User#users.charnumber),
 	[{name, _}, {quest, QuestFile}, {zone, ZoneFile}, {entries, _}] = 
@@ -351,14 +352,14 @@ myroom_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry) ->
 		egs_proto:send_player_card(CSocket, GID, Char, User#users.charnumber),
 		% 1501 1512 0303
 		egs_proto:send_npc_info(CSocket, GID),
-		egs_proto:send_init_quest(CSocket, GID, Quest),
+		egs_proto:send_init_quest(CSocket, GID, QuestID),
 		egs_proto:send_quest(CSocket, QuestFile),
 		send_packet_0a05(CSocket, GID),
 		send_packet_0111(CSocket, GID),
 		% 010d
 		egs_proto:send_zone_init(CSocket, GID, myroom),
 		egs_proto:send_zone(CSocket, ZoneFile),
-		egs_proto:send_map(CSocket, MapType, MapNumber, MapEntry),
+		egs_proto:send_map(CSocket, ZoneID, MapID, EntryID),
 		myroom_send_packet(CSocket, "p/packet1332.bin"),
 		% 130e(a) 130e(b) 1202 1204 1206
 		egs_proto:send_load_quest(CSocket, GID),
@@ -447,20 +448,20 @@ broadcast(16#0503, GID, Orig) ->
 	LID = 0, % TODO: handle the LID correctly
 	<< 100:32/little-unsigned-integer, 16#050301:24/unsigned-integer, _:72, GID:32/little-unsigned-integer, _:192,
 		GID:32/little-unsigned-integer, LID:32/little-unsigned-integer, Direction:32/bits, Coords:96/bits, _:96,
-		Quest:32/little-unsigned-integer, MapType:32/little-unsigned-integer, MapNumber:32/little-unsigned-integer,
-		MapEntry:32/little-unsigned-integer, _:32 >> = Orig,
+		QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer,
+		EntryID:32/little-unsigned-integer, _:32 >> = Orig,
 	User = egs_db:users_select(GID),
-	NewUser = User#users{direction=Direction, coords=Coords, quest=Quest, maptype=MapType, mapnumber=MapNumber, mapentry=MapEntry},
+	NewUser = User#users{direction=Direction, coords=Coords, questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID},
 	egs_db:users_insert(NewUser),
 	broadcast(default, GID, Orig);
 
 %% @doc Stand still broadcast handler. Save the position and then dispatch it.
 
 broadcast(16#0514, GID, Orig) ->
-	<< _:320, _:96, Direction:32/bits, Coords:96/bits, Quest:32/little-unsigned-integer, MapType:32/little-unsigned-integer,
-		MapNumber:32/little-unsigned-integer, MapEntry:32/little-unsigned-integer, _/bits >> = Orig,
+	<< _:320, _:96, Direction:32/bits, Coords:96/bits, QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer,
+		MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer, _/bits >> = Orig,
 	User = egs_db:users_select(GID),
-	NewUser = User#users{direction=Direction, coords=Coords, quest=Quest, maptype=MapType, mapnumber=MapNumber, mapentry=MapEntry},
+	NewUser = User#users{direction=Direction, coords=Coords, questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID},
 	egs_db:users_insert(NewUser),
 	broadcast(default, GID, Orig);
 
@@ -603,40 +604,40 @@ handle(16#0402, _, _, _, _) ->
 %% @todo The mission loading here is a temporary one-mission only choice.
 
 handle(16#0807, CSocket, GID, _, Orig) ->
-	<< _:352, Quest:32/little-unsigned-integer, MapType:16/little-unsigned-integer,
-		MapNumber:16/little-unsigned-integer, MapEntry:16/little-unsigned-integer, _/bits >> = Orig,
-	log(GID, "lobby change (~b,~b,~b,~b)", [Quest,MapType, MapNumber, MapEntry]),
-	case {Quest, MapType, MapNumber, MapEntry} of
-		{1000013, _, _, _} ->
+	<< _:352, QuestID:32/little-unsigned-integer, ZoneID:16/little-unsigned-integer,
+		MapID:16/little-unsigned-integer, EntryID:16/little-unsigned-integer, _/bits >> = Orig,
+	log(GID, "lobby change (~b,~b,~b,~b)", [QuestID, ZoneID, MapID, EntryID]),
+	case QuestID of
+		1000013 ->
 			mission_load(CSocket, GID, 1000013, 0, 1121, 0);
-		{1120000, _, _, _} ->
-			myroom_load(CSocket, GID, Quest, MapType, 423, MapEntry);
+		1120000 ->
+			myroom_load(CSocket, GID, QuestID, ZoneID, 423, EntryID);
 		_ ->
-			lobby_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry)
+			lobby_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID)
 	end;
 
 %% @doc Mission counter handler.
 
 handle(16#0811, CSocket, GID, _, Orig) ->
-	<< _:352, Quest:32/little-unsigned-integer, MapType:16/little-unsigned-integer,
-		MapNumber:16/little-unsigned-integer, MapEntry:16/little-unsigned-integer, _/bits >> = Orig,
-	log(GID, "mission counter (~b,~b,~b,~b)", [Quest, MapType, MapNumber, MapEntry]),
-	counter_load(CSocket, GID, Quest, MapType, MapNumber, MapEntry);
+	<< _:352, QuestID:32/little-unsigned-integer, ZoneID:16/little-unsigned-integer,
+		MapID:16/little-unsigned-integer, EntryID:16/little-unsigned-integer, _/bits >> = Orig,
+	log(GID, "mission counter (~b,~b,~b,~b)", [QuestID, ZoneID, MapID, EntryID]),
+	counter_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID);
 
 %% @doc Leave mission counter handler. Lobby values depend on which counter was entered.
 
 handle(16#0812, CSocket, GID, _, _) ->
 	User = egs_db:users_select(GID),
-	[{lobby, [QuestID, ZoneID]}|_] = proplists:get_value(User#users.mapentry, ?COUNTERS),
-	lobby_load(CSocket, GID, QuestID, ZoneID, User#users.maptype, User#users.mapnumber);
+	[{lobby, [QuestID, ZoneID]}|_] = proplists:get_value(User#users.entryid, ?COUNTERS),
+	lobby_load(CSocket, GID, QuestID, ZoneID, User#users.zoneid, User#users.mapid);
 
 %% @doc Start mission handler.
 %% @todo Load more than one mission.
 %% @todo Forward the mission start to other players of the same party, whatever their location is.
 
 handle(16#0c01, CSocket, GID, _, Orig) ->
-	<< _:352, Quest:32/little-unsigned-integer >> = Orig,
-	log(GID, "start mission ~b", [Quest]),
+	<< _:352, QuestID:32/little-unsigned-integer >> = Orig,
+	log(GID, "start mission ~b", [QuestID]),
 	send_packet_170c(CSocket, GID),
 	egs_proto:packet_send(CSocket, << 16#10200300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64 >>),
 	send_packet_1015(CSocket),
@@ -648,7 +649,7 @@ handle(16#0c01, CSocket, GID, _, Orig) ->
 
 handle(16#0c05, CSocket, GID, _, _) ->
 	User = egs_db:users_select(GID),
-	[{lobby, _}, {filename, Filename}|_] = proplists:get_value(User#users.mapentry, ?COUNTERS),
+	[{lobby, _}, {filename, Filename}|_] = proplists:get_value(User#users.entryid, ?COUNTERS),
 	{ok, << File/bits >>} = file:read_file(Filename),
 	Packet = << 16#0c060300:32, 0:288, 1:32/little-unsigned-integer, File/binary >>,
 	egs_proto:packet_send(CSocket, Packet);
@@ -672,7 +673,7 @@ handle(16#0c0e, CSocket, GID, _, _) ->
 
 handle(16#0c0f, CSocket, GID, _, _) ->
 	User = egs_db:users_select(GID),
-	[{lobby, _}, {filename, _}, {options, Options}] = proplists:get_value(User#users.mapentry, ?COUNTERS),
+	[{lobby, _}, {filename, _}, {options, Options}] = proplists:get_value(User#users.entryid, ?COUNTERS),
 	Packet = << 16#0c100300:32, 0:32, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
 		16#00011300:32, GID:32/little-unsigned-integer, 0:64, Options/binary >>,
 	egs_proto:packet_send(CSocket, Packet);
@@ -837,18 +838,18 @@ handle_hits(CSocket, GID, Data) ->
 %% @todo Figure out what the other things are.
 
 send_packet_201(CSocket, GID, User, Char) ->
-	Quest = User#users.quest,
-	MapType = User#users.maptype,
-	MapNumber = User#users.mapnumber,
-	MapEntry = User#users.mapentry,
+	QuestID = User#users.questid,
+	ZoneID = User#users.zoneid,
+	MapID = User#users.mapid,
+	EntryID = User#users.entryid,
 	CharGID = User#users.gid,
 	CharLID = User#users.lid,
 	{ok, File} = file:read_file("p/packet0201.bin"),
 	<< _:96, A:32/bits, _:96, B:32/bits, _:256, D:32/bits, _:2656, After/bits >> = File,
 	Packet = << 16#0201:16, 0:48, A/binary, CharGID:32/little-unsigned-integer, 0:64, B/binary, GID:32/little-unsigned-integer,
-		0:64, CharLID:32/little-unsigned-integer, CharGID:32/little-unsigned-integer, 0:96, D/binary, Quest:32/little-unsigned-integer,
-		MapType:32/little-unsigned-integer, MapNumber:32/little-unsigned-integer, MapEntry:32/little-unsigned-integer, 0:192, Quest:32/little-unsigned-integer,
-		MapType:32/little-unsigned-integer, MapNumber:32/little-unsigned-integer, MapEntry:32/little-unsigned-integer, Char/binary, After/binary >>,
+		0:64, CharLID:32/little-unsigned-integer, CharGID:32/little-unsigned-integer, 0:96, D/binary, QuestID:32/little-unsigned-integer,
+		ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer, 0:192, QuestID:32/little-unsigned-integer,
+		ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer, Char/binary, After/binary >>,
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @todo Figure out what the other things are.
@@ -879,22 +880,22 @@ build_packet_233_contents(Users) ->
 		undefined ->
 			Direction = << 0:32 >>,
 			Coords = << 0:96 >>,
-			Quest = 1100000,
-			MapType = 0,
-			MapNumber = 1,
-			MapEntry = 0;
+			QuestID = 1100000,
+			ZoneID = 0,
+			MapID = 1,
+			EntryID = 0;
 		_ ->
 			Direction = User#users.direction,
 			Coords = User#users.coords,
-			Quest = User#users.quest,
-			MapType = User#users.maptype,
-			MapNumber = User#users.mapnumber,
-			MapEntry = User#users.mapentry
+			QuestID = User#users.questid,
+			ZoneID = User#users.zoneid,
+			MapID = User#users.mapid,
+			EntryID = User#users.entryid
 	end,
 	Chunk = << A/binary, CharGID:32/little-unsigned-integer, B/binary, LID:16/little-unsigned-integer, 16#0100:16, C/binary,
-		Quest:32/little-unsigned-integer, MapType:32/little-unsigned-integer, MapNumber:32/little-unsigned-integer, MapEntry:32/little-unsigned-integer,
-		Direction:32/bits, Coords:96/bits, E/binary,  Quest:32/little-unsigned-integer, MapType:32/little-unsigned-integer, MapNumber:32/little-unsigned-integer,
-		MapEntry:32/little-unsigned-integer, CharFile/binary, F/binary >>,
+		QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer,
+		Direction:32/bits, Coords:96/bits, E/binary, QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer,
+		EntryID:32/little-unsigned-integer, CharFile/binary, F/binary >>,
 	Next = build_packet_233_contents(Rest),
 	<< Chunk/binary, Next/binary >>.
 
