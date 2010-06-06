@@ -248,8 +248,9 @@ lobby_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID) ->
 	User = OldUser#users{instanceid=undefined, questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID},
 	egs_db:users_insert(User),
 	[{status, 1}, {char, Char}, {options, _}] = char_load(User#users.folder, User#users.charnumber),
-	[{type, AreaType}, {name, AreaName}, {quest, QuestFile}, {zone, ZoneFile}, {entries, _}] = proplists:get_value([QuestID, ZoneID, MapID], ?MAPS,
-		[{type, lobby}, {name, "dammy"}, {quest, "data/lobby/colony.quest.nbl"}, {zone, "data/lobby/colony.zone-0.nbl"}, {entries, []}]),
+	[{type, AreaType}, {file, QuestFile}] = proplists:get_value(QuestID, ?QUESTS, [{type, lobby}, {file, "data/lobby/colony.quest.nbl"}]),
+	[{file, ZoneFile}] = proplists:get_value([QuestID, ZoneID], ?ZONES, [{file, "data/lobby/colony.zone-0.nbl"}]),
+	[{name, AreaName}] = proplists:get_value([QuestID, MapID], ?MAPS, [{name, "dammy"}]),
 	try
 		% broadcast spawn and unspawn to other people
 		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(OldUser)),
@@ -299,14 +300,16 @@ mission_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID) ->
 	User = OldUser#users{instanceid=GID, questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID},
 	egs_db:users_insert(User),
 	[{status, 1}, {char, Char}, {options, _}] = char_load(User#users.folder, User#users.charnumber),
-	[{type, _}, {name, AreaName}, {quest, QuestFile}, {zone, ZoneFile}, {entries, _}] = proplists:get_value([QuestID, ZoneID, MapID], ?MAPS),
+	[{type, AreaType}, {file, QuestFile}] = proplists:get_value(QuestID, ?QUESTS, [{type, lobby}, {file, "data/missions/test.quest.nbl"}]),
+	[{file, ZoneFile}] = proplists:get_value([QuestID, ZoneID], ?ZONES, [{file, "data/missions/test.zone.nbl"}]),
+	[{name, AreaName}] = proplists:get_value([QuestID, MapID], ?MAPS, [{name, "dammy"}]),
 	try
 		egs_proto:send_init_quest(CSocket, GID, QuestID),
 		egs_proto:send_quest(CSocket, QuestFile),
 		send_packet_0215(CSocket, GID, 16#ffffffff),
 		send_packet_0a05(CSocket, GID),
 		% 010d
-		egs_proto:send_zone_init(CSocket, GID, mission),
+		egs_proto:send_zone_init(CSocket, GID, AreaType),
 		egs_proto:send_zone(CSocket, ZoneFile),
 		egs_proto:send_map(CSocket, ZoneID, MapID, EntryID),
 		egs_proto:send_location(CSocket, GID, QuestID, ZoneID, MapID, AreaName, 16#ffffffff),
