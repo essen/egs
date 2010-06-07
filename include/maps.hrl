@@ -203,6 +203,41 @@
 		3, 3, 3, % Dark Satellite S3 variant 1-3
 	0:440 >>}]},
 
+	% Parum East: Illusionary Shaft, Mad Creatures, Fire purification (missing), Scarred Planet (missing), Scarred Planet
+
+	{  2, [{quests, "data/missions/parum.counter.east.pack"}, {bg, 1}, {options, << 16#01003c00:32, 3, 3, 0, 0, 3,
+		3, 3, 3, 3, 0, % Illusionary Shaft C-S
+		3, 3, 3, 3, % Mad Creatures C-S variant 1
+		3, 3, 3, 3, % Mad Creatures C-S variant 2
+		3, 3, 3, 3, % Mad Creatures C-S variant 3
+		3, 3, 3, % Mad Creatures S2 variant 1-3
+		0:144,
+		3, 3, 3, 3, 3, % Scarred Planet C-S2 variant 1
+		3, 3, 3, 3, 3, % Scarred Planet C-S2 variant 2
+		3, 3, 3, 3, 3, % Scarred Planet C-S2 variant 3
+	0:16 >>}]},
+
+	% Parum Linear Line: Train Rescue, Fire purification (missing)
+
+	{  3, [{quests, "data/missions/parum.counter.ll.pack"}, {bg, 1}, {options, << 16#01781800:32, 3, 0, 0,
+		3, 3, 3, 3, % Train Rescue C-S variant 1
+		3, 3, 3, 3, % Train Rescue C-S variant 2
+		3, 3, 3, 3, % Train Rescue C-S variant 3
+		3, 3, 3, % Train Rescue S2 variant 1-3
+	0:48 >>}]},
+
+	% AMF Headquarters: AMF HQ Recovery
+
+	{  7, [{quests, "data/missions/parum.counter.amf.pack"}, {bg, 1}, {options, << 16#019e1000:32, 3,
+		3, 3, 3, 3, 0, % AMF HQ Recovery C-S variant 1
+		3, 3, 3, 3, 0, % AMF HQ Recovery C-S variant 2
+		3, 3, 3, 3, 0 % AMF HQ Recovery C-S variant 3
+	>>}]},
+
+	% GRM: Side story C rank, Side story B rank, Side story A rank
+
+	{  8, [{quests, "data/missions/parum.counter.grm.pack"}, {bg, 5}, {options, << 16#01000c00:32, 3, 3, 3, 0, 3, 0, 3, 0, 3, 0:24 >>}]},
+
 	% Transfer Terminal (entry 0)
 
 	{ 10, [{quests, "data/missions/colony.counter.terminal-0.pack"}, {bg, 255}, {options, << 16#01d10400:32, 0:32 >>}]},
@@ -249,6 +284,93 @@
 		3, 3, 3, 3, 3, % True Darkness C-S2 variant 3
 	0:144 >>}]},
 
+	% Raffon Fieldbase (entry 0)
+
+	{ 30, [{quests, "data/missions/parum.counter.raffon-0.pack"}, {bg, 1}, {options, << 16#01000400:32, 0:32 >>}]},
+
+	% Raffon Fieldbase (entry 1): Illusionary Shaft, Plains Overlord, Sleeping Warriors, Fire purification (missing)
+
+	{ 31, [{quests, "data/missions/parum.counter.raffon-1.pack"}, {bg, 1}, {options, << 16#01c52c00:32, 3, 3, 3, 0,
+		3, 3, 3, 3, % Illusionary Shaft C-S
+		3, 3, 3, 3, 3, % Plains Overlord C-S2 variant 1
+		3, 3, 3, 3, 3, % Plains Overlord C-S2 variant 2
+		3, 3, 3, 3, 3, % Plains Overlord C-S2 variant 3
+		3, 3, 3, 3, 3, % Sleeping Warriors C-S2 variant 1
+		3, 3, 3, 3, 3, % Sleeping Warriors C-S2 variant 2
+		3, 3, 3, 3, 3, % Sleeping Warriors C-S2 variant 3
+	0:48 >>}]},
+
+	% Parum Lakeshore (entry 0): Illusionary Shaft, Crimson Beast
+
+	{ 35, [{quests, "data/missions/parum.counter.lake-0.pack"}, {bg, 1}, {options, << 16#01d61800:32, 3, 3,
+		3, 3, 3, 3, % Illusionary Shaft C-S
+		3, 3, 3, 3, 3, % Crimson Beast C-S2 variant 1
+		3, 3, 3, 3, 3, % Crimson Beast C-S2 variant 2
+		3, 3, 3, 3, 3, % Crimson Beast C-S2 variant 3
+	0:24 >>}]},
+
+	% Parum Lakeshore (entry 1): The Mad Beasts
+
+	{ 36, [{quests, "data/missions/parum.counter.lake-1.pack"}, {bg, 1}, {options, << 16#01e91000:32, 3,
+		3, 3, 3, % The Mad Beasts C-A variant 1
+		3, 3, 3, % The Mad Beasts C-A variant 2
+		3, 3, 3, % The Mad Beasts C-A variant 3
+		3, 3, 3, % The Mad Beasts S variant 1-3
+		3, 3, 3 % The Mad Beasts S2 variant 1-3
+	>>}]},
+
+	% Parum Underground (entry 0)
+
+	{ 40, [{quests, "data/missions/parum.counter.under-0.pack"}, {bg, 1}, {options, << 16#01050400:32, 0:32 >>}]},
+
+	% Parum Underground (entry 1): Lab Recovery
+
+	{ 41, [{quests, "data/missions/parum.counter.under-1.pack"}, {bg, 1}, {options, << 16#01cf1000:32, 3,
+		3, 3, 3, % Lab Recovery C-A variant 1
+		3, 3, 3, % Lab Recovery C-A variant 2
+		3, 3, 3, % Lab Recovery C-A variant 3
+		3, 3, 3, % Lab Recovery S variant 1-3
+		3, 3, 3 % Lab Recovery S2 variant 1-3
+	>>}]},
+
+	% Parum Underground (entry 2): Illusionary Shaft, Endrum Remnants, Fire purification (missing)
+
+	{ 42, [{quests, "data/missions/parum.counter.under-2.pack"}, {bg, 1}, {options, << 16#01381c00:32, 3, 3, 0,
+		3, 3, 3, 3, % Illusionary Shaft C-S
+		3, 3, 3, % Endrum Remnants C-A variant 1
+		3, 3, 3, % Endrum Remnants C-A variant 2
+		3, 3, 3, % Endrum Remnants C-A variant 3
+		3, 3, 3, % Endrum Remnants S variant 1-3
+		3, 3, 3, % Endrum Remnants S2 variant 1-3
+	0:48 >>}]},
+
+	% Parum Denes (entry 0)
+
+	{ 45, [{quests, "data/missions/parum.counter.denes-0.pack"}, {bg, 1}, {options, << 16#01000400:32, 0:32 >>}]},
+
+	% Parum Denes (entry 1): Illusionary Shaft, The Dual Sentinel
+
+	{ 46, [{quests, "data/missions/parum.counter.denes-1.pack"}, {bg, 1}, {options, << 16#013e1800:32, 3, 3,
+		3, 3, 3, 3, % Illusionary Shaft C-S
+		3, 3, 3, 3, % The Dual Sentinel C-S variant 1
+		3, 3, 3, 3, % The Dual Sentinel C-S variant 2
+		3, 3, 3, 3, % The Dual Sentinel C-S variant 3
+		3, 3, 3, % The Dual Sentinel S2 variant 1-3
+	0:24 >>}]},
+
+	% Parum Waterfall: Illusionary Shaft, (empty name, Duel in the Ruins)
+
+	{ 48, [{quests, "data/missions/parum.counter.waterfall.pack"}, {bg, 1}, {options, << 16#01eb1800:32, 3, 3,
+		2, 2, 2, 2, % Illusionary Shaft C-S
+		2, 2, 2, 2, 2, % Duel in the Ruins C-S2 variant 1
+		2, 2, 2, 2, 2, % Duel in the Ruins C-S2 variant 2
+		2, 2, 2, 2, 2, % Duel in the Ruins C-S2 variant 3
+	0:24 >>}]},
+
+	% Parum Cafe: The Collector
+
+	{112, [{quests, "data/missions/parum.counter.cafe.pack"}, {bg, 5}, {options, << 16#01000800:32, 3, 0:24, 3, 0:24 >>}]},
+
 	% GUARDIANS HQ: Episode 2 C rank, B rank, A rank, Episode 3 C rank, B rank, A rank, Winter event 1 (missing), Winter event 2 (missing)
 	% MAG event (missing), Side story C rank, Side story B rank, Side story A rank, Old event missions
 
@@ -270,6 +392,21 @@
 		3, % Photon Eraser Return
 	0:32 >>}]},
 
+	% Parum GUARDIANS: Partner Missions, Protectors a+ (missing), Protectors b+ (missing), Training Intro (missing), Party Missions, Versus, Item Exchange, (empty name, missing), (empty name, missing), (empty name, missing)
+
+	{116, [{quests, "data/missions/parum.counter.guardians.pack"}, {bg, 5}, {options, << 16#01005000:32, 3, 0, 0, 0, 3, 3, 3, 0, 0, 0, 0,
+		3, 3, 3, 3,
+		0:32,
+		2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+		3, % Standby (Party)
+		3, 3, 3, 3, 3, % Eggs Thieves C-S2 variant 1
+		3, 3, 3, 3, 3, % Eggs Thieves C-S2 variant 2
+		3, 3, 3, 3, 3, % Eggs Thieves C-S2 variant 3
+		3, % Standby (Versus)
+		3, % Explosive Arena
+		0, 3, % Bullet License
+	0:56 >>}]},
+
 	% Colony R&D: Clothes'n'Parts male/female
 
 	{177, [{quests, "data/missions/colony.counter.rd.pack"}, {bg, 4}, {options, << 16#01000800:32, 3, 0:24, 3, 3, 0:16 >>}]},
@@ -289,5 +426,57 @@
 
 	% Falz Memoria
 
-	{203, [{quests, "data/missions/colony.counter.memoria.pack"}, {bg, 255}, {options, << 16#01013800:32, 0:448 >>}]}
+	{203, [{quests, "data/missions/colony.counter.memoria.pack"}, {bg, 255}, {options, << 16#01013800:32, 0:448 >>}]},
+
+	% Parum Rozenom (entry 0)
+
+	{205, [{quests, "data/missions/parum.counter.rozenom-0.pack"}, {bg, 1}, {options, << 16#01fa0400:32, 0:32 >>}]},
+
+	% Parum Rozenom (entry 1): Illusionary Shaft, Lightning Beasts, Lightning Beasts (missing)
+
+	{206, [{quests, "data/missions/parum.counter.rozenom-1.pack"}, {bg, 1}, {options, << 16#01f82800:32, 3, 3, 0,
+		3, 3, 3, 3, % Illusionary Shaft C-S
+		3, 3, 3, 3, 3, % Lightning Beasts C-S2 variant 1
+		3, 3, 3, 3, 3, % Lightning Beasts C-S2 variant 2
+		3, 3, 3, 3, 3, % Lightning Beasts C-S2 variant 3
+	0:144 >>}]},
+
+	% Parum Beach (entry 0)
+
+	{210, [{quests, "data/missions/parum.counter.beach-0.pack"}, {bg, 1}, {options, << 16#014a0400:32, 0:32 >>}]},
+
+	% Parum Beach (entry 1): Illusionary Shaft, SEED Express
+
+	{211, [{quests, "data/missions/parum.counter.beach-1.pack"}, {bg, 1}, {options, << 16#01ac1800:32, 3, 3,
+		3, 3, 3, 3, % Illusionary Shaft C-S
+		3, 3, 3, 3, 3, % SEED Express C-S2 variant 1
+		3, 3, 3, 3, 3, % SEED Express C-S2 variant 2
+		3, 3, 3, 3, 3, % SEED Express C-S2 variant 3
+	0:24 >>}]},
+
+	% Parum Subway (entry 0)
+
+	{215, [{quests, "data/missions/parum.counter.subway-0.pack"}, {bg, 1}, {options, << 16#015c0400:32, 0:32 >>}]},
+
+	% Parum Subway (entry 1): Illusionary Shaft, Military Subway
+
+	{216, [{quests, "data/missions/parum.counter.subway-1.pack"}, {bg, 1}, {options, << 16#01001800:32, 3, 3,
+		3, 3, 3, 3, % Illusionary Shaft C-S
+		3, 3, 3, 3, 0, % Military Subway C-S variant 1
+		3, 3, 3, 3, 0, % Military Subway C-S variant 2
+		3, 3, 3, 3, 0, % Military Subway C-S variant 3
+	0:24 >>}]},
+
+	% Parum AMF Central (entry 0): Illusionary Shaft, Electric Brain
+
+	{220, [{quests, "data/missions/parum.counter.amfcentral-0.pack"}, {bg, 1}, {options, << 16#01001800:32, 3, 3,
+		3, 3, 3, 3, % Illusionary Shaft C-S
+		3, 3, 3, 3, 3, % Electric Brain C-S2 variant 1
+		3, 3, 3, 3, 3, % Electric Brain C-S2 variant 2
+		3, 3, 3, 3, 3, % Electric Brain C-S2 variant 3
+	0:24 >>}]},
+
+	% Parum AMF Central (entry 1)
+
+	{221, [{quests, "data/missions/parum.counter.amfcentral-1.pack"}, {bg, 1}, {options, << 16#01000400:32, 0:32 >>}]}
 ]).
