@@ -226,6 +226,27 @@
 		3, 3, 3, % Train Rescue S2 variant 1-3
 	0:48 >>}]},
 
+	% Neudaiz Flyerbase: Phantom Fissure, Mizuraki Defense, Forested Islands, (empty name, missing), Fire purification (missing)
+
+	{  4, [{quests, "data/missions/neudaiz.counter.flyer.pack"}, {bg, 3}, {options, << 16#01f04000:32, 3, 3, 3, 0, 0,
+		3, 3, 3, 3, 0, % Phantom Fissure C-S
+		3, 3, 3, 3, 3, 0, % Mizuraki Defense C-S2 variant 1
+		3, 3, 3, 3, 3, 0, % Mizuraki Defense C-S2 variant 2
+		3, 3, 3, 3, 3, 0, % Mizuraki Defense C-S2 variant 3
+		3, 3, 3, 3, 3, % Forested Islands C-S2 variant 1
+		3, 3, 3, 3, 3, % Forested Islands C-S2 variant 2
+		3, 3, 3, 3, 3, % Forested Islands C-S2 variant 3
+	0:168 >>}]},
+
+	% Neudaiz COG: Phantom Fissure, Sacred Stream
+
+	{  6, [{quests, "data/missions/neudaiz.counter.cog.pack"}, {bg, 3}, {options, << 16#01001800:32, 3, 3,
+		3, 3, 3, 3, % Phantom Fissure C-S
+		3, 3, 3, 3, 3, % Sacred Stream C-S2 variant 1
+		3, 3, 3, 3, 3, % Sacred Stream C-S2 variant 2
+		3, 3, 3, 3, 3, % Sacred Stream C-S2 variant 3
+	0:24 >>}]},
+
 	% AMF Headquarters: AMF HQ Recovery
 
 	{  7, [{quests, "data/missions/parum.counter.amf.pack"}, {bg, 1}, {options, << 16#019e1000:32, 3,
@@ -367,6 +388,90 @@
 		2, 2, 2, 2, 2, % Duel in the Ruins C-S2 variant 3
 	0:24 >>}]},
 
+	% Neudaiz Islands (entry 0)
+
+	{ 50, [{quests, "data/missions/neudaiz.counter.islands-0.pack"}, {bg, 3}, {options, << 16#01000400:32, 0:32 >>}]},
+
+	% Neudaiz Islands (entry 1): Rainbow Beast, (empty name, missing), Grove of Fanatics, (empty name, missing)
+
+	{ 51, [{quests, "data/missions/neudaiz.counter.islands-1.pack"}, {bg, 3}, {options, << 16#01424400:32, 3, 0, 3, 0,
+		3, 3, 3, 3, 3, 3, % Rainbow Beast C-S3 variant 1
+		3, 3, 3, 3, 3, 3, % Rainbow Beast C-S3 variant 2
+		3, 3, 3, 3, 3, 3, % Rainbow Beast C-S3 variant 3
+		0:120,
+		3, 3, 3, 3, 3, % Grove of Fanatics C-S2 variant 1
+		3, 3, 3, 3, 3, % Grove of Fanatics C-S2 variant 2
+		3, 3, 3, 3, 3, % Grove of Fanatics C-S2 variant 3
+	0:128 >>}]},
+
+	% Neudaiz Islands (entry 2): Phantom Ruins, Hill of Spores
+
+	{ 52, [{quests, "data/missions/neudaiz.counter.islands-2.pack"}, {bg, 3}, {options, << 16#01001800:32, 3, 3,
+		3, 3, 3, 3, % Phantom Ruins C-S
+		3, 3, 3, 3, 3, % Hill of Spores C-S2 variant 1
+		3, 3, 3, 3, 3, % Hill of Spores C-S2 variant 3
+		3, 3, 3, 3, 3, % Hill of Spores C-S2 variant 3
+	0:24 >>}]},
+
+	% Neudaiz Relics (entry 0): Phantom Fissure, The Eastern Peril, Forest Infiltration
+
+	{ 55, [{quests, "data/missions/neudaiz.counter.relics-0.pack"}, {bg, 3}, {options, << 16#01c32c00:32, 3, 3, 3,
+		3, 3, 3, 3, % Phantom Ruins C-S
+		3, 3, 3, 3, 3, 3, % The Eastern Peril C-S3 variant 1
+		3, 3, 3, 3, 3, 3, % The Eastern Peril C-S3 variant 2
+		3, 3, 3, 3, 3, 3, % The Eastern Peril C-S3 variant 3
+		3, 3, 3, 3, 3, 3, % Forest Infiltration C-S3 variant 1
+		3, 3, 3, 3, 3, 3, % Forest Infiltration C-S3 variant 2
+		3, 3, 3, 3, 3, 3, % Forest Infiltration C-S3 variant 3
+	0 >>}]},
+
+	% Neudaiz Relics (entry 1): The Holy Ground, Fire purification
+
+	{ 56, [{quests, "data/missions/neudaiz.counter.relics-1.pack"}, {bg, 3}, {options, << 16#01741400:32, 3, 0,
+		3, 3, 3, % The Holy Ground C-A variant 1
+		3, 3, 3, % The Holy Ground C-A variant 2
+		3, 3, 3, % The Holy Ground C-A variant 3
+		3, 3, 3, % The Holy Ground S variant 1-3
+		3, 3, 3, % The Holy Ground S2 variant 1-3
+	0:24 >>}]},
+
+	% Neudaiz Mizuraki (entry 0)
+
+	{ 70, [{quests, "data/missions/neudaiz.counter.mizuraki-0.pack"}, {bg, 3}, {options, << 16#010c0400:32, 0:32 >>}]},
+
+	% Neudaiz Mizuraki (entry 1): Demons Above
+
+	{ 71, [{quests, "data/missions/neudaiz.counter.mizuraki-1.pack"}, {bg, 3}, {options, << 16#01c21400:32, 3,
+		3, 3, 3, % Demons Above C-A variant 1
+		3, 3, 3, % Demons Above C-A variant 2
+		3, 3, 3, % Demons Above C-A variant 3
+		3, 3, 3, % Demons Above S variant 1-3
+		3, 3, 3, % Demons Above S2 variant 1-3
+	0:32 >>}]},
+
+	% Neudaiz Mizuraki (entry 2): Phantom Fissure, Moonlight Beast, Moonlight Beast (AOTI, missing)
+
+	{ 72, [{quests, "data/missions/neudaiz.counter.mizuraki-2.pack"}, {bg, 3}, {options, << 16#01ab2c00:32, 3, 3, 0,
+		3, 3, 3, 3, % Phantom Ruins C-S
+		3, 3, 3, 3, % Moonlight Beast C-S variant 1
+		3, 3, 3, 3, % Moonlight Beast C-S variant 2
+		3, 3, 3, 3, % Moonlight Beast C-S variant 3
+		3, 3, 3, % Moonlight Beast S2 variant 1-3
+		3, 3, 3, % Moonlight Beast S3 variant 1-3
+	0:152 >>}]},
+
+	% Neudaiz Hot Springs: Phantom Fissure, Sakura Blast, Cost of Research
+
+	{ 75, [{quests, "data/missions/neudaiz.counter.hotsprings.pack"}, {bg, 3}, {options, << 16#01ee2800:32, 3, 3, 3,
+		3, 3, 3, 3, % Phantom Ruins C-S
+		3, 3, 3, 3, 3, 0, % Sakura Blast C-S2 variant 1
+		3, 3, 3, 3, 3, 0, % Sakura Blast C-S2 variant 2
+		3, 3, 3, 3, 3, 0, % Sakura Blast C-S2 variant 3
+		3, 3, 3, 3, 3, % Cost of Research C-S2 variant 1
+		3, 3, 3, 3, 3, % Cost of Research C-S2 variant 2
+		3, 3, 3, 3, 3 % Cost of Research C-S2 variant 3
+	>>}]},
+
 	% Parum Cafe: The Collector
 
 	{112, [{quests, "data/missions/parum.counter.cafe.pack"}, {bg, 5}, {options, << 16#01000800:32, 3, 0:24, 3, 0:24 >>}]},
@@ -406,6 +511,18 @@
 		3, % Explosive Arena
 		0, 3, % Bullet License
 	0:56 >>}]},
+
+	% Neudaiz GUARDIANS: Partner Missions, Party Missions, Item Exchange
+
+	{117, [{quests, "data/missions/neudaiz.counter.guardians.pack"}, {bg, 7}, {options, << 16#01e32000:32, 3, 3, 3,
+		3, 3, 3, 3, % Temple of Traps
+		0:32,
+		3, % Standby (Party)
+		3, 3, 3, 3, 3, % Her Secret Mission C-S2 variant 1
+		3, 3, 3, 3, 3, % Her Secret Mission C-S2 variant 2
+		3, 3, 3, 3, 3, % Her Secret Mission C-S2 variant 3
+		0, 3, % TECHNIC License
+	0:24 >>}]},
 
 	% Colony R&D: Clothes'n'Parts male/female
 
@@ -478,5 +595,56 @@
 
 	% Parum AMF Central (entry 1)
 
-	{221, [{quests, "data/missions/parum.counter.amfcentral-1.pack"}, {bg, 1}, {options, << 16#01000400:32, 0:32 >>}]}
+	{221, [{quests, "data/missions/parum.counter.amfcentral-1.pack"}, {bg, 1}, {options, << 16#01000400:32, 0:32 >>}]},
+
+	% Neudaiz Saguraki (entry 0)
+
+	{225, [{quests, "data/missions/neudaiz.counter.saguraki-0.pack"}, {bg, 3}, {options, << 16#01ff0400:32, 0:32 >>}]},
+
+	% Neudaiz Saguraki (entry 1)
+
+	{226, [{quests, "data/missions/neudaiz.counter.saguraki-1.pack"}, {bg, 3}, {options, << 16#01120400:32, 0:32 >>}]},
+
+	% Neudaiz Saguraki (entry 2): Phantom Fissure, Flowery Pursuit
+
+	{227, [{quests, "data/missions/neudaiz.counter.saguraki-2.pack"}, {bg, 3}, {options, << 16#01741800:32, 3, 3,
+		3, 3, 3, 3, % Phantom Fissure C-S
+		3, 3, 3, 3, 3, 0, % Flowery Pursuit C-S2 variant 1
+		3, 3, 3, 3, 3, 0, % Flowery Pursuit C-S2 variant 2
+		3, 3, 3, 3, 3, 0 % Flowery Pursuit C-S2 variant 3
+	>>}]},
+
+	% Neudaiz Pavilion (entry 0)
+
+	{230, [{quests, "data/missions/neudaiz.counter.pavilion-0.pack"}, {bg, 3}, {options, << 16#01060400:32, 0:32 >>}]},
+
+	% Neudaiz Pavilion (entry 1)
+
+	{231, [{quests, "data/missions/neudaiz.counter.pavilion-1.pack"}, {bg, 3}, {options, << 16#01000400:32, 0:32 >>}]},
+
+	% Neudaiz Pavilion (entry 2): Phantom Fissure, White Beast
+
+	{232, [{quests, "data/missions/neudaiz.counter.pavilion-2.pack"}, {bg, 3}, {options, << 16#01021800:32, 3, 3,
+		3, 3, 3, 3, % Phantom Fissure C-S
+		3, 3, 3, 3, 3, % White Beast C-S2 variant 1
+		3, 3, 3, 3, 3, % White Beast C-S2 variant 2
+		3, 3, 3, 3, 3, % White Beast C-S2 variant 3
+	0:24 >>}]},
+
+	% Neudaiz Habirao (entry 0)
+
+	{235, [{quests, "data/missions/neudaiz.counter.habirao-0.pack"}, {bg, 3}, {options, << 16#01000400:32, 0:32 >>}]},
+
+	% Neudaiz Habirao (entry 1): Phantom Fissure, The Dancing Birds
+
+	{236, [{quests, "data/missions/neudaiz.counter.habirao-1.pack"}, {bg, 3}, {options, << 16#01031800:32, 3, 3,
+		3, 3, 3, 3, % Phantom Fissure C-S
+		3, 3, 3, 3, 3, % The Dancing Birds C-S2 variant 1
+		3, 3, 3, 3, 3, % The Dancing Birds C-S2 variant 2
+		3, 3, 3, 3, 3, % The Dancing Birds C-S2 variant 3
+	0:24 >>}]},
+
+	% Neudaiz Temple
+
+	{240, [{quests, "data/missions/neudaiz.counter.temple.pack"}, {bg, 3}, {options, << 16#01ff0400:32, 0:32 >>}]}
 ]).
