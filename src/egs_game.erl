@@ -265,8 +265,11 @@ lobby_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID) ->
 			_ ->
 				ignore
 		end,
-		egs_proto:send_init_quest(CSocket, GID, QuestID),
-		egs_proto:send_quest(CSocket, QuestFile),
+		if	OldUser#users.questid /= QuestID ->
+				egs_proto:send_init_quest(CSocket, GID, QuestID),
+				egs_proto:send_quest(CSocket, QuestFile);
+			true -> ignore
+		end,
 		send_packet_0a05(CSocket, GID),
 		case AreaType of
 			lobby ->
@@ -275,8 +278,11 @@ lobby_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID) ->
 			_ ->
 				ignore
 		end,
-		egs_proto:send_zone_init(CSocket, GID, lobby),
-		egs_proto:send_zone(CSocket, ZoneFile),
+		if	OldUser#users.zoneid /= ZoneID ->
+				egs_proto:send_zone_init(CSocket, GID, lobby),
+				egs_proto:send_zone(CSocket, ZoneFile);
+			true -> ignore
+		end,
 		egs_proto:send_map(CSocket, ZoneID, MapID, EntryID),
 		egs_proto:send_location(CSocket, GID, QuestID, ZoneID, MapID, AreaName, 16#ffffffff),
 		send_packet_020c(CSocket),
