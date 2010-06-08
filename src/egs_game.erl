@@ -278,7 +278,7 @@ lobby_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID) ->
 			_ ->
 				ignore
 		end,
-		if	OldUser#users.zoneid /= ZoneID ->
+		if	OldUser#users.questid /= QuestID; OldUser#users.zoneid /= ZoneID ->
 				egs_proto:send_zone_init(CSocket, GID, lobby),
 				egs_proto:send_zone(CSocket, ZoneFile);
 			true -> ignore
