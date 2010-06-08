@@ -39,7 +39,7 @@
 	{1000023, [{type, mission}, {file, "data/missions/unsafe-passage.3.s.quest.nbl"},  {start, [0, 1200, 0]}]},
 	{1000024, [{type, mission}, {file, "data/missions/unsafe-passage.3.s2.quest.nbl"}, {start, [0, 1200, 0]}]},
 
-	% Phantom Fissure
+	% Phantom Ruins
 
 	{1060300, [{type, mission}, {file, "data/missions/phantom-fissure.c.quest.nbl"},  {start, [0, 8002, 0]}]},
 	{1060301, [{type, mission}, {file, "data/missions/phantom-fissure.b.quest.nbl"},  {start, [0, 8002, 0]}]},
@@ -77,7 +77,7 @@
 	{[1000023, 0], [{file, "data/missions/unsafe-passage.3.s.zone.nbl"}]},
 	{[1000024, 0], [{file, "data/missions/unsafe-passage.3.s2.zone.nbl"}]},
 
-	% Phantom Fissure
+	% Phantom Ruins
 
 	{[1060300, 0], [{file, "data/missions/phantom-fissure.c-0.zone.nbl"}]},
 	{[1060300, 1], [{file, "data/missions/phantom-fissure.c-1.zone.nbl"}]},
