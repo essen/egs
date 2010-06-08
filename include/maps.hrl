@@ -186,7 +186,7 @@
 -define(COUNTERS, [
 	% Linear Line: Phantom Ruins, Unsafe Passage, Unsafe Passage (AOTI, missing)
 
-	{  0, [{quests, "data/missions/colony.counter.ll.pack"}, {bg, 255}, {options, << 16#01a92800:32, 3, 3, 0,
+	{  0, [{quests, "data/counters/colony.ll.pack"}, {bg, 255}, {options, << 16#01a92800:32, 3, 3, 0,
 		3, 3, 3, 3, 0, % Phantom Ruins C-S
 		3, 3, 3, 3, 3, % Unsafe Passage C-S2 variant 1
 		3, 3, 3, 3, 3, % Unsafe Passage C-S2 variant 2
@@ -195,7 +195,7 @@
 
 	% Space docks: Phantom Ruins, Dark Satellite, Familiar Trees (missing), Boss quest category (missing), Unit category (missing), Enemy category (missing)
 
-	{  1, [{quests, "data/missions/colony.counter.docks.pack"}, {bg, 255}, {options, << 16#01805400:32, 3, 3, 0, 0, 0, 0,
+	{  1, [{quests, "data/counters/colony.docks.pack"}, {bg, 255}, {options, << 16#01805400:32, 3, 3, 0, 0, 0, 0,
 		3, 3, 3, 3, 0, % Phantom Ruins C-S
 		3, 3, 3, 3, % Dark Satellite C-S variant 1
 		3, 3, 3, 3, % Dark Satellite C-S variant 2
@@ -206,7 +206,7 @@
 
 	% Parum East: Illusionary Shaft, Mad Creatures, Fire purification (missing), Scarred Planet (missing), Scarred Planet
 
-	{  2, [{quests, "data/missions/parum.counter.east.pack"}, {bg, 1}, {options, << 16#01003c00:32, 3, 3, 0, 0, 3,
+	{  2, [{quests, "data/counters/parum.east.pack"}, {bg, 1}, {options, << 16#01003c00:32, 3, 3, 0, 0, 3,
 		3, 3, 3, 3, 0, % Illusionary Shaft C-S
 		3, 3, 3, 3, % Mad Creatures C-S variant 1
 		3, 3, 3, 3, % Mad Creatures C-S variant 2
@@ -220,7 +220,7 @@
 
 	% Parum Linear Line: Train Rescue, Fire purification (missing)
 
-	{  3, [{quests, "data/missions/parum.counter.ll.pack"}, {bg, 1}, {options, << 16#01781800:32, 3, 0, 0,
+	{  3, [{quests, "data/counters/parum.ll.pack"}, {bg, 1}, {options, << 16#01781800:32, 3, 0, 0,
 		3, 3, 3, 3, % Train Rescue C-S variant 1
 		3, 3, 3, 3, % Train Rescue C-S variant 2
 		3, 3, 3, 3, % Train Rescue C-S variant 3
@@ -229,7 +229,7 @@
 
 	% Neudaiz Flyerbase: Phantom Fissure, Mizuraki Defense, Forested Islands, (empty name, missing), Fire purification (missing)
 
-	{  4, [{quests, "data/missions/neudaiz.counter.flyer.pack"}, {bg, 3}, {options, << 16#01f04000:32, 3, 3, 3, 0, 0,
+	{  4, [{quests, "data/counters/neudaiz.flyer.pack"}, {bg, 3}, {options, << 16#01f04000:32, 3, 3, 3, 0, 0,
 		3, 3, 3, 3, 0, % Phantom Fissure C-S
 		3, 3, 3, 3, 3, 0, % Mizuraki Defense C-S2 variant 1
 		3, 3, 3, 3, 3, 0, % Mizuraki Defense C-S2 variant 2
@@ -241,7 +241,7 @@
 
 	% Moatoob Flyerbase: Forest of Illusion, System Defense, Valley of Carnage, System Defense (missing), Fire purification (missing)
 
-	{  5, [{quests, "data/missions/moatoob.counter.flyer.pack"}, {bg, 2}, {options, << 16#01ab3c00:32, 3, 3, 3, 0, 0,
+	{  5, [{quests, "data/counters/moatoob.flyer.pack"}, {bg, 2}, {options, << 16#01ab3c00:32, 3, 3, 3, 0, 0,
 		3, 3, 3, 3, 0, % Forest of Illusion C-S
 		3, 3, 3, 3, % System Defense C-S variant 1
 		3, 3, 3, 3, % System Defense C-S variant 2
@@ -255,7 +255,7 @@
 
 	% Neudaiz COG: Phantom Fissure, Sacred Stream
 
-	{  6, [{quests, "data/missions/neudaiz.counter.cog.pack"}, {bg, 3}, {options, << 16#01001800:32, 3, 3,
+	{  6, [{quests, "data/counters/neudaiz.cog.pack"}, {bg, 3}, {options, << 16#01001800:32, 3, 3,
 		3, 3, 3, 3, % Phantom Fissure C-S
 		3, 3, 3, 3, 3, % Sacred Stream C-S2 variant 1
 		3, 3, 3, 3, 3, % Sacred Stream C-S2 variant 2
@@ -264,7 +264,7 @@
 
 	% AMF Headquarters: AMF HQ Recovery
 
-	{  7, [{quests, "data/missions/parum.counter.amf.pack"}, {bg, 1}, {options, << 16#019e1000:32, 3,
+	{  7, [{quests, "data/counters/parum.amf.pack"}, {bg, 1}, {options, << 16#019e1000:32, 3,
 		3, 3, 3, 3, 0, % AMF HQ Recovery C-S variant 1
 		3, 3, 3, 3, 0, % AMF HQ Recovery C-S variant 2
 		3, 3, 3, 3, 0 % AMF HQ Recovery C-S variant 3
@@ -272,15 +272,15 @@
 
 	% GRM: Side story C rank, Side story B rank, Side story A rank
 
-	{  8, [{quests, "data/missions/parum.counter.grm.pack"}, {bg, 5}, {options, << 16#01000c00:32, 3, 3, 3, 0, 3, 0, 3, 0, 3, 0:24 >>}]},
+	{  8, [{quests, "data/counters/parum.grm.pack"}, {bg, 5}, {options, << 16#01000c00:32, 3, 3, 3, 0, 3, 0, 3, 0, 3, 0:24 >>}]},
 
 	% Transfer Terminal (entry 0)
 
-	{ 10, [{quests, "data/missions/colony.counter.terminal-0.pack"}, {bg, 255}, {options, << 16#01d10400:32, 0:32 >>}]},
+	{ 10, [{quests, "data/counters/colony.terminal-0.pack"}, {bg, 255}, {options, << 16#01d10400:32, 0:32 >>}]},
 
 	% Transfer Terminal (entry 1): Phantom Ruins, Fight for Food, Fight for Food (AOTI, missing)
 
-	{ 11, [{quests, "data/missions/colony.counter.terminal-1.pack"}, {bg, 255}, {options, << 16#01fc2800:32, 3, 3, 0,
+	{ 11, [{quests, "data/counters/colony.terminal-1.pack"}, {bg, 255}, {options, << 16#01fc2800:32, 3, 3, 0,
 		3, 3, 3, 3, 0, % Phantom Ruins C-S
 		3, 3, 3, % Fight for Food C-A variant 1
 		3, 3, 3, % Fight for Food C-A variant 2
@@ -291,15 +291,15 @@
 
 	% Aurorey
 
-	{ 15, [{quests, "data/missions/colony.counter.aurorey.pack"}, {bg, 255}, {options, << 16#01010400:32, 0:32 >>}]},
+	{ 15, [{quests, "data/counters/colony.aurorey.pack"}, {bg, 255}, {options, << 16#01010400:32, 0:32 >>}]},
 
 	% HIVE (entry 0)
 
-	{ 20, [{quests, "data/missions/colony.counter.hive-0.pack"}, {bg, 255}, {options, << 16#01050400:32, 0:32 >>}]},
+	{ 20, [{quests, "data/counters/colony.hive-0.pack"}, {bg, 255}, {options, << 16#01050400:32, 0:32 >>}]},
 
 	% HIVE (entry 1): Phantom Ruins, SEED Awakened
 
-	{ 21, [{quests, "data/missions/colony.counter.hive-1.pack"}, {bg, 255}, {options, << 16#017e1c00:32, 3, 3,
+	{ 21, [{quests, "data/counters/colony.hive-1.pack"}, {bg, 255}, {options, << 16#017e1c00:32, 3, 3,
 		3, 3, 3, 3, 0, % Phantom Ruins C-S
 		3, 3, 3, 3, % SEED Awakened C-S variant 1
 		3, 3, 3, 3, % SEED Awakened C-S variant 2
@@ -310,7 +310,7 @@
 
 	% Dallgun: Phantom Ruins, The Black Nest, True Darkness, (empty name, missing)
 
-	{ 25, [{quests, "data/missions/colony.counter.dallgun.pack"}, {bg, 255}, {options, << 16#01003c00:32, 3, 3, 3, 0,
+	{ 25, [{quests, "data/counters/colony.dallgun.pack"}, {bg, 255}, {options, << 16#01003c00:32, 3, 3, 3, 0,
 		3, 3, 3, 3, 0, % Phantom Ruins C-S
 		3, 3, 3, 3, 3, 0, % The Black Nest C-S2 variant 1
 		3, 3, 3, 3, 3, 0, % The Black Nest C-S2 variant 2
@@ -322,11 +322,11 @@
 
 	% Raffon Fieldbase (entry 0)
 
-	{ 30, [{quests, "data/missions/parum.counter.raffon-0.pack"}, {bg, 1}, {options, << 16#01000400:32, 0:32 >>}]},
+	{ 30, [{quests, "data/counters/parum.raffon-0.pack"}, {bg, 1}, {options, << 16#01000400:32, 0:32 >>}]},
 
 	% Raffon Fieldbase (entry 1): Illusionary Shaft, Plains Overlord, Sleeping Warriors, Fire purification (missing)
 
-	{ 31, [{quests, "data/missions/parum.counter.raffon-1.pack"}, {bg, 1}, {options, << 16#01c52c00:32, 3, 3, 3, 0,
+	{ 31, [{quests, "data/counters/parum.raffon-1.pack"}, {bg, 1}, {options, << 16#01c52c00:32, 3, 3, 3, 0,
 		3, 3, 3, 3, % Illusionary Shaft C-S
 		3, 3, 3, 3, 3, % Plains Overlord C-S2 variant 1
 		3, 3, 3, 3, 3, % Plains Overlord C-S2 variant 2
@@ -338,7 +338,7 @@
 
 	% Parum Lakeshore (entry 0): Illusionary Shaft, Crimson Beast
 
-	{ 35, [{quests, "data/missions/parum.counter.lake-0.pack"}, {bg, 1}, {options, << 16#01d61800:32, 3, 3,
+	{ 35, [{quests, "data/counters/parum.lake-0.pack"}, {bg, 1}, {options, << 16#01d61800:32, 3, 3,
 		3, 3, 3, 3, % Illusionary Shaft C-S
 		3, 3, 3, 3, 3, % Crimson Beast C-S2 variant 1
 		3, 3, 3, 3, 3, % Crimson Beast C-S2 variant 2
@@ -347,7 +347,7 @@
 
 	% Parum Lakeshore (entry 1): The Mad Beasts
 
-	{ 36, [{quests, "data/missions/parum.counter.lake-1.pack"}, {bg, 1}, {options, << 16#01e91000:32, 3,
+	{ 36, [{quests, "data/counters/parum.lake-1.pack"}, {bg, 1}, {options, << 16#01e91000:32, 3,
 		3, 3, 3, % The Mad Beasts C-A variant 1
 		3, 3, 3, % The Mad Beasts C-A variant 2
 		3, 3, 3, % The Mad Beasts C-A variant 3
@@ -357,11 +357,11 @@
 
 	% Parum Underground (entry 0)
 
-	{ 40, [{quests, "data/missions/parum.counter.under-0.pack"}, {bg, 1}, {options, << 16#01050400:32, 0:32 >>}]},
+	{ 40, [{quests, "data/counters/parum.under-0.pack"}, {bg, 1}, {options, << 16#01050400:32, 0:32 >>}]},
 
 	% Parum Underground (entry 1): Lab Recovery
 
-	{ 41, [{quests, "data/missions/parum.counter.under-1.pack"}, {bg, 1}, {options, << 16#01cf1000:32, 3,
+	{ 41, [{quests, "data/counters/parum.under-1.pack"}, {bg, 1}, {options, << 16#01cf1000:32, 3,
 		3, 3, 3, % Lab Recovery C-A variant 1
 		3, 3, 3, % Lab Recovery C-A variant 2
 		3, 3, 3, % Lab Recovery C-A variant 3
@@ -371,7 +371,7 @@
 
 	% Parum Underground (entry 2): Illusionary Shaft, Endrum Remnants, Fire purification (missing)
 
-	{ 42, [{quests, "data/missions/parum.counter.under-2.pack"}, {bg, 1}, {options, << 16#01381c00:32, 3, 3, 0,
+	{ 42, [{quests, "data/counters/parum.under-2.pack"}, {bg, 1}, {options, << 16#01381c00:32, 3, 3, 0,
 		3, 3, 3, 3, % Illusionary Shaft C-S
 		3, 3, 3, % Endrum Remnants C-A variant 1
 		3, 3, 3, % Endrum Remnants C-A variant 2
@@ -382,11 +382,11 @@
 
 	% Parum Denes (entry 0)
 
-	{ 45, [{quests, "data/missions/parum.counter.denes-0.pack"}, {bg, 1}, {options, << 16#01000400:32, 0:32 >>}]},
+	{ 45, [{quests, "data/counters/parum.denes-0.pack"}, {bg, 1}, {options, << 16#01000400:32, 0:32 >>}]},
 
 	% Parum Denes (entry 1): Illusionary Shaft, The Dual Sentinel
 
-	{ 46, [{quests, "data/missions/parum.counter.denes-1.pack"}, {bg, 1}, {options, << 16#013e1800:32, 3, 3,
+	{ 46, [{quests, "data/counters/parum.denes-1.pack"}, {bg, 1}, {options, << 16#013e1800:32, 3, 3,
 		3, 3, 3, 3, % Illusionary Shaft C-S
 		3, 3, 3, 3, % The Dual Sentinel C-S variant 1
 		3, 3, 3, 3, % The Dual Sentinel C-S variant 2
@@ -396,7 +396,7 @@
 
 	% Parum Waterfall: Illusionary Shaft, (empty name, Duel in the Ruins)
 
-	{ 48, [{quests, "data/missions/parum.counter.waterfall.pack"}, {bg, 1}, {options, << 16#01eb1800:32, 3, 3,
+	{ 48, [{quests, "data/counters/parum.waterfall.pack"}, {bg, 1}, {options, << 16#01eb1800:32, 3, 3,
 		3, 3, 3, 3, % Illusionary Shaft C-S
 		3, 3, 3, 3, 3, % Duel in the Ruins C-S2 variant 1
 		3, 3, 3, 3, 3, % Duel in the Ruins C-S2 variant 2
@@ -405,11 +405,11 @@
 
 	% Neudaiz Islands (entry 0)
 
-	{ 50, [{quests, "data/missions/neudaiz.counter.islands-0.pack"}, {bg, 3}, {options, << 16#01000400:32, 0:32 >>}]},
+	{ 50, [{quests, "data/counters/neudaiz.islands-0.pack"}, {bg, 3}, {options, << 16#01000400:32, 0:32 >>}]},
 
 	% Neudaiz Islands (entry 1): Rainbow Beast, (empty name, missing), Grove of Fanatics, (empty name, missing)
 
-	{ 51, [{quests, "data/missions/neudaiz.counter.islands-1.pack"}, {bg, 3}, {options, << 16#01424400:32, 3, 0, 3, 0,
+	{ 51, [{quests, "data/counters/neudaiz.islands-1.pack"}, {bg, 3}, {options, << 16#01424400:32, 3, 0, 3, 0,
 		3, 3, 3, 3, 3, 3, % Rainbow Beast C-S3 variant 1
 		3, 3, 3, 3, 3, 3, % Rainbow Beast C-S3 variant 2
 		3, 3, 3, 3, 3, 3, % Rainbow Beast C-S3 variant 3
@@ -421,7 +421,7 @@
 
 	% Neudaiz Islands (entry 2): Phantom Ruins, Hill of Spores
 
-	{ 52, [{quests, "data/missions/neudaiz.counter.islands-2.pack"}, {bg, 3}, {options, << 16#01001800:32, 3, 3,
+	{ 52, [{quests, "data/counters/neudaiz.islands-2.pack"}, {bg, 3}, {options, << 16#01001800:32, 3, 3,
 		3, 3, 3, 3, % Phantom Ruins C-S
 		3, 3, 3, 3, 3, % Hill of Spores C-S2 variant 1
 		3, 3, 3, 3, 3, % Hill of Spores C-S2 variant 3
@@ -430,7 +430,7 @@
 
 	% Neudaiz Relics (entry 0): Phantom Fissure, The Eastern Peril, Forest Infiltration
 
-	{ 55, [{quests, "data/missions/neudaiz.counter.relics-0.pack"}, {bg, 3}, {options, << 16#01c32c00:32, 3, 3, 3,
+	{ 55, [{quests, "data/counters/neudaiz.relics-0.pack"}, {bg, 3}, {options, << 16#01c32c00:32, 3, 3, 3,
 		3, 3, 3, 3, % Phantom Ruins C-S
 		3, 3, 3, 3, 3, 3, % The Eastern Peril C-S3 variant 1
 		3, 3, 3, 3, 3, 3, % The Eastern Peril C-S3 variant 2
@@ -442,7 +442,7 @@
 
 	% Neudaiz Relics (entry 1): The Holy Ground, Fire purification
 
-	{ 56, [{quests, "data/missions/neudaiz.counter.relics-1.pack"}, {bg, 3}, {options, << 16#01741400:32, 3, 0,
+	{ 56, [{quests, "data/counters/neudaiz.relics-1.pack"}, {bg, 3}, {options, << 16#01741400:32, 3, 0,
 		3, 3, 3, % The Holy Ground C-A variant 1
 		3, 3, 3, % The Holy Ground C-A variant 2
 		3, 3, 3, % The Holy Ground C-A variant 3
@@ -452,11 +452,11 @@
 
 	% Neudaiz Mizuraki (entry 0)
 
-	{ 70, [{quests, "data/missions/neudaiz.counter.mizuraki-0.pack"}, {bg, 3}, {options, << 16#010c0400:32, 0:32 >>}]},
+	{ 70, [{quests, "data/counters/neudaiz.mizuraki-0.pack"}, {bg, 3}, {options, << 16#010c0400:32, 0:32 >>}]},
 
 	% Neudaiz Mizuraki (entry 1): Demons Above
 
-	{ 71, [{quests, "data/missions/neudaiz.counter.mizuraki-1.pack"}, {bg, 3}, {options, << 16#01c21400:32, 3,
+	{ 71, [{quests, "data/counters/neudaiz.mizuraki-1.pack"}, {bg, 3}, {options, << 16#01c21400:32, 3,
 		3, 3, 3, % Demons Above C-A variant 1
 		3, 3, 3, % Demons Above C-A variant 2
 		3, 3, 3, % Demons Above C-A variant 3
@@ -466,7 +466,7 @@
 
 	% Neudaiz Mizuraki (entry 2): Phantom Fissure, Moonlight Beast, Moonlight Beast (AOTI, missing)
 
-	{ 72, [{quests, "data/missions/neudaiz.counter.mizuraki-2.pack"}, {bg, 3}, {options, << 16#01ab2c00:32, 3, 3, 0,
+	{ 72, [{quests, "data/counters/neudaiz.mizuraki-2.pack"}, {bg, 3}, {options, << 16#01ab2c00:32, 3, 3, 0,
 		3, 3, 3, 3, % Phantom Ruins C-S
 		3, 3, 3, 3, % Moonlight Beast C-S variant 1
 		3, 3, 3, 3, % Moonlight Beast C-S variant 2
@@ -477,7 +477,7 @@
 
 	% Neudaiz Hot Springs: Phantom Fissure, Sakura Blast, Cost of Research
 
-	{ 75, [{quests, "data/missions/neudaiz.counter.hotsprings.pack"}, {bg, 3}, {options, << 16#01ee2800:32, 3, 3, 3,
+	{ 75, [{quests, "data/counters/neudaiz.hotsprings.pack"}, {bg, 3}, {options, << 16#01ee2800:32, 3, 3, 3,
 		3, 3, 3, 3, % Phantom Ruins C-S
 		3, 3, 3, 3, 3, 0, % Sakura Blast C-S2 variant 1
 		3, 3, 3, 3, 3, 0, % Sakura Blast C-S2 variant 2
@@ -489,11 +489,11 @@
 
 	% Moatoob Desert (entry 0)
 
-	{ 85, [{quests, "data/missions/moatoob.counter.desert-0.pack"}, {bg, 2}, {options, << 16#01d30400:32, 0:32 >>}]},
+	{ 85, [{quests, "data/counters/moatoob.desert-0.pack"}, {bg, 2}, {options, << 16#01d30400:32, 0:32 >>}]},
 
 	% Moatoob Desert (entry 1): Forest of Illusion, Desert Terror, Citadel of Sand, (empty name, missing)
 
-	{ 86, [{quests, "data/missions/moatoob.counter.desert-1.pack"}, {bg, 2}, {options, << 16#01553c00:32, 3, 3, 3, 0,
+	{ 86, [{quests, "data/counters/moatoob.desert-1.pack"}, {bg, 2}, {options, << 16#01553c00:32, 3, 3, 3, 0,
 		3, 3, 3, 3, 0, % Forest of Illusion C-S
 		3, 3, 3, % Desert Terror C-A variant 1
 		3, 3, 3, % Desert Terror C-A variant 2
@@ -508,11 +508,11 @@
 
 	% Moatoob Basin (entry 0)
 
-	{ 90, [{quests, "data/missions/moatoob.counter.basin-0.pack"}, {bg, 2}, {options, << 16#01000400:32, 0:32 >>}]},
+	{ 90, [{quests, "data/counters/moatoob.basin-0.pack"}, {bg, 2}, {options, << 16#01000400:32, 0:32 >>}]},
 
 	% Moatoob Basin (entry 1): Forest of Illusion, Mine Defense
 
-	{ 91, [{quests, "data/missions/moatoob.counter.basin-1.pack"}, {bg, 2}, {options, << 16#01f01800:32, 3, 3,
+	{ 91, [{quests, "data/counters/moatoob.basin-1.pack"}, {bg, 2}, {options, << 16#01f01800:32, 3, 3,
 		3, 3, 3, 3, 0, % Forest of Illusion C-S
 		3, 3, 3, % Mine Defense C-A variant 1
 		3, 3, 3, % Mine Defense C-A variant 2
@@ -523,7 +523,7 @@
 
 	% Moatoob Underground Lake (entry 0): Rogues' Shortcut
 
-	{100, [{quests, "data/missions/moatoob.counter.lake-0.pack"}, {bg, 2}, {options, << 16#01cf1400:32, 3,
+	{100, [{quests, "data/counters/moatoob.lake-0.pack"}, {bg, 2}, {options, << 16#01cf1400:32, 3,
 		3, 3, 3, 3, 3, % Rogues' Shortcut C-S2 variant 1
 		3, 3, 3, 3, 3, % Rogues' Shortcut C-S2 variant 2
 		3, 3, 3, 3, 3, % Rogues' Shortcut C-S2 variant 3
@@ -532,11 +532,11 @@
 
 	% Moatoob Underground Lake (entry 1)
 
-	{101, [{quests, "data/missions/moatoob.counter.lake-1.pack"}, {bg, 2}, {options, << 16#01000400:32, 0:32 >>}]},
+	{101, [{quests, "data/counters/moatoob.lake-1.pack"}, {bg, 2}, {options, << 16#01000400:32, 0:32 >>}]},
 
 	% Moatoob Underground Lake (entry 2): Forest of Illusion, Tunnel Recapture, Desert Goliath, Lonely Laboratory, (empty name, missing)
 
-	{102, [{quests, "data/missions/moatoob.counter.lake-2.pack"}, {bg, 2}, {options, << 16#01004c00:32, 3, 3, 3, 3, 0,
+	{102, [{quests, "data/counters/moatoob.lake-2.pack"}, {bg, 2}, {options, << 16#01004c00:32, 3, 3, 3, 3, 0,
 		3, 3, 3, 3, 0, % Forest of Illusion C-S
 		3, 3, 3, 3, % Tunnel Recapture C-S variant 1
 		3, 3, 3, 3, % Tunnel Recapture C-S variant 2
@@ -554,7 +554,7 @@
 
 	% Moatoob Oasis: Forest of Illusion, The Stolen Weapon
 
-	{105, [{quests, "data/missions/moatoob.counter.oasis.pack"}, {bg, 2}, {options, << 16#01ae1c00:32, 3, 3,
+	{105, [{quests, "data/counters/moatoob.oasis.pack"}, {bg, 2}, {options, << 16#01ae1c00:32, 3, 3,
 		3, 3, 3, 3, 0, % Forest of Illusion C-S
 		3, 3, 3, 3, 3, % The Stolen Weapon C-S2 variant 1
 		3, 3, 3, 3, 3, % The Stolen Weapon C-S2 variant 2
@@ -564,11 +564,11 @@
 
 	% Moatoob Glacier (entry 0)
 
-	{108, [{quests, "data/missions/moatoob.counter.glacier-0.pack"}, {bg, 2}, {options, << 16#01000400:32, 0:32 >>}]},
+	{108, [{quests, "data/counters/moatoob.glacier-0.pack"}, {bg, 2}, {options, << 16#01000400:32, 0:32 >>}]},
 
 	% Moatoob Glacier (entry 1): Forest of Illusion, Caves of Ice
 
-	{109, [{quests, "data/missions/moatoob.counter.glacier-1.pack"}, {bg, 2}, {options, << 16#01001800:32, 3, 3,
+	{109, [{quests, "data/counters/moatoob.glacier-1.pack"}, {bg, 2}, {options, << 16#01001800:32, 3, 3,
 		3, 3, 3, 3, 0, % Forest of Illusion C-S
 		3, 3, 3, 3, 3, % Caves of Ice C-S2 variant 1
 		3, 3, 3, 3, 3, % Caves of Ice C-S2 variant 2
@@ -577,16 +577,16 @@
 
 	% Parum Cafe: The Collector
 
-	{112, [{quests, "data/missions/parum.counter.cafe.pack"}, {bg, 5}, {options, << 16#01000800:32, 3, 0:24, 3, 0:24 >>}]},
+	{112, [{quests, "data/counters/parum.cafe.pack"}, {bg, 5}, {options, << 16#01000800:32, 3, 0:24, 3, 0:24 >>}]},
 
 	% Moatoob Pub: Desert Arms Shop
 
-	{114, [{quests, "data/missions/moatoob.counter.pub.pack"}, {bg, 6}, {options, << 16#01000800:32, 3, 0:32, 3, 0:16 >>}]},
+	{114, [{quests, "data/counters/moatoob.pub.pack"}, {bg, 6}, {options, << 16#01000800:32, 3, 0:32, 3, 0:16 >>}]},
 
 	% GUARDIANS HQ: Episode 2 C rank, B rank, A rank, Episode 3 C rank, B rank, A rank, Winter event 1 (missing), Winter event 2 (missing)
 	% MAG event (missing), Side story C rank, Side story B rank, Side story A rank, Old event missions
 
-	{115, [{quests, "data/missions/colony.counter.guardians.pack"}, {bg, 4}, {options, << 16#01807800:32, 3, 3, 3, 3, 3, 3, 0, 0, 0, 3, 3, 3, 3,
+	{115, [{quests, "data/counters/colony.guardians.pack"}, {bg, 4}, {options, << 16#01807800:32, 3, 3, 3, 3, 3, 3, 0, 0, 0, 3, 3, 3, 3,
 		3, 3, 3, 3, 3, 3, 3, 3, 3, 3, % Episode 2 Difficulty C Chapters 1-10
 		3, 3, 3, 3, 3, 3, 3, 3, 3, 3, % Episode 2 Difficulty B Chapters 1-10
 		3, 3, 3, 3, 3, 3, 3, 3, 3, 3, % Episode 2 Difficulty A Chapters 1-10
@@ -606,7 +606,7 @@
 
 	% Parum GUARDIANS: Partner Missions, Protectors a+ (missing), Protectors b+ (missing), Training Intro (missing), Party Missions, Versus, Item Exchange, (empty name, missing), (empty name, missing), (empty name, missing)
 
-	{116, [{quests, "data/missions/parum.counter.guardians.pack"}, {bg, 5}, {options, << 16#01005000:32, 3, 0, 0, 0, 3, 3, 3, 0, 0, 0, 0,
+	{116, [{quests, "data/counters/parum.guardians.pack"}, {bg, 5}, {options, << 16#01005000:32, 3, 0, 0, 0, 3, 3, 3, 0, 0, 0, 0,
 		3, 3, 3, 3,
 		0:304,
 		3, % Standby (Party)
@@ -620,7 +620,7 @@
 
 	% Neudaiz GUARDIANS: Partner Missions, Party Missions, Item Exchange
 
-	{117, [{quests, "data/missions/neudaiz.counter.guardians.pack"}, {bg, 7}, {options, << 16#01e32000:32, 3, 3, 3,
+	{117, [{quests, "data/counters/neudaiz.guardians.pack"}, {bg, 7}, {options, << 16#01e32000:32, 3, 3, 3,
 		3, 3, 3, 3, % Temple of Traps
 		0:32,
 		3, % Standby (Party)
@@ -632,7 +632,7 @@
 
 	% Moatoob GUARDIANS: Party Missions, Versus, Item Exchange
 
-	{118, [{quests, "data/missions/moatoob.counter.guardians.pack"}, {bg, 6}, {options, << 16#01001000:32, 3, 3, 3,
+	{118, [{quests, "data/counters/moatoob.guardians.pack"}, {bg, 6}, {options, << 16#01001000:32, 3, 3, 3,
 		3, % Standby (Party)
 		3, 3, 3, 3, 3, % Bruce's Dungeon C-S2
 		3, % Standby (Versus)
@@ -644,15 +644,15 @@
 
 	% Colony R&D: Clothes'n'Parts male/female
 
-	{177, [{quests, "data/missions/colony.counter.rd.pack"}, {bg, 4}, {options, << 16#01000800:32, 3, 0:24, 3, 3, 0:16 >>}]},
+	{177, [{quests, "data/counters/colony.rd.pack"}, {bg, 4}, {options, << 16#01000800:32, 3, 0:24, 3, 3, 0:16 >>}]},
 
 	% Rykros (entry 0)
 
-	{200, [{quests, "data/missions/colony.counter.rykros-0.pack"}, {bg, 255}, {options, << 16#01000400:32, 0:32 >>}]},
+	{200, [{quests, "data/counters/colony.rykros-0.pack"}, {bg, 255}, {options, << 16#01000400:32, 0:32 >>}]},
 
 	% Rykros (entry 1): Phantom Ruins, The Dark God
 
-	{201, [{quests, "data/missions/colony.counter.rykros-1.pack"}, {bg, 255}, {options, << 16#01d11c00:32, 3, 3,
+	{201, [{quests, "data/counters/colony.rykros-1.pack"}, {bg, 255}, {options, << 16#01d11c00:32, 3, 3,
 		3, 3, 3, 3, 0, % Phantom Ruins C-S
 		3, 3, 3, 3, 3, 0, % The Dark God C-S2 variant 1
 		3, 3, 3, 3, 3, 0, % The Dark God C-S2 variant 2
@@ -661,15 +661,15 @@
 
 	% Falz Memoria
 
-	{203, [{quests, "data/missions/colony.counter.memoria.pack"}, {bg, 255}, {options, << 16#01013800:32, 0:448 >>}]},
+	{203, [{quests, "data/counters/colony.memoria.pack"}, {bg, 255}, {options, << 16#01013800:32, 0:448 >>}]},
 
 	% Parum Rozenom (entry 0)
 
-	{205, [{quests, "data/missions/parum.counter.rozenom-0.pack"}, {bg, 1}, {options, << 16#01fa0400:32, 0:32 >>}]},
+	{205, [{quests, "data/counters/parum.rozenom-0.pack"}, {bg, 1}, {options, << 16#01fa0400:32, 0:32 >>}]},
 
 	% Parum Rozenom (entry 1): Illusionary Shaft, Lightning Beasts, Lightning Beasts (missing)
 
-	{206, [{quests, "data/missions/parum.counter.rozenom-1.pack"}, {bg, 1}, {options, << 16#01f82800:32, 3, 3, 0,
+	{206, [{quests, "data/counters/parum.rozenom-1.pack"}, {bg, 1}, {options, << 16#01f82800:32, 3, 3, 0,
 		3, 3, 3, 3, % Illusionary Shaft C-S
 		3, 3, 3, 3, 3, % Lightning Beasts C-S2 variant 1
 		3, 3, 3, 3, 3, % Lightning Beasts C-S2 variant 2
@@ -678,11 +678,11 @@
 
 	% Parum Beach (entry 0)
 
-	{210, [{quests, "data/missions/parum.counter.beach-0.pack"}, {bg, 1}, {options, << 16#014a0400:32, 0:32 >>}]},
+	{210, [{quests, "data/counters/parum.beach-0.pack"}, {bg, 1}, {options, << 16#014a0400:32, 0:32 >>}]},
 
 	% Parum Beach (entry 1): Illusionary Shaft, SEED Express
 
-	{211, [{quests, "data/missions/parum.counter.beach-1.pack"}, {bg, 1}, {options, << 16#01ac1800:32, 3, 3,
+	{211, [{quests, "data/counters/parum.beach-1.pack"}, {bg, 1}, {options, << 16#01ac1800:32, 3, 3,
 		3, 3, 3, 3, % Illusionary Shaft C-S
 		3, 3, 3, 3, 3, % SEED Express C-S2 variant 1
 		3, 3, 3, 3, 3, % SEED Express C-S2 variant 2
@@ -691,11 +691,11 @@
 
 	% Parum Subway (entry 0)
 
-	{215, [{quests, "data/missions/parum.counter.subway-0.pack"}, {bg, 1}, {options, << 16#015c0400:32, 0:32 >>}]},
+	{215, [{quests, "data/counters/parum.subway-0.pack"}, {bg, 1}, {options, << 16#015c0400:32, 0:32 >>}]},
 
 	% Parum Subway (entry 1): Illusionary Shaft, Military Subway
 
-	{216, [{quests, "data/missions/parum.counter.subway-1.pack"}, {bg, 1}, {options, << 16#01001800:32, 3, 3,
+	{216, [{quests, "data/counters/parum.subway-1.pack"}, {bg, 1}, {options, << 16#01001800:32, 3, 3,
 		3, 3, 3, 3, % Illusionary Shaft C-S
 		3, 3, 3, 3, 0, % Military Subway C-S variant 1
 		3, 3, 3, 3, 0, % Military Subway C-S variant 2
@@ -704,7 +704,7 @@
 
 	% Parum AMF Central (entry 0): Illusionary Shaft, Electric Brain
 
-	{220, [{quests, "data/missions/parum.counter.amfcentral-0.pack"}, {bg, 1}, {options, << 16#01001800:32, 3, 3,
+	{220, [{quests, "data/counters/parum.amfcentral-0.pack"}, {bg, 1}, {options, << 16#01001800:32, 3, 3,
 		3, 3, 3, 3, % Illusionary Shaft C-S
 		3, 3, 3, 3, 3, % Electric Brain C-S2 variant 1
 		3, 3, 3, 3, 3, % Electric Brain C-S2 variant 2
@@ -713,19 +713,19 @@
 
 	% Parum AMF Central (entry 1)
 
-	{221, [{quests, "data/missions/parum.counter.amfcentral-1.pack"}, {bg, 1}, {options, << 16#01000400:32, 0:32 >>}]},
+	{221, [{quests, "data/counters/parum.amfcentral-1.pack"}, {bg, 1}, {options, << 16#01000400:32, 0:32 >>}]},
 
 	% Neudaiz Saguraki (entry 0)
 
-	{225, [{quests, "data/missions/neudaiz.counter.saguraki-0.pack"}, {bg, 3}, {options, << 16#01ff0400:32, 0:32 >>}]},
+	{225, [{quests, "data/counters/neudaiz.saguraki-0.pack"}, {bg, 3}, {options, << 16#01ff0400:32, 0:32 >>}]},
 
 	% Neudaiz Saguraki (entry 1)
 
-	{226, [{quests, "data/missions/neudaiz.counter.saguraki-1.pack"}, {bg, 3}, {options, << 16#01120400:32, 0:32 >>}]},
+	{226, [{quests, "data/counters/neudaiz.saguraki-1.pack"}, {bg, 3}, {options, << 16#01120400:32, 0:32 >>}]},
 
 	% Neudaiz Saguraki (entry 2): Phantom Fissure, Flowery Pursuit
 
-	{227, [{quests, "data/missions/neudaiz.counter.saguraki-2.pack"}, {bg, 3}, {options, << 16#01741800:32, 3, 3,
+	{227, [{quests, "data/counters/neudaiz.saguraki-2.pack"}, {bg, 3}, {options, << 16#01741800:32, 3, 3,
 		3, 3, 3, 3, % Phantom Fissure C-S
 		3, 3, 3, 3, 3, 0, % Flowery Pursuit C-S2 variant 1
 		3, 3, 3, 3, 3, 0, % Flowery Pursuit C-S2 variant 2
@@ -734,15 +734,15 @@
 
 	% Neudaiz Pavilion (entry 0)
 
-	{230, [{quests, "data/missions/neudaiz.counter.pavilion-0.pack"}, {bg, 3}, {options, << 16#01060400:32, 0:32 >>}]},
+	{230, [{quests, "data/counters/neudaiz.pavilion-0.pack"}, {bg, 3}, {options, << 16#01060400:32, 0:32 >>}]},
 
 	% Neudaiz Pavilion (entry 1)
 
-	{231, [{quests, "data/missions/neudaiz.counter.pavilion-1.pack"}, {bg, 3}, {options, << 16#01000400:32, 0:32 >>}]},
+	{231, [{quests, "data/counters/neudaiz.pavilion-1.pack"}, {bg, 3}, {options, << 16#01000400:32, 0:32 >>}]},
 
 	% Neudaiz Pavilion (entry 2): Phantom Fissure, White Beast
 
-	{232, [{quests, "data/missions/neudaiz.counter.pavilion-2.pack"}, {bg, 3}, {options, << 16#01021800:32, 3, 3,
+	{232, [{quests, "data/counters/neudaiz.pavilion-2.pack"}, {bg, 3}, {options, << 16#01021800:32, 3, 3,
 		3, 3, 3, 3, % Phantom Fissure C-S
 		3, 3, 3, 3, 3, % White Beast C-S2 variant 1
 		3, 3, 3, 3, 3, % White Beast C-S2 variant 2
@@ -751,11 +751,11 @@
 
 	% Neudaiz Habirao (entry 0)
 
-	{235, [{quests, "data/missions/neudaiz.counter.habirao-0.pack"}, {bg, 3}, {options, << 16#01000400:32, 0:32 >>}]},
+	{235, [{quests, "data/counters/neudaiz.habirao-0.pack"}, {bg, 3}, {options, << 16#01000400:32, 0:32 >>}]},
 
 	% Neudaiz Habirao (entry 1): Phantom Fissure, The Dancing Birds
 
-	{236, [{quests, "data/missions/neudaiz.counter.habirao-1.pack"}, {bg, 3}, {options, << 16#01031800:32, 3, 3,
+	{236, [{quests, "data/counters/neudaiz.habirao-1.pack"}, {bg, 3}, {options, << 16#01031800:32, 3, 3,
 		3, 3, 3, 3, % Phantom Fissure C-S
 		3, 3, 3, 3, 3, % The Dancing Birds C-S2 variant 1
 		3, 3, 3, 3, 3, % The Dancing Birds C-S2 variant 2
@@ -764,19 +764,19 @@
 
 	% Neudaiz Temple
 
-	{240, [{quests, "data/missions/neudaiz.counter.temple.pack"}, {bg, 3}, {options, << 16#01ff0400:32, 0:32 >>}]},
+	{240, [{quests, "data/counters/neudaiz.temple.pack"}, {bg, 3}, {options, << 16#01ff0400:32, 0:32 >>}]},
 
 	% Moatoob Granigs (entry 0)
 
-	{245, [{quests, "data/missions/moatoob.counter.granigs-0.pack"}, {bg, 2}, {options, << 16#01020400:32, 0:32 >>}]},
+	{245, [{quests, "data/counters/moatoob.granigs-0.pack"}, {bg, 2}, {options, << 16#01020400:32, 0:32 >>}]},
 
 	% Moatoob Granigs (entry 1)
 
-	{246, [{quests, "data/missions/moatoob.counter.granigs-1.pack"}, {bg, 2}, {options, << 16#01000400:32, 0:32 >>}]},
+	{246, [{quests, "data/counters/moatoob.granigs-1.pack"}, {bg, 2}, {options, << 16#01000400:32, 0:32 >>}]},
 
 	% Moatoob Granigs (entry 2): Forest of Illusion, Awoken Serpent
 
-	{247, [{quests, "data/missions/moatoob.counter.granigs-2.pack"}, {bg, 2}, {options, << 16#01001800:32, 3, 3,
+	{247, [{quests, "data/counters/moatoob.granigs-2.pack"}, {bg, 2}, {options, << 16#01001800:32, 3, 3,
 		3, 3, 3, 3, 0, % Forest of Illusion C-S
 		3, 3, 3, 3, 3, % Awoken Serpent C-S2 variant 1
 		3, 3, 3, 3, 3, % Awoken Serpent C-S2 variant 2
@@ -785,11 +785,11 @@
 
 	% Moatoob Il Cabo (entry 0)
 
-	{250, [{quests, "data/missions/moatoob.counter.ilcabo-0.pack"}, {bg, 2}, {options, << 16#01000400:32, 0:32 >>}]},
+	{250, [{quests, "data/counters/moatoob.ilcabo-0.pack"}, {bg, 2}, {options, << 16#01000400:32, 0:32 >>}]},
 
 	% Moatoob Il Cabo (entry 1): Forest of Illusion, (empty name, Bladed Legacy)
 
-	{251, [{quests, "data/missions/moatoob.counter.ilcabo-1.pack"}, {bg, 2}, {options, << 16#012f1800:32, 3, 3,
+	{251, [{quests, "data/counters/moatoob.ilcabo-1.pack"}, {bg, 2}, {options, << 16#012f1800:32, 3, 3,
 		3, 3, 3, 3, 0, % Forest of Illusion C-S
 		3, 3, 3, 3, 3, % Bladed Legacy C-S2 variant 1
 		3, 3, 3, 3, 3, % Bladed Legacy C-S2 variant 2
@@ -798,5 +798,5 @@
 
 	% Moatoob Casino
 
-	{255, [{quests, "data/missions/moatoob.counter.casino.pack"}, {bg, 2}, {options, << 16#01000400:32, 0:32 >>}]}
+	{255, [{quests, "data/counters/moatoob.casino.pack"}, {bg, 2}, {options, << 16#01000400:32, 0:32 >>}]}
 ]).
