@@ -21,7 +21,8 @@
 -define(QUESTS, [
 	% Missions
 
-	{1000013, [{type, mission}, {file, "data/missions/test.quest.nbl"}, {start, [0, 1121, 0]}]},
+	{1000000, [{type, mission}, {file, "data/missions/unsafe-passage.1.c.quest.nbl"}, {start, [0, 1120, 0]}]},
+	{1000013, [{type, mission}, {file, "data/missions/unsafe-passage.2.s.quest.nbl"}, {start, [0, 1121, 0]}]},
 
 	% Planetary lobbies
 
@@ -36,7 +37,8 @@
 -define(ZONES, [
 	% Current test mission
 
-	{[1000013, 0], [{file, "data/missions/test.zone.nbl"}]},
+	{[1000000, 0], [{file, "data/missions/unsafe-passage.1.c.zone.nbl"}]},
+	{[1000013, 0], [{file, "data/missions/unsafe-passage.2.s.zone.nbl"}]},
 
 	% Colony
 
