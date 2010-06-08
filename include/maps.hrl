@@ -396,10 +396,10 @@
 	% Parum Waterfall: Illusionary Shaft, (empty name, Duel in the Ruins)
 
 	{ 48, [{quests, "data/missions/parum.counter.waterfall.pack"}, {bg, 1}, {options, << 16#01eb1800:32, 3, 3,
-		2, 2, 2, 2, % Illusionary Shaft C-S
-		2, 2, 2, 2, 2, % Duel in the Ruins C-S2 variant 1
-		2, 2, 2, 2, 2, % Duel in the Ruins C-S2 variant 2
-		2, 2, 2, 2, 2, % Duel in the Ruins C-S2 variant 3
+		3, 3, 3, 3, % Illusionary Shaft C-S
+		3, 3, 3, 3, 3, % Duel in the Ruins C-S2 variant 1
+		3, 3, 3, 3, 3, % Duel in the Ruins C-S2 variant 2
+		3, 3, 3, 3, 3, % Duel in the Ruins C-S2 variant 3
 	0:24 >>}]},
 
 	% Neudaiz Islands (entry 0)
@@ -607,8 +607,7 @@
 
 	{116, [{quests, "data/missions/parum.counter.guardians.pack"}, {bg, 5}, {options, << 16#01005000:32, 3, 0, 0, 0, 3, 3, 3, 0, 0, 0, 0,
 		3, 3, 3, 3,
-		0:32,
-		2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+		0:304,
 		3, % Standby (Party)
 		3, 3, 3, 3, 3, % Eggs Thieves C-S2 variant 1
 		3, 3, 3, 3, 3, % Eggs Thieves C-S2 variant 2
