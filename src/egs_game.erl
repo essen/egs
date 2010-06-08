@@ -164,6 +164,20 @@ char_select_handle(Command, CSocket, GID, Version, _) ->
 	log(GID, "(char_select) dismissed packet ~4.16.0b", [Command]),
 	?MODULE:char_select(CSocket, GID, Version).
 
+%% @doc Load the selected character in the start lobby and start the main game's loop.
+
+char_select_load(CSocket, GID, Version, Number) ->
+	User = egs_db:users_select(GID),
+	[{status, 1}, {char, Char}, {options, Options}] = data_load(User#users.folder, Number),
+	<< Name:512/bits, _/bits >> = Char,
+	NewRow = User#users{charnumber=Number, charname=Name},
+	egs_db:users_insert(NewRow),
+	char_load(CSocket, GID, Char, Options, Number),
+	send_packet_021b(CSocket, GID),
+	lobby_load(CSocket, GID, 1100000, 0, 1, 1),
+	ssl:setopts(CSocket, [{active, true}]),
+	?MODULE:loop(CSocket, GID, Version).
+
 %% @doc Load the given character's data.
 
 data_load(Folder, Number) ->
@@ -176,14 +190,9 @@ data_load(Folder, Number) ->
 			[{status, 0}, {char, << 0:2208 >>}]
 	end.
 
-%% @doc Load the selected character in the start lobby and start the main game's loop.
+%% @doc Load and send the character information to the client.
 
-char_select_load(CSocket, GID, Version, Number) ->
-	User = egs_db:users_select(GID),
-	[{status, 1}, {char, Char}, {options, Options}] = data_load(User#users.folder, Number),
-	<< Name:512/bits, _/bits >> = Char,
-	NewRow = User#users{charnumber=Number, charname=Name},
-	egs_db:users_insert(NewRow),
+char_load(CSocket, GID, Char, Options, Number) ->
 	egs_proto:send_character_selected(CSocket, GID, Char, Options),
 	% 0246
 	send_packet_0a0a(CSocket, GID),
@@ -196,11 +205,7 @@ char_select_load(CSocket, GID, Version, Number) ->
 	send_packet_1501(CSocket, GID),
 	send_packet_1512(CSocket, GID),
 	% 0303
-	egs_proto:send_npc_info(CSocket, GID),
-	send_packet_021b(CSocket, GID),
-	lobby_load(CSocket, GID, 1100000, 0, 1, 1),
-	ssl:setopts(CSocket, [{active, true}]),
-	?MODULE:loop(CSocket, GID, Version).
+	egs_proto:send_npc_info(CSocket, GID).
 
 %% @doc Load the given map as a mission counter.
 
@@ -346,15 +351,8 @@ myroom_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID) ->
 		% broadcast spawn and unspawn to other people
 		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(OldUser)),
 		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_spawn, User} end, egs_db:users_select_others_in_area(User)),
-		% load lobby and character
-		egs_proto:send_character_selected(CSocket, GID, Char, Options),
-		% 0246 0a0a 1006
-		send_packet_1005(CSocket, GID, Char),
-		% 1006 0210
-		egs_proto:send_universe_info(CSocket, GID),
-		egs_proto:send_player_card(CSocket, GID, Char, User#users.charnumber),
-		% 1501 1512 0303
-		egs_proto:send_npc_info(CSocket, GID),
+		% always reload the character when entering a room
+		char_load(CSocket, GID, Char, Options, User#users.charnumber),
 		egs_proto:send_init_quest(CSocket, GID, QuestID),
 		egs_proto:send_quest(CSocket, QuestFile),
 		send_packet_0a05(CSocket, GID),
