@@ -238,6 +238,20 @@
 		3, 3, 3, 3, 3, % Forested Islands C-S2 variant 3
 	0:168 >>}]},
 
+	% Moatoob Flyerbase: Forest of Illusion, System Defense, Valley of Carnage, System Defense (missing), Fire purification (missing)
+
+	{  5, [{quests, "data/missions/moatoob.counter.flyer.pack"}, {bg, 2}, {options, << 16#01ab3c00:32, 3, 3, 3, 0, 0,
+		3, 3, 3, 3, 0, % Forest of Illusion C-S
+		3, 3, 3, 3, % System Defense C-S variant 1
+		3, 3, 3, 3, % System Defense C-S variant 2
+		3, 3, 3, 3, % System Defense C-S variant 3
+		3, 3, 3, % System Defense S2 variant 1-3
+		3, 3, 3, 3, % Valley of Carnage C-S variant 1
+		3, 3, 3, 3, % Valley of Carnage C-S variant 2
+		3, 3, 3, 3, % Valley of Carnage C-S variant 3
+		3, 3, 3, % Valley of Carnage S2 variant 1-3
+	0:160 >>}]},
+
 	% Neudaiz COG: Phantom Fissure, Sacred Stream
 
 	{  6, [{quests, "data/missions/neudaiz.counter.cog.pack"}, {bg, 3}, {options, << 16#01001800:32, 3, 3,
@@ -472,9 +486,101 @@
 		3, 3, 3, 3, 3 % Cost of Research C-S2 variant 3
 	>>}]},
 
+	% Moatoob Desert (entry 0)
+
+	{ 85, [{quests, "data/missions/moatoob.counter.desert-0.pack"}, {bg, 2}, {options, << 16#01d30400:32, 0:32 >>}]},
+
+	% Moatoob Desert (entry 1): Forest of Illusion, Desert Terror, Citadel of Sand, (empty name, missing)
+
+	{ 86, [{quests, "data/missions/moatoob.counter.desert-1.pack"}, {bg, 2}, {options, << 16#01553c00:32, 3, 3, 3, 0,
+		3, 3, 3, 3, 0, % Forest of Illusion C-S
+		3, 3, 3, % Desert Terror C-A variant 1
+		3, 3, 3, % Desert Terror C-A variant 2
+		3, 3, 3, % Desert Terror C-A variant 3
+		3, 3, 3, % Desert Terror S variant 1-3
+		3, 3, 3, % Desert Terror S2 variant 1-3
+		3, 3, 3, % Desert Terror S3 variant 1-3
+		3, 3, 3, 3, 3, % Citadel of Sand C-S2 variant 1
+		3, 3, 3, 3, 3, % Citadel of Sand C-S2 variant 2
+		3, 3, 3, 3, 3, % Citadel of Sand C-S2 variant 3
+	0:144 >>}]},
+
+	% Moatoob Basin (entry 0)
+
+	{ 90, [{quests, "data/missions/moatoob.counter.basin-0.pack"}, {bg, 2}, {options, << 16#01000400:32, 0:32 >>}]},
+
+	% Moatoob Basin (entry 1): Forest of Illusion, Mine Defense
+
+	{ 91, [{quests, "data/missions/moatoob.counter.basin-1.pack"}, {bg, 2}, {options, << 16#01f01800:32, 3, 3,
+		3, 3, 3, 3, 0, % Forest of Illusion C-S
+		3, 3, 3, % Mine Defense C-A variant 1
+		3, 3, 3, % Mine Defense C-A variant 2
+		3, 3, 3, % Mine Defense C-A variant 3
+		3, 3, 3, % Mine Defense S variant 1-3
+		3, 3, 3, % Mine Defense S2 variant 1-3
+	0:16 >>}]},
+
+	% Moatoob Underground Lake (entry 0): Rogues' Shortcut
+
+	{100, [{quests, "data/missions/moatoob.counter.lake-0.pack"}, {bg, 2}, {options, << 16#01cf1400:32, 3,
+		3, 3, 3, 3, 3, % Rogues' Shortcut C-S2 variant 1
+		3, 3, 3, 3, 3, % Rogues' Shortcut C-S2 variant 2
+		3, 3, 3, 3, 3, % Rogues' Shortcut C-S2 variant 3
+		3, 3, 3, % Rogues' Shortcut S3 variant 1-3
+	0 >>}]},
+
+	% Moatoob Underground Lake (entry 1)
+
+	{101, [{quests, "data/missions/moatoob.counter.lake-1.pack"}, {bg, 2}, {options, << 16#01000400:32, 0:32 >>}]},
+
+	% Moatoob Underground Lake (entry 2): Forest of Illusion, Tunnel Recapture, Desert Goliath, Lonely Laboratory, (empty name, missing)
+
+	{102, [{quests, "data/missions/moatoob.counter.lake-2.pack"}, {bg, 2}, {options, << 16#01004c00:32, 3, 3, 3, 3, 0,
+		3, 3, 3, 3, 0, % Forest of Illusion C-S
+		3, 3, 3, 3, % Tunnel Recapture C-S variant 1
+		3, 3, 3, 3, % Tunnel Recapture C-S variant 2
+		3, 3, 3, 3, % Tunnel Recapture C-S variant 3
+		3, 3, 3, % Tunnel Recapture S2 variant 1-3
+		3, 3, 3, 3, % Desert Goliath C-S variant 1
+		3, 3, 3, 3, % Desert Goliath C-S variant 2
+		3, 3, 3, 3, % Desert Goliath C-S variant 3
+		3, 3, 3, % Desert Goliath S2 variant 1-3
+		3, 3, 3, % Desert Goliath S3 variant 1-3
+		3, 3, 3, 3, % Lonely Laboratory C-S variant 1
+		0:48,
+		3, 3, 3, 3, % Lonely Laboratory C-S variant 2
+	0:152 >>}]},
+
+	% Moatoob Oasis: Forest of Illusion, The Stolen Weapon
+
+	{105, [{quests, "data/missions/moatoob.counter.oasis.pack"}, {bg, 2}, {options, << 16#01ae1c00:32, 3, 3,
+		3, 3, 3, 3, 0, % Forest of Illusion C-S
+		3, 3, 3, 3, 3, % The Stolen Weapon C-S2 variant 1
+		3, 3, 3, 3, 3, % The Stolen Weapon C-S2 variant 2
+		3, 3, 3, 3, 3, % The Stolen Weapon C-S2 variant 3
+		3, 3, 3, % The Stolen Weapon S3 variant 1-3
+	0:24 >>}]},
+
+	% Moatoob Glacier (entry 0)
+
+	{108, [{quests, "data/missions/moatoob.counter.glacier-0.pack"}, {bg, 2}, {options, << 16#01000400:32, 0:32 >>}]},
+
+	% Moatoob Glacier (entry 1): Forest of Illusion, Caves of Ice
+
+	{109, [{quests, "data/missions/moatoob.counter.glacier-1.pack"}, {bg, 2}, {options, << 16#01001800:32, 3, 3,
+		3, 3, 3, 3, 0, % Forest of Illusion C-S
+		3, 3, 3, 3, 3, % Caves of Ice C-S2 variant 1
+		3, 3, 3, 3, 3, % Caves of Ice C-S2 variant 2
+		3, 3, 3, 3, 3, % Caves of Ice C-S2 variant 3
+	0:16 >>}]},
+
 	% Parum Cafe: The Collector
 
 	{112, [{quests, "data/missions/parum.counter.cafe.pack"}, {bg, 5}, {options, << 16#01000800:32, 3, 0:24, 3, 0:24 >>}]},
+
+	% Moatoob Pub: Desert Arms Shop
+
+	{114, [{quests, "data/missions/moatoob.counter.pub.pack"}, {bg, 6}, {options, << 16#01000800:32, 3, 0:32, 3, 0:16 >>}]},
 
 	% GUARDIANS HQ: Episode 2 C rank, B rank, A rank, Episode 3 C rank, B rank, A rank, Winter event 1 (missing), Winter event 2 (missing)
 	% MAG event (missing), Side story C rank, Side story B rank, Side story A rank, Old event missions
@@ -523,6 +629,18 @@
 		3, 3, 3, 3, 3, % Her Secret Mission C-S2 variant 3
 		0, 3, % TECHNIC License
 	0:24 >>}]},
+
+	% Moatoob GUARDIANS: Party Missions, Versus, Item Exchange
+
+	{118, [{quests, "data/missions/moatoob.counter.guardians.pack"}, {bg, 6}, {options, << 16#01001000:32, 3, 3, 3,
+		3, % Standby (Party)
+		3, 3, 3, 3, 3, % Bruce's Dungeon C-S2
+		3, % Standby (Versus)
+		3, % Airboard Rally
+		0:16,
+		3, % Skill License
+		0, 3 % Thunderfeast Deals
+	>>}]},
 
 	% Colony R&D: Clothes'n'Parts male/female
 
@@ -646,5 +764,39 @@
 
 	% Neudaiz Temple
 
-	{240, [{quests, "data/missions/neudaiz.counter.temple.pack"}, {bg, 3}, {options, << 16#01ff0400:32, 0:32 >>}]}
+	{240, [{quests, "data/missions/neudaiz.counter.temple.pack"}, {bg, 3}, {options, << 16#01ff0400:32, 0:32 >>}]},
+
+	% Moatoob Granigs (entry 0)
+
+	{245, [{quests, "data/missions/moatoob.counter.granigs-0.pack"}, {bg, 2}, {options, << 16#01020400:32, 0:32 >>}]},
+
+	% Moatoob Granigs (entry 1)
+
+	{246, [{quests, "data/missions/moatoob.counter.granigs-1.pack"}, {bg, 2}, {options, << 16#01000400:32, 0:32 >>}]},
+
+	% Moatoob Granigs (entry 2): Forest of Illusion, Awoken Serpent
+
+	{247, [{quests, "data/missions/moatoob.counter.granigs-2.pack"}, {bg, 2}, {options, << 16#01001800:32, 3, 3,
+		3, 3, 3, 3, 0, % Forest of Illusion C-S
+		3, 3, 3, 3, 3, % Awoken Serpent C-S2 variant 1
+		3, 3, 3, 3, 3, % Awoken Serpent C-S2 variant 2
+		3, 3, 3, 3, 3, % Awoken Serpent C-S2 variant 3
+	0:16 >>}]},
+
+	% Moatoob Il Cabo (entry 0)
+
+	{250, [{quests, "data/missions/moatoob.counter.ilcabo-0.pack"}, {bg, 2}, {options, << 16#01000400:32, 0:32 >>}]},
+
+	% Moatoob Il Cabo (entry 1): Forest of Illusion, (empty name, Bladed Legacy)
+
+	{251, [{quests, "data/missions/moatoob.counter.ilcabo-1.pack"}, {bg, 2}, {options, << 16#012f1800:32, 3, 3,
+		3, 3, 3, 3, 0, % Forest of Illusion C-S
+		3, 3, 3, 3, 3, % Bladed Legacy C-S2 variant 1
+		3, 3, 3, 3, 3, % Bladed Legacy C-S2 variant 2
+		3, 3, 3, 3, 3, % Bladed Legacy C-S2 variant 3
+	0:16 >>}]},
+
+	% Moatoob Casino
+
+	{255, [{quests, "data/missions/moatoob.counter.casino.pack"}, {bg, 2}, {options, << 16#01000400:32, 0:32 >>}]}
 ]).
