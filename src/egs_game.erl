@@ -147,10 +147,10 @@ char_select_handle(16#0d02, CSocket, GID, Version, Orig) ->
 char_select_handle(16#0d06, CSocket, GID, Version, _) ->
 	User = egs_db:users_select(GID),
 	egs_proto:send_character_list(CSocket, GID,
-		char_load(User#users.folder, 0),
-		char_load(User#users.folder, 1),
-		char_load(User#users.folder, 2),
-		char_load(User#users.folder, 3)),
+		data_load(User#users.folder, 0),
+		data_load(User#users.folder, 1),
+		data_load(User#users.folder, 2),
+		data_load(User#users.folder, 3)),
 	?MODULE:char_select(CSocket, GID, Version);
 
 %% @doc Silently ignore packet 0818. Gives CPU/GPU information.
@@ -166,7 +166,7 @@ char_select_handle(Command, CSocket, GID, Version, _) ->
 
 %% @doc Load the given character's data.
 
-char_load(Folder, Number) ->
+data_load(Folder, Number) ->
 	Filename = io_lib:format("save/~s/~b-character", [Folder, Number]),
 	case file:read_file(Filename) of
 		{ok, Char} ->
@@ -180,7 +180,7 @@ char_load(Folder, Number) ->
 
 char_select_load(CSocket, GID, Version, Number) ->
 	User = egs_db:users_select(GID),
-	[{status, 1}, {char, Char}, {options, Options}] = char_load(User#users.folder, Number),
+	[{status, 1}, {char, Char}, {options, Options}] = data_load(User#users.folder, Number),
 	<< Name:512/bits, _/bits >> = Char,
 	NewRow = User#users{charnumber=Number, charname=Name},
 	egs_db:users_insert(NewRow),
@@ -208,7 +208,7 @@ counter_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID) ->
 	OldUser = egs_db:users_select(GID),
 	User = OldUser#users{questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID, savedquestid=OldUser#users.questid, savedzoneid=OldUser#users.zoneid},
 	egs_db:users_insert(User),
-	[{status, 1}, {char, Char}, {options, _}] = char_load(User#users.folder, User#users.charnumber),
+	[{status, 1}, {char, Char}, {options, _}] = data_load(User#users.folder, User#users.charnumber),
 	AreaName = "Mission counter",
 	QuestFile = "data/lobby/counter.quest.nbl",
 	ZoneFile = "data/lobby/counter.zone.nbl",
@@ -247,7 +247,7 @@ lobby_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID) ->
 	OldUser = egs_db:users_select(GID),
 	User = OldUser#users{instanceid=undefined, questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID},
 	egs_db:users_insert(User),
-	[{status, 1}, {char, Char}, {options, _}] = char_load(User#users.folder, User#users.charnumber),
+	[{status, 1}, {char, Char}, {options, _}] = data_load(User#users.folder, User#users.charnumber),
 	[{type, AreaType}, {file, QuestFile}] = proplists:get_value(QuestID, ?QUESTS, [{type, lobby}, {file, "data/lobby/colony.quest.nbl"}]),
 	[{file, ZoneFile}] = proplists:get_value([QuestID, ZoneID], ?ZONES, [{file, "data/lobby/colony.zone-0.nbl"}]),
 	[{name, AreaName}] = proplists:get_value([QuestID, MapID], ?MAPS, [{name, "dammy"}]),
@@ -299,7 +299,7 @@ mission_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID) ->
 	OldUser = egs_db:users_select(GID),
 	User = OldUser#users{instanceid=GID, questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID},
 	egs_db:users_insert(User),
-	[{status, 1}, {char, Char}, {options, _}] = char_load(User#users.folder, User#users.charnumber),
+	[{status, 1}, {char, Char}, {options, _}] = data_load(User#users.folder, User#users.charnumber),
 	[{type, AreaType}, {file, QuestFile}] = proplists:get_value(QuestID, ?QUESTS, [{type, lobby}, {file, "data/missions/test.quest.nbl"}]),
 	[{file, ZoneFile}] = proplists:get_value([QuestID, ZoneID], ?ZONES, [{file, "data/missions/test.zone.nbl"}]),
 	[{name, AreaName}] = proplists:get_value([QuestID, MapID], ?MAPS, [{name, "dammy"}]),
@@ -339,7 +339,7 @@ myroom_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID) ->
 	OldUser = egs_db:users_select(GID),
 	User = OldUser#users{questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID},
 	egs_db:users_insert(User),
-	[{status, 1}, {char, Char}, {options, Options}] = char_load(User#users.folder, User#users.charnumber),
+	[{status, 1}, {char, Char}, {options, Options}] = data_load(User#users.folder, User#users.charnumber),
 	[{name, _}, {quest, QuestFile}, {zone, ZoneFile}, {entries, _}] = 
 		[{name, "dammy"}, {quest, "data/rooms/test.quest.nbl"}, {zone, "data/rooms/test.zone.nbl"}, {entries, []}],
 	try
