@@ -19,10 +19,32 @@
 %% EGS maps settings.
 
 -define(QUESTS, [
-	% Missions
+	% Unsafe Passage
 
-	{1000000, [{type, mission}, {file, "data/missions/unsafe-passage.1.c.quest.nbl"}, {start, [0, 1120, 0]}]},
-	{1000013, [{type, mission}, {file, "data/missions/unsafe-passage.2.s.quest.nbl"}, {start, [0, 1121, 0]}]},
+	{1000000, [{type, mission}, {file, "data/missions/unsafe-passage.1.c.quest.nbl"},  {start, [0, 1120, 0]}]},
+	{1000001, [{type, mission}, {file, "data/missions/unsafe-passage.1.b.quest.nbl"},  {start, [0, 1120, 0]}]},
+	{1000002, [{type, mission}, {file, "data/missions/unsafe-passage.1.a.quest.nbl"},  {start, [0, 1120, 0]}]},
+	{1000003, [{type, mission}, {file, "data/missions/unsafe-passage.1.s.quest.nbl"},  {start, [0, 1120, 0]}]},
+	{1000004, [{type, mission}, {file, "data/missions/unsafe-passage.1.s2.quest.nbl"}, {start, [0, 1120, 0]}]},
+
+	{1000010, [{type, mission}, {file, "data/missions/unsafe-passage.2.c.quest.nbl"},  {start, [0, 1121, 0]}]},
+	{1000011, [{type, mission}, {file, "data/missions/unsafe-passage.2.b.quest.nbl"},  {start, [0, 1121, 0]}]},
+	{1000012, [{type, mission}, {file, "data/missions/unsafe-passage.2.a.quest.nbl"},  {start, [0, 1121, 0]}]},
+	{1000013, [{type, mission}, {file, "data/missions/unsafe-passage.2.s.quest.nbl"},  {start, [0, 1121, 0]}]},
+	{1000014, [{type, mission}, {file, "data/missions/unsafe-passage.2.s2.quest.nbl"}, {start, [0, 1121, 0]}]},
+
+	{1000020, [{type, mission}, {file, "data/missions/unsafe-passage.3.c.quest.nbl"},  {start, [0, 1200, 0]}]},
+	{1000021, [{type, mission}, {file, "data/missions/unsafe-passage.3.b.quest.nbl"},  {start, [0, 1200, 0]}]},
+	{1000022, [{type, mission}, {file, "data/missions/unsafe-passage.3.a.quest.nbl"},  {start, [0, 1200, 0]}]},
+	{1000023, [{type, mission}, {file, "data/missions/unsafe-passage.3.s.quest.nbl"},  {start, [0, 1200, 0]}]},
+	{1000024, [{type, mission}, {file, "data/missions/unsafe-passage.3.s2.quest.nbl"}, {start, [0, 1200, 0]}]},
+
+	% Phantom Fissure
+
+	{1060300, [{type, mission}, {file, "data/missions/phantom-fissure.c.quest.nbl"},  {start, [0, 8002, 0]}]},
+	{1060301, [{type, mission}, {file, "data/missions/phantom-fissure.b.quest.nbl"},  {start, [0, 8002, 0]}]},
+	{1060302, [{type, mission}, {file, "data/missions/phantom-fissure.a.quest.nbl"},  {start, [0, 8002, 0]}]},
+	{1060303, [{type, mission}, {file, "data/missions/phantom-fissure.s.quest.nbl"},  {start, [0, 8002, 0]}]},
 
 	% Planetary lobbies
 
@@ -35,10 +57,36 @@
 ]).
 
 -define(ZONES, [
-	% Current test mission
+	% Unsafe Passage
 
 	{[1000000, 0], [{file, "data/missions/unsafe-passage.1.c.zone.nbl"}]},
+	{[1000001, 0], [{file, "data/missions/unsafe-passage.1.b.zone.nbl"}]},
+	{[1000002, 0], [{file, "data/missions/unsafe-passage.1.a.zone.nbl"}]},
+	{[1000003, 0], [{file, "data/missions/unsafe-passage.1.s.zone.nbl"}]},
+	{[1000004, 0], [{file, "data/missions/unsafe-passage.1.s2.zone.nbl"}]},
+
+	{[1000010, 0], [{file, "data/missions/unsafe-passage.2.c.zone.nbl"}]},
+	{[1000011, 0], [{file, "data/missions/unsafe-passage.2.b.zone.nbl"}]},
+	{[1000012, 0], [{file, "data/missions/unsafe-passage.2.a.zone.nbl"}]},
 	{[1000013, 0], [{file, "data/missions/unsafe-passage.2.s.zone.nbl"}]},
+	{[1000014, 0], [{file, "data/missions/unsafe-passage.2.s2.zone.nbl"}]},
+
+	{[1000020, 0], [{file, "data/missions/unsafe-passage.3.c.zone.nbl"}]},
+	{[1000021, 0], [{file, "data/missions/unsafe-passage.3.b.zone.nbl"}]},
+	{[1000022, 0], [{file, "data/missions/unsafe-passage.3.a.zone.nbl"}]},
+	{[1000023, 0], [{file, "data/missions/unsafe-passage.3.s.zone.nbl"}]},
+	{[1000024, 0], [{file, "data/missions/unsafe-passage.3.s2.zone.nbl"}]},
+
+	% Phantom Fissure
+
+	{[1060300, 0], [{file, "data/missions/phantom-fissure.c-0.zone.nbl"}]},
+	{[1060300, 1], [{file, "data/missions/phantom-fissure.c-1.zone.nbl"}]},
+	{[1060301, 0], [{file, "data/missions/phantom-fissure.b-0.zone.nbl"}]},
+	{[1060301, 1], [{file, "data/missions/phantom-fissure.b-1.zone.nbl"}]},
+	{[1060302, 0], [{file, "data/missions/phantom-fissure.a-0.zone.nbl"}]},
+	{[1060302, 1], [{file, "data/missions/phantom-fissure.a-1.zone.nbl"}]},
+	{[1060303, 0], [{file, "data/missions/phantom-fissure.s-0.zone.nbl"}]},
+	{[1060303, 1], [{file, "data/missions/phantom-fissure.s-1.zone.nbl"}]},
 
 	% Colony
 
