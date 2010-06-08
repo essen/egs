@@ -19,16 +19,17 @@
 %% EGS maps settings.
 
 -define(QUESTS, [
-	% Current test mission
+	% Missions
 
-	{1000013, [{type, mission},   {file, "data/missions/test.quest.nbl"}]},
+	{1000013, [{type, mission}, {file, "data/missions/test.quest.nbl"}, {start, [0, 1121, 0]}]},
 
 	% Planetary lobbies
 
-	{1100000, [{type, lobby},     {file, "data/lobby/colony.quest.nbl"}]},
-	{1101000, [{type, lobby},     {file, "data/lobby/parum.quest.nbl"}]},
-	{1102000, [{type, lobby},     {file, "data/lobby/neudaiz.quest.nbl"}]},
-	{1103000, [{type, lobby},     {file, "data/lobby/moatoob.quest.nbl"}]},
+	{1100000, [{type, lobby}, {file, "data/lobby/colony.quest.nbl"}]},
+	{1101000, [{type, lobby}, {file, "data/lobby/parum.quest.nbl"}]},
+	{1102000, [{type, lobby}, {file, "data/lobby/neudaiz.quest.nbl"}]},
+	{1103000, [{type, lobby}, {file, "data/lobby/moatoob.quest.nbl"}]},
+
 	{1104000, [{type, spaceport}, {file, "data/lobby/spaceport.quest.nbl"}]}
 ]).
 

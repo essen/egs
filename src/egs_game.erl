@@ -253,7 +253,7 @@ lobby_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID) ->
 	User = OldUser#users{instanceid=undefined, questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID},
 	egs_db:users_insert(User),
 	[{status, 1}, {char, Char}, {options, _}] = data_load(User#users.folder, User#users.charnumber),
-	[{type, AreaType}, {file, QuestFile}] = proplists:get_value(QuestID, ?QUESTS, [{type, lobby}, {file, "data/lobby/colony.quest.nbl"}]),
+	[{type, AreaType}, {file, QuestFile}|_] = proplists:get_value(QuestID, ?QUESTS, [{type, lobby}, {file, "data/lobby/colony.quest.nbl"}]),
 	[{file, ZoneFile}] = proplists:get_value([QuestID, ZoneID], ?ZONES, [{file, "data/lobby/colony.zone-0.nbl"}]),
 	[{name, AreaName}] = proplists:get_value([QuestID, MapID], ?MAPS, [{name, "dammy"}]),
 	try
@@ -300,14 +300,14 @@ lobby_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID) ->
 %% @todo One of the silenced packets enable a 04xx command sent by the client and related to enemies sync. Probably 1202.
 %% @todo Maybe the quest doesn't work right because of the lack of this odd checksum-like value.
 
-mission_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID) ->
+mission_load(CSocket, GID, QuestID, _, _, _) ->
 	OldUser = egs_db:users_select(GID),
-	User = OldUser#users{instanceid=GID, questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID},
-	egs_db:users_insert(User),
-	[{status, 1}, {char, Char}, {options, _}] = data_load(User#users.folder, User#users.charnumber),
-	[{type, AreaType}, {file, QuestFile}] = proplists:get_value(QuestID, ?QUESTS, [{type, lobby}, {file, "data/missions/test.quest.nbl"}]),
+	[{status, 1}, {char, Char}, {options, _}] = data_load(OldUser#users.folder, OldUser#users.charnumber),
+	[{type, AreaType}, {file, QuestFile}, {start, [ZoneID, MapID, EntryID]}] = proplists:get_value(QuestID, ?QUESTS, [{type, missions}, {file, "data/missions/test.quest.nbl"}, {start, [0, 0, 0]}]),
 	[{file, ZoneFile}] = proplists:get_value([QuestID, ZoneID], ?ZONES, [{file, "data/missions/test.zone.nbl"}]),
 	[{name, AreaName}] = proplists:get_value([QuestID, MapID], ?MAPS, [{name, "dammy"}]),
+	User = OldUser#users{instanceid=GID, questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID},
+	egs_db:users_insert(User),
 	try
 		egs_proto:send_init_quest(CSocket, GID, QuestID),
 		egs_proto:send_quest(CSocket, QuestFile),
@@ -600,6 +600,7 @@ handle(16#0402, _, _, _, _) ->
 
 %% @doc Map change handler.
 %%      Rooms are handled differently than normal lobbies.
+%%      When entering a mission the values other than quest are all 65535. Find the actual start area and load it.
 %% @todo Load 'Your room' correctly.
 %% @todo When changing lobby to the room, 0230 must also be sent. Same when going from room to lobby.
 %% @todo The mission loading here is a temporary one-mission only choice.
@@ -608,13 +609,16 @@ handle(16#0807, CSocket, GID, _, Orig) ->
 	<< _:352, QuestID:32/little-unsigned-integer, ZoneID:16/little-unsigned-integer,
 		MapID:16/little-unsigned-integer, EntryID:16/little-unsigned-integer, _/bits >> = Orig,
 	log(GID, "lobby change (~b,~b,~b,~b)", [QuestID, ZoneID, MapID, EntryID]),
-	case QuestID of
-		1000013 ->
-			mission_load(CSocket, GID, 1000013, 0, 1121, 0);
-		1120000 ->
-			myroom_load(CSocket, GID, QuestID, ZoneID, 423, EntryID);
+	case ZoneID of
+		65535 ->
+			mission_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID);
 		_ ->
-			lobby_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID)
+			case QuestID of
+				1120000 ->
+					myroom_load(CSocket, GID, QuestID, ZoneID, 423, EntryID);
+				_ ->
+					lobby_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID)
+			end
 	end;
 
 %% @doc Mission counter handler.
@@ -640,7 +644,7 @@ handle(16#0c01, CSocket, GID, _, Orig) ->
 	log(GID, "start mission ~b", [QuestID]),
 	send_packet_170c(CSocket, GID),
 	egs_proto:packet_send(CSocket, << 16#10200300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64 >>),
-	send_packet_1015(CSocket),
+	send_packet_1015(CSocket, GID, QuestID),
 	Packet = << 16#0c020300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96 >>,
 	egs_proto:packet_send(CSocket, Packet);
 
@@ -966,10 +970,16 @@ send_packet_1006(CSocket, GID, N) ->
 	Packet = << 16#10060300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, N:32/little-unsigned-integer >>,
 	egs_proto:packet_send(CSocket, Packet).
 
-%% @todo Handle correctly.
+%% @doc Send the mission's quest file when starting a new mission.
+%% @todo Handle correctly. 0:32 is actually a missing value. Value before that is unknown too.
 
-send_packet_1015(CSocket) ->
-	myroom_send_packet(CSocket, "p/packet1015_mission.bin").
+send_packet_1015(CSocket, GID, QuestID) ->
+	[{type, _}, {file, QuestFile}|_] = proplists:get_value(QuestID, ?QUESTS, [{type, missions}, {file, "data/missions/test.quest.nbl"}, {start, [0, 0, 0]}]),
+	{ok, File} = file:read_file(QuestFile),
+	Size = byte_size(File),
+	Packet = << 16#10150300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
+		QuestID:32/little-unsigned-integer, 16#01010000:32, 0:32, Size:32/little-unsigned-integer, File/binary >>,
+	egs_proto:packet_send(CSocket, Packet).
 
 %% @todo Figure out what this packet does. Sane values for counter and missions for now.
 
