@@ -50,10 +50,10 @@ global(Type, Message) ->
 %% @doc Warp all players to a new map.
 
 warp(Quest, MapType, MapNumber, MapEntry) ->
-	lists:foreach(fun(User) -> egs_game:lobby_load(User#users.socket, User#users.gid, Quest, MapType, MapNumber, MapEntry) end, egs_db:users_select_all()).
+	lists:foreach(fun(User) -> egs_game:area_load(User#users.socket, User#users.gid, Quest, MapType, MapNumber, MapEntry) end, egs_db:users_select_all()).
 
 %% @doc Warp one player to a new map.
 
 warp(GID, Quest, MapType, MapNumber, MapEntry) ->
 	User = egs_db:users_select(GID),
-	egs_game:lobby_load(User#users.socket, User#users.gid, Quest, MapType, MapNumber, MapEntry).
+	egs_game:area_load(User#users.socket, User#users.gid, Quest, MapType, MapNumber, MapEntry).

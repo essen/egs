@@ -18,7 +18,7 @@
 
 -module(egs_game).
 -export([start/0]). % external
--export([listen/0, accept/1, process/2, char_select/3, lobby_load/6, loop/3, loop/4]). % internal
+-export([listen/0, accept/1, process/2, char_select/3, area_load/6, loop/3, loop/4]). % internal
 
 -include("include/records.hrl").
 -include("include/network.hrl").
@@ -174,7 +174,7 @@ char_select_load(CSocket, GID, Version, Number) ->
 	egs_db:users_insert(NewRow),
 	char_load(CSocket, GID, Char, Options, Number),
 	send_packet_021b(CSocket, GID),
-	lobby_load(CSocket, GID, 1100000, 0, 1, 1),
+	area_load(CSocket, GID, 1100000, 0, 1, 1),
 	ssl:setopts(CSocket, [{active, true}]),
 	?MODULE:loop(CSocket, GID, Version).
 
@@ -248,49 +248,79 @@ counter_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID) ->
 %% @doc Load the given map as a standard lobby.
 %% @todo Probably save the map type in the users table.
 
-lobby_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID) ->
+area_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID) ->
 	OldUser = egs_db:users_select(GID),
-	User = OldUser#users{instanceid=undefined, questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID},
+	[{type, AreaType}, {file, QuestFile}|StartInfo] = proplists:get_value(QuestID, ?QUESTS, [{type, undefined}, {file, undefined}]),
+	[IsStart, InstanceID, RealZoneID, RealMapID, RealEntryID] = case AreaType of
+		mission ->
+			if	ZoneID =:= 65535 ->
+					[{start, [TmpZoneID, TmpMapID, TmpEntryID]}] = StartInfo,
+					[true, GID, TmpZoneID, TmpMapID, TmpEntryID];
+				true -> [false, GID, ZoneID, MapID, EntryID]
+			end;
+		_ ->
+			[false, undefined, ZoneID, MapID, EntryID]
+	end,
+	[{file, ZoneFile}] = proplists:get_value([QuestID, RealZoneID], ?ZONES, [{file, undefined}]),
+	[{name, AreaName}] = proplists:get_value([QuestID, RealMapID], ?MAPS, [{name, "dammy"}]),
+	User = OldUser#users{instanceid=InstanceID, questid=QuestID, zoneid=RealZoneID, mapid=RealMapID, entryid=RealEntryID},
 	egs_db:users_insert(User),
+	area_load(CSocket, GID, AreaType, IsStart, OldUser, User, QuestFile, ZoneFile, AreaName).
+
+area_load(CSocket, GID, AreaType, IsStart, OldUser, User, QuestFile, ZoneFile, AreaName) ->
 	[{status, 1}, {char, Char}, {options, _}] = data_load(User#users.folder, User#users.charnumber),
-	[{type, AreaType}, {file, QuestFile}|_] = proplists:get_value(QuestID, ?QUESTS, [{type, lobby}, {file, "data/lobby/colony.quest.nbl"}]),
-	[{file, ZoneFile}] = proplists:get_value([QuestID, ZoneID], ?ZONES, [{file, "data/lobby/colony.zone-0.nbl"}]),
-	[{name, AreaName}] = proplists:get_value([QuestID, MapID], ?MAPS, [{name, "dammy"}]),
+	QuestChange = if OldUser#users.questid /= User#users.questid; QuestFile /= undefined -> true; true -> false end,
+	ZoneChange = if OldUser#users.questid /= User#users.questid; OldUser#users.zoneid /= User#users.zoneid; ZoneFile /= undefined -> true; true -> false end,
 	try
 		% broadcast spawn and unspawn to other people
 		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(OldUser)),
-		case AreaType of
-			lobby ->
+		if	AreaType =:= lobby ->
 				lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_spawn, User} end, egs_db:users_select_others_in_area(User));
-			_ ->
-				ignore
+			true -> ignore
 		end,
-		if	OldUser#users.questid /= QuestID ->
-				egs_proto:send_init_quest(CSocket, GID, QuestID),
+		% load area
+		if	QuestChange ->
+				egs_proto:send_init_quest(CSocket, GID, User#users.questid),
 				egs_proto:send_quest(CSocket, QuestFile);
 			true -> ignore
 		end,
-		send_packet_0a05(CSocket, GID),
-		case AreaType of
-			lobby ->
-				send_packet_0111(CSocket, GID);
-				% 010d
-			_ ->
-				ignore
+		if	IsStart =:= true ->
+				send_packet_0215(CSocket, GID, 16#ffffffff);
+			true -> ignore
 		end,
-		if	OldUser#users.questid /= QuestID; OldUser#users.zoneid /= ZoneID ->
-				egs_proto:send_zone_init(CSocket, GID, lobby),
+		send_packet_0a05(CSocket, GID),
+		if AreaType =:= lobby ->
+				send_packet_0111(CSocket, GID);
+			true -> ignore
+		end,
+		% 010d
+		if	ZoneChange ->
+				egs_proto:send_zone_init(CSocket, GID, AreaType),
 				egs_proto:send_zone(CSocket, ZoneFile);
 			true -> ignore
 		end,
-		egs_proto:send_map(CSocket, ZoneID, MapID, EntryID),
-		egs_proto:send_location(CSocket, GID, QuestID, ZoneID, MapID, AreaName, 16#ffffffff),
+		egs_proto:send_map(CSocket, User#users.zoneid, User#users.mapid, User#users.entryid),
+		egs_proto:send_location(CSocket, GID, User#users.questid, User#users.zoneid, User#users.mapid, AreaName, 16#ffffffff),
+		if	AreaType =:= mission ->
+				send_packet_0215(CSocket, GID, 0),
+				if	IsStart =:= true ->
+						send_packet_0215(CSocket, GID, 0),
+						egs_proto:send_trial_start(CSocket, GID);
+					true -> ignore
+				end;
+			true -> ignore
+		end,
 		send_packet_020c(CSocket),
-		case AreaType of
-			lobby ->
+		if	AreaType =:= mission ->
+				send_packet_1202(CSocket, GID),
+				send_packet_1204(CSocket, GID),
+				send_packet_1206(CSocket, GID),
+				send_packet_1207(CSocket, GID);
+			true -> ignore
+		end,
+		if	AreaType /= spaceport ->
 				egs_proto:send_load_quest(CSocket, GID);
-			_ ->
-				ignore
+			true -> ignore
 		end,
 		send_packet_201(CSocket, GID, User, Char),
 		send_packet_0a06(CSocket, GID),
@@ -298,47 +328,7 @@ lobby_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID) ->
 		egs_proto:send_loading_end(CSocket, GID),
 		egs_proto:send_camera_center(CSocket, GID)
 	catch
-		_ ->
-			close(CSocket, GID)
-	end.
-
-%% @doc Load the given map as a mission.
-%% @todo One of the silenced packets enable a 04xx command sent by the client and related to enemies sync. Probably 1202.
-%% @todo Maybe the quest doesn't work right because of the lack of this odd checksum-like value.
-
-mission_load(CSocket, GID, QuestID, _, _, _) ->
-	OldUser = egs_db:users_select(GID),
-	[{status, 1}, {char, Char}, {options, _}] = data_load(OldUser#users.folder, OldUser#users.charnumber),
-	[{type, AreaType}, {file, QuestFile}, {start, [ZoneID, MapID, EntryID]}] = proplists:get_value(QuestID, ?QUESTS, [{type, missions}, {file, "data/missions/test.quest.nbl"}, {start, [0, 0, 0]}]),
-	[{file, ZoneFile}] = proplists:get_value([QuestID, ZoneID], ?ZONES, [{file, "data/missions/test.zone.nbl"}]),
-	[{name, AreaName}] = proplists:get_value([QuestID, MapID], ?MAPS, [{name, "dammy"}]),
-	User = OldUser#users{instanceid=GID, questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID},
-	egs_db:users_insert(User),
-	try
-		egs_proto:send_init_quest(CSocket, GID, QuestID),
-		egs_proto:send_quest(CSocket, QuestFile),
-		send_packet_0215(CSocket, GID, 16#ffffffff),
-		send_packet_0a05(CSocket, GID),
-		% 010d
-		egs_proto:send_zone_init(CSocket, GID, AreaType),
-		egs_proto:send_zone(CSocket, ZoneFile),
-		egs_proto:send_map(CSocket, ZoneID, MapID, EntryID),
-		egs_proto:send_location(CSocket, GID, QuestID, ZoneID, MapID, AreaName, 16#ffffffff),
-		send_packet_0215(CSocket, GID, 0),
-		send_packet_0215(CSocket, GID, 0),
-		egs_proto:send_trial_start(CSocket, GID),
-		send_packet_020c(CSocket),
-		send_packet_1202(CSocket, GID),
-		send_packet_1204(CSocket, GID),
-		send_packet_1206(CSocket, GID),
-		send_packet_1207(CSocket, GID),
-		egs_proto:send_load_quest(CSocket, GID),
-		send_packet_201(CSocket, GID, User, Char),
-		send_packet_0a06(CSocket, GID),
-		egs_proto:send_loading_end(CSocket, GID),
-		egs_proto:send_camera_center(CSocket, GID)
-	catch
-		_ ->
+		_:_ ->
 			close(CSocket, GID)
 	end.
 
@@ -545,7 +535,7 @@ handle(16#010a, CSocket, GID, _, Orig) ->
 
 handle(16#0110, CSocket, GID, _, _) ->
 	log(GID, "death (and more)"),
-	lobby_load(CSocket, GID, 1100000, 0, 4, 6);
+	area_load(CSocket, GID, 1100000, 0, 4, 6);
 
 %% @doc Uni cube handler.
 
@@ -571,7 +561,7 @@ handle(16#021f, CSocket, GID, _, Orig) ->
 			log(GID, "uni selection (reload)"),
 			send_packet_0230(CSocket, GID),
 			% 0220
-			lobby_load(CSocket, GID, 1100000, 0, 1, 1)
+			area_load(CSocket, GID, 1100000, 0, 1, 1)
 	end;
 
 %% @doc Shortcut changes handler. Do nothing.
@@ -606,25 +596,18 @@ handle(16#0402, _, _, _, _) ->
 
 %% @doc Map change handler.
 %%      Rooms are handled differently than normal lobbies.
-%%      When entering a mission the values other than quest are all 65535. Find the actual start area and load it.
 %% @todo Load 'Your room' correctly.
 %% @todo When changing lobby to the room, 0230 must also be sent. Same when going from room to lobby.
-%% @todo The mission loading here is a temporary one-mission only choice.
 
 handle(16#0807, CSocket, GID, _, Orig) ->
 	<< _:352, QuestID:32/little-unsigned-integer, ZoneID:16/little-unsigned-integer,
 		MapID:16/little-unsigned-integer, EntryID:16/little-unsigned-integer, _/bits >> = Orig,
-	log(GID, "lobby change (~b,~b,~b,~b)", [QuestID, ZoneID, MapID, EntryID]),
-	case ZoneID of
-		65535 ->
-			mission_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID);
+	log(GID, "map change (~b,~b,~b,~b)", [QuestID, ZoneID, MapID, EntryID]),
+	case QuestID of
+		1120000 ->
+			myroom_load(CSocket, GID, QuestID, ZoneID, 423, EntryID);
 		_ ->
-			case QuestID of
-				1120000 ->
-					myroom_load(CSocket, GID, QuestID, ZoneID, 423, EntryID);
-				_ ->
-					lobby_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID)
-			end
+			area_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID)
 	end;
 
 %% @doc Mission counter handler.
@@ -639,7 +622,7 @@ handle(16#0811, CSocket, GID, _, Orig) ->
 
 handle(16#0812, CSocket, GID, _, _) ->
 	User = egs_db:users_select(GID),
-	lobby_load(CSocket, GID, User#users.savedquestid, User#users.savedzoneid, User#users.zoneid, User#users.mapid);
+	area_load(CSocket, GID, User#users.savedquestid, User#users.savedzoneid, User#users.zoneid, User#users.mapid);
 
 %% @doc Start mission handler.
 %% @todo Load more than one mission.
@@ -980,7 +963,7 @@ send_packet_1006(CSocket, GID, N) ->
 %% @todo Handle correctly. 0:32 is actually a missing value. Value before that is unknown too.
 
 send_packet_1015(CSocket, GID, QuestID) ->
-	[{type, _}, {file, QuestFile}|_] = proplists:get_value(QuestID, ?QUESTS, [{type, missions}, {file, "data/missions/test.quest.nbl"}, {start, [0, 0, 0]}]),
+	[{type, _}, {file, QuestFile}|_] = proplists:get_value(QuestID, ?QUESTS),
 	{ok, File} = file:read_file(QuestFile),
 	Size = byte_size(File),
 	Packet = << 16#10150300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
