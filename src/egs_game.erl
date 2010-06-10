@@ -658,8 +658,7 @@ handle(16#0c07, CSocket, GID, _, _) ->
 %% @todo Warp the player to the lobby if he's in a mission. No need if he's in a counter though.
 
 handle(16#0c0e, CSocket, GID, _, _) ->
-	Packet = << 16#10060300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#0b000000:32 >>,
-	egs_proto:packet_send(CSocket, Packet);
+	send_1006(CSocket, GID, 11);
 
 %% @doc Counter available mission list request handler.
 %% @todo Temporarily allow rare mission and LL all difficulties to all players.
@@ -692,7 +691,6 @@ handle(16#0d07, _, GID, _, Orig) ->
 %% @doc Hit handler.
 %% @todo Finish the work on it.
 %% @todo First value at 2C is the number of hits. We don't need to know it though.
-%% @todo We should later send this into one 0e07 packet rather than many.
 
 handle(16#0e00, CSocket, GID, _, Orig) ->
 	<< _:448, Data/bits >> = Orig,
@@ -1088,6 +1086,8 @@ send_1005(CSocket, GID, Char) ->
 	Packet = << 16#10050300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Before/binary, GID:32/little-unsigned-integer, 0:64, Name/binary, After/binary >>,
 	egs_proto:packet_send(CSocket, Packet).
 
+%% @doc Party-related command probably controlling the party state.
+%%      Value 11 aborts the mission.
 %% @todo Figure out what the packet is.
 
 send_1006(CSocket, GID, N) ->
