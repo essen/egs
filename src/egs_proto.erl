@@ -119,60 +119,6 @@ packet_split(Packet, Result) ->
 			end
 	end.
 
-%% @doc Center the camera on the player, if possible.
-%% @todo Probably.
-
-send_camera_center(CSocket, GID) ->
-	Packet = << 16#02360300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64 >>,
-	packet_send(CSocket, Packet).
-
-%% @doc Send the character list for selection.
-
-send_character_list(CSocket, GID, Data0, Data1, Data2, Data3) ->
-	[{status, Status0}, {char, Char0}|_] = Data0,
-	[{status, Status1}, {char, Char1}|_] = Data1,
-	[{status, Status2}, {char, Char2}|_] = Data2,
-	[{status, Status3}, {char, Char3}|_] = Data3,
-	Packet = << 16#0d030300:32/unsigned-integer, 0:32, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:104,
-		Status0:8/unsigned-integer, 0:48, Char0/binary, 0:520,
-		Status1:8/unsigned-integer, 0:48, Char1/binary, 0:520,
-		Status2:8/unsigned-integer, 0:48, Char2/binary, 0:520,
-		Status3:8/unsigned-integer, 0:48, Char3/binary, 0:512 >>,
-	egs_proto:packet_send(CSocket, Packet).
-
-%% @doc Send the data for the selected character.
-%% @todo The large chunk of 0s can have some values set... but what are they used for?
-%% @todo The values after the Char variable are the flags. Probably use bits to define what flag is and isn't set. Handle correctly.
-
-send_character_selected(CSocket, GID, Char, Options) ->
-	Packet = << 16#0d010300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Char/binary,
-		16#ffbbef1c:32, 16#f8ff0700:32, 16#fc810916:32, 16#7802134c:32,
-		16#b0c0040f:32, 16#7cf0e583:32, 16#b7bce0c6:32, 16#7ff8f963:32,
-		16#3fd7ffff:32, 16#fff7ffff:32, 16#f3ff63e0:32, 16#1fe00000:32,
-		0:7744, Options/binary >>,
-	packet_send(CSocket, Packet).
-
-%% @doc Send a chat command. AOTI v2.000 version of the command.
-
-send_chat(CSocket, 0, FromGID, _, Modifiers, Message) ->
-	Packet = << 16#0304:16/unsigned-integer, 0:320, 16#1200:16/unsigned-integer, FromGID:32/little-unsigned-integer, Modifiers:128/bits, Message/bits >>,
-	packet_send(CSocket, Packet);
-
-%% @doc Send a chat command. AOTI since an unknown version of the game.
-
-send_chat(CSocket, _, FromGID, FromName, Modifiers, Message) ->
-	Packet = << 16#0304:16, 0:320, 16#1200:16/unsigned-integer, FromGID:32/little-unsigned-integer, Modifiers:128/bits, FromName:512/bits, Message/bits >>,
-	packet_send(CSocket, Packet).
-
-%% @doc Send the character flags list.
-%%      Sent without fragmentation on official for unknown reasons. Do the same here.
-
-send_flags(CSocket, GID) ->
-	{ok, Flags} = file:read_file("p/flags.bin"),
-	Packet = << 16#0d050300:32, 0:32, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Flags/binary >>,
-	Size = 4 + byte_size(Packet),
-	ssl:send(CSocket, << Size:32/little-unsigned-integer, Packet/binary >>).
-
 %% @doc Shortcut for send_global/4.
 
 send_global(CSocket, Type, Message) ->
@@ -195,22 +141,12 @@ send_global(CSocket, Type, Message, Duration) ->
 	end,
 	UCS2Message = << << X:8, 0:8 >> || X <- Message >>,
 	try
-		Packet = << 16#0228:16, 0:304, TypeID:32/little-unsigned-integer, Duration:32/little-unsigned-integer, UCS2Message/binary, 0, 0 >>,
+		Packet = << 16#02280300:32, 0:288, TypeID:32/little-unsigned-integer, Duration:32/little-unsigned-integer, UCS2Message/binary, 0, 0 >>,
 		packet_send(CSocket, Packet)
 	catch
 		_:_ ->
 			ignore
 	end.
-
-%% @doc Init quest.
-
-send_init_quest(CSocket, GID, QuestID) ->
-	Packet = << 16#0c000300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, QuestID:32/little-unsigned-integer,
-		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
-		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
-		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
-		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32 >>,
-	packet_send(CSocket, Packet).
 
 %% @doc Keepalive. Just send an empty packet, the game doesn't really care.
 %% @todo If there's an actual keepalive command, use it instead.
@@ -218,107 +154,3 @@ send_init_quest(CSocket, GID, QuestID) ->
 send_keepalive(CSocket) ->
 	Packet = << 0:32 >>,
 	packet_send(CSocket, Packet).
-
-%% @doc Make the client load the quest previously sent.
-
-send_load_quest(CSocket, GID) ->
-	Packet = << 16#12120300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:19264 >>,
-	packet_send(CSocket, Packet).
-
-%% @doc Indicate to the client that loading should finish.
-%% @todo Last value seems to be 2 most of the time. Never 0 though. Apparently counters have it at 4.
-
-send_loading_end(CSocket, GID) ->
-	Packet = << 16#02080300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 2:32/little-unsigned-integer >>,
-	packet_send(CSocket, Packet).
-
-%% @doc Send the player's current location.
-%% @todo Figure out what the last value is. No counter without it. The value before that is also different for counters.
-%% @todo Handle correctly after unifying the area loading code.
-
-send_location(CSocket, GID, QuestID, ZoneID, MapID, Location, CounterID) ->
-	UCS2Location = << << X:8, 0:8 >> || X <- Location >>,
-	Packet = << 16#100e0300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
-		1:32/little-unsigned-integer, MapID:16/little-unsigned-integer, ZoneID:16/little-unsigned-integer,
-		QuestID:32/little-unsigned-integer, UCS2Location/binary >>,
-	PaddingSize = (128 - byte_size(Packet) - 8) * 8,
-	case CounterID of
-		16#ffffffff ->
-			Footer = << CounterID:32/little-unsigned-integer, 0:32 >>;
-		_ ->
-			Footer = << CounterID:32/little-unsigned-integer, 1:32/little-unsigned-integer >>
-	end,
-	packet_send(CSocket, << Packet/binary, 0:PaddingSize, Footer/binary >>).
-
-%% @doc Send the map ID to be loaded by the client.
-%% @todo Last two values are unknown.
-
-send_map(CSocket, MapType, MapNumber, MapEntry) ->
-	Packet = << 16#02050300:32, 0:288, 16#ffffffff:32, MapType:32/little-unsigned-integer,
-		MapNumber:32/little-unsigned-integer, MapEntry:32/little-unsigned-integer, 0:64 >>,
-	packet_send(CSocket, Packet).
-
-%% @doc Send the player's NPC and PM information.
-
-send_npc_info(CSocket, GID) ->
-	{ok, File} = file:read_file("p/npc.bin"),
-	Packet = << 16#16020300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96, File/binary >>,
-	packet_send(CSocket, Packet).
-
-%% @doc Send the player's partner card.
-
-send_player_card(CSocket, GID, Char, Number) ->
-	<< CharInfo:576/bits, _/bits >> = Char,
-	Packet = << 16#15000300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, CharInfo/binary, 0:3072, 16#010401:24, Number:8, 0:64 >>,
-	packet_send(CSocket, Packet).
-
-%% @doc Send the quest file to be loaded.
-%% @todo Probably should try sending the checksum like value (right before the file) and see if it magically fixes anything.
-
-send_quest(CSocket, Filename) ->
-	{ok, File} = file:read_file(Filename),
-	Size = byte_size(File),
-	Packet = << 16#020e0300:32, 0:288, Size:32/little-unsigned-integer, 0:32, File/binary, 0:32 >>,
-	packet_send(CSocket, Packet).
-
-%% @doc Send the trial start notification.
-
-send_trial_start(CSocket, GID) ->
-	Packet = << 16#0c090300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:128 >>,
-	packet_send(CSocket, Packet).
-
-%% @doc Send the list of available universes.
-
-send_universe_cube(CSocket) ->
-	{ok, File} = file:read_file("p/unicube.bin"),
-	Packet = << 16#021e:16, 0:304, File/binary >>,
-	packet_send(CSocket, Packet).
-
-%% @doc Send the current universe name and number.
-%% @todo Currently only have universe number 2, named EGS Test.
-
-send_universe_info(CSocket, GID) ->
-	Packet = << 16#02220300:32, 0:32, 16#00001200:32, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
-		2:32/little-unsigned-integer, 0:32, 16#45, 0, 16#47, 0, 16#53, 0, 16#20, 0, 16#54, 0, 16#65, 0, 16#73, 0, 16#74, 0:24 >>,
-	packet_send(CSocket, Packet).
-
-%% @doc Send the zone file to be loaded.
-
-send_zone(CSocket, Filename) ->
-	{ok, File} = file:read_file(Filename),
-	Size = byte_size(File),
-	Packet = << 16#020f0300:32, 0:288, 16#00ff0000:32, Size:32/little-unsigned-integer, File/binary >>,
-	packet_send(CSocket, Packet).
-
-%% @doc Send the zone initialization notification.
-
-send_zone_init(CSocket, GID, ZoneType) ->
-	case ZoneType of
-		mission ->
-			Var = << 16#06000500:32, 16#01000000:32, 0:64, 16#00040000:32, 16#00010000:32, 16#00140000:32 >>;
-		_ ->
-			Var = << 16#00040000:32, 0:160, 16#00140000:32 >>
-	end,
-	Packet = << 16#02000300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96, 16#01000000:32,
-		16#ffffffff:32, Var/binary, 16#ffffffff:32, 16#ffffffff:32 >>,
-	egs_proto:packet_send(CSocket, Packet).

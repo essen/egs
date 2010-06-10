@@ -44,7 +44,7 @@ accept(LSocket) ->
 		{ok, CSocket} ->
 			ssl:ssl_accept(CSocket),
 			try
-				egs_proto:packet_send(CSocket, << 16#02020300:32, 0:352 >>),
+				send_0202(CSocket),
 				Pid = spawn_link(?MODULE, process, [CSocket, 0]),
 				ssl:controlling_process(CSocket, Pid)
 			catch
@@ -86,7 +86,7 @@ process_handle(16#020d, CSocket, Version, Orig) ->
 					LID = 1 + egs_db:next(lobby) rem 1023,
 					Time = calendar:datetime_to_gregorian_seconds(calendar:universal_time()),
 					egs_db:users_insert(#users{gid=GID, pid=self(), socket=CSocket, auth=success, time=Time, folder=User#users.folder, lid=LID}),
-					egs_proto:send_flags(CSocket, GID),
+					send_0d05(CSocket, GID),
 					?MODULE:char_select(CSocket, GID, Version);
 				_ ->
 					log(GID, "quit, auth failed"),
@@ -146,7 +146,7 @@ char_select_handle(16#0d02, CSocket, GID, Version, Orig) ->
 
 char_select_handle(16#0d06, CSocket, GID, Version, _) ->
 	User = egs_db:users_select(GID),
-	egs_proto:send_character_list(CSocket, GID,
+	send_0d03(CSocket, GID,
 		data_load(User#users.folder, 0),
 		data_load(User#users.folder, 1),
 		data_load(User#users.folder, 2),
@@ -173,7 +173,7 @@ char_select_load(CSocket, GID, Version, Number) ->
 	NewRow = User#users{charnumber=Number, charname=Name},
 	egs_db:users_insert(NewRow),
 	char_load(CSocket, GID, Char, Options, Number),
-	send_packet_021b(CSocket, GID),
+	send_021b(CSocket, GID),
 	area_load(CSocket, GID, 1100000, 0, 1, 1),
 	ssl:setopts(CSocket, [{active, true}]),
 	?MODULE:loop(CSocket, GID, Version).
@@ -193,19 +193,19 @@ data_load(Folder, Number) ->
 %% @doc Load and send the character information to the client.
 
 char_load(CSocket, GID, Char, Options, Number) ->
-	egs_proto:send_character_selected(CSocket, GID, Char, Options),
+	send_0d01(CSocket, GID, Char, Options),
 	% 0246
-	send_packet_0a0a(CSocket, GID),
-	send_packet_1006(CSocket, GID, 5),
-	send_packet_1005(CSocket, GID, Char),
-	send_packet_1006(CSocket, GID, 12),
+	send_0a0a(CSocket, GID),
+	send_1006(CSocket, GID, 5),
+	send_1005(CSocket, GID, Char),
+	send_1006(CSocket, GID, 12),
 	% 0210
-	egs_proto:send_universe_info(CSocket, GID),
-	egs_proto:send_player_card(CSocket, GID, Char, Number),
-	send_packet_1501(CSocket, GID),
-	send_packet_1512(CSocket, GID),
+	send_0222(CSocket, GID),
+	send_1500(CSocket, GID, Char, Number),
+	send_1501(CSocket, GID),
+	send_1512(CSocket, GID),
 	% 0303
-	egs_proto:send_npc_info(CSocket, GID).
+	send_1602(CSocket, GID).
 
 %% @doc Load the given map as a mission counter.
 
@@ -220,28 +220,28 @@ counter_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID) ->
 	try
 		% broadcast unspawn to other people
 		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(OldUser)),
-		egs_proto:send_init_quest(CSocket, GID, 16#7fffffff),
-		egs_proto:send_quest(CSocket, QuestFile),
-		send_packet_0a05(CSocket, GID),
+		send_0c00(CSocket, GID, 16#7fffffff),
+		send_020e(CSocket, QuestFile),
+		send_0a05(CSocket, GID),
 		% 010d
-		egs_proto:send_zone_init(CSocket, GID, mission),
-		egs_proto:send_zone(CSocket, ZoneFile),
-		egs_proto:send_map(CSocket, 0, 0, 0),
-		egs_proto:send_location(CSocket, GID, 16#7fffffff, 0, 0, AreaName, EntryID),
-		send_packet_0215(CSocket, GID, 0),
-		send_packet_0215(CSocket, GID, 0),
-		send_packet_020c(CSocket),
-		send_packet_1202(CSocket, GID),
-		send_packet_1204(CSocket, GID),
-		send_packet_1206(CSocket, GID),
-		send_packet_1207(CSocket, GID),
-		egs_proto:send_load_quest(CSocket, GID),
-		send_packet_201(CSocket, GID, User, Char),
-		send_packet_0a06(CSocket, GID),
-		egs_proto:send_loading_end(CSocket, GID),
-		egs_proto:send_camera_center(CSocket, GID)
+		send_0200(CSocket, GID, mission),
+		send_020f(CSocket, ZoneFile),
+		send_0205(CSocket, 0, 0, 0),
+		send_100e(CSocket, GID, 16#7fffffff, 0, 0, AreaName, EntryID),
+		send_0215(CSocket, GID, 0),
+		send_0215(CSocket, GID, 0),
+		send_020c(CSocket),
+		send_1202(CSocket, GID),
+		send_1204(CSocket, GID),
+		send_1206(CSocket, GID),
+		send_1207(CSocket, GID),
+		send_1212(CSocket, GID),
+		send_0201(CSocket, GID, User, Char),
+		send_0a06(CSocket, GID),
+		send_0208(CSocket, GID),
+		send_0236(CSocket, GID)
 	catch
-		_ ->
+		_:_ ->
 			close(CSocket, GID)
 	end.
 
@@ -280,53 +280,53 @@ area_load(CSocket, GID, AreaType, IsStart, OldUser, User, QuestFile, ZoneFile, A
 		end,
 		% load area
 		if	QuestChange ->
-				egs_proto:send_init_quest(CSocket, GID, User#users.questid),
-				egs_proto:send_quest(CSocket, QuestFile);
+				send_0c00(CSocket, GID, User#users.questid),
+				send_020e(CSocket, QuestFile);
 			true -> ignore
 		end,
 		if	IsStart =:= true ->
-				send_packet_0215(CSocket, GID, 16#ffffffff);
+				send_0215(CSocket, GID, 16#ffffffff);
 			true -> ignore
 		end,
-		send_packet_0a05(CSocket, GID),
+		send_0a05(CSocket, GID),
 		if AreaType =:= lobby ->
-				send_packet_0111(CSocket, GID);
+				send_0111(CSocket, GID);
 			true -> ignore
 		end,
 		% 010d
 		if	ZoneChange ->
-				egs_proto:send_zone_init(CSocket, GID, AreaType),
-				egs_proto:send_zone(CSocket, ZoneFile);
+				send_0200(CSocket, GID, AreaType),
+				send_020f(CSocket, ZoneFile);
 			true -> ignore
 		end,
-		egs_proto:send_map(CSocket, User#users.zoneid, User#users.mapid, User#users.entryid),
-		egs_proto:send_location(CSocket, GID, User#users.questid, User#users.zoneid, User#users.mapid, AreaName, 16#ffffffff),
+		send_0205(CSocket, User#users.zoneid, User#users.mapid, User#users.entryid),
+		send_100e(CSocket, GID, User#users.questid, User#users.zoneid, User#users.mapid, AreaName, 16#ffffffff),
 		if	AreaType =:= mission ->
-				send_packet_0215(CSocket, GID, 0),
+				send_0215(CSocket, GID, 0),
 				if	IsStart =:= true ->
-						send_packet_0215(CSocket, GID, 0),
-						egs_proto:send_trial_start(CSocket, GID);
+						send_0215(CSocket, GID, 0),
+						send_0c09(CSocket, GID);
 					true -> ignore
 				end;
 			true -> ignore
 		end,
-		send_packet_020c(CSocket),
+		send_020c(CSocket),
 		if	AreaType =:= mission ->
-				send_packet_1202(CSocket, GID),
-				send_packet_1204(CSocket, GID),
-				send_packet_1206(CSocket, GID),
-				send_packet_1207(CSocket, GID);
+				send_1202(CSocket, GID),
+				send_1204(CSocket, GID),
+				send_1206(CSocket, GID),
+				send_1207(CSocket, GID);
 			true -> ignore
 		end,
 		if	AreaType /= spaceport ->
-				egs_proto:send_load_quest(CSocket, GID);
+				send_1212(CSocket, GID);
 			true -> ignore
 		end,
-		send_packet_201(CSocket, GID, User, Char),
-		send_packet_0a06(CSocket, GID),
-		send_packet_233(CSocket, GID, egs_db:users_select_others_in_area(User)),
-		egs_proto:send_loading_end(CSocket, GID),
-		egs_proto:send_camera_center(CSocket, GID)
+		send_0201(CSocket, GID, User, Char),
+		send_0a06(CSocket, GID),
+		send_0233(CSocket, GID, egs_db:users_select_others_in_area(User)),
+		send_0208(CSocket, GID),
+		send_0236(CSocket, GID)
 	catch
 		_:_ ->
 			close(CSocket, GID)
@@ -349,25 +349,25 @@ myroom_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID) ->
 		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_spawn, User} end, egs_db:users_select_others_in_area(User)),
 		% always reload the character when entering a room
 		char_load(CSocket, GID, Char, Options, User#users.charnumber),
-		egs_proto:send_init_quest(CSocket, GID, QuestID),
-		egs_proto:send_quest(CSocket, QuestFile),
-		send_packet_0a05(CSocket, GID),
-		send_packet_0111(CSocket, GID),
+		send_0c00(CSocket, GID, QuestID),
+		send_020e(CSocket, QuestFile),
+		send_0a05(CSocket, GID),
+		send_0111(CSocket, GID),
 		% 010d
-		egs_proto:send_zone_init(CSocket, GID, myroom),
-		egs_proto:send_zone(CSocket, ZoneFile),
-		egs_proto:send_map(CSocket, ZoneID, MapID, EntryID),
+		send_0200(CSocket, GID, myroom),
+		send_020f(CSocket, ZoneFile),
+		send_0205(CSocket, ZoneID, MapID, EntryID),
 		myroom_send_packet(CSocket, "p/packet1332.bin"),
 		% 130e(a) 130e(b) 1202 1204 1206
-		egs_proto:send_load_quest(CSocket, GID),
+		send_1212(CSocket, GID),
 		myroom_send_packet(CSocket, "p/packet1309.bin"),
 		% 130a(removing moved the pm from shop to normal spot) 1318
-		send_packet_201(CSocket, GID, User, Char),
+		send_0201(CSocket, GID, User, Char),
 		% 0a06 0233
-		egs_proto:send_loading_end(CSocket, GID),
-		egs_proto:send_camera_center(CSocket, GID)
+		send_0208(CSocket, GID),
+		send_0236(CSocket, GID)
 	catch
-		_ ->
+		_:_ ->
 			close(CSocket, GID)
 	end.
 
@@ -390,7 +390,7 @@ loop(CSocket, GID, Version, SoFar) ->
 			egs_proto:packet_send(CSocket, Packet),
 			?MODULE:loop(CSocket, GID, Version, SoFar);
 		{psu_chat, ChatGID, ChatName, ChatModifiers, ChatMessage} ->
-			egs_proto:send_chat(CSocket, Version, ChatGID, ChatName, ChatModifiers, ChatMessage),
+			send_0304(CSocket, Version, ChatGID, ChatName, ChatModifiers, ChatMessage),
 			?MODULE:loop(CSocket, GID, Version, SoFar);
 		{psu_keepalive} ->
 			egs_proto:send_keepalive(CSocket),
@@ -540,7 +540,7 @@ handle(16#0110, CSocket, GID, _, _) ->
 %% @doc Uni cube handler.
 
 handle(16#021d, CSocket, _, _, _) ->
-	egs_proto:send_universe_cube(CSocket);
+	send_021e(CSocket);
 
 %% @doc Uni selection handler.
 %%      When selecting 'Your room', load first floor for now.
@@ -554,12 +554,12 @@ handle(16#021f, CSocket, GID, _, Orig) ->
 			ignore;
 		16#ffffffff ->
 			log(GID, "uni selection (my room)"),
-			send_packet_0230(CSocket, GID),
+			send_0230(CSocket, GID),
 			% 0220
 			myroom_load(CSocket, GID, 1120000, 0, 423, 0);
 		_ ->
 			log(GID, "uni selection (reload)"),
-			send_packet_0230(CSocket, GID),
+			send_0230(CSocket, GID),
 			% 0220
 			area_load(CSocket, GID, 1100000, 0, 1, 1)
 	end;
@@ -631,9 +631,9 @@ handle(16#0812, CSocket, GID, _, _) ->
 handle(16#0c01, CSocket, GID, _, Orig) ->
 	<< _:352, QuestID:32/little-unsigned-integer >> = Orig,
 	log(GID, "start mission ~b", [QuestID]),
-	send_packet_170c(CSocket, GID),
+	send_170c(CSocket, GID),
 	egs_proto:packet_send(CSocket, << 16#10200300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64 >>),
-	send_packet_1015(CSocket, GID, QuestID),
+	send_1015(CSocket, GID, QuestID),
 	Packet = << 16#0c020300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96 >>,
 	egs_proto:packet_send(CSocket, Packet);
 
@@ -704,7 +704,7 @@ handle(16#0e00, CSocket, GID, _, Orig) ->
 
 handle(16#0f0a, CSocket, GID, _, Orig) ->
 	<< _:448, A:32/little-unsigned-integer, _:64, B:32/little-unsigned-integer, _/bits >> = Orig,
-	Packet = << 16#1211:16, 0:176, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, A:32/little-unsigned-integer, B:32/little-unsigned-integer, 8:32/little-unsigned-integer, 0:32 >>,
+	Packet = << 16#12110300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, A:32/little-unsigned-integer, B:32/little-unsigned-integer, 8:32/little-unsigned-integer, 0:32 >>,
 	egs_proto:packet_send(CSocket, Packet),
 	log(GID, "lobby event (can only chair so far)");
 
@@ -735,7 +735,7 @@ handle(16#1709, CSocket, GID, _, _) ->
 %% @doc Counter-related handler.
 
 handle(16#170b, CSocket, GID, _, _) ->
-	send_packet_170c(CSocket, GID);
+	send_170c(CSocket, GID);
 
 %% @doc Counter initialization handler? Send the code for the background image to use.
 %% @todo Handle correctly.
@@ -830,9 +830,29 @@ handle_hits(CSocket, GID, Data) ->
 	egs_proto:packet_send(CSocket, Packet),
 	handle_hits(CSocket, GID, Rest).
 
+%% @todo Possibly related to 010d. Just send seemingly safe values.
+
+send_0111(CSocket, GID) ->
+	Packet = << 16#01110300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
+		GID:32/little-unsigned-integer, 0:32, 6:32/little-unsigned-integer, 0:32 >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @doc Send the zone initialization notification.
+
+send_0200(CSocket, GID, ZoneType) ->
+	case ZoneType of
+		mission ->
+			Var = << 16#06000500:32, 16#01000000:32, 0:64, 16#00040000:32, 16#00010000:32, 16#00140000:32 >>;
+		_ ->
+			Var = << 16#00040000:32, 0:160, 16#00140000:32 >>
+	end,
+	Packet = << 16#02000300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96, 16#01000000:32,
+		16#ffffffff:32, Var/binary, 16#ffffffff:32, 16#ffffffff:32 >>,
+	egs_proto:packet_send(CSocket, Packet).
+
 %% @todo Figure out what the other things are.
 
-send_packet_201(CSocket, GID, User, Char) ->
+send_0201(CSocket, GID, User, Char) ->
 	QuestID = User#users.questid,
 	ZoneID = User#users.zoneid,
 	MapID = User#users.mapid,
@@ -841,15 +861,91 @@ send_packet_201(CSocket, GID, User, Char) ->
 	CharLID = User#users.lid,
 	{ok, File} = file:read_file("p/packet0201.bin"),
 	<< _:96, A:32/bits, _:96, B:32/bits, _:256, D:32/bits, _:2656, After/bits >> = File,
-	Packet = << 16#0201:16, 0:48, A/binary, CharGID:32/little-unsigned-integer, 0:64, B/binary, GID:32/little-unsigned-integer,
+	Packet = << 16#02010300:32, 0:32, A/binary, CharGID:32/little-unsigned-integer, 0:64, B/binary, GID:32/little-unsigned-integer,
 		0:64, CharLID:32/little-unsigned-integer, CharGID:32/little-unsigned-integer, 0:96, D/binary, QuestID:32/little-unsigned-integer,
 		ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer, 0:192, QuestID:32/little-unsigned-integer,
 		ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer, Char/binary, After/binary >>,
 	egs_proto:packet_send(CSocket, Packet).
 
+%% @doc Hello packet, always sent on client connection.
+
+send_0202(CSocket) ->
+	egs_proto:packet_send(CSocket, << 16#02020300:32, 0:352 >>).
+
+%% @doc Send the map ID to be loaded by the client.
+%% @todo Last two values are unknown.
+
+send_0205(CSocket, MapType, MapNumber, MapEntry) ->
+	Packet = << 16#02050300:32, 0:288, 16#ffffffff:32, MapType:32/little-unsigned-integer,
+		MapNumber:32/little-unsigned-integer, MapEntry:32/little-unsigned-integer, 0:64 >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @doc Indicate to the client that loading should finish.
+%% @todo Last value seems to be 2 most of the time. Never 0 though. Apparently counters have it at 4.
+
+send_0208(CSocket, GID) ->
+	Packet = << 16#02080300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 2:32/little-unsigned-integer >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @todo No idea what this one does. For unknown reasons it uses channel 2.
+
+send_020c(CSocket) ->
+	Packet = << 16#020c020c:32, 16#fffff20c:32, 0:256 >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @doc Send the quest file to be loaded.
+%% @todo Probably should try sending the checksum like value (right before the file) and see if it magically fixes anything.
+
+send_020e(CSocket, Filename) ->
+	{ok, File} = file:read_file(Filename),
+	Size = byte_size(File),
+	Packet = << 16#020e0300:32, 0:288, Size:32/little-unsigned-integer, 0:32, File/binary, 0:32 >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @doc Send the zone file to be loaded.
+
+send_020f(CSocket, Filename) ->
+	{ok, File} = file:read_file(Filename),
+	Size = byte_size(File),
+	Packet = << 16#020f0300:32, 0:288, 16#00ff0000:32, Size:32/little-unsigned-integer, File/binary >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @todo No idea what this do. Nor why it's sent twice when loading a counter.
+
+send_0215(CSocket, GID, N) ->
+	Packet = << 16#02150300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, N:32/little-unsigned-integer >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @todo End of character loading. Just send it.
+
+send_021b(CSocket, GID) ->
+	Packet = << 16#021b0300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64 >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @doc Send the list of available universes.
+
+send_021e(CSocket) ->
+	{ok, File} = file:read_file("p/unicube.bin"),
+	Packet = << 16#021e0300:32, 0:288, File/binary >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @doc Send the current universe name and number.
+%% @todo Currently only have universe number 2, named EGS Test.
+
+send_0222(CSocket, GID) ->
+	Packet = << 16#02220300:32, 0:32, 16#00001200:32, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
+		2:32/little-unsigned-integer, 0:32, 16#45, 0, 16#47, 0, 16#53, 0, 16#20, 0, 16#54, 0, 16#65, 0, 16#73, 0, 16#74, 0:24 >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @todo Not sure. Sent when going to or from room.
+
+send_0230(CSocket, GID) ->
+	Packet = << 16#02300300:32, 0:32, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64 >>,
+	egs_proto:packet_send(CSocket, Packet).
+
 %% @todo Figure out what the other things are.
 
-send_packet_233(CSocket, GID, Users) ->
+send_0233(CSocket, GID, Users) ->
 	NbUsers = length(Users),
 	case NbUsers of
 		0 ->
@@ -857,14 +953,14 @@ send_packet_233(CSocket, GID, Users) ->
 		_ ->
 			Header = << 16#02330300:32, 0:32, 16#00001200:32, GID:32/little-unsigned-integer, 0:64, 16#00011300:32,
 				GID:32/little-unsigned-integer, 0:64, NbUsers:32/little-unsigned-integer >>,
-			Contents = build_packet_233_contents(Users),
+			Contents = build_0233_contents(Users),
 			Packet = << Header/binary, Contents/binary >>,
 			egs_proto:packet_send(CSocket, Packet)
 	end.
 
-build_packet_233_contents([]) ->
+build_0233_contents([]) ->
 	<< >>;
-build_packet_233_contents(Users) ->
+build_0233_contents(Users) ->
 	[User|Rest] = Users,
 	{ok, File} = file:read_file("p/player.bin"),
 	<< A:32/bits, _:32, B:64/bits, _:32, C:32/bits, _:256, E:64/bits, _:2336, F/bits >> = File,
@@ -891,62 +987,101 @@ build_packet_233_contents(Users) ->
 		QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer,
 		Direction:32/bits, Coords:96/bits, E/binary, QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer,
 		EntryID:32/little-unsigned-integer, CharFile/binary, F/binary >>,
-	Next = build_packet_233_contents(Rest),
+	Next = build_0233_contents(Rest),
 	<< Chunk/binary, Next/binary >>.
 
-%% @todo Possibly related to 010d. Just send seemingly safe values.
+%% @doc Center the camera on the player, if possible.
+%% @todo Probably.
 
-send_packet_0111(CSocket, GID) ->
-	Packet = << 16#01110300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
-		GID:32/little-unsigned-integer, 0:32, 6:32/little-unsigned-integer, 0:32 >>,
+send_0236(CSocket, GID) ->
+	Packet = << 16#02360300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64 >>,
 	egs_proto:packet_send(CSocket, Packet).
 
-%% @todo No idea what this one does. For unknown reasons it uses channel 2.
+%% @doc Send a chat command. AOTI v2.000 version of the command.
 
-send_packet_020c(CSocket) ->
-	Packet = << 16#020c020c:32, 16#fffff20c:32, 0:256 >>,
-	egs_proto:packet_send(CSocket, Packet).
+send_0304(CSocket, 0, FromGID, _, Modifiers, Message) ->
+	Packet = << 16#03040300:32/unsigned-integer, 0:304, 16#1200:16/unsigned-integer, FromGID:32/little-unsigned-integer, Modifiers:128/bits, Message/bits >>,
+	egs_proto:packet_send(CSocket, Packet);
 
-%% @todo No idea what this do. Nor why it's sent twice when loading a counter.
+%% @doc Send a chat command. AOTI since an unknown version of the game.
 
-send_packet_0215(CSocket, GID, N) ->
-	Packet = << 16#02150300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, N:32/little-unsigned-integer >>,
-	egs_proto:packet_send(CSocket, Packet).
-
-%% @todo End of character loading. Just send it.
-
-send_packet_021b(CSocket, GID) ->
-	Packet = << 16#021b0300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64 >>,
-	egs_proto:packet_send(CSocket, Packet).
-
-%% @todo Not sure. Sent when going to or from room.
-
-send_packet_0230(CSocket, GID) ->
-	Packet = << 16#02300300:32, 0:32, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64 >>,
+send_0304(CSocket, _, FromGID, FromName, Modifiers, Message) ->
+	Packet = << 16#03040300:32, 0:304, 16#1200:16/unsigned-integer, FromGID:32/little-unsigned-integer, Modifiers:128/bits, FromName:512/bits, Message/bits >>,
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @todo Inventory related. No idea what it does.
 
-send_packet_0a05(CSocket, GID) ->
+send_0a05(CSocket, GID) ->
 	Packet = << 16#0a050300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64 >>,
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @todo Inventory related. Figure out everything in this packet and handle it correctly.
 %% @todo It sends 60 values so it's probably some kind of options for all 60 items in the inventory?
 
-send_packet_0a06(CSocket, GID) ->
+send_0a06(CSocket, GID) ->
 	{ok, << _:32, A:96/bits, _:32, B:96/bits, _:32, C:1440/bits, _:32, D/bits >>} = file:read_file("p/packet0a06.bin"),
 	egs_proto:packet_send(CSocket, << A/binary, GID:32/little-unsigned-integer, B/binary, GID:32/little-unsigned-integer, C/binary, GID:32/little-unsigned-integer, D/binary >>).
 
 %% @todo Inventory. Figure out everything in this packet and handle it correctly.
 
-send_packet_0a0a(CSocket, GID) ->
+send_0a0a(CSocket, GID) ->
 	{ok, << _:32, A:224/bits, _:32, B/bits >>} = file:read_file("p/packet0a0a.bin"),
 	egs_proto:packet_send(CSocket, << A/binary, GID:32/little-unsigned-integer, B/binary >>).
 
+%% @doc Init quest.
+
+send_0c00(CSocket, GID, QuestID) ->
+	Packet = << 16#0c000300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, QuestID:32/little-unsigned-integer,
+		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
+		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
+		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
+		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32 >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @doc Send the trial start notification.
+
+send_0c09(CSocket, GID) ->
+	Packet = << 16#0c090300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:128 >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @doc Send the data for the selected character.
+%% @todo The large chunk of 0s can have some values set... but what are they used for?
+%% @todo The values after the Char variable are the flags. Probably use bits to define what flag is and isn't set. Handle correctly.
+
+send_0d01(CSocket, GID, Char, Options) ->
+	Packet = << 16#0d010300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Char/binary,
+		16#ffbbef1c:32, 16#f8ff0700:32, 16#fc810916:32, 16#7802134c:32,
+		16#b0c0040f:32, 16#7cf0e583:32, 16#b7bce0c6:32, 16#7ff8f963:32,
+		16#3fd7ffff:32, 16#fff7ffff:32, 16#f3ff63e0:32, 16#1fe00000:32,
+		0:7744, Options/binary >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @doc Send the character list for selection.
+
+send_0d03(CSocket, GID, Data0, Data1, Data2, Data3) ->
+	[{status, Status0}, {char, Char0}|_] = Data0,
+	[{status, Status1}, {char, Char1}|_] = Data1,
+	[{status, Status2}, {char, Char2}|_] = Data2,
+	[{status, Status3}, {char, Char3}|_] = Data3,
+	Packet = << 16#0d030300:32/unsigned-integer, 0:32, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:104,
+		Status0:8/unsigned-integer, 0:48, Char0/binary, 0:520,
+		Status1:8/unsigned-integer, 0:48, Char1/binary, 0:520,
+		Status2:8/unsigned-integer, 0:48, Char2/binary, 0:520,
+		Status3:8/unsigned-integer, 0:48, Char3/binary, 0:512 >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @doc Send the character flags list. This is the whole list of available values, not the character's.
+%%      Sent without fragmentation on official for unknown reasons. Do the same here.
+
+send_0d05(CSocket, GID) ->
+	{ok, Flags} = file:read_file("p/flags.bin"),
+	Packet = << 16#0d050300:32, 0:32, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Flags/binary >>,
+	Size = 4 + byte_size(Packet),
+	ssl:send(CSocket, << Size:32/little-unsigned-integer, Packet/binary >>).
+
 %% @todo Figure out what the packet is.
 
-send_packet_1005(CSocket, GID, Char) ->
+send_1005(CSocket, GID, Char) ->
 	{ok, File} = file:read_file("p/packet1005.bin"),
 	<< _:352, Before:160/bits, _:608, After/bits >> = File,
 	<< Name:512/bits, _/bits >> = Char,
@@ -955,14 +1090,32 @@ send_packet_1005(CSocket, GID, Char) ->
 
 %% @todo Figure out what the packet is.
 
-send_packet_1006(CSocket, GID, N) ->
+send_1006(CSocket, GID, N) ->
 	Packet = << 16#10060300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, N:32/little-unsigned-integer >>,
 	egs_proto:packet_send(CSocket, Packet).
+
+%% @doc Send the player's current location.
+%% @todo Figure out what the last value is. No counter without it. The value before that is also different for counters.
+%% @todo Handle correctly after unifying the area loading code.
+
+send_100e(CSocket, GID, QuestID, ZoneID, MapID, Location, CounterID) ->
+	UCS2Location = << << X:8, 0:8 >> || X <- Location >>,
+	Packet = << 16#100e0300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
+		1:32/little-unsigned-integer, MapID:16/little-unsigned-integer, ZoneID:16/little-unsigned-integer,
+		QuestID:32/little-unsigned-integer, UCS2Location/binary >>,
+	PaddingSize = (128 - byte_size(Packet) - 8) * 8,
+	case CounterID of
+		16#ffffffff ->
+			Footer = << CounterID:32/little-unsigned-integer, 0:32 >>;
+		_ ->
+			Footer = << CounterID:32/little-unsigned-integer, 1:32/little-unsigned-integer >>
+	end,
+	egs_proto:packet_send(CSocket, << Packet/binary, 0:PaddingSize, Footer/binary >>).
 
 %% @doc Send the mission's quest file when starting a new mission.
 %% @todo Handle correctly. 0:32 is actually a missing value. Value before that is unknown too.
 
-send_packet_1015(CSocket, GID, QuestID) ->
+send_1015(CSocket, GID, QuestID) ->
 	[{type, _}, {file, QuestFile}|_] = proplists:get_value(QuestID, ?QUESTS),
 	{ok, File} = file:read_file(QuestFile),
 	Size = byte_size(File),
@@ -972,45 +1125,65 @@ send_packet_1015(CSocket, GID, QuestID) ->
 
 %% @todo Figure out what this packet does. Sane values for counter and missions for now.
 
-send_packet_1202(CSocket, GID) ->
+send_1202(CSocket, GID) ->
 	Packet = << 16#12020300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96, 16#10000000:32, 0:64, 16#14000000:32, 0:32 >>,
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @todo Figure out what this packet does. Seems it's the same values all the time.
 
-send_packet_1204(CSocket, GID) ->
+send_1204(CSocket, GID) ->
 	Packet = << 16#12040300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96, 16#20000000:32, 0:256 >>,
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @todo Figure out what this packet does. Sane values for counter and missions for now.
 
-send_packet_1206(CSocket, GID) ->
+send_1206(CSocket, GID) ->
 	Packet = << 16#12060300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96, 16#80020000:32, 0:5120 >>,
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @todo Figure out what this packet does. Sane values for counter and missions for now.
 
-send_packet_1207(CSocket, GID) ->
+send_1207(CSocket, GID) ->
 	Chunk = << 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 0:224, 16#0000ffff:32, 16#ff000000:32, 16#64000a00:32 >>,
 	Packet = << 16#12070300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
 		Chunk/binary, Chunk/binary, Chunk/binary, Chunk/binary, Chunk/binary, Chunk/binary >>,
 	egs_proto:packet_send(CSocket, Packet).
 
+%% @doc Make the client load the quest previously sent.
+
+send_1212(CSocket, GID) ->
+	Packet = << 16#12120300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:19264 >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @doc Send the player's partner card.
+
+send_1500(CSocket, GID, Char, Number) ->
+	<< CharInfo:576/bits, _/bits >> = Char,
+	Packet = << 16#15000300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, CharInfo/binary, 0:3072, 16#010401:24, Number:8, 0:64 >>,
+	egs_proto:packet_send(CSocket, Packet).
+
 %% @todo Send an empty partner card list.
 
-send_packet_1501(CSocket, GID) ->
+send_1501(CSocket, GID) ->
 	Packet = << 16#15010300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96 >>,
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @todo Send an empty blacklist.
 
-send_packet_1512(CSocket, GID) ->
+send_1512(CSocket, GID) ->
 	Packet = << 16#15120300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:46144 >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @doc Send the player's NPC and PM information.
+
+send_1602(CSocket, GID) ->
+	{ok, File} = file:read_file("p/npc.bin"),
+	Packet = << 16#16020300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96, File/binary >>,
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @todo Find what the heck this packet is.
 
-send_packet_170c(CSocket, GID) ->
+send_170c(CSocket, GID) ->
 	{ok, File} = file:read_file("p/packet170c.bin"),
 	Packet = << 16#170c0300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, File/binary >>,
 	egs_proto:packet_send(CSocket, Packet).
@@ -1020,7 +1193,7 @@ send_packet_170c(CSocket, GID) ->
 %%       Should be something along the lines of 203 201 204.
 
 send_spawn(CSocket, GID, _) ->
-	send_packet_233(CSocket, GID, egs_db:users_select_others_in_area(egs_db:users_select(GID))).
+	send_0233(CSocket, GID, egs_db:users_select_others_in_area(egs_db:users_select(GID))).
 
 %% @doc Send a character unspawn notification.
 %% @todo It's probably right but who knows...
