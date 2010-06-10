@@ -929,8 +929,11 @@ send_021b(CSocket, GID) ->
 %% @doc Send the list of available universes.
 
 send_021e(CSocket) ->
-	{ok, File} = file:read_file("p/unicube.bin"),
-	Packet = << 16#021e0300:32, 0:288, File/binary >>,
+	{ok, << File:1184/bits, _/bits >>} = file:read_file("p/unicube.bin"),
+	[StrCount] = io_lib:format("~b", [egs_db:users_count()]),
+	UCS2Count = << << X:8, 0:8 >> || X <- StrCount >>,
+	PaddingSize = (12 - byte_size(UCS2Count)) * 8,
+	Packet = << 16#021e0300:32, 0:288, File/binary, UCS2Count/binary, 0:PaddingSize >>,
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @doc Send the current universe name and number.

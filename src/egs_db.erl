@@ -45,6 +45,11 @@ create() ->
 next(Type) ->
 	mnesia:dirty_update_counter(ids, Type, 1).
 
+%% @doc Count the number of users online.
+
+users_count() ->
+	mnesia:table_info(users, size).
+
 %% @doc Select exactly one user by its GID. Return an #users record.
 
 users_select(GID) ->
