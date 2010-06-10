@@ -211,7 +211,8 @@ char_load(CSocket, GID, Char, Options, Number) ->
 
 counter_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID) ->
 	OldUser = egs_db:users_select(GID),
-	User = OldUser#users{questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID, savedquestid=OldUser#users.questid, savedzoneid=OldUser#users.zoneid},
+	User = OldUser#users{areatype=counter, questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID,
+		savedquestid=OldUser#users.questid, savedzoneid=OldUser#users.zoneid, savedmapid=ZoneID, savedentryid=MapID},
 	egs_db:users_insert(User),
 	[{status, 1}, {char, Char}, {options, _}] = data_load(User#users.folder, User#users.charnumber),
 	AreaName = "Mission counter",
@@ -263,7 +264,7 @@ area_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID) ->
 	end,
 	[{file, ZoneFile}] = proplists:get_value([QuestID, RealZoneID], ?ZONES, [{file, undefined}]),
 	[{name, AreaName}] = proplists:get_value([QuestID, RealMapID], ?MAPS, [{name, "dammy"}]),
-	User = OldUser#users{instanceid=InstanceID, questid=QuestID, zoneid=RealZoneID, mapid=RealMapID, entryid=RealEntryID},
+	User = OldUser#users{instanceid=InstanceID, areatype=AreaType, questid=QuestID, zoneid=RealZoneID, mapid=RealMapID, entryid=RealEntryID},
 	egs_db:users_insert(User),
 	area_load(CSocket, GID, AreaType, IsStart, OldUser, User, QuestFile, ZoneFile, AreaName).
 
@@ -338,7 +339,7 @@ area_load(CSocket, GID, AreaType, IsStart, OldUser, User, QuestFile, ZoneFile, A
 
 myroom_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID) ->
 	OldUser = egs_db:users_select(GID),
-	User = OldUser#users{questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID},
+	User = OldUser#users{areatype=room, questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID},
 	egs_db:users_insert(User),
 	[{status, 1}, {char, Char}, {options, Options}] = data_load(User#users.folder, User#users.charnumber),
 	[{name, _}, {quest, QuestFile}, {zone, ZoneFile}, {entries, _}] = 
@@ -530,7 +531,7 @@ handle(16#010a, CSocket, GID, _, Orig) ->
 		GID:32/little-unsigned-integer, 0:64, GID:32/little-unsigned-integer, 0:32, File/binary >>,
 	egs_proto:packet_send(CSocket, Packet);
 
-%% @doc Character death, and more, handler. Abort mission and redirect to 4th floor for now.
+%% @doc Character death, and more, handler. Warp to 4th floor for now.
 %% @todo Recover from death correctly.
 
 handle(16#0110, CSocket, GID, _, _) ->
@@ -658,7 +659,12 @@ handle(16#0c07, CSocket, GID, _, _) ->
 %% @todo Warp the player to the lobby if he's in a mission. No need if he's in a counter though.
 
 handle(16#0c0e, CSocket, GID, _, _) ->
-	send_1006(CSocket, GID, 11);
+	send_1006(CSocket, GID, 11),
+	User = egs_db:users_select(GID),
+	if	User#users.areatype =:= mission ->
+			area_load(CSocket, GID, User#users.savedquestid, User#users.savedzoneid, User#users.savedmapid, User#users.savedentryid);
+		true -> ignore
+	end;
 
 %% @doc Counter available mission list request handler.
 %% @todo Temporarily allow rare mission and LL all difficulties to all players.
