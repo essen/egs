@@ -717,11 +717,7 @@ handle(16#0f0a, CSocket, GID, _, Orig) ->
 
 handle(16#1705, CSocket, GID, _, _) ->
 	User = egs_db:users_select(GID),
-	CharName = User#users.charname,
-	Packet = << 16#17060300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
-		16#00000300:32, 16#d5c0faff:32, 0:64, CharName/binary, 16#78000000:32, 16#01010000:32,
-		0:1536, 16#0100c800:32, 16#0601010a:32, 16#ffffffff:32, 0:32 >>,
-	egs_proto:packet_send(CSocket, Packet);
+	send_1706(CSocket, GID, User#users.charname);
 
 %% @doc Mission selected handler. Send the currently selected mission.
 %% @todo Probably need to dispatch that info to other party members in the same counter.
@@ -733,8 +729,7 @@ handle(16#1707, _, _, _, _) ->
 %% @todo Handle correctly.
 
 handle(16#1709, CSocket, GID, _, _) ->
-	Packet = << 16#170a0300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#01010c08:32 >>,
-	egs_proto:packet_send(CSocket, Packet);
+	send_170a(CSocket, GID);
 
 %% @doc Counter-related handler.
 
@@ -747,8 +742,7 @@ handle(16#170b, CSocket, GID, _, _) ->
 handle(16#1710, CSocket, GID, _, _) ->
 	User = egs_db:users_select(GID),
 	[{quests, _}, {bg, Background}, {options, _}] = proplists:get_value(User#users.entryid, ?COUNTERS),
-	Packet = << 16#17110300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Background:32/little-unsigned-integer >>,
-	egs_proto:packet_send(CSocket, Packet);
+	send_1711(CSocket, GID, Background);
 
 %% @doc Dialog request handler. Do what we can.
 %% @todo Handle correctly.
@@ -1162,11 +1156,34 @@ send_1602(CSocket, GID) ->
 	Packet = << 16#16020300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96, File/binary >>,
 	egs_proto:packet_send(CSocket, Packet).
 
+%% @doc Party information.
+%% @todo Handle existing parties.
+
+send_1706(CSocket, GID, CharName) ->
+	Packet = << 16#17060300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
+		16#00000300:32, 16#d5c0faff:32, 0:64, CharName/binary, 16#78000000:32, 16#01010000:32,
+		0:1536, 16#0100c800:32, 16#0601010a:32, 16#ffffffff:32, 0:32 >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @doc Party settings. Item distribution is random for now.
+%% @todo Handle correctly.
+
+send_170a(CSocket, GID) ->
+	Packet = << 16#170a0300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#01010c08:32 >>,
+	egs_proto:packet_send(CSocket, Packet).
+
 %% @todo Find what the heck this packet is.
 
 send_170c(CSocket, GID) ->
 	{ok, File} = file:read_file("p/packet170c.bin"),
 	Packet = << 16#170c0300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, File/binary >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @doc Send the background to use for the counter.
+%% @todo Background has more info past the first byte.
+
+send_1711(CSocket, GID, Background) ->
+	Packet = << 16#17110300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Background:32/little-unsigned-integer >>,
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @doc Unknown dialog-related handler.
