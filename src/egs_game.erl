@@ -646,12 +646,11 @@ handle(16#0c05, CSocket, GID, _, _) ->
 	Packet = << 16#0c060300:32, 0:288, 1:32/little-unsigned-integer, File/binary >>,
 	egs_proto:packet_send(CSocket, Packet);
 
-%% @doc Lobby transport handler? Just ignore the meseta price and send the player where he wanna be!
+%% @doc Lobby transport handler? Just ignore the meseta price for now and send the player where he wanna be!
 %% @todo Handle correctly.
 
 handle(16#0c07, CSocket, GID, _, _) ->
-	Packet = << 16#0c080300:32, 16#ffff0000:32, 0:128, 16#00011300:32, GID:32/little-unsigned-integer, 0:96 >>,
-	egs_proto:packet_send(CSocket, Packet);
+	send_0c08(CSocket, GID, ok);
 
 %% @doc Abort mission handler.
 %% @todo Warp the player to the lobby if he's in a mission. No need if he's in a counter though.
@@ -1013,6 +1012,14 @@ send_0c00(CSocket, GID, QuestID) ->
 
 send_0c02(CSocket, GID) ->
 	Packet = << 16#0c020300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96 >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @doc Reply whether the player is allowed to use the transport option.
+%%      Use 'ok' for allowing it, and 'error' otherwise.
+
+send_0c08(CSocket, GID, Response) ->
+	Value = if Response =:= ok -> 0; true -> 1 end,
+	Packet = << 16#0c080300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Value:32 >>,
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @doc Send the trial start notification.
