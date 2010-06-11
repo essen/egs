@@ -626,17 +626,15 @@ handle(16#0812, CSocket, GID, _, _) ->
 	area_load(CSocket, GID, User#users.savedquestid, User#users.savedzoneid, User#users.zoneid, User#users.mapid);
 
 %% @doc Start mission handler.
-%% @todo Load more than one mission.
 %% @todo Forward the mission start to other players of the same party, whatever their location is.
 
 handle(16#0c01, CSocket, GID, _, Orig) ->
 	<< _:352, QuestID:32/little-unsigned-integer >> = Orig,
 	log(GID, "start mission ~b", [QuestID]),
 	send_170c(CSocket, GID),
-	egs_proto:packet_send(CSocket, << 16#10200300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64 >>),
+	send_1020(CSocket, GID),
 	send_1015(CSocket, GID, QuestID),
-	Packet = << 16#0c020300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96 >>,
-	egs_proto:packet_send(CSocket, Packet);
+	send_0c02(CSocket, GID);
 
 %% @doc Counter quests files request handler? Send huge number of quest files.
 %% @todo Handle correctly.
@@ -1011,6 +1009,12 @@ send_0c00(CSocket, GID, QuestID) ->
 		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32 >>,
 	egs_proto:packet_send(CSocket, Packet).
 
+%% @todo Figure out last 4 bytes!
+
+send_0c02(CSocket, GID) ->
+	Packet = << 16#0c020300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96 >>,
+	egs_proto:packet_send(CSocket, Packet).
+
 %% @doc Send the trial start notification.
 
 send_0c09(CSocket, GID) ->
@@ -1096,6 +1100,12 @@ send_1015(CSocket, GID, QuestID) ->
 	Size = byte_size(File),
 	Packet = << 16#10150300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
 		QuestID:32/little-unsigned-integer, 16#01010000:32, 0:32, Size:32/little-unsigned-integer, File/binary >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @todo Totally unknown.
+
+send_1020(CSocket, GID) ->
+	Packet = << 16#10200300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64 >>,
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @todo Figure out what this packet does. Sane values for counter and missions for now.
