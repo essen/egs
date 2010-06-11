@@ -642,9 +642,7 @@ handle(16#0c01, CSocket, GID, _, Orig) ->
 handle(16#0c05, CSocket, GID, _, _) ->
 	User = egs_db:users_select(GID),
 	[{quests, Filename}, {bg, _}, {options, _}] = proplists:get_value(User#users.entryid, ?COUNTERS),
-	{ok, << File/bits >>} = file:read_file(Filename),
-	Packet = << 16#0c060300:32, 0:288, 1:32/little-unsigned-integer, File/binary >>,
-	egs_proto:packet_send(CSocket, Packet);
+	send_0c06(CSocket, Filename);
 
 %% @doc Lobby transport handler? Just ignore the meseta price for now and send the player where he wanna be!
 %% @todo Handle correctly.
@@ -669,9 +667,7 @@ handle(16#0c0e, CSocket, GID, _, _) ->
 handle(16#0c0f, CSocket, GID, _, _) ->
 	User = egs_db:users_select(GID),
 	[{quests, _}, {bg, _}, {options, Options}] = proplists:get_value(User#users.entryid, ?COUNTERS),
-	Packet = << 16#0c100300:32, 0:32, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
-		16#00011300:32, GID:32/little-unsigned-integer, 0:64, Options/binary >>,
-	egs_proto:packet_send(CSocket, Packet);
+	send_0c10(CSocket, GID, Options);
 
 %% @doc Set flag handler. Associate a new flag with the character.
 %%      Just reply with a success value for now.
@@ -1014,6 +1010,13 @@ send_0c02(CSocket, GID) ->
 	Packet = << 16#0c020300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96 >>,
 	egs_proto:packet_send(CSocket, Packet).
 
+%% @doc Send the huge pack of quest files available in the counter.
+
+send_0c06(CSocket, Filename) ->
+	{ok, << File/bits >>} = file:read_file(Filename),
+	Packet = << 16#0c060300:32, 0:288, 1:32/little-unsigned-integer, File/binary >>,
+	egs_proto:packet_send(CSocket, Packet).
+
 %% @doc Reply whether the player is allowed to use the transport option.
 %%      Use 'ok' for allowing it, and 'error' otherwise.
 
@@ -1026,6 +1029,13 @@ send_0c08(CSocket, GID, Response) ->
 
 send_0c09(CSocket, GID) ->
 	Packet = << 16#0c090300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:128 >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @doc Send the counter's mission options (0 = invisible, 2 = disabled, 3 = available).
+
+send_0c10(CSocket, GID, Options) ->
+	Packet = << 16#0c100300:32, 0:32, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
+		16#00011300:32, GID:32/little-unsigned-integer, 0:64, Options/binary >>,
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @doc Send the data for the selected character.
