@@ -755,62 +755,34 @@ handle(16#1710, CSocket, GID, _, _) ->
 
 handle(16#1a01, CSocket, GID, _, Orig) ->
 	<< _:384, A:8, B:8, _:16, C:8, _/bits >> = Orig,
-	file:write_file("1a01.bin", Orig),
-	case B of
-		0 ->
-			case A of
-				0 ->
-					case C of
-						2 ->
-							log(GID, "Lumilass?"),
-							Command = << 16#1a030300:32 >>,
-							{ok, File} = file:read_file("p/lumilassA.bin"),
-							Packet = << 0:32, File/binary >>;
-						3 ->
-							log(GID, "PP cube?"),
-							Command = << 16#1a040300:32 >>,
-							{ok, File} = file:read_file("p/ppcube.bin"),
-							Packet = << 0:32, File/binary >>;
-						_ ->
-							Command = << 16#1a020300:32 >>,
-							Packet = << >>,
-							log(GID, "unhandled 1a01 B A C")
-					end;
-				80 ->
-					log(GID, "NPC dialog request?"),
-					Command = << 16#1a020300:32 >>,
-					Packet = << 0:32, 16#11001100:32, 16#03000900:32 >>;
-				90 ->
-					log(GID, "unknown 1a01 90"),
-					Command = << 16#1a020300:32 >>,
-					Packet = << 0:32, 16#05000100:32, 16#04000500:32 >>;
-				91 ->
-					log(GID, "unknown 1a01 91"),
-					Command = << 16#1a020300:32 >>,
-					Packet = << 0:32, 16#05000500:32, 16#04000700:32 >>;
-				92 ->
-					log(GID, "unknown 1a01 92"),
-					Command = << 16#1a020300:32 >>,
-					Packet = << 0:32, 16#05000800:32, 16#04000000:32 >>;
-				93 ->
-					log(GID, "unknown 1a01 93"),
-					Command = << 16#1a020300:32 >>,
-					Packet = << 0:32, 16#05001200:32, 16#04000000:32 >>;
-				_ ->
-					Command = << 16#1a020300:32 >>,
-					Packet = << >>,
-					log(GID, "unhandled 1a01 in A case")
-			end;
-		2 ->
-			log(GID, "unknown 1a01 B"),
-			Command = << 16#1a020300:32 >>,
-			Packet = << 0:32, 16#00000100:32, 0:32 >>;
+	case [A, B, C] of
+		[ 0, 0, 2] ->
+			log(GID, "lumilass (and more?)"),
+			send_1a03(CSocket, GID);
+		[ 0, 0, 3] ->
+			log(GID, "pp cube"),
+			send_1a04(CSocket, GID);
+		[80, 0, _] -> % npc dialog choice
+			log(GID, "npc dialog choice"),
+			send_1a02(CSocket, GID, 0, 17, 17, 3, 9);
+		[90, 0, _] -> % All the replies from here are consistent but their effect is unknown.
+			log(GID, "1a01 unknown (~b ~b ~b)", [A, B, C]),
+			send_1a02(CSocket, GID, 0, 5, 1, 4, 5);
+		[91, 0, _] ->
+			log(GID, "1a01 unknown (~b ~b ~b)", [A, B, C]),
+			send_1a02(CSocket, GID, 0, 5, 5, 4, 7);
+		[92, 0, _] ->
+			log(GID, "1a01 unknown (~b ~b ~b)", [A, B, C]),
+			send_1a02(CSocket, GID, 0, 5, 0, 4, 0);
+		[93, 0, _] ->
+			log(GID, "1a01 unknown (~b ~b ~b)", [A, B, C]),
+			send_1a02(CSocket, GID, 0, 5, 18, 4, 0);
+		[ _, 2, _] ->
+			log(GID, "1a01 unknown (~b ~b ~b)", [A, B, C]),
+			send_1a02(CSocket, GID, 0, 0, 1, 0, 0);
 		_ ->
-			Command = << 16#1a020300:32 >>,
-			Packet = << >>,
-			log(GID, "unhandled 1a01 in B case")
-	end,
-	egs_proto:packet_send(CSocket, << Command/binary, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Packet/binary >>);
+			log(GID, "1a01 unknown (~b ~b ~b) - do nothing", [A, B, C])
+	end;
 
 %% @doc Unknown command handler. Do nothing.
 
@@ -1195,6 +1167,30 @@ send_1602(CSocket, GID) ->
 send_170c(CSocket, GID) ->
 	{ok, File} = file:read_file("p/packet170c.bin"),
 	Packet = << 16#170c0300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, File/binary >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @doc Unknown dialog-related handler.
+%% @todo Everything!
+
+send_1a02(CSocket, GID, A, B, C, D, E) ->
+	Packet = << 16#1a020300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, A:32/little-unsigned-integer,
+		B:16/little-unsigned-integer, C:16/little-unsigned-integer, D:16/little-unsigned-integer, E:16/little-unsigned-integer >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @doc Lumilass handler. Possibly more.
+%% @todo Figure out how Lumilass work exactly. The 4 bytes before the file may vary.
+
+send_1a03(CSocket, GID) ->
+	{ok, File} = file:read_file("p/lumilassA.bin"),
+	Packet = << 16#1a030300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96, File/binary >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @doc PP cube handler. 
+%% @todo The 4 bytes before the file may vary. Everything past that is the same. Figure things out.
+
+send_1a04(CSocket, GID) ->
+	{ok, File} = file:read_file("p/ppcube.bin"),
+	Packet = << 16#1a040300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96, File/binary >>,
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @todo Figure out what the other things are and do it right.
