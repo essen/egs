@@ -259,19 +259,32 @@ area_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID) ->
 					[true, GID, TmpZoneID, TmpMapID, TmpEntryID];
 				true -> [false, GID, ZoneID, MapID, EntryID]
 			end;
+		myroom ->
+			if	ZoneID =:= 0 ->
+					[false, undefined, 0, 423, EntryID];
+				true -> [false, undefined, ZoneID, MapID, EntryID]
+			end;
 		_ ->
 			[false, undefined, ZoneID, MapID, EntryID]
 	end,
 	[{file, ZoneFile}] = proplists:get_value([QuestID, RealZoneID], ?ZONES, [{file, undefined}]),
-	[{name, AreaName}] = proplists:get_value([QuestID, RealMapID], ?MAPS, [{name, "dammy"}]),
+	if	AreaType =:= myroom ->
+			AreaName = "Your Room";
+		true ->
+			[{name, AreaName}] = proplists:get_value([QuestID, RealMapID], ?MAPS, [{name, "dammy"}])
+	end,
 	User = OldUser#users{instanceid=InstanceID, areatype=AreaType, questid=QuestID, zoneid=RealZoneID, mapid=RealMapID, entryid=RealEntryID},
 	egs_db:users_insert(User),
 	area_load(CSocket, GID, AreaType, IsStart, OldUser, User, QuestFile, ZoneFile, AreaName).
 
 area_load(CSocket, GID, AreaType, IsStart, OldUser, User, QuestFile, ZoneFile, AreaName) ->
-	[{status, 1}, {char, Char}, {options, _}] = data_load(User#users.folder, User#users.charnumber),
-	QuestChange = if OldUser#users.questid /= User#users.questid; QuestFile /= undefined -> true; true -> false end,
-	ZoneChange = if OldUser#users.questid /= User#users.questid; OldUser#users.zoneid /= User#users.zoneid; ZoneFile /= undefined -> true; true -> false end,
+	[{status, 1}, {char, Char}, {options, Options}] = data_load(User#users.folder, User#users.charnumber),
+	QuestChange = if OldUser#users.questid /= User#users.questid, QuestFile /= undefined -> true; true -> false end,
+	if	ZoneFile =:= undefined ->
+			ZoneChange = false;
+		true ->
+			ZoneChange = if OldUser#users.questid =:= User#users.questid, OldUser#users.zoneid =:= User#users.zoneid -> false; true -> true end
+	end,
 	try
 		% broadcast spawn and unspawn to other people
 		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(OldUser)),
@@ -280,7 +293,13 @@ area_load(CSocket, GID, AreaType, IsStart, OldUser, User, QuestFile, ZoneFile, A
 			true -> ignore
 		end,
 		% load area
-		if	QuestChange ->
+		if	QuestChange =:= true ->
+				% reload the character if entering or leaving the room quest
+				if	OldUser#users.questid =:= 1120000; User#users.questid =:= 1120000 ->
+						char_load(CSocket, GID, Char, Options, User#users.charnumber);
+					true -> ignore
+				end,
+				% load new quest
 				send_0c00(CSocket, GID, User#users.questid),
 				send_020e(CSocket, QuestFile);
 			true -> ignore
@@ -289,13 +308,14 @@ area_load(CSocket, GID, AreaType, IsStart, OldUser, User, QuestFile, ZoneFile, A
 				send_0215(CSocket, GID, 16#ffffffff);
 			true -> ignore
 		end,
-		send_0a05(CSocket, GID),
-		if AreaType =:= lobby ->
-				send_0111(CSocket, GID);
-			true -> ignore
-		end,
-		% 010d
-		if	ZoneChange ->
+		if	ZoneChange =:= true ->
+				% load new zone
+				send_0a05(CSocket, GID),
+				if AreaType =:= lobby ->
+						send_0111(CSocket, GID);
+					true -> ignore
+				end,
+				% 010d
 				send_0200(CSocket, GID, AreaType),
 				send_020f(CSocket, ZoneFile);
 			true -> ignore
@@ -309,62 +329,36 @@ area_load(CSocket, GID, AreaType, IsStart, OldUser, User, QuestFile, ZoneFile, A
 						send_0c09(CSocket, GID);
 					true -> ignore
 				end;
-			true -> ignore
+			true ->
+				send_020c(CSocket)
 		end,
-		send_020c(CSocket),
-		if	AreaType =:= mission ->
+		case AreaType of
+			myroom ->
+				myroom_send_packet(CSocket, "p/packet1332.bin"),
+				send_1202(CSocket, GID),
+				send_1204(CSocket, GID),
+				send_1206(CSocket, GID);
+			mission ->
 				send_1202(CSocket, GID),
 				send_1204(CSocket, GID),
 				send_1206(CSocket, GID),
 				send_1207(CSocket, GID);
-			true -> ignore
+			_ -> ignore
 		end,
 		if	AreaType /= spaceport ->
 				send_1212(CSocket, GID);
 			true -> ignore
 		end,
+		if	AreaType =:= myroom ->
+				myroom_send_packet(CSocket, "p/packet1309.bin");
+			true -> ignore
+		end,
 		send_0201(CSocket, GID, User, Char),
-		send_0a06(CSocket, GID),
+		if	ZoneChange =:= true ->
+				send_0a06(CSocket, GID);
+			true -> ignore
+		end,
 		send_0233(CSocket, GID, egs_db:users_select_others_in_area(User)),
-		send_0208(CSocket, GID),
-		send_0236(CSocket, GID)
-	catch
-		_:_ ->
-			close(CSocket, GID)
-	end.
-
-%% @doc Load the given map as a player room.
-%%      Always load the same room that isn't this player's room for now.
-%% @todo Load 'Your room' correctly.
-
-myroom_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID) ->
-	OldUser = egs_db:users_select(GID),
-	User = OldUser#users{areatype=room, questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID},
-	egs_db:users_insert(User),
-	[{status, 1}, {char, Char}, {options, Options}] = data_load(User#users.folder, User#users.charnumber),
-	[{name, _}, {quest, QuestFile}, {zone, ZoneFile}, {entries, _}] = 
-		[{name, "dammy"}, {quest, "data/rooms/test.quest.nbl"}, {zone, "data/rooms/test.zone.nbl"}, {entries, []}],
-	try
-		% broadcast spawn and unspawn to other people
-		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(OldUser)),
-		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_spawn, User} end, egs_db:users_select_others_in_area(User)),
-		% always reload the character when entering a room
-		char_load(CSocket, GID, Char, Options, User#users.charnumber),
-		send_0c00(CSocket, GID, QuestID),
-		send_020e(CSocket, QuestFile),
-		send_0a05(CSocket, GID),
-		send_0111(CSocket, GID),
-		% 010d
-		send_0200(CSocket, GID, myroom),
-		send_020f(CSocket, ZoneFile),
-		send_0205(CSocket, ZoneID, MapID, EntryID),
-		myroom_send_packet(CSocket, "p/packet1332.bin"),
-		% 130e(a) 130e(b) 1202 1204 1206
-		send_1212(CSocket, GID),
-		myroom_send_packet(CSocket, "p/packet1309.bin"),
-		% 130a(removing moved the pm from shop to normal spot) 1318
-		send_0201(CSocket, GID, User, Char),
-		% 0a06 0233
 		send_0208(CSocket, GID),
 		send_0236(CSocket, GID)
 	catch
@@ -557,7 +551,7 @@ handle(16#021f, CSocket, GID, _, Orig) ->
 			log(GID, "uni selection (my room)"),
 			send_0230(CSocket, GID),
 			% 0220
-			myroom_load(CSocket, GID, 1120000, 0, 423, 0);
+			area_load(CSocket, GID, 1120000, 0, 100, 0);
 		_ ->
 			log(GID, "uni selection (reload)"),
 			send_0230(CSocket, GID),
@@ -604,12 +598,7 @@ handle(16#0807, CSocket, GID, _, Orig) ->
 	<< _:352, QuestID:32/little-unsigned-integer, ZoneID:16/little-unsigned-integer,
 		MapID:16/little-unsigned-integer, EntryID:16/little-unsigned-integer, _/bits >> = Orig,
 	log(GID, "map change (~b,~b,~b,~b)", [QuestID, ZoneID, MapID, EntryID]),
-	case QuestID of
-		1120000 ->
-			myroom_load(CSocket, GID, QuestID, ZoneID, 423, EntryID);
-		_ ->
-			area_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID)
-	end;
+	area_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID);
 
 %% @doc Mission counter handler.
 
@@ -806,6 +795,8 @@ send_0200(CSocket, GID, ZoneType) ->
 	case ZoneType of
 		mission ->
 			Var = << 16#06000500:32, 16#01000000:32, 0:64, 16#00040000:32, 16#00010000:32, 16#00140000:32 >>;
+		myroom ->
+			Var = << 16#06000000:32, 16#02000000:32, 0:64, 16#40000000:32, 16#00010000:32, 16#00010000:32 >>;
 		_ ->
 			Var = << 16#00040000:32, 0:160, 16#00140000:32 >>
 	end,

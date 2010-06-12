@@ -53,7 +53,22 @@
 	{1102000, [{type, lobby}, {file, "data/lobby/neudaiz.quest.nbl"}]},
 	{1103000, [{type, lobby}, {file, "data/lobby/moatoob.quest.nbl"}]},
 
-	{1104000, [{type, spaceport}, {file, "data/lobby/spaceport.quest.nbl"}]}
+	{1104000, [{type, spaceport}, {file, "data/lobby/spaceport.quest.nbl"}]},
+
+	% Tutorial
+
+	{1106000, [{type, lobby}, {file, "data/tutorial/lobby.quest.nbl"}]},
+
+	% SEED-Form Purge
+
+	{1113000, [{type, mission}, {file, "data/tutorial/seed-form-purge.hyuga.quest.nbl"}, {start, [0, 1121, 0]}]},
+	{1113001, [{type, mission}, {file, "data/tutorial/seed-form-purge.maya.quest.nbl"}, {start, [0, 1121, 0]}]},
+	{1113002, [{type, mission}, {file, "data/tutorial/seed-form-purge.lou.quest.nbl"}, {start, [0, 1121, 0]}]},
+	{1113003, [{type, mission}, {file, "data/tutorial/seed-form-purge.leo.quest.nbl"}, {start, [0, 1121, 0]}]},
+
+	% My room
+
+	{1120000, [{type, myroom}, {file, "data/rooms/test.quest.nbl"}]}
 ]).
 
 -define(ZONES, [
@@ -140,7 +155,27 @@
 
 	% Spaceport
 
-	{[1104000, 0], [{file, "data/lobby/spaceport.zone.nbl"}]}
+	{[1104000, 0], [{file, "data/lobby/spaceport.zone.nbl"}]},
+
+	% Tutorial (colony)
+
+	{[1106000, 0], [{file, "data/tutorial/lobby.zone-0.nbl"}]},
+	{[1106000, 1], [{file, "data/tutorial/lobby.zone-1.nbl"}]},
+
+	% SEED-Form Purge
+
+	{[1113000, 0], [{file, "data/tutorial/seed-form-purge.hyuga.zone.nbl"}]},
+	{[1113001, 0], [{file, "data/tutorial/seed-form-purge.maya.zone.nbl"}]},
+	{[1113002, 0], [{file, "data/tutorial/seed-form-purge.lou.zone.nbl"}]},
+	{[1113003, 0], [{file, "data/tutorial/seed-form-purge.leo.zone.nbl"}]},
+
+	% My room
+
+	{[1120000, 0], [{file, "data/rooms/test.zone.nbl"}]},
+
+	% Tutorial (my room)
+
+	{[1120000,10], [{file, "data/tutorial/myroom.zone.nbl"}]}
 ]).
 
 -define(MAPS, [
@@ -624,6 +659,14 @@
 		3, 3, 3, 3, 3, % Caves of Ice C-S2 variant 2
 		3, 3, 3, 3, 3, % Caves of Ice C-S2 variant 3
 	0:16 >>}]},
+
+	% Tutorial, Linear Line
+
+	{110, [{quests, "counters/counter.76033.4.6.110.pack"}, {bg, 255}, {options, << 16#01000800:32, 3, 3, 3, 3, 3, 3, 3, 3 >>}]},
+
+	% Tutorial, Transfer Terminal
+
+	{111, [{quests, "counters/counter.141569.9001.0.111.pack"}, {bg, 255}, {options, << 16#01000400:32, 0:32 >>}]},
 
 	% Parum Cafe: The Collector
 
