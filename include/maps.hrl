@@ -41,10 +41,10 @@
 
 	% Phantom Ruins
 
-	{1060300, [{type, mission}, {file, "data/missions/phantom-fissure.c.quest.nbl"},  {start, [0, 8002, 0]}]},
-	{1060301, [{type, mission}, {file, "data/missions/phantom-fissure.b.quest.nbl"},  {start, [0, 8002, 0]}]},
-	{1060302, [{type, mission}, {file, "data/missions/phantom-fissure.a.quest.nbl"},  {start, [0, 8002, 0]}]},
-	{1060303, [{type, mission}, {file, "data/missions/phantom-fissure.s.quest.nbl"},  {start, [0, 8002, 0]}]},
+	{1060300, [{type, mission}, {file, "data/missions/phantom-ruins.c.quest.nbl"},  {start, [0, 8002, 0]}]},
+	{1060301, [{type, mission}, {file, "data/missions/phantom-ruins.b.quest.nbl"},  {start, [0, 8002, 0]}]},
+	{1060302, [{type, mission}, {file, "data/missions/phantom-ruins.a.quest.nbl"},  {start, [0, 8002, 0]}]},
+	{1060303, [{type, mission}, {file, "data/missions/phantom-ruins.s.quest.nbl"},  {start, [0, 8002, 0]}]},
 
 	% Planetary lobbies
 
@@ -94,14 +94,14 @@
 
 	% Phantom Ruins
 
-	{[1060300, 0], [{file, "data/missions/phantom-fissure.c-0.zone.nbl"}]},
-	{[1060300, 1], [{file, "data/missions/phantom-fissure.c-1.zone.nbl"}]},
-	{[1060301, 0], [{file, "data/missions/phantom-fissure.b-0.zone.nbl"}]},
-	{[1060301, 1], [{file, "data/missions/phantom-fissure.b-1.zone.nbl"}]},
-	{[1060302, 0], [{file, "data/missions/phantom-fissure.a-0.zone.nbl"}]},
-	{[1060302, 1], [{file, "data/missions/phantom-fissure.a-1.zone.nbl"}]},
-	{[1060303, 0], [{file, "data/missions/phantom-fissure.s-0.zone.nbl"}]},
-	{[1060303, 1], [{file, "data/missions/phantom-fissure.s-1.zone.nbl"}]},
+	{[1060300, 0], [{file, "data/missions/phantom-ruins.c-0.zone.nbl"}]},
+	{[1060300, 1], [{file, "data/missions/phantom-ruins.c-1.zone.nbl"}]},
+	{[1060301, 0], [{file, "data/missions/phantom-ruins.b-0.zone.nbl"}]},
+	{[1060301, 1], [{file, "data/missions/phantom-ruins.b-1.zone.nbl"}]},
+	{[1060302, 0], [{file, "data/missions/phantom-ruins.a-0.zone.nbl"}]},
+	{[1060302, 1], [{file, "data/missions/phantom-ruins.a-1.zone.nbl"}]},
+	{[1060303, 0], [{file, "data/missions/phantom-ruins.s-0.zone.nbl"}]},
+	{[1060303, 1], [{file, "data/missions/phantom-ruins.s-1.zone.nbl"}]},
 
 	% Colony
 
@@ -516,7 +516,7 @@
 	% Neudaiz Relics (entry 0): Phantom Fissure, The Eastern Peril, Forest Infiltration
 
 	{ 55, [{quests, "data/counters/neudaiz.relics-0.pack"}, {bg, 3}, {options, << 16#01c32c00:32, 3, 3, 3,
-		3, 3, 3, 3, % Phantom Ruins C-S
+		3, 3, 3, 3, % Phantom Fissure C-S
 		3, 3, 3, 3, 3, 3, % The Eastern Peril C-S3 variant 1
 		3, 3, 3, 3, 3, 3, % The Eastern Peril C-S3 variant 2
 		3, 3, 3, 3, 3, 3, % The Eastern Peril C-S3 variant 3
@@ -552,7 +552,7 @@
 	% Neudaiz Mizuraki (entry 2): Phantom Fissure, Moonlight Beast, Moonlight Beast (AOTI, missing)
 
 	{ 72, [{quests, "data/counters/neudaiz.mizuraki-2.pack"}, {bg, 3}, {options, << 16#01ab2c00:32, 3, 3, 0,
-		3, 3, 3, 3, % Phantom Ruins C-S
+		3, 3, 3, 3, % Phantom Fissure C-S
 		3, 3, 3, 3, % Moonlight Beast C-S variant 1
 		3, 3, 3, 3, % Moonlight Beast C-S variant 2
 		3, 3, 3, 3, % Moonlight Beast C-S variant 3
@@ -563,7 +563,7 @@
 	% Neudaiz Hot Springs: Phantom Fissure, Sakura Blast, Cost of Research
 
 	{ 75, [{quests, "data/counters/neudaiz.hotsprings.pack"}, {bg, 3}, {options, << 16#01ee2800:32, 3, 3, 3,
-		3, 3, 3, 3, % Phantom Ruins C-S
+		3, 3, 3, 3, % Phantom Fissure C-S
 		3, 3, 3, 3, 3, 0, % Sakura Blast C-S2 variant 1
 		3, 3, 3, 3, 3, 0, % Sakura Blast C-S2 variant 2
 		3, 3, 3, 3, 3, 0, % Sakura Blast C-S2 variant 3
