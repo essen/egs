@@ -571,22 +571,22 @@ handle(16#0302, _, GID, _, _) ->
 
 %% @doc Chat broadcast handler. Dispatch the message to everyone (for now).
 %%      We must take extra precautions to handle different versions of the game correctly.
+%%      Disregard the name sent by the server in later versions of the game. Use the name saved in memory instead, to prevent client-side editing.
 %% @todo Only broadcast to people in the same map.
 
 handle(16#0304, _, GID, Version, Orig) ->
+	User = egs_db:users_select(GID),
 	case Version of
 		0 -> % AOTI v2.000
-			<< _:416, Modifiers:128/bits, Message/bits >> = Orig,
-			User = egs_db:users_select(GID),
-			Name = User#users.charname;
+			<< _:416, Modifiers:128/bits, Message/bits >> = Orig;
 		_ -> % Above
-			<< _:416, Modifiers:128/bits, Name:512/bits, Message/bits >> = Orig
+			<< _:416, Modifiers:128/bits, _:512, Message/bits >> = Orig
 	end,
-	[LogName|_] = re:split(Name, "\\0\\0", [{return, binary}]),
+	[LogName|_] = re:split(User#users.charname, "\\0\\0", [{return, binary}]),
 	[TmpMessage|_] = re:split(Message, "\\0\\0", [{return, binary}]),
 	LogMessage = re:replace(TmpMessage, "\\n", " ", [global, {return, binary}]),
 	log(GID, "chat from ~s: ~s", [[re:replace(LogName, "\\0", "", [global, {return, binary}])], [re:replace(LogMessage, "\\0", "", [global, {return, binary}])]]),
-	lists:foreach(fun(User) -> User#users.pid ! {psu_chat, GID, Name, Modifiers, Message} end, egs_db:users_select_all());
+	lists:foreach(fun(X) -> X#users.pid ! {psu_chat, GID, User#users.charname, Modifiers, Message} end, egs_db:users_select_all());
 
 %% @todo Handle this packet. Ignore for now.
 
