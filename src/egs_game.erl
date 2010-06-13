@@ -55,10 +55,14 @@ supervisor() ->
 %% @doc Close the connection for the given user and cleanup.
 
 supervisor_close(Pid) ->
-	User = egs_db:users_select_by_pid(Pid),
-	log(User#users.gid, "quit"),
-	lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(User)),
-	egs_db:users_delete(User#users.gid).
+	try
+		User = egs_db:users_select_by_pid(Pid),
+		log(User#users.gid, "quit"),
+		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(User)),
+		egs_db:users_delete(User#users.gid)
+	catch _:_ ->
+		ignore
+	end.
 
 %% @doc Listen for connections.
 
