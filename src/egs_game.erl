@@ -538,9 +538,9 @@ handle(16#021d, CSocket, _, _, _) ->
 	send_021e(CSocket);
 
 %% @doc Uni selection handler.
-%%      When selecting 'Your room', load first floor for now.
-%%      When selecting 'Reload', load first floor.
-%% @todo Load 'Your room' correctly.
+%%      When selecting 'Your room', load a default room.
+%%      When selecting 'Reload', reload the character in the current lobby.
+%% @todo There's probably an entryid given in the uni selection packet.
 
 handle(16#021f, CSocket, GID, _, Orig) ->
 	<< _:352, Uni:32/little-unsigned-integer, _/bits >> = Orig,
@@ -556,7 +556,11 @@ handle(16#021f, CSocket, GID, _, Orig) ->
 			log(GID, "uni selection (reload)"),
 			send_0230(CSocket, GID),
 			% 0220
-			area_load(CSocket, GID, 1100000, 0, 1, 1)
+			% force reloading the character and data files (hack)
+			User = egs_db:users_select(GID),
+			NewRow = User#users{questid=1120000, zoneid=undefined},
+			egs_db:users_insert(NewRow),
+			area_load(CSocket, GID, User#users.questid, User#users.zoneid, User#users.mapid, User#users.entryid)
 	end;
 
 %% @doc Shortcut changes handler. Do nothing.
