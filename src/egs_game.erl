@@ -540,9 +540,18 @@ handle(16#010a, CSocket, GID, _, Orig) ->
 %% @doc Character death, and more, handler. Warp to 4th floor for now.
 %% @todo Recover from death correctly.
 
-handle(16#0110, CSocket, GID, _, _) ->
-	log(GID, "death (and more)"),
-	area_load(CSocket, GID, 1100000, 0, 4, 6);
+handle(16#0110, CSocket, GID, _, Orig) ->
+	<< _:384, A:32/little-unsigned-integer, B:32/little-unsigned-integer, C:32/little-unsigned-integer >> = Orig,
+	case B of
+		2 -> % triggered when looking at the type menu
+			send_0113(CSocket, GID);
+		7 -> % player death
+			area_load(CSocket, GID, 1100000, 0, 4, 6);
+		10 -> % online status change
+			log(GID, "changed status to ~b", [C]);
+		_ ->
+			log(GID, "unknown 0110 (~b, ~b, ~b)", [A, B, C])
+	end;
 
 %% @doc Uni cube handler.
 
@@ -754,7 +763,10 @@ handle(16#1a01, CSocket, GID, _, Orig) ->
 		[ 0, 0, 3] ->
 			log(GID, "pp cube"),
 			send_1a04(CSocket, GID);
-		[80, 0, _] -> % npc dialog choice
+		[ 0, 0, 9] ->
+			log(GID, "types menu"),
+			send_1a07(CSocket, GID);
+		[80, 0, _] ->
 			log(GID, "npc dialog choice"),
 			send_1a02(CSocket, GID, 0, 17, 17, 3, 9);
 		[90, 0, _] -> % All the replies from here are consistent but their effect is unknown.
@@ -803,6 +815,13 @@ handle_hits(CSocket, GID, Data) ->
 send_0111(CSocket, GID) ->
 	Packet = << 16#01110300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
 		GID:32/little-unsigned-integer, 0:32, 6:32/little-unsigned-integer, 0:32 >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @todo Types capability list.
+
+send_0113(CSocket, GID) ->
+	{ok, File} = file:read_file("p/typesinfo.bin"),
+	Packet = << 16#01130300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, GID:32/little-unsigned-integer, File/binary >>,
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @doc Send the zone initialization notification.
@@ -1242,6 +1261,14 @@ send_1a03(CSocket, GID) ->
 send_1a04(CSocket, GID) ->
 	{ok, File} = file:read_file("p/ppcube.bin"),
 	Packet = << 16#1a040300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96, File/binary >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @doc Types menu handler.
+%% @todo Handle correctly.
+
+send_1a07(CSocket, GID) ->
+	Packet = << 16#1a070300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#085b5d0a:32, 16#3a200000:32, 0:32,
+		16#01010101:32, 16#01010101:32, 16#01010101:32, 16#01010101:32 >>,
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @todo Figure out what the other things are and do it right.
