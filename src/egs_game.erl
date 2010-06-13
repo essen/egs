@@ -961,13 +961,13 @@ send_0236(CSocket, GID) ->
 %% @doc Send a chat command. AOTI v2.000 version of the command.
 
 send_0304(CSocket, 0, FromGID, _, Modifiers, Message) ->
-	Packet = << 16#03040300:32/unsigned-integer, 0:304, 16#1200:16/unsigned-integer, FromGID:32/little-unsigned-integer, Modifiers:128/bits, Message/bits >>,
+	Packet = << 16#03040300:32/unsigned-integer, 0:288, 16#00001200:32, FromGID:32/little-unsigned-integer, Modifiers:128/bits, Message/bits >>,
 	egs_proto:packet_send(CSocket, Packet);
 
 %% @doc Send a chat command. AOTI since an unknown version of the game.
 
 send_0304(CSocket, _, FromGID, FromName, Modifiers, Message) ->
-	Packet = << 16#03040300:32, 0:304, 16#1200:16/unsigned-integer, FromGID:32/little-unsigned-integer, Modifiers:128/bits, FromName:512/bits, Message/bits >>,
+	Packet = << 16#03040300:32, 0:288, 16#00001200:32, FromGID:32/little-unsigned-integer, Modifiers:128/bits, FromName:512/bits, Message/bits >>,
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @todo Inventory related. No idea what it does.
