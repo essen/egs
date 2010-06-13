@@ -60,6 +60,12 @@ users_select(GID) ->
 			Val
 	end.
 
+%% @doc Select exactly one user by its Pid. Return an #users record.
+
+users_select_by_pid(Pid) ->
+	[User] = do(qlc:q([X || X <- mnesia:table(users), X#users.pid =:= Pid])),
+	User.
+
 %% @doc Select all users. Return a list of #users records.
 
 users_select_all() ->

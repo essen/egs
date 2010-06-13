@@ -18,7 +18,7 @@
 
 -module(egs_game).
 -export([start/0]). % external
--export([listen/0, accept/1, process/2, char_select/3, area_load/6, loop/3, loop/4]). % internal
+-export([supervisor_init/0, supervisor/0, listen/1, accept/2, process/2, char_select/3, area_load/6, loop/3, loop/4]). % internal
 
 -include("include/records.hrl").
 -include("include/network.hrl").
@@ -27,25 +27,55 @@
 %% @doc Start the game server.
 
 start() ->
-	Pid = spawn_link(?MODULE, listen, []),
-	Pid.
+	SPid = spawn(?MODULE, supervisor_init, []),
+	LPid = spawn(?MODULE, listen, [SPid]),
+	[{listener, LPid}, {supervisor, SPid}].
+
+%% @doc Game processes supervisor initialization.
+
+supervisor_init() ->
+	process_flag(trap_exit, true),
+	supervisor().
+
+%% @doc Game processes supervisor. Make sure everything is cleaned up when an unexpected error occurs.
+
+supervisor() ->
+	receive
+		{link, Pid} ->
+			link(Pid);
+		{'EXIT', Pid, _} ->
+			supervisor_close(Pid);
+		_ ->
+			reload
+	after 5000 ->
+		reload
+	end,
+	?MODULE:supervisor().
+
+%% @doc Close the connection for the given user and cleanup.
+
+supervisor_close(Pid) ->
+	User = egs_db:users_select_by_pid(Pid),
+	log(User#users.gid, "quit"),
+	lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(User)),
+	egs_db:users_delete(User#users.gid).
 
 %% @doc Listen for connections.
 
-listen() ->
-	process_flag(trap_exit, true),
+listen(SPid) ->
 	{ok, LSocket} = ssl:listen(?GAME_PORT, ?GAME_LISTEN_OPTIONS),
-	?MODULE:accept(LSocket).
+	?MODULE:accept(LSocket, SPid).
 
 %% @doc Accept connections.
 
-accept(LSocket) ->
+accept(LSocket, SPid) ->
 	case ssl:transport_accept(LSocket, 5000) of
 		{ok, CSocket} ->
 			ssl:ssl_accept(CSocket),
 			try
 				send_0202(CSocket),
-				Pid = spawn_link(?MODULE, process, [CSocket, 0]),
+				Pid = spawn(?MODULE, process, [CSocket, 0]),
+				SPid ! {link, Pid},
 				ssl:controlling_process(CSocket, Pid)
 			catch
 				_:_ ->
@@ -54,7 +84,7 @@ accept(LSocket) ->
 		_ ->
 			reload
 	end,
-	?MODULE:accept(LSocket).
+	?MODULE:accept(LSocket, SPid).
 
 %% @doc Process the new connections.
 %%      Send an hello packet, authenticate the user and send him to character select.
@@ -218,33 +248,29 @@ counter_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID) ->
 	AreaName = "Mission counter",
 	QuestFile = "data/lobby/counter.quest.nbl",
 	ZoneFile = "data/lobby/counter.zone.nbl",
-	try
-		% broadcast unspawn to other people
-		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(OldUser)),
-		send_0c00(CSocket, GID, 16#7fffffff),
-		send_020e(CSocket, QuestFile),
-		send_0a05(CSocket, GID),
-		% 010d
-		send_0200(CSocket, GID, mission),
-		send_020f(CSocket, ZoneFile),
-		send_0205(CSocket, 0, 0, 0),
-		send_100e(CSocket, GID, 16#7fffffff, 0, 0, AreaName, EntryID),
-		send_0215(CSocket, GID, 0),
-		send_0215(CSocket, GID, 0),
-		send_020c(CSocket),
-		send_1202(CSocket, GID),
-		send_1204(CSocket, GID),
-		send_1206(CSocket, GID),
-		send_1207(CSocket, GID),
-		send_1212(CSocket, GID),
-		send_0201(CSocket, GID, User, Char),
-		send_0a06(CSocket, GID),
-		send_0208(CSocket, GID),
-		send_0236(CSocket, GID)
-	catch
-		_:_ ->
-			close(CSocket, GID)
-	end.
+	% broadcast unspawn to other people
+	lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(OldUser)),
+	% load counter
+	send_0c00(CSocket, GID, 16#7fffffff),
+	send_020e(CSocket, QuestFile),
+	send_0a05(CSocket, GID),
+	% 010d
+	send_0200(CSocket, GID, mission),
+	send_020f(CSocket, ZoneFile),
+	send_0205(CSocket, 0, 0, 0),
+	send_100e(CSocket, GID, 16#7fffffff, 0, 0, AreaName, EntryID),
+	send_0215(CSocket, GID, 0),
+	send_0215(CSocket, GID, 0),
+	send_020c(CSocket),
+	send_1202(CSocket, GID),
+	send_1204(CSocket, GID),
+	send_1206(CSocket, GID),
+	send_1207(CSocket, GID),
+	send_1212(CSocket, GID),
+	send_0201(CSocket, GID, User, Char),
+	send_0a06(CSocket, GID),
+	send_0208(CSocket, GID),
+	send_0236(CSocket, GID).
 
 %% @doc Load the given map as a standard lobby.
 %% @todo Probably save the map type in the users table.
@@ -285,86 +311,81 @@ area_load(CSocket, GID, AreaType, IsStart, OldUser, User, QuestFile, ZoneFile, A
 		true ->
 			ZoneChange = if OldUser#users.questid =:= User#users.questid, OldUser#users.zoneid =:= User#users.zoneid -> false; true -> true end
 	end,
-	try
-		% broadcast spawn and unspawn to other people
-		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(OldUser)),
-		if	AreaType =:= lobby ->
-				lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_spawn, User} end, egs_db:users_select_others_in_area(User));
-			true -> ignore
-		end,
-		% load area
-		if	QuestChange =:= true ->
-				% reload the character if entering or leaving the room quest
-				if	OldUser#users.questid =:= 1120000; User#users.questid =:= 1120000 ->
-						char_load(CSocket, GID, Char, Options, User#users.charnumber);
-					true -> ignore
-				end,
-				% load new quest
-				send_0c00(CSocket, GID, User#users.questid),
-				send_020e(CSocket, QuestFile);
-			true -> ignore
-		end,
-		if	IsStart =:= true ->
-				send_0215(CSocket, GID, 16#ffffffff);
-			true -> ignore
-		end,
-		if	ZoneChange =:= true ->
-				% load new zone
-				send_0a05(CSocket, GID),
-				if AreaType =:= lobby ->
-						send_0111(CSocket, GID);
-					true -> ignore
-				end,
-				% 010d
-				send_0200(CSocket, GID, AreaType),
-				send_020f(CSocket, ZoneFile);
-			true -> ignore
-		end,
-		send_0205(CSocket, User#users.zoneid, User#users.mapid, User#users.entryid),
-		send_100e(CSocket, GID, User#users.questid, User#users.zoneid, User#users.mapid, AreaName, 16#ffffffff),
-		if	AreaType =:= mission ->
-				send_0215(CSocket, GID, 0),
-				if	IsStart =:= true ->
-						send_0215(CSocket, GID, 0),
-						send_0c09(CSocket, GID);
-					true -> ignore
-				end;
-			true ->
-				send_020c(CSocket)
-		end,
-		case AreaType of
-			myroom ->
-				myroom_send_packet(CSocket, "p/packet1332.bin"),
-				send_1202(CSocket, GID),
-				send_1204(CSocket, GID),
-				send_1206(CSocket, GID);
-			mission ->
-				send_1202(CSocket, GID),
-				send_1204(CSocket, GID),
-				send_1206(CSocket, GID),
-				send_1207(CSocket, GID);
-			_ -> ignore
-		end,
-		if	AreaType /= spaceport ->
-				send_1212(CSocket, GID);
-			true -> ignore
-		end,
-		if	AreaType =:= myroom ->
-				myroom_send_packet(CSocket, "p/packet1309.bin");
-			true -> ignore
-		end,
-		send_0201(CSocket, GID, User, Char),
-		if	ZoneChange =:= true ->
-				send_0a06(CSocket, GID);
-			true -> ignore
-		end,
-		send_0233(CSocket, GID, egs_db:users_select_others_in_area(User)),
-		send_0208(CSocket, GID),
-		send_0236(CSocket, GID)
-	catch
-		_:_ ->
-			close(CSocket, GID)
-	end.
+	% broadcast spawn and unspawn to other people
+	lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(OldUser)),
+	if	AreaType =:= lobby ->
+			lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_spawn, User} end, egs_db:users_select_others_in_area(User));
+		true -> ignore
+	end,
+	% load area
+	if	QuestChange =:= true ->
+			% reload the character if entering or leaving the room quest
+			if	OldUser#users.questid =:= 1120000; User#users.questid =:= 1120000 ->
+					char_load(CSocket, GID, Char, Options, User#users.charnumber);
+				true -> ignore
+			end,
+			% load new quest
+			send_0c00(CSocket, GID, User#users.questid),
+			send_020e(CSocket, QuestFile);
+		true -> ignore
+	end,
+	if	IsStart =:= true ->
+			send_0215(CSocket, GID, 16#ffffffff);
+		true -> ignore
+	end,
+	if	ZoneChange =:= true ->
+			% load new zone
+			send_0a05(CSocket, GID),
+			if AreaType =:= lobby ->
+					send_0111(CSocket, GID);
+				true -> ignore
+			end,
+			% 010d
+			send_0200(CSocket, GID, AreaType),
+			send_020f(CSocket, ZoneFile);
+		true -> ignore
+	end,
+	send_0205(CSocket, User#users.zoneid, User#users.mapid, User#users.entryid),
+	send_100e(CSocket, GID, User#users.questid, User#users.zoneid, User#users.mapid, AreaName, 16#ffffffff),
+	if	AreaType =:= mission ->
+			send_0215(CSocket, GID, 0),
+			if	IsStart =:= true ->
+					send_0215(CSocket, GID, 0),
+					send_0c09(CSocket, GID);
+				true -> ignore
+			end;
+		true ->
+			send_020c(CSocket)
+	end,
+	case AreaType of
+		myroom ->
+			myroom_send_packet(CSocket, "p/packet1332.bin"),
+			send_1202(CSocket, GID),
+			send_1204(CSocket, GID),
+			send_1206(CSocket, GID);
+		mission ->
+			send_1202(CSocket, GID),
+			send_1204(CSocket, GID),
+			send_1206(CSocket, GID),
+			send_1207(CSocket, GID);
+		_ -> ignore
+	end,
+	if	AreaType /= spaceport ->
+			send_1212(CSocket, GID);
+		true -> ignore
+	end,
+	if	AreaType =:= myroom ->
+			myroom_send_packet(CSocket, "p/packet1309.bin");
+		true -> ignore
+	end,
+	send_0201(CSocket, GID, User, Char),
+	if	ZoneChange =:= true ->
+			send_0a06(CSocket, GID);
+		true -> ignore
+	end,
+	send_0233(CSocket, GID, egs_db:users_select_others_in_area(User)),
+	send_0208(CSocket, GID),
+	send_0236(CSocket, GID).
 
 myroom_send_packet(CSocket, Filename) ->
 	{ok, << _:32, File/bits >>} = file:read_file(Filename),
@@ -401,24 +422,15 @@ loop(CSocket, GID, Version, SoFar) ->
 			[dispatch(CSocket, GID, Version, Orig) || Orig <- Packets],
 			?MODULE:loop(CSocket, GID, Version, Rest);
 		{ssl_closed, _} ->
-			close(CSocket, GID);
+			exit(ssl_closed);
 		{ssl_error, _, _} ->
-			close(CSocket, GID);
+			exit(ssl_error);
 		_ ->
 			?MODULE:loop(CSocket, GID, Version, SoFar)
 	after 1000 ->
 		reload,
 		?MODULE:loop(CSocket, GID, Version, SoFar)
 	end.
-
-%% @doc Close the connection for the given user.
-
-close(CSocket, GID) ->
-	log(GID, "quit"),
-	User = egs_db:users_select(GID),
-	lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(User)),
-	egs_db:users_delete(GID),
-	ssl:close(CSocket).
 
 %% @doc Dispatch the command to the right handler.
 %%      Command 0b05 uses the channel for something else. Conflicts could occur. Better to just ignore it anyway.
