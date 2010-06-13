@@ -662,11 +662,11 @@
 
 	% Tutorial, Linear Line
 
-	{110, [{quests, "counters/counter.76033.4.6.110.pack"}, {bg, 255}, {options, << 16#01000800:32, 3, 3, 3, 3, 3, 3, 3, 3 >>}]},
+	{110, [{quests, "data/tutorial/colony.ll.pack"}, {bg, 255}, {options, << 16#01000800:32, 3, 3, 3, 3, 3, 3, 3, 3 >>}]},
 
 	% Tutorial, Transfer Terminal
 
-	{111, [{quests, "counters/counter.141569.9001.0.111.pack"}, {bg, 255}, {options, << 16#01000400:32, 0:32 >>}]},
+	{111, [{quests, "data/tutorial/colony.terminal.pack"}, {bg, 255}, {options, << 16#01000400:32, 0:32 >>}]},
 
 	% Parum Cafe: The Collector
 
