@@ -526,7 +526,7 @@ handle(16#0105, CSocket, GID, _, Orig) ->
 				0:64, GID:32/little-unsigned-integer, A:32/little-unsigned-integer, ItemID, Action, B:16/little-unsigned-integer, C:32/little-unsigned-integer >>,
 			egs_proto:packet_send(CSocket, Packet);
 		_ ->
-			log(GID, "0105 - ignored"),
+			log(GID, "0105 - ignored action ~b", [Action]),
 			ignored
 	end;
 
