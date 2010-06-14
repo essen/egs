@@ -419,7 +419,7 @@ loop(CSocket, GID, Version, SoFar) ->
 			send_spawn(CSocket, GID, Spawn),
 			?MODULE:loop(CSocket, GID, Version, SoFar);
 		{psu_player_unspawn, Spawn} ->
-			send_unspawn(CSocket, GID, Spawn),
+			send_0204(CSocket, GID, Spawn#users.gid, Spawn#users.lid, 5),
 			?MODULE:loop(CSocket, GID, Version, SoFar);
 		{ssl, _, Data} ->
 			{Packets, Rest} = egs_proto:packet_split(<< SoFar/bits, Data/bits >>),
@@ -890,6 +890,14 @@ send_0201(CSocket, GID, User, Char) ->
 send_0202(CSocket) ->
 	egs_proto:packet_send(CSocket, << 16#02020300:32, 0:352 >>).
 
+%% @todo Not sure. Used for unspawning, and more.
+
+send_0204(CSocket, GID, PlayerGID, PlayerLID, Action) ->
+	Packet = << 16#02040300:32, 0:32, 16#00001200:32, PlayerGID:32/little-unsigned-integer, 0:64,
+		16#00011300:32, GID:32/little-unsigned-integer, 0:64, PlayerGID:32/little-unsigned-integer,
+		PlayerLID:32/little-unsigned-integer, Action:32/little-unsigned-integer >>,
+	egs_proto:packet_send(CSocket, Packet).
+
 %% @doc Send the map ID to be loaded by the client.
 %% @todo Last two values are unknown.
 
@@ -1321,17 +1329,6 @@ send_1a07(CSocket, GID) ->
 
 send_spawn(CSocket, GID, _) ->
 	send_0233(CSocket, GID, egs_db:users_select_others_in_area(egs_db:users_select(GID))).
-
-%% @doc Send a character unspawn notification.
-%% @todo It's probably right but who knows...
-
-send_unspawn(CSocket, GID, Spawn) ->
-	PlayerGID = Spawn#users.gid,
-	PlayerLID = Spawn#users.lid,
-	Packet = << 16#02040300:32, 0:32, 16#00001200:32, PlayerGID:32/little-unsigned-integer, 0:64,
-		16#00011300:32, GID:32/little-unsigned-integer, 0:64, PlayerGID:32/little-unsigned-integer,
-		PlayerLID:32/little-unsigned-integer, 5:32/little-unsigned-integer >>,
-	egs_proto:packet_send(CSocket, Packet).
 
 %% @doc Log message to the console.
 
