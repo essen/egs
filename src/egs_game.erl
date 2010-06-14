@@ -549,6 +549,8 @@ handle(16#0110, CSocket, GID, _, Orig) ->
 	case B of
 		2 -> % triggered when looking at the type menu
 			send_0113(CSocket, GID);
+		3 -> % type change
+			log(GID, "changed type to ~b", [C]);
 		7 -> % player death
 			area_load(CSocket, GID, 1100000, 0, 4, 6);
 		10 -> % online status change
