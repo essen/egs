@@ -713,15 +713,33 @@ handle(16#0e00, CSocket, GID, _, Orig) ->
 	<< _:448, Data/bits >> = Orig,
 	handle_hits(CSocket, GID, Data);
 
-%% @doc Lobby event handler. Handle chairs!
-%%      Apparently used for elevator, sit on chairs, and more?
-%% @todo Handle more than sit on chair.
+%% @doc Object event handler.
+%% @todo Handle all events appropriately.
 
 handle(16#0f0a, CSocket, GID, _, Orig) ->
-	<< _:448, A:32/little-unsigned-integer, _:64, B:32/little-unsigned-integer, _/bits >> = Orig,
-	Packet = << 16#12110300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, A:32/little-unsigned-integer, B:32/little-unsigned-integer, 8:32/little-unsigned-integer, 0:32 >>,
-	egs_proto:packet_send(CSocket, Packet),
-	log(GID, "lobby event (can only chair so far)");
+	<< _:448, A:32/little-unsigned-integer, _:64, B:32/little-unsigned-integer, _:272, Action:8, _/bits >> = Orig,
+	case Action of
+		0 -> % warp
+			ignore;
+		13 -> % button on
+			ignore;
+		14 -> % button off
+			ignore;
+		%~ 19 -> % @todo (somewhere in phantom ruins block 4)
+			%~ ignore;
+		20 -> % enter counter/elevator/room/spaceport
+			ignore;
+		23 -> % key door activation (no key)
+			ignore;
+		25 -> % sit on chair
+			send_1211(CSocket, GID, A, B, 8, 0);
+		26 -> % sit out of chair
+			send_1211(CSocket, GID, A, B, 8, 2);
+		%~ 30 -> % @todo (phantom ruins block 4)
+			%~ ignore;
+		_ ->
+			log(GID, "object event ~b", [Action])
+	end;
 
 %% @doc Party information recap request.
 %% @todo Handle when the party already exists! And stop doing it wrong.
@@ -1179,6 +1197,12 @@ send_1207(CSocket, GID) ->
 	Chunk = << 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 0:224, 16#0000ffff:32, 16#ff000000:32, 16#64000a00:32 >>,
 	Packet = << 16#12070300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
 		Chunk/binary, Chunk/binary, Chunk/binary, Chunk/binary, Chunk/binary, Chunk/binary >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @todo Object interaction? Figure out. C probably the interaction type.
+
+send_1211(CSocket, GID, A, B, C, D) ->
+	Packet = << 16#12110300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, A:32/little-unsigned-integer, B:32/little-unsigned-integer, C:32/little-unsigned-integer, D:32/little-unsigned-integer >>,
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @doc Make the client load the quest previously sent.
