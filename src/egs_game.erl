@@ -643,6 +643,13 @@ handle(16#0812, CSocket, GID, _, _) ->
 	User = egs_db:users_select(GID),
 	area_load(CSocket, GID, User#users.savedquestid, User#users.savedzoneid, User#users.zoneid, User#users.mapid);
 
+%% @doc Item description request.
+%% @todo Send something other than just "dammy".
+
+handle(16#0a10, CSocket, GID, _, Orig) ->
+	<< _:352, ItemID:32/unsigned-integer >> = Orig,
+	send_0a11(CSocket, GID, ItemID, "dammy");
+
 %% @doc Start mission handler.
 %% @todo Forward the mission start to other players of the same party, whatever their location is.
 
@@ -1041,6 +1048,15 @@ send_0a06(CSocket, GID) ->
 send_0a0a(CSocket, GID) ->
 	{ok, << _:32, A:224/bits, _:32, B/bits >>} = file:read_file("p/packet0a0a.bin"),
 	egs_proto:packet_send(CSocket, << A/binary, GID:32/little-unsigned-integer, B/binary >>).
+
+%% @doc Item description.
+
+send_0a11(CSocket, GID, ItemID, ItemDesc) ->
+	Size = 1 + length(ItemDesc),
+	UCS2Desc = << << X:8, 0:8 >> || X <- ItemDesc >>,
+	Packet = << 16#0a110300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
+		ItemID:32/unsigned-integer, Size:32/little-unsigned-integer, UCS2Desc/binary, 0:16 >>,
+	egs_proto:packet_send(CSocket, Packet).
 
 %% @doc Init quest.
 
