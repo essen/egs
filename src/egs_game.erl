@@ -453,9 +453,7 @@ dispatch(CSocket, GID, Version, Orig) ->
 %% @doc Position change broadcast handler. Save the position and then dispatch it.
 
 broadcast(16#0503, GID, Orig) ->
-	LID = 0, % TODO: handle the LID correctly
-	<< 100:32/little-unsigned-integer, 16#050301:24/unsigned-integer, _:72, GID:32/little-unsigned-integer, _:192,
-		GID:32/little-unsigned-integer, LID:32/little-unsigned-integer, Direction:32/bits, Coords:96/bits, _:96,
+	<< 100:32/little-unsigned-integer, 16#050301:24/unsigned-integer, _:360, Direction:32/bits, Coords:96/bits, _:96,
 		QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer,
 		EntryID:32/little-unsigned-integer, _:32 >> = Orig,
 	User = egs_db:users_select(GID),
