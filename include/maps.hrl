@@ -264,6 +264,26 @@
 	{[1104000,900], [{name, "Spaceport"}]}
 ]).
 
+%% Seasons.
+
+-define(SEASON_NONE,      [1,  1, []]).
+-define(SEASON_PARTY,     [1,  0, [1100000]]).
+-define(SEASON_NEWYEAR,   [1,  1, [1100000, 1102000]]).
+-define(SEASON_VALENTINE, [1,  2, [1100000]]).
+-define(SEASON_WHITEDAY,  [1,  3, [1100000]]).
+-define(SEASON_SPRING,    [1,  4, [1100000, 1102000]]).
+-define(SEASON_EASTER,    [1,  5, [1100000]]).
+-define(SEASON_PARUMUNIF, [1,  6, [1101000]]).
+-define(SEASON_SONIC,     [1,  7, [1100000]]).
+-define(SEASON_HOLYLIGHT, [1,  8, [1102000]]).
+-define(SEASON_FIREWORKS, [1,  9, [1102000]]).
+-define(SEASON_AUTUMN,    [1, 10, [1100000, 1102000]]).
+-define(SEASON_HALLOWEEN, [1, 11, [1100000, 1101000, 1103000]]).
+-define(SEASON_NATIVE,    [1, 12, [1103000]]).
+-define(SEASON_CHRISTMAS, [1, 13, [1100000, 1101000, 1103000]]).
+-define(SEASON_WINTER,    [1, 14, [1100000, 1101000]]).
+-define(SEASON_WEDDING,   [1, 15, [1100000, 1101000, 1102000, 1103000]]).
+
 %% EGS counters settings.
 %% Various appearance configuration counters don't have any quest-related data. They use the CounterID 65535.
 %% Background values include: 01 parum, 02 moatoob, 03 neudaiz, 04 guardians hq, 05 parum guardians, 06 moatoob guardians, 07 neudaiz guardians, 08 pitch black, ff destroyed colony

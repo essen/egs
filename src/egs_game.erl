@@ -260,8 +260,8 @@ counter_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID) ->
 	send_0a05(CSocket, GID),
 	% 010d
 	send_0200(CSocket, GID, mission),
-	send_020f(CSocket, ZoneFile),
-	send_0205(CSocket, 0, 0, 0),
+	send_020f(CSocket, ZoneFile, 16#ff),
+	send_0205(CSocket, 0, 0, 0, 0),
 	send_100e(CSocket, GID, 16#7fffffff, 0, 0, AreaName, EntryID),
 	send_0215(CSocket, GID, 0),
 	send_0215(CSocket, GID, 0),
@@ -275,6 +275,46 @@ counter_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID) ->
 	send_0a06(CSocket, GID),
 	send_0208(CSocket, GID),
 	send_0236(CSocket, GID).
+
+%% @doc Return the current season information.
+
+area_get_season(QuestID) ->
+	{{_, Month, Day}, _} = calendar:universal_time(),
+	[IsSeasonal, Season, SeasonQuestIDs] = if
+		Month =:=  1, Day =< 14            -> ?SEASON_NEWYEAR;
+		Month =:=  1, Day >= 25            -> ?SEASON_WINTER;
+		Month =:=  2, Day =< 7             -> ?SEASON_WINTER;
+		Month =:=  2, Day >= 14            -> ?SEASON_VALENTINE;
+		Month =:=  3, Day =< 6             -> ?SEASON_VALENTINE;
+		Month =:=  3, Day >= 14            -> ?SEASON_WHITEDAY;
+		Month =:=  4, Day =< 3             -> ?SEASON_WHITEDAY;
+		Month =:=  4, Day >= 4, Day =< 25  -> ?SEASON_EASTER;
+		Month =:=  4, Day >= 26            -> ?SEASON_SPRING;
+		Month =:=  5, Day =< 9             -> ?SEASON_SPRING;
+		Month =:=  5, Day >= 17, Day =< 30 -> ?SEASON_WEDDING;
+		Month =:=  6, Day >= 3, Day =< 16  -> ?SEASON_PARUMUNIF;
+		Month =:=  6, Day >= 23            -> ?SEASON_SONIC;
+		Month =:=  7, Day =< 13            -> ?SEASON_SONIC;
+		Month =:=  7, Day >= 18            -> ?SEASON_HOLYLIGHT;
+		Month =:=  8, Day =< 21            -> ?SEASON_FIREWORKS;
+		Month =:=  8, Day >= 28            -> ?SEASON_NATIVE;
+		Month =:=  9, Day =< 10            -> ?SEASON_NATIVE;
+		Month =:=  9, Day >= 24            -> ?SEASON_AUTUMN;
+		Month =:= 10, Day =< 7             -> ?SEASON_AUTUMN;
+		Month =:= 10, Day >= 15, Day =< 28 -> ?SEASON_PARTY;
+		Month =:= 10, Day >= 31            -> ?SEASON_HALLOWEEN;
+		Month =:= 11, Day =< 20            -> ?SEASON_HALLOWEEN;
+		Month =:= 12, Day >= 11            -> ?SEASON_CHRISTMAS;
+		true                               -> ?SEASON_NONE
+	end,
+	if	IsSeasonal =:= 1 ->
+			case lists:member(QuestID, SeasonQuestIDs) of
+				true  -> [{status, IsSeasonal}, {season, Season}];
+				false -> [{status, 0}, {season, 255}]
+			end;
+		true ->
+			[{status, 0}, {season, 255}]
+	end.
 
 %% @doc Load the given map as a standard lobby.
 %% @todo Probably save the map type in the users table.
@@ -315,6 +355,7 @@ area_load(CSocket, GID, AreaType, IsStart, OldUser, User, QuestFile, ZoneFile, A
 		true ->
 			ZoneChange = if OldUser#users.questid =:= User#users.questid, OldUser#users.zoneid =:= User#users.zoneid -> false; true -> true end
 	end,
+	[{status, IsSeasonal}, {season, Season}] = area_get_season(User#users.questid),
 	% broadcast spawn and unspawn to other people
 	lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(OldUser)),
 	if	AreaType =:= lobby ->
@@ -346,10 +387,10 @@ area_load(CSocket, GID, AreaType, IsStart, OldUser, User, QuestFile, ZoneFile, A
 			end,
 			% 010d
 			send_0200(CSocket, GID, AreaType),
-			send_020f(CSocket, ZoneFile);
+			send_020f(CSocket, ZoneFile, Season);
 		true -> ignore
 	end,
-	send_0205(CSocket, User#users.zoneid, User#users.mapid, User#users.entryid),
+	send_0205(CSocket, User#users.zoneid, User#users.mapid, User#users.entryid, IsSeasonal),
 	send_100e(CSocket, GID, User#users.questid, User#users.zoneid, User#users.mapid, AreaName, 16#ffffffff),
 	if	AreaType =:= mission ->
 			send_0215(CSocket, GID, 0),
@@ -901,9 +942,9 @@ send_0204(CSocket, GID, PlayerGID, PlayerLID, Action) ->
 %% @doc Send the map ID to be loaded by the client.
 %% @todo Last two values are unknown.
 
-send_0205(CSocket, MapType, MapNumber, MapEntry) ->
+send_0205(CSocket, MapType, MapNumber, MapEntry, IsSeasonal) ->
 	Packet = << 16#02050300:32, 0:288, 16#ffffffff:32, MapType:32/little-unsigned-integer,
-		MapNumber:32/little-unsigned-integer, MapEntry:32/little-unsigned-integer, 0:64 >>,
+		MapNumber:32/little-unsigned-integer, MapEntry:32/little-unsigned-integer, 0:56, IsSeasonal >>,
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @doc Indicate to the client that loading should finish.
@@ -930,10 +971,10 @@ send_020e(CSocket, Filename) ->
 
 %% @doc Send the zone file to be loaded.
 
-send_020f(CSocket, Filename) ->
+send_020f(CSocket, Filename, Season) ->
 	{ok, File} = file:read_file(Filename),
 	Size = byte_size(File),
-	Packet = << 16#020f0300:32, 0:288, 16#00ff0000:32, Size:32/little-unsigned-integer, File/binary >>,
+	Packet = << 16#020f0300:32, 0:288, 0, Season, 0:16, Size:32/little-unsigned-integer, File/binary >>,
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @todo No idea what this do. Nor why it's sent twice when loading a counter.
