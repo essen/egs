@@ -288,9 +288,9 @@ area_get_season(QuestID) ->
 		Month =:=  3, Day =< 6             -> ?SEASON_VALENTINE;
 		Month =:=  3, Day >= 14            -> ?SEASON_WHITEDAY;
 		Month =:=  4, Day =< 3             -> ?SEASON_WHITEDAY;
-		Month =:=  4, Day >= 4, Day =< 25  -> ?SEASON_EASTER;
-		Month =:=  4, Day >= 26            -> ?SEASON_SPRING;
-		Month =:=  5, Day =< 9             -> ?SEASON_SPRING;
+		Month =:=  4, Day >= 4, Day =< 24  -> ?SEASON_EASTER;
+		Month =:=  4, Day >= 25            -> ?SEASON_SPRING;
+		Month =:=  5, Day =< 8             -> ?SEASON_SPRING;
 		Month =:=  5, Day >= 17, Day =< 30 -> ?SEASON_WEDDING;
 		Month =:=  6, Day >= 3, Day =< 16  -> ?SEASON_PARUMUNIF;
 		Month =:=  6, Day >= 23            -> ?SEASON_SONIC;
