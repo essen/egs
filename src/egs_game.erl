@@ -654,10 +654,30 @@ handle(16#0304, _, GID, Version, Orig) ->
 	log(GID, "chat from ~s: ~s", [[re:replace(LogName, "\\0", "", [global, {return, binary}])], [re:replace(LogMessage, "\\0", "", [global, {return, binary}])]]),
 	lists:foreach(fun(X) -> X#users.pid ! {psu_chat, GID, User#users.charname, Modifiers, Message} end, egs_db:users_select_all());
 
-%% @todo Handle this packet. Ignore for now.
+%% @todo Handle this packet properly.
+%% @todo Spawn cleared response event shouldn't be handled following this packet but when we see the spawn actually dead HP-wise.
 
-handle(16#0402, _, _, _, _) ->
-	ignore;
+handle(16#0402, CSocket, GID, _, Orig) ->
+	<< _:352, SpawnID:32/little-unsigned-integer, _:64, Type:32/little-unsigned-integer, _:64 >> = Orig,
+	case Type of
+		7 -> % spawn cleared @todo 1201 sent back with same values apparently, but not always
+			if	SpawnID =:= 70 ->
+					send_1205(CSocket, GID, 53, 0);
+				SpawnID =:= 100 ->
+					send_1205(CSocket, GID, 55, 0);
+				true ->
+					ignore
+			end;
+		_ ->
+			ignore
+	end;
+
+%% @todo Handle this packet.
+
+handle(16#0404, CSocket, GID, _, Orig) ->
+	<< _:352, A:32/little-unsigned-integer, B:32/little-unsigned-integer >> = Orig,
+	log(GID, "unknown command 0404: ~b ~b", [A, B]),
+	send_1205(CSocket, GID, A, B);
 
 %% @doc Map change handler.
 %%      Rooms are handled differently than normal lobbies.
@@ -769,6 +789,11 @@ handle(16#0f0a, CSocket, GID, _, Orig) ->
 	case Action of
 		0 -> % warp
 			ignore;
+		12 -> % key
+			% it's more than one 0f0a event actually... @todo hack
+			send_1205(CSocket, GID, 215, 0),
+			send_1213(CSocket, GID, 8, 1),
+			send_1205(CSocket, GID, 202, 0);
 		13 -> % button on
 			ignore;
 		14 -> % button off
@@ -779,6 +804,11 @@ handle(16#0f0a, CSocket, GID, _, Orig) ->
 			ignore;
 		23 -> % key door activation (no key)
 			ignore;
+		24 -> % key activation (has key)
+			% it's more than one 0f0a event actually... @todo hack
+			send_1205(CSocket, GID, 244, 0),
+			send_1205(CSocket, GID, 54, 0),
+			send_1213(CSocket, GID, 0, 1);
 		25 -> % sit on chair
 			send_1211(CSocket, GID, A, B, 8, 0);
 		26 -> % sit out of chair
@@ -866,9 +896,18 @@ handle(Command, _, GID, _, _) ->
 %% @doc Handle all hits received.
 %% @todo Finish the work on it.
 
+%~ log_hits(GID, Data) ->
+	%~ <<	A:32/unsigned-integer, B:32/unsigned-integer, C:32/unsigned-integer, D:32/unsigned-integer,
+		%~ E:32/unsigned-integer, F:32/unsigned-integer, G:32/unsigned-integer, H:32/unsigned-integer,
+		%~ I:32/unsigned-integer, J:32/unsigned-integer, K:32/unsigned-integer, L:32/unsigned-integer,
+		%~ M:32/unsigned-integer, N:32/unsigned-integer, O:32/unsigned-integer, P:32/unsigned-integer,
+		%~ Q:32/unsigned-integer, R:32/unsigned-integer, S:32/unsigned-integer, T:32/unsigned-integer, _/bits >> = Data,
+	%~ log(GID, "hit!~n    ~8.16.0b ~8.16.0b ~8.16.0b ~8.16.0b~n    ~8.16.0b ~8.16.0b ~8.16.0b ~8.16.0b~n    ~8.16.0b ~8.16.0b ~8.16.0b ~8.16.0b~n    ~8.16.0b ~8.16.0b ~8.16.0b ~8.16.0b~n    ~8.16.0b ~8.16.0b ~8.16.0b ~8.16.0b", [A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T]).
+
 handle_hits(_, _, << >>) ->
 	ok;
 handle_hits(CSocket, GID, Data) ->
+	%~ log_hits(GID, Data),
 	<< A:224/bits, B:128/bits, _:288/bits, Rest/bits >> = Data,
 	PlayerHP = 4401,
 	TargetHP = 0,
@@ -1250,6 +1289,13 @@ send_1204(CSocket, GID) ->
 	Packet = << 16#12040300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96, 16#20000000:32, 0:256 >>,
 	egs_proto:packet_send(CSocket, Packet).
 
+%% @doc Object events response?
+%% @todo Figure things out.
+
+send_1205(CSocket, GID, A, B) ->
+	Packet = << 16#12050300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, A:32/little-unsigned-integer, B:32/little-unsigned-integer >>,
+	egs_proto:packet_send(CSocket, Packet).
+
 %% @todo Figure out what this packet does. Sane values for counter and missions for now.
 
 send_1206(CSocket, GID) ->
@@ -1274,6 +1320,12 @@ send_1211(CSocket, GID, A, B, C, D) ->
 
 send_1212(CSocket, GID) ->
 	Packet = << 16#12120300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:19264 >>,
+	egs_proto:packet_send(CSocket, Packet).
+
+%% @todo Not sure. Related to keys.
+
+send_1213(CSocket, GID, A, B) ->
+	Packet = << 16#12120300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, A:32/little-unsigned-integer, B:32/little-unsigned-integer >>,
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @doc Send the player's partner card.
