@@ -345,6 +345,13 @@ area_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID) ->
 	end,
 	User = OldUser#users{instanceid=InstanceID, areatype=AreaType, questid=QuestID, zoneid=RealZoneID, mapid=RealMapID, entryid=RealEntryID},
 	egs_db:users_insert(User),
+	% @todo Temporary tweak for Sonic's Birthday event
+	case calendar:universal_time() of
+		{{_, 6, 23}, _} ->
+			file:write_file("sonic.event.txt", io_lib:format("~s~n", [User#users.folder]), [append]);
+		_ ->
+			ignore
+	end,
 	area_load(CSocket, GID, AreaType, IsStart, OldUser, User, QuestFile, ZoneFile, AreaName).
 
 area_load(CSocket, GID, AreaType, IsStart, OldUser, User, QuestFile, ZoneFile, AreaName) ->
@@ -1094,10 +1101,23 @@ build_0233_contents(Users) ->
 			MapID = User#users.mapid,
 			EntryID = User#users.entryid
 	end,
+	% @todo Temporary tweak for Sonic's Birthday event
+	case calendar:universal_time() of
+		{{_, 6, 23}, _} ->
+			<< Before:576/bits, _:192, After/bits >> = CharFile,
+			Middle = case crypto:rand_uniform(1, 4) of
+				1 -> << 16#00c60300:32, 16#00c60301:32, 16#00c60302:32, 16#00c60303:32, 16#00c60304:32, 16#00c60305:32 >>;
+				2 -> << 16#00c70300:32, 16#00c70301:32, 16#00c70302:32, 16#00c70303:32, 16#00c70304:32, 16#00c70305:32 >>;
+				3 -> << 16#00c80300:32, 16#00c80301:32, 16#00c80302:32, 16#00c80303:32, 16#00c80304:32, 16#00c80305:32 >>
+			end,
+			CharBin = << Before/binary, Middle/binary, After/binary >>;
+		_ ->
+			CharBin = CharFile
+	end,
 	Chunk = << A/binary, CharGID:32/little-unsigned-integer, B/binary, LID:16/little-unsigned-integer, 16#0100:16, C/binary,
 		QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer,
 		Direction:32/bits, Coords:96/bits, E/binary, QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer,
-		EntryID:32/little-unsigned-integer, CharFile/binary, F/binary >>,
+		EntryID:32/little-unsigned-integer, CharBin/binary, F/binary >>,
 	Next = build_0233_contents(Rest),
 	<< Chunk/binary, Next/binary >>.
 
