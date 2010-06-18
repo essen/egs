@@ -789,6 +789,8 @@ handle(16#0f0a, CSocket, GID, _, Orig) ->
 	case Action of
 		0 -> % warp
 			ignore;
+		3 -> % crystal activation
+			ignore;
 		12 -> % key
 			% it's more than one 0f0a event actually... @todo hack
 			send_1205(CSocket, GID, 215, 0),
