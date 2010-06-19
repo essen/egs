@@ -557,23 +557,50 @@ handle(16#0102, _, _, _, _) ->
 %% @todo Currently use a separate file for the data sent for the weapons.
 
 handle(16#0105, CSocket, GID, _, Orig) ->
-	<< _:384, A:32/little-unsigned-integer, ItemID:8, Action:8, B:16, C:32/little-unsigned-integer, _/bits >> = Orig,
+	<< _:384, A:32/little-unsigned-integer, ItemID:8, Action:8, _:8, B:8, C:32/little-unsigned-integer, _/bits >> = Orig,
+	log(GID, "0105 action ~b item ~b (~b ~b ~b)", [Action, ItemID, A, B, C]),
+	Category = case ItemID of
+		% units would be 8, traps would be 12
+		19 -> 2; % armor
+		Y when Y =:= 5; Y =:= 6; Y =:= 7 -> 0; % clothes
+		_ -> 1 % weapons
+	end,
 	case Action of
-		1 -> % equip weapon
-			log(GID, "0105 - equip weapon"),
-			{ok, File} = file:read_file("p/packet0105_1.bin"),
+		1 -> % equip item
+			Filename = case ItemID of
+				% weapons
+				16 -> "p/packet0105_sword.bin";
+				13 -> "p/packet0105_twindaggers.bin";
+				15 -> "p/packet0105_dagger.bin";
+				 9 -> "p/packet0105_rcsm.bin";
+				14 -> "p/packet0105_saber.bin";
+				 8 -> "p/packet0105_mgun.bin";
+				X when X =:= 17; X =:= 18 ->
+					"p/packet0105_twinguns.bin";
+				% armor
+				19 -> "p/packet0105_armor.bin";
+				% clothes
+				X when X =:= 5; X =:= 6; X =:= 7 ->
+					none;
+				_ -> % default: do nothing
+					none
+			end,
+			case Filename of
+				none -> File = << >>;
+				_ -> {ok, File} = file:read_file(Filename)
+			end,
 			Packet = << 16#01050300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer,
-				0:64, GID:32/little-unsigned-integer, A:32/little-unsigned-integer, ItemID, Action, B:16/little-unsigned-integer, C:32/little-unsigned-integer,
+				0:64, GID:32/little-unsigned-integer, A:32/little-unsigned-integer, ItemID, Action, Category, B, C:32/little-unsigned-integer,
 				File/binary >>,
 			egs_proto:packet_send(CSocket, Packet);
-		2 -> % unequip weapon
-			log(GID, "0105 - unequip weapon"),
+		2 -> % unequip item
 			Packet = << 16#01050300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer,
-				0:64, GID:32/little-unsigned-integer, A:32/little-unsigned-integer, ItemID, Action, B:16/little-unsigned-integer, C:32/little-unsigned-integer >>,
+				0:64, GID:32/little-unsigned-integer, A:32/little-unsigned-integer, ItemID, Action, Category, B, C:32/little-unsigned-integer >>,
 			egs_proto:packet_send(CSocket, Packet);
+		5 -> % drop item
+			ignore;
 		_ ->
-			log(GID, "0105 - ignored action ~b", [Action]),
-			ignored
+			ignore
 	end;
 
 %% @doc Shop listing request. Currently return the normal item shop for everything.
