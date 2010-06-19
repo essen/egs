@@ -260,7 +260,7 @@ counter_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID) ->
 	send_0a05(CSocket, GID),
 	% 010d
 	send_0200(CSocket, GID, mission),
-	send_020f(CSocket, ZoneFile, 16#ff),
+	send_020f(CSocket, ZoneFile, 0, 16#ff),
 	send_0205(CSocket, 0, 0, 0, 0),
 	send_100e(CSocket, GID, 16#7fffffff, 0, 0, AreaName, EntryID),
 	send_0215(CSocket, GID, 0),
@@ -394,7 +394,10 @@ area_load(CSocket, GID, AreaType, IsStart, OldUser, User, QuestFile, ZoneFile, A
 			end,
 			% 010d
 			send_0200(CSocket, GID, AreaType),
-			send_020f(CSocket, ZoneFile, Season);
+			Layout = if IsStart =:= true -> crypto:rand_uniform(0, 4);
+				true -> 0
+			end,
+			send_020f(CSocket, ZoneFile, Layout, Season);
 		true -> ignore
 	end,
 	send_0205(CSocket, User#users.zoneid, User#users.mapid, User#users.entryid, IsSeasonal),
@@ -1046,10 +1049,10 @@ send_020e(CSocket, Filename) ->
 
 %% @doc Send the zone file to be loaded.
 
-send_020f(CSocket, Filename, Season) ->
+send_020f(CSocket, Filename, Layout, Season) ->
 	{ok, File} = file:read_file(Filename),
 	Size = byte_size(File),
-	Packet = << 16#020f0300:32, 0:288, 0, Season, 0:16, Size:32/little-unsigned-integer, File/binary >>,
+	Packet = << 16#020f0300:32, 0:288, Layout, Season, 0:16, Size:32/little-unsigned-integer, File/binary >>,
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @todo No idea what this do. Nor why it's sent twice when loading a counter.
