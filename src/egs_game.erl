@@ -317,7 +317,6 @@ area_get_season(QuestID) ->
 	end.
 
 %% @doc Load the given map as a standard lobby.
-%% @todo Probably save the map type in the users table.
 
 area_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID) ->
 	OldUser = egs_db:users_select(GID),
@@ -718,7 +717,6 @@ handle(16#0404, CSocket, GID, _, Orig) ->
 
 %% @doc Map change handler.
 %%      Rooms are handled differently than normal lobbies.
-%% @todo Load 'Your room' correctly.
 %% @todo When changing lobby to the room, 0230 must also be sent. Same when going from room to lobby.
 
 handle(16#0807, CSocket, GID, _, Orig) ->
@@ -774,7 +772,6 @@ handle(16#0c07, CSocket, GID, _, _) ->
 	send_0c08(CSocket, GID, ok);
 
 %% @doc Abort mission handler.
-%% @todo Warp the player to the lobby if he's in a mission. No need if he's in a counter though.
 
 handle(16#0c0e, CSocket, GID, _, _) ->
 	send_1006(CSocket, GID, 11),
@@ -1295,8 +1292,6 @@ send_1006(CSocket, GID, N) ->
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @doc Send the player's current location.
-%% @todo Figure out what the last value is. No counter without it. The value before that is also different for counters.
-%% @todo Handle correctly after unifying the area loading code.
 
 send_100e(CSocket, GID, QuestID, ZoneID, MapID, Location, CounterID) ->
 	UCS2Location = << << X:8, 0:8 >> || X <- Location >>,
