@@ -1054,8 +1054,9 @@ send_021e(CSocket) ->
 %% @todo Currently only have universe number 2, named EGS Test.
 
 send_0222(CSocket, GID) ->
+	UCS2Name = << << X:8, 0:8 >> || X <- "EGS Test" >>,
 	Packet = << 16#02220300:32, 0:32, 16#00001200:32, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
-		2:32/little-unsigned-integer, 0:32, 16#45, 0, 16#47, 0, 16#53, 0, 16#20, 0, 16#54, 0, 16#65, 0, 16#73, 0, 16#74, 0:24 >>,
+		2:32/little-unsigned-integer, 0:32, UCS2Name/binary, 0:16 >>,
 	egs_proto:packet_send(CSocket, Packet).
 
 %% @todo Not sure. Sent when going to or from room.
