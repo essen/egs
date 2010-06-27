@@ -1112,21 +1112,10 @@ build_0233_contents(Users) ->
 	{ok, CharFile} = file:read_file(io_lib:format("save/~s/~b-character", [User#users.folder, User#users.charnumber])),
 	CharGID = User#users.gid,
 	LID = User#users.lid,
-	case User#users.coords of % TODO: temporary? undefined handling
-		undefined ->
-			Direction = << 0:32 >>,
-			Coords = << 0:96 >>,
-			QuestID = 1100000,
-			ZoneID = 0,
-			MapID = 1,
-			EntryID = 0;
-		_ ->
-			Direction = User#users.direction,
-			Coords = User#users.coords,
-			QuestID = User#users.questid,
-			ZoneID = User#users.zoneid,
-			MapID = User#users.mapid,
-			EntryID = User#users.entryid
+	% TODO: temporary? undefined handling
+	#users{direction=Direction, coords=Coords, questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID} = case User#users.coords of
+		undefined -> #users{direction= << 0:32 >>, coords= << 0:96 >>, questid=1100000, zoneid=0, mapid=1, entryid=0};
+		_ -> User
 	end,
 	% @todo Temporary tweak for Sonic's Birthday event
 	case calendar:universal_time() of
