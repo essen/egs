@@ -96,8 +96,8 @@ accept(LSocket, SPid) ->
 process(CSocket, Version) ->
 	case egs_proto:packet_recv(CSocket, 5000) of
 		{ok, Orig} ->
-			<< _:32, Command:16/unsigned-integer, _/bits >> = Orig,
-			process_handle(Command, CSocket, Version, Orig);
+			{command, Command, _, Data} = egs_proto:packet_parse(Orig),
+			process_handle(Command, CSocket, Version, Data);
 		{error, timeout} ->
 			reload,
 			?MODULE:process(CSocket, Version);
@@ -107,8 +107,7 @@ process(CSocket, Version) ->
 
 %% @doc Game server auth request handler.
 
-process_handle(16#020d, CSocket, Version, Orig) ->
-	<< _:352, GID:32/little-unsigned-integer, Auth:32/bits, _/bits >> = Orig,
+process_handle(16#020d, CSocket, Version, << GID:32/little-unsigned-integer, Auth:32/bits, _/bits >>) ->
 	case egs_db:users_select(GID) of
 		error ->
 			log(GID, "can't find user, closing"),
@@ -131,8 +130,7 @@ process_handle(16#020d, CSocket, Version, Orig) ->
 
 %% @doc Platform information handler. Obtain the game version.
 
-process_handle(16#080e, CSocket, _, Orig) ->
-	<< _:416, Version:32/little-unsigned-integer, _/bits >> = Orig,
+process_handle(16#080e, CSocket, _, << _:64, Version:32/little-unsigned-integer, _/bits >>) ->
 	?MODULE:process(CSocket, Version);
 
 %% @doc Unknown command handler. Do nothing.
@@ -147,8 +145,8 @@ process_handle(Command, CSocket, Version, _) ->
 char_select(CSocket, GID, Version) ->
 	case egs_proto:packet_recv(CSocket, 5000) of
 		{ok, Orig} ->
-			<< _:32, Command:16/unsigned-integer, _/bits >> = Orig,
-			char_select_handle(Command, CSocket, GID, Version, Orig);
+			{command, Command, _, Data} = egs_proto:packet_parse(Orig),
+			char_select_handle(Command, CSocket, GID, Version, Data);
 		{error, timeout} ->
 			egs_proto:send_keepalive(CSocket),
 			reload,
@@ -160,17 +158,15 @@ char_select(CSocket, GID, Version) ->
 
 %% @doc Character selection handler.
 
-char_select_handle(16#020b, CSocket, GID, Version, Orig) ->
-	<< _:352, Number:32/little-unsigned-integer, _/bits >> = Orig,
+char_select_handle(16#020b, CSocket, GID, Version, << Number:32/little-unsigned-integer, _/bits >>) ->
 	log(GID, "selected character ~b", [Number]),
 	char_select_load(CSocket, GID, Version, Number);
 
 %% @doc Character creation handler.
 
-char_select_handle(16#0d02, CSocket, GID, Version, Orig) ->
+char_select_handle(16#0d02, CSocket, GID, Version, << Number:32/little-unsigned-integer, Char/bits >>) ->
 	log(GID, "character creation"),
 	User = egs_db:users_select(GID),
-	<< _:352, Number:32/little-unsigned-integer, Char/bits >> = Orig,
 	_ = file:make_dir(io_lib:format("save/~s", [User#users.folder])),
 	file:write_file(io_lib:format("save/~s/~b-character", [User#users.folder, Number]), Char),
 	file:write_file(io_lib:format("save/~s/~b-character.options", [User#users.folder, Number]), << 0:192 >>),
@@ -480,17 +476,13 @@ loop(CSocket, GID, Version, SoFar) ->
 	end.
 
 %% @doc Dispatch the command to the right handler.
-%%      Command 0b05 uses the channel for something else. Conflicts could occur. Better to just ignore it anyway.
 
 dispatch(CSocket, GID, Version, Orig) ->
-	<< _:32, Command:16/unsigned-integer, Channel:8/little-unsigned-integer, _/bits >> = Orig,
-	case [Command, Channel] of
-		[16#0b05, _] ->
-			ignore;
-		[_, 1] ->
-			broadcast(Command, GID, Orig);
-		_ ->
-			handle(Command, CSocket, GID, Version, Orig)
+	{command, Command, Channel, Data} = egs_proto:packet_parse(Orig),
+	case Channel of
+		ignore -> ignore;
+		1 -> broadcast(Command, GID, Orig);
+		_ -> handle(Command, CSocket, GID, Version, Data)
 	end.
 
 %% @doc Position change broadcast handler. Save the position and then dispatch it.
@@ -551,8 +543,8 @@ handle(16#0102, _, _, _, _) ->
 %% @todo Apparently B is always ItemID+1. Not sure why.
 %% @todo Currently use a separate file for the data sent for the weapons.
 
-handle(16#0105, CSocket, GID, _, Orig) ->
-	<< _:384, A:32/little-unsigned-integer, ItemID:8, Action:8, _:8, B:8, C:32/little-unsigned-integer, _/bits >> = Orig,
+handle(16#0105, CSocket, GID, _, Data) ->
+	<< _:32, A:32/little-unsigned-integer, ItemID:8, Action:8, _:8, B:8, C:32/little-unsigned-integer, _/bits >> = Data,
 	log(GID, "0105 action ~b item ~b (~b ~b ~b)", [Action, ItemID, A, B, C]),
 	Category = case ItemID of
 		% units would be 8, traps would be 12
@@ -601,8 +593,8 @@ handle(16#0105, CSocket, GID, _, Orig) ->
 %% @doc Shop listing request. Currently return the normal item shop for everything.
 %% @todo Return the other shops appropriately.
 
-handle(16#010a, CSocket, GID, _, Orig) ->
-	<< _:384, A:32/little-unsigned-integer, B:32/little-unsigned-integer, C:32/little-unsigned-integer >> = Orig,
+handle(16#010a, CSocket, GID, _, Data) ->
+	<< _:32, A:32/little-unsigned-integer, B:32/little-unsigned-integer, C:32/little-unsigned-integer >> = Data,
 	log(GID, "shop listing request (~b, ~b, ~b)", [A, B, C]),
 	{ok, File} = file:read_file("p/itemshop.bin"),
 	Packet = << 16#010a0300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32,
@@ -612,8 +604,8 @@ handle(16#010a, CSocket, GID, _, Orig) ->
 %% @doc Character death, and more, handler. Warp to 4th floor for now.
 %% @todo Recover from death correctly.
 
-handle(16#0110, CSocket, GID, _, Orig) ->
-	<< _:384, A:32/little-unsigned-integer, B:32/little-unsigned-integer, C:32/little-unsigned-integer >> = Orig,
+handle(16#0110, CSocket, GID, _, Data) ->
+	<< _:32, A:32/little-unsigned-integer, B:32/little-unsigned-integer, C:32/little-unsigned-integer >> = Data,
 	case B of
 		2 -> % triggered when looking at the type menu
 			send_0113(CSocket, GID);
@@ -637,8 +629,7 @@ handle(16#021d, CSocket, _, _, _) ->
 %%      When selecting 'Reload', reload the character in the current lobby.
 %% @todo There's probably an entryid given in the uni selection packet.
 
-handle(16#021f, CSocket, GID, _, Orig) ->
-	<< _:352, Uni:32/little-unsigned-integer, _/bits >> = Orig,
+handle(16#021f, CSocket, GID, _, << Uni:32/little-unsigned-integer, _/bits >>) ->
 	case Uni of
 		0 -> % cancelled uni selection
 			ignore;
@@ -669,13 +660,13 @@ handle(16#0302, _, GID, _, _) ->
 %%      Disregard the name sent by the server in later versions of the game. Use the name saved in memory instead, to prevent client-side editing.
 %% @todo Only broadcast to people in the same map.
 
-handle(16#0304, _, GID, Version, Orig) ->
+handle(16#0304, _, GID, Version, Data) ->
 	User = egs_db:users_select(GID),
 	case Version of
 		0 -> % AOTI v2.000
-			<< _:416, Modifiers:128/bits, Message/bits >> = Orig;
+			<< _:64, Modifiers:128/bits, Message/bits >> = Data;
 		_ -> % Above
-			<< _:416, Modifiers:128/bits, _:512, Message/bits >> = Orig
+			<< _:64, Modifiers:128/bits, _:512, Message/bits >> = Data
 	end,
 	[LogName|_] = re:split(User#users.charname, "\\0\\0", [{return, binary}]),
 	[TmpMessage|_] = re:split(Message, "\\0\\0", [{return, binary}]),
@@ -686,8 +677,8 @@ handle(16#0304, _, GID, Version, Orig) ->
 %% @todo Handle this packet properly.
 %% @todo Spawn cleared response event shouldn't be handled following this packet but when we see the spawn actually dead HP-wise.
 
-handle(16#0402, CSocket, GID, _, Orig) ->
-	<< _:352, SpawnID:32/little-unsigned-integer, _:64, Type:32/little-unsigned-integer, _:64 >> = Orig,
+handle(16#0402, CSocket, GID, _, Data) ->
+	<< SpawnID:32/little-unsigned-integer, _:64, Type:32/little-unsigned-integer, _:64 >> = Data,
 	case Type of
 		7 -> % spawn cleared @todo 1201 sent back with same values apparently, but not always
 			if	SpawnID =:= 70 ->
@@ -703,8 +694,8 @@ handle(16#0402, CSocket, GID, _, Orig) ->
 
 %% @todo Handle this packet.
 
-handle(16#0404, CSocket, GID, _, Orig) ->
-	<< _:352, A:32/little-unsigned-integer, B:32/little-unsigned-integer >> = Orig,
+handle(16#0404, CSocket, GID, _, Data) ->
+	<< A:32/little-unsigned-integer, B:32/little-unsigned-integer >> = Data,
 	log(GID, "unknown command 0404: ~b ~b", [A, B]),
 	send_1205(CSocket, GID, A, B);
 
@@ -712,17 +703,17 @@ handle(16#0404, CSocket, GID, _, Orig) ->
 %%      Rooms are handled differently than normal lobbies.
 %% @todo When changing lobby to the room, 0230 must also be sent. Same when going from room to lobby.
 
-handle(16#0807, CSocket, GID, _, Orig) ->
-	<< _:352, QuestID:32/little-unsigned-integer, ZoneID:16/little-unsigned-integer,
-		MapID:16/little-unsigned-integer, EntryID:16/little-unsigned-integer, _/bits >> = Orig,
+handle(16#0807, CSocket, GID, _, Data) ->
+	<< QuestID:32/little-unsigned-integer, ZoneID:16/little-unsigned-integer,
+		MapID:16/little-unsigned-integer, EntryID:16/little-unsigned-integer, _/bits >> = Data,
 	log(GID, "map change (~b,~b,~b,~b)", [QuestID, ZoneID, MapID, EntryID]),
 	area_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID);
 
 %% @doc Mission counter handler.
 
-handle(16#0811, CSocket, GID, _, Orig) ->
-	<< _:352, QuestID:32/little-unsigned-integer, ZoneID:16/little-unsigned-integer,
-		MapID:16/little-unsigned-integer, EntryID:16/little-unsigned-integer, _/bits >> = Orig,
+handle(16#0811, CSocket, GID, _, Data) ->
+	<< QuestID:32/little-unsigned-integer, ZoneID:16/little-unsigned-integer,
+		MapID:16/little-unsigned-integer, EntryID:16/little-unsigned-integer, _/bits >> = Data,
 	log(GID, "mission counter (~b,~b,~b,~b)", [QuestID, ZoneID, MapID, EntryID]),
 	counter_load(CSocket, GID, QuestID, ZoneID, MapID, EntryID);
 
@@ -735,15 +726,13 @@ handle(16#0812, CSocket, GID, _, _) ->
 %% @doc Item description request.
 %% @todo Send something other than just "dammy".
 
-handle(16#0a10, CSocket, GID, _, Orig) ->
-	<< _:352, ItemID:32/unsigned-integer >> = Orig,
+handle(16#0a10, CSocket, GID, _, << ItemID:32/unsigned-integer >>) ->
 	send_0a11(CSocket, GID, ItemID, "dammy");
 
 %% @doc Start mission handler.
 %% @todo Forward the mission start to other players of the same party, whatever their location is.
 
-handle(16#0c01, CSocket, GID, _, Orig) ->
-	<< _:352, QuestID:32/little-unsigned-integer >> = Orig,
+handle(16#0c01, CSocket, GID, _, << QuestID:32/little-unsigned-integer >>) ->
 	log(GID, "start mission ~b", [QuestID]),
 	send_170c(CSocket, GID),
 	send_1020(CSocket, GID),
@@ -786,17 +775,16 @@ handle(16#0c0f, CSocket, GID, _, _) ->
 %%      Just reply with a success value for now.
 %% @todo God save the flags.
 
-handle(16#0d04, CSocket, GID, _, Orig) ->
-	<< _:352, Flag:128/bits, A:16/bits, _:8, B/bits >> = Orig,
+handle(16#0d04, CSocket, GID, _, Data) ->
+	<< Flag:128/bits, A:16/bits, _:8, B/bits >> = Data,
 	log(GID, "flag handler for ~s", [re:replace(Flag, "\\0+", "", [global, {return, binary}])]),
 	Packet = << 16#0d040300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Flag/binary, A/binary, 1, B/binary >>,
 	egs_proto:packet_send(CSocket, Packet);
 
 %% @doc Options changes handler.
 
-handle(16#0d07, _, GID, _, Orig) ->
+handle(16#0d07, _, GID, _, << Options/bits >>) ->
 	log(GID, "options changes"),
-	<< _:352, Options/bits >> = Orig,
 	User = egs_db:users_select(GID),
 	file:write_file(io_lib:format("save/~s/~b-character.options", [User#users.folder, User#users.charnumber]), Options);
 
@@ -804,15 +792,15 @@ handle(16#0d07, _, GID, _, Orig) ->
 %% @todo Finish the work on it.
 %% @todo First value at 2C is the number of hits. We don't need to know it though.
 
-handle(16#0e00, CSocket, GID, _, Orig) ->
-	<< _:448, Data/bits >> = Orig,
-	handle_hits(CSocket, GID, Data);
+handle(16#0e00, CSocket, GID, _, Data) ->
+	<< _:96, Hits/bits >> = Data,
+	handle_hits(CSocket, GID, Hits);
 
 %% @doc Object event handler.
 %% @todo Handle all events appropriately.
 
-handle(16#0f0a, CSocket, GID, _, Orig) ->
-	<< _:448, A:32/little-unsigned-integer, _:64, B:32/little-unsigned-integer, _:272, Action:8, _/bits >> = Orig,
+handle(16#0f0a, CSocket, GID, _, Data) ->
+	<< _:96, A:32/little-unsigned-integer, _:64, B:32/little-unsigned-integer, _:272, Action:8, _/bits >> = Data,
 	case Action of
 		0 -> % warp
 			ignore;
@@ -883,8 +871,8 @@ handle(16#1710, CSocket, GID, _, _) ->
 %% @doc Dialog request handler. Do what we can.
 %% @todo Handle correctly.
 
-handle(16#1a01, CSocket, GID, _, Orig) ->
-	<< _:384, A:8, B:8, _:16, C:8, _/bits >> = Orig,
+handle(16#1a01, CSocket, GID, _, Data) ->
+	<< _:32, A:8, B:8, _:16, C:8, _/bits >> = Data,
 	case [A, B, C] of
 		[ 0, 0, 2] ->
 			log(GID, "lumilass (and more?)"),

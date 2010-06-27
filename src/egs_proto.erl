@@ -119,6 +119,16 @@ packet_split(Packet, Result) ->
 			end
 	end.
 
+%% @doc Parse the packet header returns the header information along with the data chunk.
+%%      0b05 is handled differently because it's only 16 bytes long and use a different format.
+
+packet_parse(<< _:32, 16#0b05:16, _/bits >>) ->
+	{command, 16#0b05, ignore, ignore};
+
+packet_parse(Orig) ->
+	<< _:32, Command:16/unsigned-integer, Channel:8, _:296, Data/bits >> = Orig,
+	{command, Command, Channel, Data}.
+
 %% @doc Shortcut for send_global/4.
 
 send_global(CSocket, Type, Message) ->
