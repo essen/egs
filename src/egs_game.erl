@@ -968,12 +968,7 @@ send_0200(CSocket, GID, ZoneType) ->
 %% @todo Figure out what the other things are.
 
 send_0201(CSocket, GID, User, Char) ->
-	QuestID = User#users.questid,
-	ZoneID = User#users.zoneid,
-	MapID = User#users.mapid,
-	EntryID = User#users.entryid,
-	CharGID = User#users.gid,
-	CharLID = User#users.lid,
+	#users{gid=CharGID, lid=CharLID, questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID} = User,
 	{ok, File} = file:read_file("p/packet0201.bin"),
 	<< _:96, A:32/bits, _:96, B:32/bits, _:256, D:32/bits, _:2656, After/bits >> = File,
 	Packet = << 16#02010300:32, 0:32, A/binary, CharGID:32/little-unsigned-integer, 0:64, B/binary, GID:32/little-unsigned-integer,
