@@ -454,8 +454,9 @@ loop(SoFar) ->
 		{psu_keepalive} ->
 			egs_proto:send_keepalive(get(socket)),
 			?MODULE:loop(SoFar);
-		{psu_player_spawn, Spawn} ->
-			send_spawn(Spawn),
+		{psu_player_spawn, _Spawn} ->
+			% Should be something along the lines of 203 201 204 or something.
+			send_0233(egs_db:users_select_others_in_area(egs_db:users_select(get(gid)))),
 			?MODULE:loop(SoFar);
 		{psu_player_unspawn, Spawn} ->
 			send_0204(Spawn#users.gid, Spawn#users.lid, 5),
@@ -1379,13 +1380,6 @@ send_1a04() ->
 send_1a07() ->
 	send(<< (header(16#1a07))/binary, 16#085b5d0a:32, 16#3a200000:32, 0:32,
 		16#01010101:32, 16#01010101:32, 16#01010101:32, 16#01010101:32 >>).
-
-%% @todo Figure out what the other things are and do it right.
-%% @todo Temporarily send 233 until the correct process is figured out.
-%%       Should be something along the lines of 203 201 204.
-
-send_spawn(_) ->
-	send_0233(egs_db:users_select_others_in_area(egs_db:users_select(get(gid)))).
 
 %% @doc Log message to the console.
 
