@@ -936,6 +936,12 @@ handle_hits(Data) ->
 		0:32, TargetHP:32, 0:32, B/binary, 16#04320000:32, 16#80000000:32, 16#26030000:32, 16#89068d00:32, 16#0c1c0105:32 >>),
 	handle_hits(Rest).
 
+%% @doc Build the packet header.
+
+header(Command) ->
+	GID = get(gid),
+	<< Command:16/unsigned-integer, 16#0300:16, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64 >>.
+
 %% @doc Send the given packet to the client.
 %% @todo Consolidate the receive and send functions better.
 
@@ -967,9 +973,7 @@ send_0200(ZoneType) ->
 		_ ->
 			Var = << 16#00040000:32, 0:160, 16#00140000:32 >>
 	end,
-	GID = get(gid),
-	send(<< 16#02000300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96, 16#01000000:32,
-		16#ffffffff:32, Var/binary, 16#ffffffff:32, 16#ffffffff:32 >>).
+	send(<< (header(16#0200))/binary, 0:32, 16#01000000:32, 16#ffffffff:32, Var/binary, 16#ffffffff:32, 16#ffffffff:32 >>).
 
 %% @todo Figure out what the other things are.
 
@@ -1007,8 +1011,7 @@ send_0205(MapType, MapNumber, MapEntry, IsSeasonal) ->
 %% @todo Last value seems to be 2 most of the time. Never 0 though. Apparently counters have it at 4.
 
 send_0208() ->
-	GID = get(gid),
-	send(<< 16#02080300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 2:32/little-unsigned-integer >>).
+	send(<< (header(16#0208))/binary, 2:32/little-unsigned-integer >>).
 
 %% @todo No idea what this one does. For unknown reasons it uses channel 2.
 
@@ -1033,14 +1036,12 @@ send_020f(Filename, Layout, Season) ->
 %% @todo No idea what this do. Nor why it's sent twice when loading a counter.
 
 send_0215(N) ->
-	GID = get(gid),
-	send(<< 16#02150300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, N:32/little-unsigned-integer >>).
+	send(<< (header(16#0215))/binary, N:32/little-unsigned-integer >>).
 
 %% @todo End of character loading. Just send it.
 
 send_021b() ->
-	GID = get(gid),
-	send(<< 16#021b0300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64 >>).
+	send(header(16#021b)).
 
 %% @doc Send the list of available universes.
 
@@ -1106,22 +1107,20 @@ build_0233_contents(Users) ->
 %% @todo Probably.
 
 send_0236() ->
-	GID = get(gid),
-	send(<< 16#02360300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64 >>).
+	send(header(16#0236)).
 
 %% @doc Send a chat command. Handled differently at v2.0000 and all versions starting somewhere above that.
 
 send_0304(FromGID, FromName, Modifiers, Message) ->
 	case get(version) of
-		0 -> send(<< 16#03040300:32/unsigned-integer, 0:288, 16#00001200:32, FromGID:32/little-unsigned-integer, Modifiers:128/bits, Message/bits >>);
+		0 -> send(<< 16#03040300:32, 0:288, 16#00001200:32, FromGID:32/little-unsigned-integer, Modifiers:128/bits, Message/bits >>);
 		_ -> send(<< 16#03040300:32, 0:288, 16#00001200:32, FromGID:32/little-unsigned-integer, Modifiers:128/bits, FromName:512/bits, Message/bits >>)
 	end.
 
 %% @todo Inventory related. No idea what it does.
 
 send_0a05() ->
-	GID = get(gid),
-	send(<< 16#0a050300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64 >>).
+	send(header(16#0a05)).
 
 %% @todo Inventory related. Figure out everything in this packet and handle it correctly.
 %% @todo It sends 60 values so it's probably some kind of options for all 60 items in the inventory?
@@ -1143,15 +1142,12 @@ send_0a0a() ->
 send_0a11(ItemID, ItemDesc) ->
 	Size = 1 + length(ItemDesc),
 	UCS2Desc = << << X:8, 0:8 >> || X <- ItemDesc >>,
-	GID = get(gid),
-	send(<< 16#0a110300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
-		ItemID:32/unsigned-integer, Size:32/little-unsigned-integer, UCS2Desc/binary, 0:16 >>).
+	send(<< (header(16#0a11))/binary, ItemID:32/unsigned-integer, Size:32/little-unsigned-integer, UCS2Desc/binary, 0:16 >>).
 
 %% @doc Init quest.
 
 send_0c00(QuestID) ->
-	GID = get(gid),
-	send(<< 16#0c000300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, QuestID:32/little-unsigned-integer,
+	send(<< (header(16#0c00))/binary, QuestID:32/little-unsigned-integer,
 		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
 		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
 		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
@@ -1160,8 +1156,7 @@ send_0c00(QuestID) ->
 %% @todo Figure out last 4 bytes!
 
 send_0c02() ->
-	GID = get(gid),
-	send(<< 16#0c020300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96 >>).
+	send(<< (header(16#0c02))/binary, 0:32 >>).
 
 %% @doc Send the huge pack of quest files available in the counter.
 
@@ -1174,14 +1169,12 @@ send_0c06(Filename) ->
 
 send_0c08(Response) ->
 	Value = if Response =:= ok -> 0; true -> 1 end,
-	GID = get(gid),
-	send(<< 16#0c080300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Value:32 >>).
+	send(<< (header(16#0c08))/binary, Value:32 >>).
 
 %% @doc Send the trial start notification.
 
 send_0c09() ->
-	GID = get(gid),
-	send(<< 16#0c090300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:128 >>).
+	send(<< (header(16#0c09))/binary, 0:64 >>).
 
 %% @doc Send the counter's mission options (0 = invisible, 2 = disabled, 3 = available).
 
@@ -1195,8 +1188,7 @@ send_0c10(Options) ->
 %% @todo The values after the Char variable are the flags. Probably use bits to define what flag is and isn't set. Handle correctly.
 
 send_0d01(Char, Options) ->
-	GID = get(gid),
-	send(<< 16#0d010300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Char/binary,
+	send(<< (header(16#0d01))/binary, Char/binary,
 		16#ffbbef1c:32, 16#f8ff0700:32, 16#fc810916:32, 16#7802134c:32,
 		16#b0c0040f:32, 16#7cf0e583:32, 16#b7bce0c6:32, 16#7ff8f963:32,
 		16#3fd7ffff:32, 16#fff7ffff:32, 16#f3ff63e0:32, 16#1fe00000:32,
@@ -1233,24 +1225,21 @@ send_1005(Char) ->
 	<< _:352, Before:160/bits, _:608, After/bits >> = File,
 	<< Name:512/bits, _/bits >> = Char,
 	GID = get(gid),
-	send(<< 16#10050300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Before/binary, GID:32/little-unsigned-integer, 0:64, Name/binary, After/binary >>).
+	send(<< (header(16#1005))/binary, Before/binary, GID:32/little-unsigned-integer, 0:64, Name/binary, After/binary >>).
 
 %% @doc Party-related command probably controlling the party state.
 %%      Value 11 aborts the mission.
 %% @todo Figure out what the packet is.
 
 send_1006(N) ->
-	GID = get(gid),
-	send(<< 16#10060300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, N:32/little-unsigned-integer >>).
+	send(<< (header(16#1006))/binary, N:32/little-unsigned-integer >>).
 
 %% @doc Send the player's current location.
 
 send_100e(QuestID, ZoneID, MapID, Location, CounterID) ->
 	UCS2Location = << << X:8, 0:8 >> || X <- Location >>,
-	GID = get(gid),
-	Packet = << 16#100e0300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
-		1:32/little-unsigned-integer, MapID:16/little-unsigned-integer, ZoneID:16/little-unsigned-integer,
-		QuestID:32/little-unsigned-integer, UCS2Location/binary >>,
+	Packet = << (header(16#100e))/binary, 1:32/little-unsigned-integer, MapID:16/little-unsigned-integer,
+		ZoneID:16/little-unsigned-integer, QuestID:32/little-unsigned-integer, UCS2Location/binary >>,
 	PaddingSize = (128 - byte_size(Packet) - 8) * 8,
 	case CounterID of
 		16#ffffffff ->
@@ -1267,153 +1256,128 @@ send_1015(QuestID) ->
 	[{type, _}, {file, QuestFile}|_] = proplists:get_value(QuestID, ?QUESTS),
 	{ok, File} = file:read_file(QuestFile),
 	Size = byte_size(File),
-	GID = get(gid),
-	send(<< 16#10150300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
-		QuestID:32/little-unsigned-integer, 16#01010000:32, 0:32, Size:32/little-unsigned-integer, File/binary >>).
+	send(<< (header(16#1015))/binary, QuestID:32/little-unsigned-integer, 16#01010000:32, 0:32, Size:32/little-unsigned-integer, File/binary >>).
 
 %% @todo Totally unknown.
 
 send_1020() ->
-	GID = get(gid),
-	send(<< 16#10200300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64 >>).
+	send(header(16#1020)).
 
 %% @todo Figure out what this packet does. Sane values for counter and missions for now.
 
 send_1202() ->
-	GID = get(gid),
-	send(<< 16#12020300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96, 16#10000000:32, 0:64, 16#14000000:32, 0:32 >>).
+	send(<< (header(16#1202))/binary, 0:32, 16#10000000:32, 0:64, 16#14000000:32, 0:32 >>).
 
 %% @todo Figure out what this packet does. Seems it's the same values all the time.
 
 send_1204() ->
-	GID = get(gid),
-	send(<< 16#12040300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96, 16#20000000:32, 0:256 >>).
+	send(<< (header(16#1204))/binary, 0:32, 16#20000000:32, 0:256 >>).
 
 %% @doc Object events response?
 %% @todo Figure things out.
 
 send_1205(A, B) ->
-	GID = get(gid),
-	send(<< 16#12050300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, A:32/little-unsigned-integer, B:32/little-unsigned-integer >>).
+	send(<< (header(16#1205))/binary, A:32/little-unsigned-integer, B:32/little-unsigned-integer >>).
 
 %% @todo Figure out what this packet does. Sane values for counter and missions for now.
 
 send_1206() ->
-	GID = get(gid),
-	send(<< 16#12060300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96, 16#80020000:32, 0:5120 >>).
+	send(<< (header(16#1206))/binary, 0:32, 16#80020000:32, 0:5120 >>).
 
 %% @todo Figure out what this packet does. Sane values for counter and missions for now.
 
 send_1207() ->
-	GID = get(gid),
 	Chunk = << 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 0:224, 16#0000ffff:32, 16#ff000000:32, 16#64000a00:32 >>,
-	send(<< 16#12070300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
-		Chunk/binary, Chunk/binary, Chunk/binary, Chunk/binary, Chunk/binary, Chunk/binary >>).
+	send(<< (header(16#1207))/binary, Chunk/binary, Chunk/binary, Chunk/binary, Chunk/binary, Chunk/binary, Chunk/binary >>).
 
 %% @todo Object interaction? Figure out. C probably the interaction type.
 
 send_1211(A, B, C, D) ->
-	GID = get(gid),
-	send(<< 16#12110300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, A:32/little-unsigned-integer, B:32/little-unsigned-integer, C:32/little-unsigned-integer, D:32/little-unsigned-integer >>).
+	send(<< (header(16#1211))/binary, A:32/little-unsigned-integer, B:32/little-unsigned-integer, C:32/little-unsigned-integer, D:32/little-unsigned-integer >>).
 
 %% @doc Make the client load the quest previously sent.
 
 send_1212() ->
-	GID = get(gid),
-	send(<< 16#12120300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:19264 >>).
+	send(<< (header(16#1212))/binary, 0:19200 >>).
 
 %% @todo Not sure. Related to keys.
 
 send_1213(A, B) ->
-	GID = get(gid),
-	send(<< 16#12120300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, A:32/little-unsigned-integer, B:32/little-unsigned-integer >>).
+	send(<< (header(16#1213))/binary, A:32/little-unsigned-integer, B:32/little-unsigned-integer >>).
 
 %% @doc Send the player's partner card.
 
 send_1500(Char, Number) ->
 	<< CharInfo:576/bits, _/bits >> = Char,
-	GID = get(gid),
-	send(<< 16#15000300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, CharInfo/binary, 0:3072, 16#010401:24, Number:8, 0:64 >>).
+	send(<< (header(16#1500))/binary, CharInfo/binary, 0:3072, 16#010401:24, Number:8, 0:64 >>).
 
 %% @todo Send an empty partner card list.
 
 send_1501() ->
-	GID = get(gid),
-	send(<< 16#15010300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96 >>).
+	send(<< (header(16#1501))/binary, 0:32 >>).
 
 %% @todo Send an empty blacklist.
 
 send_1512() ->
-	GID = get(gid),
-	send(<< 16#15120300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:46144 >>).
+	send(<< (header(16#1512))/binary, 0:46080 >>).
 
 %% @doc Send the player's NPC and PM information.
 
 send_1602() ->
 	{ok, File} = file:read_file("p/npc.bin"),
-	GID = get(gid),
-	send(<< 16#16020300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96, File/binary >>).
+	send(<< (header(16#1602))/binary, 0:32, File/binary >>).
 
 %% @doc Party information.
 %% @todo Handle existing parties.
 
 send_1706(CharName) ->
-	GID = get(gid),
-	send(<< 16#17060300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
-		16#00000300:32, 16#d5c0faff:32, 0:64, CharName/binary, 16#78000000:32, 16#01010000:32,
-		0:1536, 16#0100c800:32, 16#0601010a:32, 16#ffffffff:32, 0:32 >>).
+	send(<< (header(16#1706))/binary, 16#00000300:32, 16#d5c0faff:32, 0:64, CharName/binary,
+		16#78000000:32, 16#01010000:32, 0:1536, 16#0100c800:32, 16#0601010a:32, 16#ffffffff:32, 0:32 >>).
 
 %% @doc Party settings. Item distribution is random for now.
 %% @todo Handle correctly.
 
 send_170a() ->
-	GID = get(gid),
-	send(<< 16#170a0300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#01010c08:32 >>).
+	send(<< (header(16#170a))/binary, 16#01010c08:32 >>).
 
 %% @todo Find what the heck this packet is.
 
 send_170c() ->
 	{ok, File} = file:read_file("p/packet170c.bin"),
-	GID = get(gid),
-	send(<< 16#170c0300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, File/binary >>).
+	send(<< (header(16#170c))/binary, File/binary >>).
 
 %% @doc Send the background to use for the counter.
 %% @todo Background has more info past the first byte.
 
 send_1711(Background) ->
-	GID = get(gid),
-	send(<< 16#17110300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Background:32/little-unsigned-integer >>).
+	send(<< (header(16#1711))/binary, Background:32/little-unsigned-integer >>).
 
 %% @doc Unknown dialog-related handler.
 %% @todo Everything!
 
 send_1a02(A, B, C, D, E) ->
-	GID = get(gid),
-	send(<< 16#1a020300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, A:32/little-unsigned-integer,
-		B:16/little-unsigned-integer, C:16/little-unsigned-integer, D:16/little-unsigned-integer, E:16/little-unsigned-integer >>).
+	send(<< (header(16#1a02))/binary, A:32/little-unsigned-integer, B:16/little-unsigned-integer,
+		C:16/little-unsigned-integer, D:16/little-unsigned-integer, E:16/little-unsigned-integer >>).
 
 %% @doc Lumilass handler. Possibly more.
 %% @todo Figure out how Lumilass work exactly. The 4 bytes before the file may vary.
 
 send_1a03() ->
 	{ok, File} = file:read_file("p/lumilassA.bin"),
-	GID = get(gid),
-	send(<< 16#1a030300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96, File/binary >>).
+	send(<< (header(16#1a03))/binary, 0:32, File/binary >>).
 
-%% @doc PP cube handler. 
+%% @doc PP cube handler.
 %% @todo The 4 bytes before the file may vary. Everything past that is the same. Figure things out.
 
 send_1a04() ->
 	{ok, File} = file:read_file("p/ppcube.bin"),
-	GID = get(gid),
-	send(<< 16#1a040300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:96, File/binary >>).
+	send(<< (header(16#1a04))/binary, 0:32, File/binary >>).
 
 %% @doc Types menu handler.
 %% @todo Handle correctly.
 
 send_1a07() ->
-	GID = get(gid),
-	send(<< 16#1a070300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#085b5d0a:32, 16#3a200000:32, 0:32,
+	send(<< (header(16#1a07))/binary, 16#085b5d0a:32, 16#3a200000:32, 0:32,
 		16#01010101:32, 16#01010101:32, 16#01010101:32, 16#01010101:32 >>).
 
 %% @todo Figure out what the other things are and do it right.
