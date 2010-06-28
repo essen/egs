@@ -752,7 +752,7 @@ handle(16#0c05, _) ->
 %% @todo Handle correctly.
 
 handle(16#0c07, _) ->
-	send_0c08(ok);
+	send_0c08(true);
 
 %% @doc Abort mission handler.
 
@@ -1166,10 +1166,10 @@ send_0c06(Filename) ->
 	send(<< 16#0c060300:32, 0:288, 1:32/little-unsigned-integer, File/binary >>).
 
 %% @doc Reply whether the player is allowed to use the transport option.
-%%      Use 'ok' for allowing it, and 'error' otherwise.
+%%      Use true for allowing it, and false otherwise.
 
 send_0c08(Response) ->
-	Value = if Response =:= ok -> 0; true -> 1 end,
+	Value = if Response =:= true -> 0; true -> 1 end,
 	send(<< (header(16#0c08))/binary, Value:32 >>).
 
 %% @doc Send the trial start notification.
