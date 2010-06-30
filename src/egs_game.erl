@@ -115,11 +115,11 @@ process_handle(16#020d, << GID:32/little-unsigned-integer, Auth:32/bits, _/bits 
 		User ->
 			case User#users.auth of
 				Auth ->
+					put(gid, GID),
 					log("auth success"),
 					LID = 1 + egs_db:next(lobby) rem 1023,
 					Time = calendar:datetime_to_gregorian_seconds(calendar:universal_time()),
 					egs_db:users_insert(#users{gid=GID, pid=self(), socket=CSocket, auth=success, time=Time, folder=User#users.folder, lid=LID}),
-					put(gid, GID),
 					send_0d05(),
 					?MODULE:char_select();
 				_ ->
