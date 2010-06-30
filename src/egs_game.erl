@@ -787,10 +787,14 @@ handle(16#0d04, Data) ->
 
 %% @doc Options changes handler.
 
-handle(16#0d07, << Options/bits >>) ->
+handle(16#0d07, Data) ->
 	log("options changes"),
+	% Translate options into a tuple, validate them and do nothing with it for now
+	Options = psu_characters:options_binary_to_tuple(Data),
+	psu_characters:validate_options(Options),
+	% End of validation
 	User = egs_db:users_select(get(gid)),
-	file:write_file(io_lib:format("save/~s/~b-character.options", [User#users.folder, User#users.charnumber]), Options);
+	file:write_file(io_lib:format("save/~s/~b-character.options", [User#users.folder, User#users.charnumber]), Data);
 
 %% @doc Hit handler.
 %% @todo Finish the work on it.

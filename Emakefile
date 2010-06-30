@@ -24,3 +24,4 @@
 {'src/egs_patch.erl', [{outdir, "ebin"}]}.
 {'src/egs_proto.erl', [{outdir, "ebin"}]}.
 {'src/psu_appearance.erl', [{outdir, "ebin"}]}.
+{'src/psu_characters.erl', [{outdir, "ebin"}]}.
