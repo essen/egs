@@ -18,7 +18,7 @@
 
 -module(egs_game).
 -export([start/0]). % external
--export([supervisor_init/0, supervisor/0, listen/1, accept/2, process_init/1, process/0, char_select/0, area_load/4, loop/1]). % internal
+-export([supervisor_init/0, supervisor/0, listen/1, accept/2, process_init/2, process/0, char_select/0, area_load/4, loop/1]). % internal
 
 -include("include/records.hrl").
 -include("include/network.hrl").
@@ -41,8 +41,6 @@ supervisor_init() ->
 
 supervisor() ->
 	receive
-		{link, Pid} ->
-			link(Pid);
 		{'EXIT', Pid, _} ->
 			supervisor_close(Pid);
 		_ ->
@@ -57,9 +55,9 @@ supervisor() ->
 supervisor_close(Pid) ->
 	try
 		User = egs_db:users_select_by_pid(Pid),
-		log(User#users.gid, "quit"),
+		egs_db:users_delete(User#users.gid),
 		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(User)),
-		egs_db:users_delete(User#users.gid)
+		io:format("game (~p): quit~n", [User#users.gid])
 	catch _:_ ->
 		ignore
 	end.
@@ -76,14 +74,8 @@ accept(LSocket, SPid) ->
 	case ssl:transport_accept(LSocket, 5000) of
 		{ok, CSocket} ->
 			ssl:ssl_accept(CSocket),
-			try
-				Pid = spawn(?MODULE, process_init, [CSocket]),
-				SPid ! {link, Pid},
-				ssl:controlling_process(CSocket, Pid)
-			catch
-				_:_ ->
-					reload
-			end;
+			Pid = spawn(?MODULE, process_init, [CSocket, SPid]),
+			ssl:controlling_process(CSocket, Pid);
 		_ ->
 			reload
 	end,
@@ -91,7 +83,8 @@ accept(LSocket, SPid) ->
 
 %% @doc Initialize the client process by saving the socket to the process dictionary.
 
-process_init(CSocket) ->
+process_init(CSocket, SPid) ->
+	link(SPid),
 	put(socket, CSocket),
 	send_0202(),
 	process().
