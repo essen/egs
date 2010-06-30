@@ -20,3 +20,10 @@
 
 -record(ids, {type, id}).
 -record(users, {gid, pid, socket, auth, time, folder, charnumber, charname, lid, instanceid, areatype, questid, zoneid, mapid, entryid, savedquestid, savedzoneid, savedmapid, savedentryid, direction, coords}).
+
+-record(flesh_appearance, {voicetype, voicepitch, jacket, pants, shoes, ears, face, hairstyle, jacketcolor, pantscolor, shoescolor,
+	lineshieldcolor, badge, eyebrows, eyelashes, eyesgroup, eyes, bodysuit, eyescolory, eyescolorx, lipsintensity, lipscolory, lipscolorx,
+	skincolor, hairstylecolory, hairstylecolorx, proportion, proportionboxx, proportionboxy, faceboxx, faceboxy}).
+-record(metal_appearance, {voicetype, voicepitch, torso, legs, arms, ears, face, headtype, maincolor, lineshieldcolor,
+	eyebrows, eyelashes, eyesgroup, eyes, eyescolory, eyescolorx, bodycolor, subcolor, hairstylecolory, hairstylecolorx,
+	proportion, proportionboxx, proportionboxy, faceboxx, faceboxy}).

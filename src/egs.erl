@@ -21,7 +21,7 @@
 
 -include("include/records.hrl").
 
--define(MODULES, [egs, egs_cron, egs_db, egs_game, egs_login, egs_patch, egs_proto]).
+-define(MODULES, [egs, egs_cron, egs_db, egs_game, egs_login, egs_patch, egs_proto, psu_appearance]).
 
 %% @doc Start all the application servers. Return the PIDs of the listening processes.
 
