@@ -461,6 +461,9 @@ loop(SoFar) ->
 		{psu_player_unspawn, Spawn} ->
 			send_0204(Spawn#users.gid, Spawn#users.lid, 5),
 			?MODULE:loop(SoFar);
+		{psu_warp, QuestID, ZoneID, MapID, EntryID} ->
+			area_load(QuestID, ZoneID, MapID, EntryID),
+			?MODULE:loop(SoFar);
 		{ssl, _, Data} ->
 			{Packets, Rest} = egs_proto:packet_split(<< SoFar/bits, Data/bits >>),
 			[dispatch(Orig) || Orig <- Packets],
