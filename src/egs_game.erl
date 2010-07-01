@@ -925,6 +925,8 @@ handle(Command, _) ->
 
 %% @doc Handle all hits received.
 %% @todo Finish the work on it.
+%% @todo Type EXP.
+%% @todo Boxes give EXP too but it doesn't show up on the screen.
 
 %~ log_hits(Data) ->
 	%~ <<	A:32/unsigned-integer, B:32/unsigned-integer, C:32/unsigned-integer, D:32/unsigned-integer,
@@ -938,15 +940,33 @@ handle_hits(<< >>) ->
 	ok;
 handle_hits(Data) ->
 	%~ log_hits(GID, Data),
-	<< A:224/bits, B:128/bits, _:288/bits, Rest/bits >> = Data,
+	% parse
+	<< A:224/bits, B:128/bits, _:288, Rest/bits >> = Data,
+	<< _:128, TargetID:32/little-unsigned-integer, _/bits >> = A,
+	% retrieve
 	GID = get(gid),
-	PlayerHP = 4401,
+	User = egs_db:users_select(GID),
+	Character = User#users.character,
+	Level = Character#characters.mainlevel,
+	% inflict damage
+	PlayerHP = Character#characters.currenthp,
 	TargetHP = 0,
-	Damage = 58008,
+	Damage = 1,
 	send(<< 16#0e070300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
 		1:32/little-unsigned-integer, 16#01050000:32, Damage:32/little-unsigned-integer,
 		A/binary, 0:64, PlayerHP:32/little-unsigned-integer, 0:32, 16#01000200:32,
 		0:32, TargetHP:32, 0:32, B/binary, 16#04320000:32, 16#80000000:32, 16#26030000:32, 16#89068d00:32, 16#0c1c0105:32 >>),
+	% enemy is dead, give exp
+	LV = 1,
+	EXP = Level#level.exp + 1,
+	Money = 1000,
+	send_0115(GID, TargetID, LV, EXP, Money),
+	% save
+	NewLevel = #level{number=LV, exp=EXP},
+	NewCharacter = Character#characters{mainlevel=NewLevel},
+	NewUser = User#users{character=NewCharacter},
+	egs_db:users_insert(NewUser),
+	% next
 	handle_hits(Rest).
 
 %% @doc Build the packet header.
@@ -974,6 +994,14 @@ send_0113() ->
 	{ok, File} = file:read_file("p/typesinfo.bin"),
 	GID = get(gid),
 	send(<< 16#01130300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, GID:32/little-unsigned-integer, File/binary >>).
+
+%% @doc Update the character's EXP.
+
+send_0115(GID, TargetID, LV, EXP, Money) ->
+	send(<< 16#01150300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, GID:32/little-unsigned-integer,
+		0:32, TargetID:32/little-unsigned-integer, LV:32/little-unsigned-integer, 0:32, 0:32, EXP:32/little-unsigned-integer, 0:32, Money:32/little-unsigned-integer, 16#f5470500:32, 0:96, 0:64,
+		16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32,
+		16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32 >>).
 
 %% @doc Send the zone initialization notification.
 
