@@ -69,14 +69,14 @@ users_select_by_pid(Pid) ->
 %% @doc Select all users. Return a list of #users records.
 
 users_select_all() ->
-	do(qlc:q([X || X <- mnesia:table(users), X#users.charnumber /= undefined])).
+	do(qlc:q([X || X <- mnesia:table(users), (X#users.character)#characters.slot /= undefined])).
 
 %% @doc Select all other users in the same area. Return a list of #users records.
 
 users_select_others_in_area(Self) ->
 	do(qlc:q([X || X <- mnesia:table(users),
 		X#users.gid /= Self#users.gid,
-		X#users.charnumber /= undefined,
+		(X#users.character)#characters.slot /= undefined,
 		X#users.instanceid =:= Self#users.instanceid,
 		X#users.questid =:= Self#users.questid,
 		X#users.zoneid =:= Self#users.zoneid,

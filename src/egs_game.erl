@@ -202,12 +202,19 @@ char_select_handle(Command, _) ->
 %% @doc Load the selected character in the start lobby and start the main game's loop.
 
 char_select_load(Number) ->
-	User = egs_db:users_select(get(gid)),
-	[{status, 1}, {char, Char}, {options, Options}] = data_load(User#users.folder, Number),
-	<< Name:512/bits, _/bits >> = Char,
-	NewRow = User#users{charnumber=Number, charname=Name},
-	egs_db:users_insert(NewRow),
-	char_load(Char, Options, Number),
+	OldUser = egs_db:users_select(get(gid)),
+	[{status, 1}, {char, CharBin}, {options, OptionsBin}] = data_load(OldUser#users.folder, Number),
+	<< Name:512/bits, RaceBin:8, GenderBin:8, ClassBin:8, AppearanceBin:776/bits, _/bits >> = CharBin,
+	psu_characters:validate_name(Name), % TODO: don't validate name when loading character, do it at creation
+	Race = psu_characters:race_binary_to_atom(RaceBin),
+	Gender = psu_characters:gender_binary_to_atom(GenderBin),
+	Class = psu_characters:class_binary_to_atom(ClassBin),
+	Appearance = psu_appearance:binary_to_tuple(Race, AppearanceBin),
+	Options = psu_characters:options_binary_to_tuple(OptionsBin),
+	Character = #characters{slot=Number, name=Name, race=Race, gender=Gender, class=Class, appearance=Appearance, options=Options}, % TODO: temporary set the slot here, won't be needed later
+	User = OldUser#users{character=Character},
+	egs_db:users_insert(User),
+	char_load(User),
 	send_021b(),
 	area_load(1100000, 0, 1, 1),
 	ssl:setopts(get(socket), [{active, true}]),
@@ -227,16 +234,16 @@ data_load(Folder, Number) ->
 
 %% @doc Load and send the character information to the client.
 
-char_load(Char, Options, Number) ->
-	send_0d01(Char, Options),
+char_load(User) ->
+	send_0d01(User),
 	% 0246
 	send_0a0a(),
 	send_1006(5),
-	send_1005(Char),
+	send_1005((User#users.character)#characters.name),
 	send_1006(12),
 	% 0210
 	send_0222(),
-	send_1500(Char, Number),
+	send_1500(User),
 	send_1501(),
 	send_1512(),
 	% 0303
@@ -249,7 +256,6 @@ counter_load(QuestID, ZoneID, MapID, EntryID) ->
 	User = OldUser#users{areatype=counter, questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID,
 		savedquestid=OldUser#users.questid, savedzoneid=OldUser#users.zoneid, savedmapid=ZoneID, savedentryid=MapID},
 	egs_db:users_insert(User),
-	[{status, 1}, {char, Char}, {options, _}] = data_load(User#users.folder, User#users.charnumber),
 	AreaName = "Mission counter",
 	QuestFile = "data/lobby/counter.quest.nbl",
 	ZoneFile = "data/lobby/counter.zone.nbl",
@@ -272,7 +278,7 @@ counter_load(QuestID, ZoneID, MapID, EntryID) ->
 	send_1206(),
 	send_1207(),
 	send_1212(),
-	send_0201(User, Char),
+	send_0201(User),
 	send_0a06(),
 	send_0208(),
 	send_0236().
@@ -348,7 +354,6 @@ area_load(QuestID, ZoneID, MapID, EntryID) ->
 	area_load(AreaType, IsStart, OldUser, User, QuestFile, ZoneFile, AreaName).
 
 area_load(AreaType, IsStart, OldUser, User, QuestFile, ZoneFile, AreaName) ->
-	[{status, 1}, {char, Char}, {options, Options}] = data_load(User#users.folder, User#users.charnumber),
 	QuestChange = if OldUser#users.questid /= User#users.questid, QuestFile /= undefined -> true; true -> false end,
 	if	ZoneFile =:= undefined ->
 			ZoneChange = false;
@@ -366,7 +371,7 @@ area_load(AreaType, IsStart, OldUser, User, QuestFile, ZoneFile, AreaName) ->
 	if	QuestChange =:= true ->
 			% reload the character if entering or leaving the room quest
 			if	OldUser#users.questid =:= 1120000; User#users.questid =:= 1120000 ->
-					char_load(Char, Options, User#users.charnumber);
+					char_load(User);
 				true -> ignore
 			end,
 			% load new quest
@@ -426,7 +431,7 @@ area_load(AreaType, IsStart, OldUser, User, QuestFile, ZoneFile, AreaName) ->
 			myroom_send_packet("p/packet1309.bin");
 		true -> ignore
 	end,
-	send_0201(User, Char),
+	send_0201(User),
 	if	ZoneChange =:= true ->
 			send_0a06();
 		true -> ignore
@@ -672,11 +677,11 @@ handle(16#0304, Data) ->
 		_ -> % Above
 			<< _:64, Modifiers:128/bits, _:512, Message/bits >> = Data
 	end,
-	[LogName|_] = re:split(User#users.charname, "\\0\\0", [{return, binary}]),
+	[LogName|_] = re:split((User#users.character)#characters.name, "\\0\\0", [{return, binary}]),
 	[TmpMessage|_] = re:split(Message, "\\0\\0", [{return, binary}]),
 	LogMessage = re:replace(TmpMessage, "\\n", " ", [global, {return, binary}]),
 	log("chat from ~s: ~s", [[re:replace(LogName, "\\0", "", [global, {return, binary}])], [re:replace(LogMessage, "\\0", "", [global, {return, binary}])]]),
-	lists:foreach(fun(X) -> X#users.pid ! {psu_chat, get(gid), User#users.charname, Modifiers, Message} end, egs_db:users_select_all());
+	lists:foreach(fun(X) -> X#users.pid ! {psu_chat, get(gid), (User#users.character)#characters.name, Modifiers, Message} end, egs_db:users_select_all());
 
 %% @todo Handle this packet properly.
 %% @todo Spawn cleared response event shouldn't be handled following this packet but when we see the spawn actually dead HP-wise.
@@ -794,7 +799,7 @@ handle(16#0d07, Data) ->
 	psu_characters:validate_options(Options),
 	% End of validation
 	User = egs_db:users_select(get(gid)),
-	file:write_file(io_lib:format("save/~s/~b-character.options", [User#users.folder, User#users.charnumber]), Data);
+	file:write_file(io_lib:format("save/~s/~b-character.options", [User#users.folder, (User#users.character)#characters.slot]), Data);
 
 %% @doc Hit handler.
 %% @todo Finish the work on it.
@@ -849,7 +854,7 @@ handle(16#0f0a, Data) ->
 
 handle(16#1705, _) ->
 	User = egs_db:users_select(get(gid)),
-	send_1706(User#users.charname);
+	send_1706((User#users.character)#characters.name);
 
 %% @doc Mission selected handler. Send the currently selected mission.
 %% @todo Probably need to dispatch that info to other party members in the same counter.
@@ -984,16 +989,17 @@ send_0200(ZoneType) ->
 	send(<< (header(16#0200))/binary, 0:32, 16#01000000:32, 16#ffffffff:32, Var/binary, 16#ffffffff:32, 16#ffffffff:32 >>).
 
 %% @todo Figure out what the other things are.
+%% @todo Handle LID correctly (should be ffffffff for self, apparently).
 
-send_0201(User, Char) ->
-	#users{gid=CharGID, lid=CharLID, questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID} = User,
-	{ok, File} = file:read_file("p/packet0201.bin"),
-	<< _:96, A:32/bits, _:96, B:32/bits, _:256, D:32/bits, _:2656, After/bits >> = File,
+send_0201(User) ->
 	GID = get(gid),
-	send(<< 16#02010300:32, 0:32, A/binary, CharGID:32/little-unsigned-integer, 0:64, B/binary, GID:32/little-unsigned-integer,
-		0:64, CharLID:32/little-unsigned-integer, CharGID:32/little-unsigned-integer, 0:96, D/binary, QuestID:32/little-unsigned-integer,
-		ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer, 0:192, QuestID:32/little-unsigned-integer,
-		ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer, Char/binary, After/binary >>).
+	CharGID = User#users.gid,
+	CharBin = psu_characters:character_user_to_binary(User#users{lid=0}),
+	IsGM = 0,
+	OnlineStatus = 0,
+	GameVersion = 0,
+	send(<< 16#02010300:32, 0:32, 16#00001200:32, CharGID:32/little-unsigned-integer, 0:64, 16#00011300:32,
+		GID:32/little-unsigned-integer, 0:64, CharBin/binary, IsGM:8, 0:8, OnlineStatus:8, GameVersion:8, 0:608 >>).
 
 %% @doc Hello packet, always sent on client connection.
 
@@ -1090,24 +1096,22 @@ send_0233(Users) ->
 			send(<< Header/binary, Contents/binary >>)
 	end.
 
+%% @todo God this function is ugly. Use tail recursion!
+%% @todo Do it properly without relying on the temporary file.
+
 build_0233_contents([]) ->
 	<< >>;
 build_0233_contents(Users) ->
 	[User|Rest] = Users,
-	{ok, File} = file:read_file("p/player.bin"),
-	<< A:32/bits, _:32, B:64/bits, _:32, C:32/bits, _:256, E:64/bits, _:2336, F/bits >> = File,
-	{ok, CharFile} = file:read_file(io_lib:format("save/~s/~b-character", [User#users.folder, User#users.charnumber])),
-	CharGID = User#users.gid,
-	LID = User#users.lid,
 	% TODO: temporary? undefined handling
-	#users{direction=Direction, coords=Coords, questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID} = case User#users.coords of
-		undefined -> #users{direction= << 0:32 >>, coords= << 0:96 >>, questid=1100000, zoneid=0, mapid=1, entryid=0};
+	SaneUser = case User#users.coords of
+		undefined -> User#users{direction= << 0:32 >>, coords= << 0:96 >>, questid=1100000, zoneid=0, mapid=1, entryid=0};
 		_ -> User
 	end,
-	Chunk = << A/binary, CharGID:32/little-unsigned-integer, B/binary, LID:16/little-unsigned-integer, 16#0100:16, C/binary,
-		QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer,
-		Direction:32/bits, Coords:96/bits, E/binary, QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer,
-		EntryID:32/little-unsigned-integer, CharFile/binary, F/binary >>,
+	CharBin = psu_characters:character_user_to_binary(SaneUser),
+	IsGM = 0,
+	GameVersion = 0,
+	Chunk = << CharBin/binary, IsGM:8, 0:8, GameVersion:8, 0:8 >>,
 	Next = build_0233_contents(Rest),
 	<< Chunk/binary, Next/binary >>.
 
@@ -1195,12 +1199,14 @@ send_0c10(Options) ->
 %% @todo The large chunk of 0s can have some values set... but what are they used for?
 %% @todo The values after the Char variable are the flags. Probably use bits to define what flag is and isn't set. Handle correctly.
 
-send_0d01(Char, Options) ->
-	send(<< (header(16#0d01))/binary, Char/binary,
+send_0d01(User) ->
+	CharBin = psu_characters:character_tuple_to_binary(User#users.character),
+	OptionsBin = psu_characters:options_tuple_to_binary((User#users.character)#characters.options),
+	send(<< (header(16#0d01))/binary, CharBin/binary,
 		16#ffbbef1c:32, 16#f8ff0700:32, 16#fc810916:32, 16#7802134c:32,
 		16#b0c0040f:32, 16#7cf0e583:32, 16#b7bce0c6:32, 16#7ff8f963:32,
 		16#3fd7ffff:32, 16#fff7ffff:32, 16#f3ff63e0:32, 16#1fe00000:32,
-		0:7744, Options/binary >>).
+		0:7744, OptionsBin/binary >>).
 
 %% @doc Send the character list for selection.
 
@@ -1228,10 +1234,9 @@ send_0d05() ->
 
 %% @todo Figure out what the packet is.
 
-send_1005(Char) ->
+send_1005(Name) ->
 	{ok, File} = file:read_file("p/packet1005.bin"),
 	<< _:352, Before:160/bits, _:608, After/bits >> = File,
-	<< Name:512/bits, _/bits >> = Char,
 	GID = get(gid),
 	send(<< (header(16#1005))/binary, Before/binary, GID:32/little-unsigned-integer, 0:64, Name/binary, After/binary >>).
 
@@ -1314,10 +1319,14 @@ send_1213(A, B) ->
 	send(<< (header(16#1213))/binary, A:32/little-unsigned-integer, B:32/little-unsigned-integer >>).
 
 %% @doc Send the player's partner card.
+%% @todo Find out the remaining values.
 
-send_1500(Char, Number) ->
-	<< CharInfo:576/bits, _/bits >> = Char,
-	send(<< (header(16#1500))/binary, CharInfo/binary, 0:3072, 16#010401:24, Number:8, 0:64 >>).
+send_1500(User) ->
+	#characters{slot=Slot, name=Name, race=Race, gender=Gender, class=Class} = User#users.character,
+	RaceBin = psu_characters:race_atom_to_binary(Race),
+	GenderBin = psu_characters:gender_atom_to_binary(Gender),
+	ClassBin = psu_characters:class_atom_to_binary(Class),
+	send(<< (header(16#1500))/binary, Name/binary, RaceBin:8, GenderBin:8, ClassBin:8, 0:3112, 16#010401:24, Slot:8, 0:64 >>).
 
 %% @todo Send an empty partner card list.
 

@@ -22,7 +22,7 @@
 
 %% @doc Table containing the users currently logged in.
 
--record(users, {gid, pid, socket, auth, time, folder, charnumber, charname, lid, instanceid, areatype, questid, zoneid, mapid, entryid, savedquestid, savedzoneid, savedmapid, savedentryid, direction, coords}).
+-record(users, {gid, pid, socket, auth, time, folder, character, lid, instanceid, areatype, questid, zoneid, mapid, entryid, savedquestid, savedzoneid, savedmapid, savedentryid, direction, coords}).
 
 %% @doc Character main or class level data structure.
 
@@ -30,7 +30,7 @@
 
 %% @doc Character stats data structure.
 
--record(stats, {hp, atp, ata, tp, dfp, evp, mst, sta}).
+-record(stats, {atp, ata, tp, dfp, evp, mst, sta}).
 
 %% @doc Character appearance data structure, flesh version.
 
@@ -58,4 +58,25 @@
 %% @doc Characters data structure.
 %% @todo Make a disk table for storing characters permanently. Also keep the current character in #users.
 
--record(characters, {gid, type, slot, name, race, gender, class, mainlevel, classlevels, stats, se, money, blastbar, luck, playtime, appearance, onlinestatus, options}). % also: shortcuts partnercards blacklist npcs flags items...
+-record(characters, {
+	gid,
+	type=white,
+	slot,
+	name,
+	race,
+	gender,
+	class,
+	mainlevel={level, 1, 0},
+	classlevels,
+	currenthp=100,
+	maxhp=100,
+	stats={stats, 1000, 2000, 3000, 4000, 5000, 6000, 7000},
+	se=[],
+	money=1000,
+	blastbar=0,
+	luck=3,
+	playtime=0,
+	appearance,
+	onlinestatus=0,
+	options={options, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0}
+}). % also: shortcuts partnercards blacklist npcs flags items...
