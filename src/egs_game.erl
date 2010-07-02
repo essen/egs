@@ -1249,6 +1249,7 @@ send_0d01(User) ->
 		0:7744, OptionsBin/binary >>).
 
 %% @doc Send the character list for selection.
+%% @todo There's a few odd values blanked, also the last known location apparently.
 
 send_0d03(Data0, Data1, Data2, Data3) ->
 	[{status, Status0}, {char, Char0}|_] = Data0,
