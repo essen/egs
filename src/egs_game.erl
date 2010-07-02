@@ -241,7 +241,7 @@ char_load(User) ->
 	send_1006(5),
 	send_1005((User#users.character)#characters.name),
 	send_1006(12),
-	% 0210
+	send_0210(),
 	send_0222(),
 	send_1500(User),
 	send_1501(),
@@ -1086,6 +1086,13 @@ send_020f(Filename, Layout, Season) ->
 	{ok, File} = file:read_file(Filename),
 	Size = byte_size(File),
 	send(<< 16#020f0300:32, 0:288, Layout, Season, 0:16, Size:32/little-unsigned-integer, File/binary >>).
+
+%% @doc Send the current UNIX time.
+
+send_0210() ->
+	CurrentTime = calendar:datetime_to_gregorian_seconds(calendar:now_to_universal_time(now()))
+		- calendar:datetime_to_gregorian_seconds({{1970, 1, 1}, {0, 0, 0}}),
+	send(<< (header(16#0210))/binary, 0:32, CurrentTime:32/little-unsigned-integer >>).
 
 %% @todo No idea what this do. Nor why it's sent twice when loading a counter.
 
