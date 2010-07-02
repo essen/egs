@@ -54,10 +54,12 @@ character_user_to_binary(User) ->
 	CharBin = psu_characters:character_tuple_to_binary(Character),
 	StatsBin = psu_characters:stats_tuple_to_binary(Stats),
 	SEBin = psu_characters:se_list_to_binary(SE),
+	TNL = 1000000,
 	<<	16#00001200:32, CharGID:32/little-unsigned-integer, 0:64, CharLID:32/little-unsigned-integer, 0:32, QuestID:32/little-unsigned-integer,
 		ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer, 0:192, QuestID:32/little-unsigned-integer,
 		ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer, CharBin/binary,
-		0:96, StatsBin/binary, 0:32, SEBin/binary, 0:64, StatsBin/binary, CurrentHP:32/little-unsigned-integer, MaxHP:32/little-unsigned-integer, 0:2304 >>.
+		TNL:32/little-unsigned-integer, 0:32, MaxHP:32/little-unsigned-integer, % not sure if this one is current or max
+		StatsBin/binary, 0:32, SEBin/binary, 0:64, StatsBin/binary, CurrentHP:32/little-unsigned-integer, MaxHP:32/little-unsigned-integer, 0:2304 >>.
 
 %% @doc Convert a class atom into a binary to be sent to clients.
 

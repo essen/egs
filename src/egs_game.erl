@@ -265,7 +265,7 @@ counter_load(QuestID, ZoneID, MapID, EntryID) ->
 	send_0c00(16#7fffffff),
 	send_020e(QuestFile),
 	send_0a05(),
-	% 010d
+	send_010d(User),
 	send_0200(mission),
 	send_020f(ZoneFile, 0, 16#ff),
 	send_0205(0, 0, 0, 0),
@@ -390,7 +390,7 @@ area_load(AreaType, IsStart, OldUser, User, QuestFile, ZoneFile, AreaName) ->
 					send_0111();
 				true -> ignore
 			end,
-			% 010d
+			send_010d(User),
 			send_0200(AreaType),
 			Layout = if IsStart =:= true -> crypto:rand_uniform(0, 4);
 				true -> 0
@@ -980,6 +980,18 @@ header(Command) ->
 
 send(Packet) ->
 	egs_proto:packet_send(get(socket), Packet).
+
+%% @todo Figure out what this does compared to 0201(self).
+%% @todo Figure out the unknown values.
+%% @todo Probably don't pattern match the data like this...
+
+send_010d(User) ->
+	GID = get(gid),
+	CharGID = User#users.gid,
+	<< _:640, CharBin/bits >> = psu_characters:character_user_to_binary(User#users{lid=0}),
+	send(<< 16#010d0300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
+		1:32/little-unsigned-integer, 0:32, 16#00000300:32, 16#ffff0000:32, 0:32, CharGID:32/little-unsigned-integer,
+		0:192, CharGID:32/little-unsigned-integer, 0:32, 16#ffffffff:32, CharBin/binary >>).
 
 %% @todo Possibly related to 010d. Just send seemingly safe values.
 
