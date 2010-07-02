@@ -44,12 +44,12 @@ character_tuple_to_binary(Tuple) ->
 
 %% @doc Convert a character tuple into a binary to be sent to clients.
 %%      Contains everything from character_tuple_to_binary/1 along with location, stats, SE and more.
-%% @todo The second QuestID list is for the previous area, not the current one.
+%% @todo One of the two QuestID lists has a different use. No idea what though.
 %% @todo The second StatsBin seems unused. Not sure what it's for.
 %% @todo Find out what the big block of 0 is at the end.
 
 character_user_to_binary(User) ->
-	#users{gid=CharGID, lid=CharLID, character=Character, questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID} = User,
+	#users{gid=CharGID, lid=CharLID, character=Character, direction=Direction, coords=Coords, questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID} = User,
 	#characters{mainlevel=Level, stats=Stats, se=SE, currenthp=CurrentHP, maxhp=MaxHP} = Character,
 	#level{number=LV} = Level,
 	CharBin = psu_characters:character_tuple_to_binary(Character),
@@ -58,9 +58,9 @@ character_user_to_binary(User) ->
 	EXPNextLevel = 100,
 	EXPPreviousLevel = 0,
 	<<	16#00001200:32, CharGID:32/little-unsigned-integer, 0:64, CharLID:32/little-unsigned-integer, 16#0000ffff:32, QuestID:32/little-unsigned-integer,
-		ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer, 0:192, QuestID:32/little-unsigned-integer,
-		ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer, CharBin/binary,
-		EXPNextLevel:32/little-unsigned-integer, EXPPreviousLevel:32/little-unsigned-integer, MaxHP:32/little-unsigned-integer, % not sure if this one is current or max
+		ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer, Direction/binary, Coords/binary, 0:64,
+		QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer,
+		CharBin/binary, EXPNextLevel:32/little-unsigned-integer, EXPPreviousLevel:32/little-unsigned-integer, MaxHP:32/little-unsigned-integer, % not sure if this one is current or max
 		StatsBin/binary, 0:32, SEBin/binary, 0:32, LV:32/little-unsigned-integer, StatsBin/binary, CurrentHP:32/little-unsigned-integer, MaxHP:32/little-unsigned-integer, 0:2304 >>.
 
 %% @doc Convert a class atom into a binary to be sent to clients.

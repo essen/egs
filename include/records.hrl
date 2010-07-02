@@ -22,7 +22,28 @@
 
 %% @doc Table containing the users currently logged in.
 
--record(users, {gid, pid, socket, auth, time, folder, character, lid, instanceid, areatype, questid, zoneid, mapid, entryid, savedquestid, savedzoneid, savedmapid, savedentryid, direction, coords}).
+-record(users, {
+	gid,
+	pid,
+	socket,
+	auth,
+	time,
+	folder,
+	character,
+	lid,
+	instanceid,
+	areatype,
+	questid,
+	zoneid,
+	mapid,
+	entryid,
+	savedquestid,
+	savedzoneid,
+	savedmapid,
+	savedentryid,
+	direction= << 0:32 >>,
+	coords= << 0:96 >>
+}).
 
 %% @doc Character main or class level data structure.
 

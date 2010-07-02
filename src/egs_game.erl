@@ -1150,12 +1150,8 @@ build_0233_contents([]) ->
 	<< >>;
 build_0233_contents(Users) ->
 	[User|Rest] = Users,
-	% TODO: temporary? undefined handling
-	SaneUser = case User#users.coords of
-		undefined -> User#users{direction= << 0:32 >>, coords= << 0:96 >>, questid=1100000, zoneid=0, mapid=1, entryid=0};
-		_ -> User
-	end,
-	CharBin = psu_characters:character_user_to_binary(SaneUser),
+	LID = 16#010000 + User#users.lid, % @todo The LID must be 16 bits and 0233 seems to (almost always) require that 01 right there...
+	CharBin = psu_characters:character_user_to_binary(User#users{lid=LID}),
 	IsGM = 0,
 	GameVersion = 0,
 	Chunk = << CharBin/binary, IsGM:8, 0:8, GameVersion:8, 0:8 >>,
