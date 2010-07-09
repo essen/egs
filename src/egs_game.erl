@@ -177,7 +177,7 @@ char_select_handle(16#0d02, << Number:32/little-unsigned-integer, Char/bits >>) 
 	User = egs_db:users_select(get(gid)),
 	_ = file:make_dir(io_lib:format("save/~s", [User#users.folder])),
 	file:write_file(io_lib:format("save/~s/~b-character", [User#users.folder, Number]), Char),
-	file:write_file(io_lib:format("save/~s/~b-character.options", [User#users.folder, Number]), << 0:192 >>),
+	file:write_file(io_lib:format("save/~s/~b-character.options", [User#users.folder, Number]), << 0:128, 4, 0:56 >>), % default 0 to everything except brightness 4
 	char_select_load(Number);
 
 %% @doc Character selection screen request.
