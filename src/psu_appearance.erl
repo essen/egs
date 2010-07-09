@@ -78,7 +78,7 @@ tuple_to_binary(_, Tuple) ->
 %%      Trigger an exception rather than handling errors.
 
 validate_char_create(cast, male, Tuple) ->
-	#metal_appearance{voicetype=VoiceType, torso=Torso, legs=Legs, arms=Arms, ears=Ears, face=Face, headtype=HeadType, eyelashes=Eyelashes, eyesgroup=EyesGroup} = Tuple,
+	#metal_appearance{voicetype=VoiceType, torso=Torso, legs=Legs, arms=Arms, ears=Ears, face=Face, headtype=HeadType, eyelashes=Eyelashes, eyesgroup=EyesGroup, eyescolorx=EyesColorX} = Tuple,
 	validate_char_create_common_metal(Tuple),
 	true = (VoiceType >= 27 andalso VoiceType =< 38) orelse (VoiceType >= 89 andalso VoiceType =< 96),
 	true = Torso =:= 16#00F70100 orelse Torso =:= 16#00F90100 orelse Torso =:= 16#00FC0100,
@@ -86,10 +86,12 @@ validate_char_create(cast, male, Tuple) ->
 	true = Arms =:= 16#00F70102 orelse Arms =:= 16#00F90102 orelse Arms =:= 16#00FC0102,
 	if	Face =:= 16#00040004 orelse Face =:= 16#0A040004 orelse Face =:= 16#14040004 orelse Face =:= 16#1E040004 orelse Face =:= 16#28040004 orelse Face =:= 16#000E0004 ->
 			true = Ears =:= 16#001E0003 orelse Ears =:= 16#001F0003 orelse Ears =:= 16#00200003 orelse Ears =:= 16#00210003 orelse Ears =:= 16#00220003,
+			true = EyesColorX =< 327679,
 			validate_char_create_male_hairstyle(HeadType);
 		Face =:= 16#00F40104 orelse Face =:= 16#00F50104 orelse Face =:= 16#00F60104 orelse Face =:= 16#00F70104 orelse Face =:= 16#00F80104 orelse Face =:= 16#00F90104 orelse
 		Face =:= 16#00FA0104 orelse Face =:= 16#00FD0104 orelse Face =:= 16#00020204 orelse Face =:= 16#00030204 orelse Face =:= 16#00040204 orelse Face =:= 16#00060204 orelse Face =:= 16#00070204 ->
 			Ears = 16#FFFFFFFF,
+			true = EyesColorX =< 458751,
 			true = HeadType =:= 16#00F40105 orelse HeadType =:= 16#00F50105 orelse HeadType =:= 16#00F60105 orelse HeadType =:= 16#00F70105 orelse HeadType =:= 16#00F80105 orelse
 				   HeadType =:= 16#00F90105 orelse HeadType =:= 16#00FA0105 orelse HeadType =:= 16#00FB0105 orelse HeadType =:= 16#00FD0105 orelse HeadType =:= 16#00020205 orelse
 				   HeadType =:= 16#00030205 orelse HeadType =:= 16#00040205 orelse HeadType =:= 16#00060205 orelse HeadType =:= 16#00070205
@@ -98,7 +100,7 @@ validate_char_create(cast, male, Tuple) ->
 	EyesGroup = 4;
 
 validate_char_create(cast, female, Tuple) ->
-	#metal_appearance{voicetype=VoiceType, torso=Torso, legs=Legs, arms=Arms, ears=Ears, face=Face, headtype=HeadType, eyelashes=Eyelashes, eyesgroup=EyesGroup} = Tuple,
+	#metal_appearance{voicetype=VoiceType, torso=Torso, legs=Legs, arms=Arms, ears=Ears, face=Face, headtype=HeadType, eyelashes=Eyelashes, eyesgroup=EyesGroup, eyescolorx=EyesColorX} = Tuple,
 	validate_char_create_common_metal(Tuple),
 	true = (VoiceType >= 39 andalso VoiceType =< 50) orelse (VoiceType >= 97 andalso VoiceType =< 101),
 	true = Torso =:= 16#00F51100 orelse Torso =:= 16#00F91100 orelse Torso =:= 16#00FA1100,
@@ -106,10 +108,12 @@ validate_char_create(cast, female, Tuple) ->
 	true = Arms =:= 16#00F51102 orelse Arms =:= 16#00F91102 orelse Arms =:= 16#00F61102,
 	if	Face =:= 16#00041004 orelse Face =:= 16#0A041004 orelse Face =:= 16#14041004 orelse Face =:= 16#1E041004 orelse Face =:= 16#3C041004 ->
 			true = Ears =:= 16#001E1003 orelse Ears =:= 16#001F1003 orelse Ears =:= 16#00201003 orelse Ears =:= 16#00211003 orelse Ears =:= 16#00221003,
+			true = EyesColorX =< 327679,
 			validate_char_create_female_hairstyle(HeadType);
 		Face =:= 16#00F41104 orelse Face =:= 16#00F51104 orelse Face =:= 16#00F61104 orelse Face =:= 16#00F71104 orelse Face =:= 16#00F81104 orelse Face =:= 16#00F91104 orelse
 		Face =:= 16#00FA1104 orelse Face =:= 16#00FD1104 orelse Face =:= 16#00031204 orelse Face =:= 16#00041204 orelse Face =:= 16#00051204 orelse Face =:= 16#00061204 orelse Face =:= 16#00081204 ->
 			Ears = 16#FFFFFFFF,
+			true = EyesColorX =< 458751,
 			true = HeadType =:= 16#00F41105 orelse HeadType =:= 16#00F51105 orelse HeadType =:= 16#00F61105 orelse HeadType =:= 16#00F71105 orelse HeadType =:= 16#00F81105 orelse
 				   HeadType =:= 16#00F91105 orelse HeadType =:= 16#00FA1105 orelse HeadType =:= 16#00FB1105 orelse HeadType =:= 16#00FD1105 orelse HeadType =:= 16#00031205 orelse
 				   HeadType =:= 16#00041205 orelse HeadType =:= 16#00051205 orelse HeadType =:= 16#00061205 orelse HeadType =:= 16#00081205
@@ -183,14 +187,13 @@ validate_char_create(beast, female, Tuple) ->
 %% @doc Validate the common settings for all metal characters.
 
 validate_char_create_common_metal(Tuple) ->
-	#metal_appearance{maincolor=MainColor, eyebrows=Eyebrows, eyes=Eyes, eyescolory=EyesColorY, eyescolorx=EyesColorX, bodycolor=BodyColor, subcolor=SubColor,
+	#metal_appearance{maincolor=MainColor, eyebrows=Eyebrows, eyes=Eyes, eyescolory=EyesColorY, bodycolor=BodyColor, subcolor=SubColor,
 		hairstylecolory=HairstyleColorY, hairstylecolorx=HairstyleColorX, proportion=Proportion, proportionboxx=ProportionBoxX, proportionboxy=ProportionBoxY,
 		faceboxx=FaceBoxX, faceboxy=FaceBoxY} = Tuple,
 	true = MainColor =< 7,
 	true = Eyebrows =< 18,
 	true = Eyes =< 2,
 	true = EyesColorY =< 65535,
-	true = EyesColorX =< 327679,
 	true = BodyColor =< 131071,
 	true = SubColor =< 393215,
 	true = HairstyleColorY =< 65535,
