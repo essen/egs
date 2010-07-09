@@ -37,7 +37,6 @@ create() ->
 	mnesia:create_schema([node()]),
 	mnesia:start(),
 	mnesia:create_table(ids, [{attributes, record_info(fields, ids)}]),
-	mnesia:dirty_update_counter(ids, lobby, 0),
 	mnesia:create_table(users, [{attributes, record_info(fields, users)}]).
 
 %% @doc Retrieve the next unique ID.
