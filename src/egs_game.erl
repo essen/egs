@@ -142,7 +142,6 @@ process_handle(Command, _) ->
 	?MODULE:process().
 
 %% @doc Character selection screen loop.
-%%      The default entry point currently is first floor, near the uni cube.
 
 char_select() ->
 	case egs_proto:packet_recv(get(socket), 5000) of
@@ -200,6 +199,7 @@ char_select_handle(Command, _) ->
 	?MODULE:char_select().
 
 %% @doc Load the selected character in the start lobby and start the main game's loop.
+%%      The default entry point currently is 4th floor, Linear Line counter.
 
 char_select_load(Number) ->
 	OldUser = egs_db:users_select(get(gid)),
@@ -216,7 +216,7 @@ char_select_load(Number) ->
 	egs_db:users_insert(User),
 	char_load(User),
 	send_021b(),
-	area_load(1100000, 0, 1, 1),
+	area_load(1100000, 0, 4, 6),
 	ssl:setopts(get(socket), [{active, true}]),
 	?MODULE:loop(<< >>).
 
@@ -287,7 +287,7 @@ counter_load(QuestID, ZoneID, MapID, EntryID) ->
 
 area_get_season(QuestID) ->
 	{{_, Month, Day}, _} = calendar:universal_time(),
-	[IsSeasonal, Season, SeasonQuestIDs] = if
+	[IsSeasonal, SeasonID, SeasonQuestIDs] = if
 		Month =:=  1, Day =< 14            -> ?SEASON_NEWYEAR;
 		Month =:=  1, Day >= 25            -> ?SEASON_WINTER;
 		Month =:=  2, Day =< 7             -> ?SEASON_WINTER;
@@ -316,7 +316,7 @@ area_get_season(QuestID) ->
 	end,
 	if	IsSeasonal =:= 1 ->
 			case lists:member(QuestID, SeasonQuestIDs) of
-				true  -> [{status, IsSeasonal}, {season, Season}];
+				true  -> [{status, IsSeasonal}, {season, SeasonID}];
 				false -> [{status, 0}, {season, 255}]
 			end;
 		true ->
@@ -351,16 +351,22 @@ area_load(QuestID, ZoneID, MapID, EntryID) ->
 	end,
 	User = OldUser#users{instanceid=InstanceID, areatype=AreaType, questid=QuestID, zoneid=RealZoneID, mapid=RealMapID, entryid=RealEntryID},
 	egs_db:users_insert(User),
-	area_load(AreaType, IsStart, OldUser, User, QuestFile, ZoneFile, AreaName).
+	%% @todo Don't recalculate SetID when leaving the mission and back (this changes the spawns).
+	SetID = if IsStart =:= true -> crypto:rand_uniform(0, 4); true -> 0 end,
+	if	IsStart =:= true -> % initialize the mission
+			psu_missions:start(InstanceID, QuestID, SetID);
+		true -> ignore
+	end,
+	area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName).
 
-area_load(AreaType, IsStart, OldUser, User, QuestFile, ZoneFile, AreaName) ->
+area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName) ->
 	QuestChange = if OldUser#users.questid /= User#users.questid, QuestFile /= undefined -> true; true -> false end,
 	if	ZoneFile =:= undefined ->
 			ZoneChange = false;
 		true ->
 			ZoneChange = if OldUser#users.questid =:= User#users.questid, OldUser#users.zoneid =:= User#users.zoneid -> false; true -> true end
 	end,
-	[{status, IsSeasonal}, {season, Season}] = area_get_season(User#users.questid),
+	[{status, IsSeasonal}, {season, SeasonID}] = area_get_season(User#users.questid),
 	% broadcast spawn and unspawn to other people
 	lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(OldUser)),
 	if	AreaType =:= lobby ->
@@ -392,10 +398,7 @@ area_load(AreaType, IsStart, OldUser, User, QuestFile, ZoneFile, AreaName) ->
 			end,
 			send_010d(User),
 			send_0200(AreaType),
-			Layout = if IsStart =:= true -> crypto:rand_uniform(0, 4);
-				true -> 0
-			end,
-			send_020f(ZoneFile, Layout, Season);
+			send_020f(ZoneFile, SetID, SeasonID);
 		true -> ignore
 	end,
 	send_0205(User#users.zoneid, User#users.mapid, User#users.entryid, IsSeasonal),
@@ -690,6 +693,7 @@ handle(16#0402, Data) ->
 	<< SpawnID:32/little-unsigned-integer, _:64, Type:32/little-unsigned-integer, _:64 >> = Data,
 	case Type of
 		7 -> % spawn cleared @todo 1201 sent back with same values apparently, but not always
+			log("cleared spawn ~b", [SpawnID]),
 			if	SpawnID =:= 70 ->
 					send_1205(53, 0);
 				SpawnID =:= 100 ->
@@ -763,10 +767,18 @@ handle(16#0c07, _) ->
 	send_0c08(true);
 
 %% @doc Abort mission handler.
+%%      Replenish the player HP.
 
 handle(16#0c0e, _) ->
 	send_1006(11),
 	User = egs_db:users_select(get(gid)),
+	%% full hp
+	Character = User#users.character,
+	MaxHP = Character#characters.maxhp,
+	NewCharacter = Character#characters{currenthp=MaxHP},
+	NewUser = User#users{character=NewCharacter},
+	egs_db:users_insert(NewUser),
+	%% map change (temporary)
 	if	User#users.areatype =:= mission ->
 			area_load(User#users.savedquestid, User#users.savedzoneid, User#users.savedmapid, User#users.savedentryid);
 		true -> ignore
@@ -813,26 +825,26 @@ handle(16#0e00, Data) ->
 %% @todo Handle all events appropriately.
 
 handle(16#0f0a, Data) ->
-	<< _:96, A:32/little-unsigned-integer, _:64, B:32/little-unsigned-integer, _:272, Action:8, _/bits >> = Data,
+	<< _:48, _MapID:16/little-unsigned-integer, ObjectID:16/little-unsigned-integer, _:16, A:32/little-unsigned-integer, _:64, B:32/little-unsigned-integer, _:272, Action:8, _/bits >> = Data,
 	case Action of
 		0 -> % warp
 			ignore;
 		3 -> % crystal activation
-			ignore;
+			send_1213(ObjectID, 1);
 		12 -> % key
 			% it's more than one 0f0a event actually... @todo hack
 			send_1205(215, 0),
-			send_1213(8, 1),
-			send_1205(202, 0);
+			send_1213(ObjectID, 1);
 		13 -> % button on
 			ignore;
 		14 -> % button off
 			ignore;
 		%~ 19 -> % @todo (somewhere in phantom ruins block 4)
 			%~ ignore;
-		20 -> % enter counter/elevator/room/spaceport
-			ignore;
-		23 -> % key door activation (no key)
+		20 -> % @todo really? enter counter/elevator/room/spaceport/more?
+			send_1205(202, 0);
+		23 -> % @todo not sure, key door activation (no key), but also when simply killing a spawn sometimes?
+			%~ send_1205(202, 0),
 			ignore;
 		24 -> % key activation (has key)
 			% it's more than one 0f0a event actually... @todo hack
@@ -939,32 +951,40 @@ handle(Command, _) ->
 handle_hits(<< >>) ->
 	ok;
 handle_hits(Data) ->
-	%~ log_hits(GID, Data),
+	%~ log_hits(Data),
 	% parse
 	<< A:224/bits, B:128/bits, _:288, Rest/bits >> = Data,
-	<< _:128, TargetID:32/little-unsigned-integer, _/bits >> = A,
+	<< _:96, SourceID:32/little-unsigned-integer, TargetID:32/little-unsigned-integer, _/bits >> = A,
 	% retrieve
 	GID = get(gid),
 	User = egs_db:users_select(GID),
-	Character = User#users.character,
-	Level = Character#characters.mainlevel,
-	% inflict damage
-	PlayerHP = Character#characters.currenthp,
-	TargetHP = 0,
-	Damage = 1,
-	send(<< 16#0e070300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
-		1:32/little-unsigned-integer, 16#01050000:32, Damage:32/little-unsigned-integer,
-		A/binary, 0:64, PlayerHP:32/little-unsigned-integer, 0:32, 16#01000200:32,
-		0:32, TargetHP:32, 0:32, B/binary, 16#04320000:32, 16#80000000:32, 16#26030000:32, 16#89068d00:32, 16#0c1c0105:32 >>),
-	% enemy is dead, give exp
-	LV = 1,
-	EXP = Level#level.exp + 1,
-	Money = 1000,
-	send_0115(GID, TargetID, LV, EXP, Money),
-	% save
-	NewLevel = #level{number=LV, exp=EXP},
-	NewCharacter = Character#characters{mainlevel=NewLevel},
-	NewUser = User#users{character=NewCharacter},
+	% hit!
+	#hit_response{type=Type, user=NewUser, exp=HasEXP, damage=Damage, targethp=TargetHP, targetse=TargetSE, event=Event} = psu_missions:object_hit(User, SourceID, TargetID),
+	case Type of
+		box ->
+			{explode, ObjectID} = Event,
+			% TODO: also has a hit sent, we should send it too
+			send_1213(ObjectID, 3);
+		_ ->
+			PlayerHP = (NewUser#users.character)#characters.currenthp,
+			io:format("~b~n", [PlayerHP]),
+			case lists:member(death, TargetSE) of
+				true -> SE = 16#01000200;
+				false -> SE = 16#01000000
+			end,
+			send(<< 16#0e070300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
+				1:32/little-unsigned-integer, 16#01050000:32, Damage:32/little-unsigned-integer,
+				A/binary, 0:64, PlayerHP:32/little-unsigned-integer, 0:32, SE:32,
+				0:32, TargetHP:32/little-unsigned-integer, 0:32, B/binary, 16#04320000:32, 16#80000000:32, 16#26030000:32, 16#89068d00:32, 16#0c1c0105:32, 0:64 >>)
+				% after TargetHP is SE-related too?
+	end,
+	% exp
+	if	HasEXP =:= true ->
+			Character = NewUser#users.character,
+			Level = Character#characters.mainlevel,
+			send_0115(GID, TargetID, Level#level.number, Level#level.exp, Character#characters.money);
+		true -> ignore
+	end,
 	egs_db:users_insert(NewUser),
 	% next
 	handle_hits(Rest).
@@ -1082,10 +1102,10 @@ send_020e(Filename) ->
 
 %% @doc Send the zone file to be loaded.
 
-send_020f(Filename, Layout, Season) ->
+send_020f(Filename, SetID, SeasonID) ->
 	{ok, File} = file:read_file(Filename),
 	Size = byte_size(File),
-	send(<< 16#020f0300:32, 0:288, Layout, Season, 0:16, Size:32/little-unsigned-integer, File/binary >>).
+	send(<< 16#020f0300:32, 0:288, SetID, SeasonID, 0:16, Size:32/little-unsigned-integer, File/binary >>).
 
 %% @doc Send the current UNIX time.
 

@@ -913,3 +913,26 @@
 
 	{255, [{quests, "data/counters/moatoob.casino.pack"}, {bg, 2}, {options, << 16#01000400:32, 0:32 >>}]}
 ]).
+
+%% Full mission data: blocks, boxes, keys, enemies...
+%% @todo Other blocks and missions.
+%% @todo Generate this from the mission files.
+
+-define(MISSIONS, [
+	{1000020, [ % unsafe passage 3rd variant C
+		{1200, [ % block 1
+			% id, listnb
+			{boxes, [{10, 1024}, {11, 1025}, {12, 1026}]},
+			% listnb, event
+			{keys, [{8, 215}]},
+			% spawnnb? event
+			{spawns, [{10, false}, {40, false}, {70, 53}, {100, 55}]} % check 10 40
+		]}
+		%~ ,
+		%~ {1201, [ % block 2
+			%~ {boxes, [{0, 5}, {0, 6}, {0, 7}, {0, 8}, {0, 9}, {0, 10}, {0, 11}, {0, 12}]},
+			%~ {keys, [{4, 215}]},
+			%~ {spawns, []} % 231 nothing?
+		%~ ]}
+	]}
+]).

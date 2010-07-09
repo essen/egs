@@ -101,3 +101,11 @@
 	onlinestatus=0,
 	options={options, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0}
 }). % also: shortcuts partnercards blacklist npcs flags items...
+
+%% @doc Table containing all mission objects.
+
+-record(objects, {id, instanceid, objectid, type, targetid, params}). % id = [instanceid, objectid]
+
+%% @doc Hit response data.
+
+-record(hit_response, {type, user, exp, damage, targethp, targetse, event}).

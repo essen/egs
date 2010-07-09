@@ -37,12 +37,43 @@ create() ->
 	mnesia:create_schema([node()]),
 	mnesia:start(),
 	mnesia:create_table(ids, [{attributes, record_info(fields, ids)}]),
+	mnesia:create_table(objects, [{attributes, record_info(fields, objects)}]),
 	mnesia:create_table(users, [{attributes, record_info(fields, users)}]).
 
 %% @doc Retrieve the next unique ID.
 
 next(Type) ->
 	mnesia:dirty_update_counter(ids, Type, 1).
+
+%% @doc Insert a new object in the database.
+%% @todo Group with users_insert, it's the same function really.
+
+objects_insert(Object) ->
+	mnesia:transaction(fun() -> mnesia:write(Object) end).
+
+%% @doc Select an object by ID.
+
+objects_select(ID) ->
+	case mnesia:transaction(fun() -> mnesia:read({objects, ID}) end) of
+		{atomic, []} ->
+			undefined;
+		{atomic, [Val]} ->
+			Val
+	end.
+
+%% @doc Select an object by instanceid and targetid.
+
+objects_select_by_targetid(InstanceID, TargetID) ->
+	[Object] = do(qlc:q([X || X <- mnesia:table(objects),
+		X#objects.instanceid =:= InstanceID,
+		X#objects.targetid =:= TargetID])),
+	Object.
+
+%% @doc Select all IDs.
+%% @todo This is for debug purposes only. Delete later.
+
+objects_select_all() ->
+	do(qlc:q([X || X <- mnesia:table(objects)])).
 
 %% @doc Count the number of users online.
 
