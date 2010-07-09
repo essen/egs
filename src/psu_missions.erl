@@ -91,5 +91,4 @@ player_hit(User) ->
 	end,
 	NewCharacter = Character#characters{currenthp=NewHP},
 	NewUser = User#users{character=NewCharacter},
-	io:format("~b~n", [NewHP]),
 	#hit_response{type=player, user=NewUser, damage=Damage, targethp=NewHP, targetse=SE}.
