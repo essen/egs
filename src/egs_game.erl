@@ -967,7 +967,6 @@ handle_hits(Data) ->
 			send_1213(ObjectID, 3);
 		_ ->
 			PlayerHP = (NewUser#users.character)#characters.currenthp,
-			io:format("~b~n", [PlayerHP]),
 			case lists:member(death, TargetSE) of
 				true -> SE = 16#01000200;
 				false -> SE = 16#01000000
