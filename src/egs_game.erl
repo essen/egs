@@ -623,9 +623,14 @@ handle(16#0110, Data) ->
 			send_0113();
 		3 -> % type change
 			log("changed type to ~b", [C]);
-		7 -> % player death: if the player has a scape, use it! otherwise red screen
+		7 -> % player death: if the player has a scape, use it! otherwise red screen @todo Right now we force revive and don't reset the HP.
+			% @todo send_0115(get(gid), 16#ffffffff, LV=1, EXP=idk, Money=1000), % apparently sent everytime you die...
+			% use scape
+			NewHP = 10,
+			send_0117(NewHP),
+			send_1022(NewHP);
 			% red screen with return to lobby choice:
-			send_0111(3, 1);
+			%~ send_0111(3, 1);
 		8 -> % return to lobby after death
 			log("return to lobby after death"),
 			area_load(1100000, 0, 4, 6); %% @todo temporary handler
@@ -1051,6 +1056,14 @@ send_0115(GID, TargetID, LV, EXP, Money) ->
 		16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32,
 		16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32 >>).
 
+%% @doc Revive player?
+%% @todo Figure out more of it.
+
+send_0117(HP) ->
+	GID = get(gid),
+	send(<< 16#01170300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
+		GID:32/little-unsigned-integer, 0:96, HP:32/little-unsigned-integer, 0:32 >>).
+
 %% @doc Send the zone initialization notification.
 
 send_0200(ZoneType) ->
@@ -1355,6 +1368,13 @@ send_1015(QuestID) ->
 
 send_1020() ->
 	send(header(16#1020)).
+
+%% @doc Update HP in the party members information on the left.
+%% @todo Figure out more of it.
+
+send_1022(HP) ->
+	GID = get(gid),
+	send(<< 16#10220300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, HP:32/little-unsigned-integer, 0:32 >>).
 
 %% @todo Figure out what this packet does. Sane values for counter and missions for now.
 
