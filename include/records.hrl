@@ -104,8 +104,8 @@
 
 %% @doc Table containing all mission objects.
 
--record(objects, {id, instanceid, objectid, type, targetid, params}). % id = [instanceid, objectid]
+-record(objects, {id, instanceid, objectid, type, targetid, blockid, triggereventid}). % id = [instanceid, objectid]
 
 %% @doc Hit response data.
 
--record(hit_response, {type, user, exp, damage, targethp, targetse, event}).
+-record(hit_response, {type, user, exp, damage, targethp, targetse, events}).

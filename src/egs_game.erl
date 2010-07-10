@@ -694,23 +694,22 @@ handle(16#0402, Data) ->
 	case Type of
 		7 -> % spawn cleared @todo 1201 sent back with same values apparently, but not always
 			log("cleared spawn ~b", [SpawnID]),
-			if	SpawnID =:= 70 ->
-					send_1205(53, 0);
-				SpawnID =:= 100 ->
-					send_1205(55, 0);
-				true ->
-					ignore
+			User = egs_db:users_select(get(gid)),
+			[EventID, BlockID] = psu_missions:spawn_cleared(User#users.instanceid, SpawnID),
+			if	EventID =:= false -> ignore;
+				true -> send_1205(EventID, BlockID, 0)
 			end;
 		_ ->
 			ignore
 	end;
 
 %% @todo Handle this packet.
+%% @todo 3rd Unsafe Passage C, EventID 10 BlockID 2 = mission cleared?
 
 handle(16#0404, Data) ->
-	<< A:32/little-unsigned-integer, B:32/little-unsigned-integer >> = Data,
-	log("unknown command 0404: ~b ~b", [A, B]),
-	send_1205(A, B);
+	<< EventID:8, BlockID:8, _:16, Value:8, _/bits >> = Data,
+	log("unknown command 0404: eventid ~b blockid ~b value ~b", [EventID, BlockID, Value]),
+	send_1205(EventID, BlockID, Value);
 
 %% @doc Map change handler.
 %%      Rooms are handled differently than normal lobbies.
@@ -826,14 +825,16 @@ handle(16#0e00, Data) ->
 
 handle(16#0f0a, Data) ->
 	<< _:48, _MapID:16/little-unsigned-integer, ObjectID:16/little-unsigned-integer, _:16, A:32/little-unsigned-integer, _:64, B:32/little-unsigned-integer, _:272, Action:8, _/bits >> = Data,
+	log("object event handler: action ~b object ~b", [Action, ObjectID]),
 	case Action of
 		0 -> % warp
 			ignore;
 		3 -> % crystal activation
 			send_1213(ObjectID, 1);
-		12 -> % key
-			% it's more than one 0f0a event actually... @todo hack
-			send_1205(215, 0),
+		12 -> % pick/use key
+			User = egs_db:users_select(get(gid)),
+			[[EventID|_], BlockID] = psu_missions:key_event(User#users.instanceid, ObjectID),
+			send_1205(EventID, BlockID, 0),
 			send_1213(ObjectID, 1);
 		13 -> % button on
 			ignore;
@@ -841,16 +842,17 @@ handle(16#0f0a, Data) ->
 			ignore;
 		%~ 19 -> % @todo (somewhere in phantom ruins block 4)
 			%~ ignore;
-		20 -> % @todo really? enter counter/elevator/room/spaceport/more?
-			send_1205(202, 0);
-		23 -> % @todo not sure, key door activation (no key), but also when simply killing a spawn sometimes?
-			%~ send_1205(202, 0),
+		20 -> % enter counter/elevator/room/spaceport/pick key/use key
 			ignore;
-		24 -> % key activation (has key)
-			% it's more than one 0f0a event actually... @todo hack
-			send_1205(244, 0),
-			send_1205(54, 0),
-			send_1213(0, 1);
+		23 -> % initialize key slots (called when picking a key or checking the gate directly with no key)
+			User = egs_db:users_select(get(gid)),
+			[[_, EventID, _], BlockID] = psu_missions:key_event(User#users.instanceid, ObjectID),
+			send_1205(EventID, BlockID, 0); % in block 1, 202 = key [1] x1, 203 = key [-] x1
+		24 -> % open gate (only when client has key)
+			User = egs_db:users_select(get(gid)),
+			[[_, _, EventID], BlockID] = psu_missions:key_event(User#users.instanceid, ObjectID),
+			send_1205(EventID, BlockID, 0),
+			send_1213(ObjectID, 1);
 		25 -> % sit on chair
 			send_1211(A, B, 8, 0);
 		26 -> % sit out of chair
@@ -959,12 +961,11 @@ handle_hits(Data) ->
 	GID = get(gid),
 	User = egs_db:users_select(GID),
 	% hit!
-	#hit_response{type=Type, user=NewUser, exp=HasEXP, damage=Damage, targethp=TargetHP, targetse=TargetSE, event=Event} = psu_missions:object_hit(User, SourceID, TargetID),
+	#hit_response{type=Type, user=NewUser, exp=HasEXP, damage=Damage, targethp=TargetHP, targetse=TargetSE, events=Events} = psu_missions:object_hit(User, SourceID, TargetID),
 	case Type of
 		box ->
-			{explode, ObjectID} = Event,
 			% TODO: also has a hit sent, we should send it too
-			send_1213(ObjectID, 3);
+			handle_events(Events);
 		_ ->
 			PlayerHP = (NewUser#users.character)#characters.currenthp,
 			case lists:member(death, TargetSE) of
@@ -984,9 +985,21 @@ handle_hits(Data) ->
 			send_0115(GID, TargetID, Level#level.number, Level#level.exp, Character#characters.money);
 		true -> ignore
 	end,
+	% save
 	egs_db:users_insert(NewUser),
 	% next
 	handle_hits(Rest).
+
+%% @doc Handle a list of events.
+
+handle_events([]) ->
+	ok;
+handle_events([{explode, ObjectID}|Tail]) ->
+	send_1213(ObjectID, 3),
+	handle_events(Tail);
+handle_events([{event, [EventID, BlockID]}|Tail]) ->
+	send_1205(EventID, BlockID, 0),
+	handle_events(Tail).
 
 %% @doc Build the packet header.
 
@@ -1350,10 +1363,10 @@ send_1204() ->
 	send(<< (header(16#1204))/binary, 0:32, 16#20000000:32, 0:256 >>).
 
 %% @doc Object events response?
-%% @todo Figure things out.
+%% @todo Not sure what Value does exactly. It's either 0 or 1.
 
-send_1205(A, B) ->
-	send(<< (header(16#1205))/binary, A:32/little-unsigned-integer, B:32/little-unsigned-integer >>).
+send_1205(EventID, BlockID, Value) ->
+	send(<< (header(16#1205))/binary, EventID, BlockID, 0:16, Value, 0:24 >>).
 
 %% @todo Figure out what this packet does. Sane values for counter and missions for now.
 
