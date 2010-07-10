@@ -393,7 +393,7 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 			% load new zone
 			send_0a05(),
 			if AreaType =:= lobby ->
-					send_0111();
+					send_0111(6, 0);
 				true -> ignore
 			end,
 			send_010d(User),
@@ -623,8 +623,12 @@ handle(16#0110, Data) ->
 			send_0113();
 		3 -> % type change
 			log("changed type to ~b", [C]);
-		7 -> % player death
-			area_load(1100000, 0, 4, 6);
+		7 -> % player death: if the player has a scape, use it! otherwise red screen
+			% red screen with return to lobby choice:
+			send_0111(3, 1);
+		8 -> % return to lobby after death
+			log("return to lobby after death"),
+			area_load(1100000, 0, 4, 6); %% @todo temporary handler
 		10 -> % online status change
 			log("changed status to ~b", [C]);
 		_ ->
@@ -1027,10 +1031,10 @@ send_010d(User) ->
 
 %% @todo Possibly related to 010d. Just send seemingly safe values.
 
-send_0111() ->
+send_0111(A, B) ->
 	GID = get(gid),
 	send(<< 16#01110300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
-		GID:32/little-unsigned-integer, 0:32, 6:32/little-unsigned-integer, 0:32 >>).
+		GID:32/little-unsigned-integer, 0:32, A:32/little-unsigned-integer, B:32/little-unsigned-integer >>).
 
 %% @todo Types capability list.
 
