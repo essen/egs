@@ -780,6 +780,8 @@ handle(16#0c07, _) ->
 handle(16#0c0e, _) ->
 	send_1006(11),
 	User = egs_db:users_select(get(gid)),
+	%% delete the mission
+	psu_missions:stop(User#users.instanceid),
 	%% full hp
 	Character = User#users.character,
 	MaxHP = Character#characters.maxhp,

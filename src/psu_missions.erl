@@ -18,33 +18,62 @@
 
 -module(psu_missions).
 -export([
-	start/3, key_event/2, object_hit/3, spawn_cleared/2
+	start/3, stop/1, key_event/2, object_hit/3, spawn_cleared/2
 ]).
 
--include("include/maps.hrl").
+-include("include/missions.hrl").
 -include("include/records.hrl").
 
 start(InstanceID, QuestID, _SetID) ->
 	MapList = proplists:get_value(QuestID, ?MISSIONS),
-	[map_init(InstanceID, BlockID, ObjectsList) || {_MapID, BlockID, ObjectsList} <- MapList],
-	ok.
+	map_init(InstanceID, MapList, 0, 0, 1024).
 
-map_init(InstanceID, BlockID, [{boxes, BoxesList}, {keys, KeysList}, {spawns, SpawnsList}]) ->
-	[box_init(InstanceID, BlockID, Box) || Box <- BoxesList],
-	[key_init(InstanceID, BlockID, Key) || Key <- KeysList],
-	[spawn_init(InstanceID, BlockID, Spawn) || Spawn <- SpawnsList],
-	ok.
+map_init(_InstanceID, [], _BlockID, _ObjectID, _TargetID) ->
+	ok;
+map_init(InstanceID, [Map|Tail], BlockID, ObjectID, TargetID) ->
+	{_MapID, Objects} = Map,
+	{ok, NewObjectID, NewTargetID} = object_init(InstanceID, BlockID, Objects, ObjectID, TargetID),
+	map_init(InstanceID, Tail, BlockID + 1, NewObjectID, NewTargetID).
 
-box_init(InstanceID, BlockID, {ObjectID, TargetID, EventID}) ->
-	egs_db:objects_insert(#objects{id=[InstanceID, ObjectID], instanceid=InstanceID, objectid=ObjectID, type=box, targetid=TargetID, blockid=BlockID, triggereventid=EventID}).
+object_init(_InstanceID, _BlockID, [], ObjectID, TargetID) ->
+	{ok, ObjectID, TargetID};
+object_init(InstanceID, BlockID, [{box, _Model, Breakable, TrigEventID}|Tail], ObjectID, TargetID) ->
+	case Breakable of
+		false -> ignore;
+		true ->
+			egs_db:objects_insert(#objects{id=[InstanceID, ObjectID], instanceid=InstanceID, objectid=ObjectID, type=box, targetid=TargetID, blockid=BlockID, triggereventid=TrigEventID})
+	end,
+	object_init(InstanceID, BlockID, Tail, ObjectID + 1, TargetID + 1);
+%% @todo key and key_console event handling will have to be fixed.
+object_init(InstanceID, BlockID, [{key, TrigEventID, _ReqEventID}|Tail], ObjectID, TargetID) ->
+	egs_db:objects_insert(#objects{id=[InstanceID, {key, ObjectID}], instanceid=InstanceID, objectid=ObjectID, type=key, blockid=BlockID, triggereventid=[TrigEventID]}),
+	object_init(InstanceID, BlockID, Tail, ObjectID + 1, TargetID);
+%% @todo Maybe separate key from key_console in its handling?
+object_init(InstanceID, BlockID, [{key_console, _NoKeyEventID, TrigEventID}|Tail], ObjectID, TargetID) ->
+	egs_db:objects_insert(#objects{id=[InstanceID, {key, ObjectID}], instanceid=InstanceID, objectid=ObjectID, type=key, blockid=BlockID, triggereventid=[244, 202, TrigEventID]}),
+	object_init(InstanceID, BlockID, Tail, ObjectID + 1, TargetID);
+%% @todo save enemies individually, do something, etc.
+%% @todo temporarily save the spawn to handle events properly
+object_init(InstanceID, BlockID, [{'spawn', TrigEventID, _ReqEventID}|Tail], ObjectID, TargetID) ->
+	egs_db:objects_insert(#objects{id=[InstanceID, {'spawn', TargetID - 1024}], instanceid=InstanceID, type='spawn', blockid=BlockID, triggereventid=TrigEventID}),
+	object_init(InstanceID, BlockID, Tail, ObjectID + 1, TargetID + 30);
+%% @todo Not sure where these 2 come from yet, assuming crystal but might not be that.
+object_init(InstanceID, BlockID, [crystal|Tail], ObjectID, TargetID) ->
+	object_init(InstanceID, BlockID, Tail, ObjectID + 1, TargetID + 2);
+%% A few object types don't have an ObjectID nor a TargetID. Disregard them completely.
+object_init(InstanceID, BlockID, [ObjType|Tail], ObjectID, TargetID)
+	when	ObjType =:= static_model;
+			ObjType =:= invisible_block;
+			ObjType =:= entrance;
+			ObjType =:= 'exit';
+			ObjType =:= label ->
+	object_init(InstanceID, BlockID, Tail, ObjectID, TargetID);
+%% Others are normal objects, we don't handle them but they have an ObjectID.
+object_init(InstanceID, BlockID, [_|Tail], ObjectID, TargetID) ->
+	object_init(InstanceID, BlockID, Tail, ObjectID + 1, TargetID).
 
-key_init(InstanceID, BlockID, {ObjectID, EventID}) ->
-	egs_db:objects_insert(#objects{id=[InstanceID, {key, ObjectID}], instanceid=InstanceID, objectid=ObjectID, type=key, blockid=BlockID, triggereventid=EventID}).
-
-spawn_init(InstanceID, BlockID, {ObjectID, EventID, _RequireEventID}) ->
-	% todo save enemies individually, do something, etc.
-	% todo temporarily save the spawn to handle events properly
-	egs_db:objects_insert(#objects{id=[InstanceID, {'spawn', ObjectID}], type='spawn', blockid=BlockID, triggereventid=EventID}).
+stop(InstanceID) ->
+	egs_db:objects_delete(InstanceID).
 
 key_event(InstanceID, ObjectID) ->
 	#objects{triggereventid=EventID, blockid=BlockID} = egs_db:objects_select([InstanceID, {key, ObjectID}]),

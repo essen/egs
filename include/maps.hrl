@@ -294,9 +294,9 @@
 	%% @todo Temporarily only enable the 3rd Unsafe Passage C variant.
 	{  0, [{quests, "data/counters/colony.ll.pack"}, {bg, 255}, {options, << 16#01a92800:32, 0, 3, 0,
 		0, 0, 0, 0, 0, % Phantom Ruins C-S
-		0, 0, 0, 0, 0, % Unsafe Passage C-S2 variant 1
-		0, 0, 0, 0, 0, % Unsafe Passage C-S2 variant 2
-		3, 0, 0, 0, 0, % Unsafe Passage C-S2 variant 3
+		3, 3, 3, 3, 3, % Unsafe Passage C-S2 variant 1
+		3, 3, 3, 3, 3, % Unsafe Passage C-S2 variant 2
+		3, 3, 3, 3, 3, % Unsafe Passage C-S2 variant 3
 	0:136 >>}]},
 
 	%~ {  0, [{quests, "data/counters/colony.ll.pack"}, {bg, 255}, {options, << 16#01a92800:32, 3, 3, 0,
@@ -920,44 +920,4 @@
 	% Moatoob Casino
 
 	{255, [{quests, "data/counters/moatoob.casino.pack"}, {bg, 2}, {options, << 16#01000400:32, 0:32 >>}]}
-]).
-
-%% Full mission data: blocks, boxes, keys, enemies...
-%% @todo Other blocks and missions.
-%% @todo Generate this from the mission files.
-
--define(MISSIONS, [
-	{1000020, [ % unsafe passage 3rd variant C
-		{1200, 0, [ % block 1
-			% id, listnb
-			{boxes, [{10, 1024, false}, {11, 1025, false}, {12, 1026, false}]},
-			{keys, [
-				{0, [244, 202, 54]}, % gate for key 1 % objectid, [eventid12, eventid23 eventid24
-				{8, [215]}  % key for gate 1 % objectid, eventid12
-			]}, % todo require 53
-			{spawns, [{10, false, false}, {40, false, false}, {70, 53, false}, {100, 55, false}]} % number, triggers, require
-		]},
-		{1201, 1, [ % block 2
-			% objectid depending on b1 apparently, should have been 7 8 9 10 11 12 (5 6 21) but 10 = 35, etc.
-			{boxes, [{32, 1158, false}, {33, 1159, false}, {34, 1160, 51}, {35, 1161, 55}, {36, 1162, 54}, {37, 1163, false}]}, % also 5 6 21: rubble
-			{keys, [
-				{44, [244, 202, 53]}, % gate for key 1
-				{29, [215]}  % key for gate 1
-			]}, % todo require 0x34
-			{spawns, [{141, 56, 55}, {171, false, 54}, {201, 52, 51}, {231, false, false}]}
-		]},
-		{1131, 2, [ % block 3
-			{boxes, [
-				{51, 1287, false}, {52, 1288, false}, {53, 1289, false},
-				{62, 1290, false}, {63, 1291, false}, {64, 1292, false}, {65, 1293, false},
-				{66, 1294, false}, {67, 1295, false}, {68, 1296, false},
-				{74, 1297, 60}, {75, 1298, false}, {76, 1299, false}
-			]},
-			{keys, [
-				{73, [244, 202, 53]}, % gate for key 1
-				{72, [215]} % key for gate 1
-			]}, % todo require 0x34
-			{spawns, [{276, false, false}, {306, 52, 60}, {336, false, 52}, {366, 55, false}, {396, 51, false}]}
-		]}
-	]}
 ]).

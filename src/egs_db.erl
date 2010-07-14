@@ -75,6 +75,13 @@ objects_select_by_targetid(InstanceID, TargetID) ->
 objects_select_all() ->
 	do(qlc:q([X || X <- mnesia:table(objects)])).
 
+%% @doc Delete all the objects for the given instance.
+
+objects_delete(InstanceID) ->
+	List = do(qlc:q([X || X <- mnesia:table(objects), X#objects.instanceid =:= InstanceID])),
+	[mnesia:transaction(fun() -> mnesia:delete({objects, ID}) end) || #objects{id=ID} <- List],
+	ok.
+
 %% @doc Count the number of users online.
 
 users_count() ->

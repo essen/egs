@@ -18,8 +18,13 @@
 
 all: server
 
-server: clean
+server: clean missions
 	@erl -make
+
+missions:
+	erlc src/psu_parser.erl
+	erl -noshell -noinput -sname missions -pa ebin -run psu_parser run -run init stop
+	rm psu_parser.beam
 
 clean:
 	rm -f ebin/*.beam

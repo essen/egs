@@ -26,3 +26,4 @@
 {'src/psu_appearance.erl', [{outdir, "ebin"}]}.
 {'src/psu_characters.erl', [{outdir, "ebin"}]}.
 {'src/psu_missions.erl', [{outdir, "ebin"}]}.
+{'src/psu_parser.erl', [{outdir, "ebin"}]}.
