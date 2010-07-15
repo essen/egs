@@ -39,7 +39,27 @@
 	{1000023, [{type, mission}, {file, "data/missions/unsafe-passage.3.s.quest.nbl"},  {start, [0, 1200, 0]}]},
 	{1000024, [{type, mission}, {file, "data/missions/unsafe-passage.3.s2.quest.nbl"}, {start, [0, 1200, 0]}]},
 
-	% Phantom Ruins
+	% Fight for Food
+
+	{1000100, [{type, mission}, {file, "data/missions/fight-for-food.1.c.quest.nbl"},  {start, [0, 1200, 0]}]},
+	{1000101, [{type, mission}, {file, "data/missions/fight-for-food.1.b.quest.nbl"},  {start, [0, 1200, 0]}]},
+	{1000102, [{type, mission}, {file, "data/missions/fight-for-food.1.a.quest.nbl"},  {start, [0, 1200, 0]}]},
+	{1000103, [{type, mission}, {file, "data/missions/fight-for-food.1.s.quest.nbl"},  {start, [0, 1200, 0]}]},
+	{1000104, [{type, mission}, {file, "data/missions/fight-for-food.1.s2.quest.nbl"}, {start, [0, 1200, 0]}]},
+
+	{1000110, [{type, mission}, {file, "data/missions/fight-for-food.2.c.quest.nbl"},  {start, [0, 1301, 0]}]},
+	{1000111, [{type, mission}, {file, "data/missions/fight-for-food.2.b.quest.nbl"},  {start, [0, 1301, 0]}]},
+	{1000112, [{type, mission}, {file, "data/missions/fight-for-food.2.a.quest.nbl"},  {start, [0, 1301, 0]}]},
+	{1000113, [{type, mission}, {file, "data/missions/fight-for-food.2.s.quest.nbl"},  {start, [0, 1301, 0]}]},
+	{1000114, [{type, mission}, {file, "data/missions/fight-for-food.2.s2.quest.nbl"}, {start, [0, 1301, 0]}]},
+
+	{1000120, [{type, mission}, {file, "data/missions/fight-for-food.3.c.quest.nbl"},  {start, [0, 1301, 0]}]},
+	{1000121, [{type, mission}, {file, "data/missions/fight-for-food.3.b.quest.nbl"},  {start, [0, 1301, 0]}]},
+	{1000122, [{type, mission}, {file, "data/missions/fight-for-food.3.a.quest.nbl"},  {start, [0, 1301, 0]}]},
+	{1000123, [{type, mission}, {file, "data/missions/fight-for-food.3.s.quest.nbl"},  {start, [0, 1301, 0]}]},
+	{1000124, [{type, mission}, {file, "data/missions/fight-for-food.3.s2.quest.nbl"}, {start, [0, 1301, 0]}]},
+
+	% Phantom Ruins (Linear Line counter)
 
 	{1060300, [{type, mission}, {file, "data/missions/phantom-ruins.c.quest.nbl"},  {start, [0, 8002, 0]}]},
 	{1060301, [{type, mission}, {file, "data/missions/phantom-ruins.b.quest.nbl"},  {start, [0, 8002, 0]}]},
@@ -92,7 +112,27 @@
 	{[1000023, 0], [{file, "data/missions/unsafe-passage.3.s.zone.nbl"}]},
 	{[1000024, 0], [{file, "data/missions/unsafe-passage.3.s2.zone.nbl"}]},
 
-	% Phantom Ruins
+	% Fight for Food
+
+	{[1000100, 0], [{file, "data/missions/fight-for-food.1.c.zone.nbl"}]},
+	{[1000101, 0], [{file, "data/missions/fight-for-food.1.b.zone.nbl"}]},
+	%~ {[1000102, 0], [{file, "data/missions/fight-for-food.1.a.zone.nbl"}]},
+	%~ {[1000103, 0], [{file, "data/missions/fight-for-food.1.s.zone.nbl"}]},
+	{[1000104, 0], [{file, "data/missions/fight-for-food.1.s2.zone.nbl"}]},
+
+	{[1000110, 0], [{file, "data/missions/fight-for-food.2.c.zone.nbl"}]},
+	%~ {[1000111, 0], [{file, "data/missions/fight-for-food.2.b.zone.nbl"}]},
+	%~ {[1000112, 0], [{file, "data/missions/fight-for-food.2.a.zone.nbl"}]},
+	%~ {[1000113, 0], [{file, "data/missions/fight-for-food.2.s.zone.nbl"}]},
+	{[1000114, 0], [{file, "data/missions/fight-for-food.2.s2.zone.nbl"}]},
+
+	{[1000120, 0], [{file, "data/missions/fight-for-food.3.c.zone.nbl"}]},
+	%~ {[1000121, 0], [{file, "data/missions/fight-for-food.3.b.zone.nbl"}]},
+	{[1000122, 0], [{file, "data/missions/fight-for-food.3.a.zone.nbl"}]},
+	%~ {[1000123, 0], [{file, "data/missions/fight-for-food.3.s.zone.nbl"}]},
+	{[1000124, 0], [{file, "data/missions/fight-for-food.3.s2.zone.nbl"}]},
+
+	% Phantom Ruins (Linear Line counter)
 
 	{[1060300, 0], [{file, "data/missions/phantom-ruins.c-0.zone.nbl"}]},
 	{[1060300, 1], [{file, "data/missions/phantom-ruins.c-1.zone.nbl"}]},
@@ -393,14 +433,23 @@
 
 	% Transfer Terminal (entry 1): Phantom Ruins, Fight for Food, Fight for Food (AOTI, missing)
 
-	{ 11, [{quests, "data/counters/colony.terminal-1.pack"}, {bg, 255}, {options, << 16#01fc2800:32, 3, 3, 0,
-		3, 3, 3, 3, 0, % Phantom Ruins C-S
-		3, 3, 3, % Fight for Food C-A variant 1
-		3, 3, 3, % Fight for Food C-A variant 2
-		3, 3, 3, % Fight for Food C-A variant 3
-		3, 3, 3, % Fight for Food S variant 1-3
+	{ 11, [{quests, "data/counters/colony.terminal-1.pack"}, {bg, 255}, {options, << 16#01fc2800:32, 0, 3, 0,
+		0, 0, 0, 0, 0, % Phantom Ruins C-S
+		3, 3, 0, % Fight for Food C-A variant 1
+		3, 0, 0, % Fight for Food C-A variant 2
+		3, 0, 3, % Fight for Food C-A variant 3
+		0, 0, 0, % Fight for Food S variant 1-3
 		3, 3, 3, % Fight for Food S2 variant 1-3
 	0:136 >>}]},
+
+	%~ { 11, [{quests, "data/counters/colony.terminal-1.pack"}, {bg, 255}, {options, << 16#01fc2800:32, 3, 3, 0,
+		%~ 3, 3, 3, 3, 0, % Phantom Ruins C-S
+		%~ 3, 3, 3, % Fight for Food C-A variant 1
+		%~ 3, 3, 3, % Fight for Food C-A variant 2
+		%~ 3, 3, 3, % Fight for Food C-A variant 3
+		%~ 3, 3, 3, % Fight for Food S variant 1-3
+		%~ 3, 3, 3, % Fight for Food S2 variant 1-3
+	%~ 0:136 >>}]},
 
 	% Aurorey
 

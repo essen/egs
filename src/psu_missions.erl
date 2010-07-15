@@ -45,12 +45,12 @@ object_init(InstanceID, BlockID, [{box, _Model, Breakable, TrigEventID}|Tail], O
 	end,
 	object_init(InstanceID, BlockID, Tail, ObjectID + 1, TargetID + 1);
 %% @todo key and key_console event handling will have to be fixed.
-object_init(InstanceID, BlockID, [{key, TrigEventID, _ReqEventID}|Tail], ObjectID, TargetID) ->
+object_init(InstanceID, BlockID, [{key, _KeySet, TrigEventID, _ReqEventID}|Tail], ObjectID, TargetID) ->
 	egs_db:objects_insert(#objects{id=[InstanceID, {key, ObjectID}], instanceid=InstanceID, objectid=ObjectID, type=key, blockid=BlockID, triggereventid=[TrigEventID]}),
 	object_init(InstanceID, BlockID, Tail, ObjectID + 1, TargetID);
 %% @todo Maybe separate key from key_console in its handling?
-object_init(InstanceID, BlockID, [{key_console, _NoKeyEventID, TrigEventID}|Tail], ObjectID, TargetID) ->
-	egs_db:objects_insert(#objects{id=[InstanceID, {key, ObjectID}], instanceid=InstanceID, objectid=ObjectID, type=key, blockid=BlockID, triggereventid=[244, 202, TrigEventID]}),
+object_init(InstanceID, BlockID, [{key_console, KeySet, _ReqKeyEventsID, TrigEventID}|Tail], ObjectID, TargetID) ->
+	egs_db:objects_insert(#objects{id=[InstanceID, {key, ObjectID}], instanceid=InstanceID, objectid=ObjectID, type=key, blockid=BlockID, triggereventid=[243 + KeySet, 201 + KeySet, TrigEventID]}),
 	object_init(InstanceID, BlockID, Tail, ObjectID + 1, TargetID);
 %% @todo save enemies individually, do something, etc.
 %% @todo temporarily save the spawn to handle events properly
