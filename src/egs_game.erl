@@ -500,8 +500,8 @@ dispatch(Orig) ->
 %% @doc Position change broadcast handler. Save the position and then dispatch it.
 
 broadcast(16#0503, Orig) ->
-	<< _:424, Dir:24/little-unsigned-integer, X:32/little-float, Y:32/little-float, Z:32/little-float,
-		_:96, QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer, _:32 >> = Orig,
+	<< _:424, Dir:24/little-unsigned-integer, _PrevCoords:96, X:32/little-float, Y:32/little-float, Z:32/little-float,
+		QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer, _:32 >> = Orig,
 	FloatDir = Dir / 46603.375,
 	User = egs_db:users_select(get(gid)),
 	NewUser = User#users{pos=#pos{x=X, y=Y, z=Z, dir=FloatDir}, questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID},
