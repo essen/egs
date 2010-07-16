@@ -18,7 +18,7 @@
 
 -module(psu_missions).
 -export([
-	start/3, stop/1, key_event/2, object_hit/3, spawn_cleared/2
+	start/3, stop/1, key_event/2, warp_event/3, object_hit/3, spawn_cleared/2
 ]).
 
 -include("include/missions.hrl").
@@ -32,45 +32,54 @@ map_init(_InstanceID, [], _BlockID, _ObjectID, _TargetID) ->
 	ok;
 map_init(InstanceID, [Map|Tail], BlockID, ObjectID, TargetID) ->
 	{_MapID, Objects} = Map,
-	{ok, NewObjectID, NewTargetID} = object_init(InstanceID, BlockID, Objects, ObjectID, TargetID),
+	{ok, NewObjectID, NewTargetID} = object_init(InstanceID, BlockID, Objects, 0, ObjectID, TargetID),
 	map_init(InstanceID, Tail, BlockID + 1, NewObjectID, NewTargetID).
 
-object_init(_InstanceID, _BlockID, [], ObjectID, TargetID) ->
+object_init(_InstanceID, _BlockID, [], _ObjectNb, ObjectID, TargetID) ->
 	{ok, ObjectID, TargetID};
-object_init(InstanceID, BlockID, [{box, _Model, Breakable, TrigEventID}|Tail], ObjectID, TargetID) ->
+object_init(InstanceID, BlockID, [{box, _Model, Breakable, TrigEventID}|Tail], ObjectNb, ObjectID, TargetID) ->
 	case Breakable of
 		false -> ignore;
 		true ->
 			egs_db:objects_insert(#objects{id=[InstanceID, ObjectID], instanceid=InstanceID, objectid=ObjectID, type=box, targetid=TargetID, blockid=BlockID, triggereventid=TrigEventID})
 	end,
-	object_init(InstanceID, BlockID, Tail, ObjectID + 1, TargetID + 1);
+	object_init(InstanceID, BlockID, Tail, ObjectNb + 1, ObjectID + 1, TargetID + 1);
 %% @todo key and key_console event handling will have to be fixed.
-object_init(InstanceID, BlockID, [{key, _KeySet, TrigEventID, _ReqEventID}|Tail], ObjectID, TargetID) ->
+object_init(InstanceID, BlockID, [{key, _KeySet, TrigEventID, _ReqEventID}|Tail], ObjectNb, ObjectID, TargetID) ->
 	egs_db:objects_insert(#objects{id=[InstanceID, {key, ObjectID}], instanceid=InstanceID, objectid=ObjectID, type=key, blockid=BlockID, triggereventid=[TrigEventID]}),
-	object_init(InstanceID, BlockID, Tail, ObjectID + 1, TargetID);
+	object_init(InstanceID, BlockID, Tail, ObjectNb + 1, ObjectID + 1, TargetID);
 %% @todo Maybe separate key from key_console in its handling?
-object_init(InstanceID, BlockID, [{key_console, KeySet, _ReqKeyEventsID, TrigEventID}|Tail], ObjectID, TargetID) ->
+object_init(InstanceID, BlockID, [{key_console, KeySet, _ReqKeyEventsID, TrigEventID}|Tail], ObjectNb, ObjectID, TargetID) ->
 	egs_db:objects_insert(#objects{id=[InstanceID, {key, ObjectID}], instanceid=InstanceID, objectid=ObjectID, type=key, blockid=BlockID, triggereventid=[243 + KeySet, 201 + KeySet, TrigEventID]}),
-	object_init(InstanceID, BlockID, Tail, ObjectID + 1, TargetID);
+	object_init(InstanceID, BlockID, Tail, ObjectNb + 1, ObjectID + 1, TargetID);
 %% @todo save enemies individually, do something, etc.
 %% @todo temporarily save the spawn to handle events properly
-object_init(InstanceID, BlockID, [{'spawn', TrigEventID, _ReqEventID}|Tail], ObjectID, TargetID) ->
+object_init(InstanceID, BlockID, [{'spawn', TrigEventID, _ReqEventID}|Tail], ObjectNb, ObjectID, TargetID) ->
 	egs_db:objects_insert(#objects{id=[InstanceID, {'spawn', TargetID - 1024}], instanceid=InstanceID, type='spawn', blockid=BlockID, triggereventid=TrigEventID}),
-	object_init(InstanceID, BlockID, Tail, ObjectID + 1, TargetID + 30);
+	object_init(InstanceID, BlockID, Tail, ObjectNb + 1, ObjectID + 1, TargetID + 30);
+object_init(InstanceID, BlockID, [{warp, DestX, DestY, DestZ, DestDir}|Tail], ObjectNb, ObjectID, TargetID) ->
+	egs_db:objects_insert(#objects{id=[InstanceID, {warp, BlockID, ObjectNb}], instanceid=InstanceID, type=warp, blockid=BlockID, args={DestX, DestY, DestZ, DestDir}}),
+	object_init(InstanceID, BlockID, Tail, ObjectNb + 1, ObjectID, TargetID);
 %% @todo Not sure where these 2 come from yet, assuming crystal but might not be that.
-object_init(InstanceID, BlockID, [crystal|Tail], ObjectID, TargetID) ->
-	object_init(InstanceID, BlockID, Tail, ObjectID + 1, TargetID + 2);
+object_init(InstanceID, BlockID, [crystal|Tail], ObjectNb, ObjectID, TargetID) ->
+	object_init(InstanceID, BlockID, Tail, ObjectNb + 1, ObjectID + 1, TargetID + 2);
+%~ %% @todo Not sure where these 9 come from yet, assuming healing pad + pp cube but might not be that.
+%~ object_init(InstanceID, BlockID, [healing_pad|Tail], ObjectID, TargetID) ->
+	%~ object_init(InstanceID, BlockID, Tail, ObjectID + 1, TargetID + 9);
+%~ object_init(InstanceID, BlockID, [pp_cube|Tail], ObjectID, TargetID) ->
+	%~ object_init(InstanceID, BlockID, Tail, ObjectID + 1, TargetID + 1);
 %% A few object types don't have an ObjectID nor a TargetID. Disregard them completely.
-object_init(InstanceID, BlockID, [ObjType|Tail], ObjectID, TargetID)
+object_init(InstanceID, BlockID, [ObjType|Tail], ObjectNb, ObjectID, TargetID)
 	when	ObjType =:= static_model;
 			ObjType =:= invisible_block;
 			ObjType =:= entrance;
 			ObjType =:= 'exit';
-			ObjType =:= label ->
-	object_init(InstanceID, BlockID, Tail, ObjectID, TargetID);
+			ObjType =:= label;
+			ObjType =:= hidden_minimap_section ->
+	object_init(InstanceID, BlockID, Tail, ObjectNb + 1, ObjectID, TargetID);
 %% Others are normal objects, we don't handle them but they have an ObjectID.
-object_init(InstanceID, BlockID, [_|Tail], ObjectID, TargetID) ->
-	object_init(InstanceID, BlockID, Tail, ObjectID + 1, TargetID).
+object_init(InstanceID, BlockID, [_|Tail], ObjectNb, ObjectID, TargetID) ->
+	object_init(InstanceID, BlockID, Tail, ObjectNb + 1, ObjectID + 1, TargetID).
 
 stop(InstanceID) ->
 	egs_db:objects_delete(InstanceID).
@@ -78,6 +87,10 @@ stop(InstanceID) ->
 key_event(InstanceID, ObjectID) ->
 	#objects{triggereventid=EventID, blockid=BlockID} = egs_db:objects_select([InstanceID, {key, ObjectID}]),
 	[EventID, BlockID].
+
+warp_event(InstanceID, BlockID, ObjectNb) ->
+	#objects{args=Args} = egs_db:objects_select([InstanceID, {warp, BlockID, ObjectNb}]),
+	Args.
 
 object_hit(User, _SourceID, TargetID) ->
 	try

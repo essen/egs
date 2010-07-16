@@ -20,6 +20,10 @@
 
 -record(ids, {type, id}).
 
+%% @doc Character position data structure.
+
+-record(pos, {x, y, z, dir}).
+
 %% @doc Table containing the users currently logged in.
 
 -record(users, {
@@ -41,8 +45,7 @@
 	savedzoneid,
 	savedmapid,
 	savedentryid,
-	direction= << 0:32 >>,
-	coords= << 0:96 >>
+	pos
 }).
 
 %% @doc Character main or class level data structure.
@@ -104,7 +107,7 @@
 
 %% @doc Table containing all mission objects.
 
--record(objects, {id, instanceid, objectid, type, targetid, blockid, triggereventid}). % id = [instanceid, objectid]
+-record(objects, {id, instanceid, objectid, type, targetid, blockid, triggereventid, args}). % id = [instanceid, objectid]
 
 %% @doc Hit response data.
 

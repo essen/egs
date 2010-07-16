@@ -212,11 +212,11 @@ char_select_load(Number) ->
 	Appearance = psu_appearance:binary_to_tuple(Race, AppearanceBin),
 	Options = psu_characters:options_binary_to_tuple(OptionsBin),
 	Character = #characters{slot=Number, name=Name, race=Race, gender=Gender, class=Class, appearance=Appearance, options=Options}, % TODO: temporary set the slot here, won't be needed later
-	User = OldUser#users{character=Character},
+	User = OldUser#users{character=Character, pos=#pos{x=0.0, y=0.0, z=0.0, dir=0.0}},
 	egs_db:users_insert(User),
 	char_load(User),
 	send_021b(),
-	area_load(1100000, 0, 4, 6),
+	area_load(1100000, 0, 4, 5),
 	ssl:setopts(get(socket), [{active, true}]),
 	?MODULE:loop(<< >>).
 
@@ -500,21 +500,23 @@ dispatch(Orig) ->
 %% @doc Position change broadcast handler. Save the position and then dispatch it.
 
 broadcast(16#0503, Orig) ->
-	<< 100:32/little-unsigned-integer, 16#050301:24/unsigned-integer, _:360, Direction:32/bits, Coords:96/bits, _:96,
-		QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer,
-		EntryID:32/little-unsigned-integer, _:32 >> = Orig,
+	<< _:424, Dir:24/little-unsigned-integer, X:32/little-float, Y:32/little-float, Z:32/little-float,
+		_:96, QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer, _:32 >> = Orig,
+	FloatDir = Dir / 46603.375,
 	User = egs_db:users_select(get(gid)),
-	NewUser = User#users{direction=Direction, coords=Coords, questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID},
+	NewUser = User#users{pos=#pos{x=X, y=Y, z=Z, dir=FloatDir}, questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID},
 	egs_db:users_insert(NewUser),
 	broadcast(default, Orig);
 
 %% @doc Stand still broadcast handler. Save the position and then dispatch it.
 
 broadcast(16#0514, Orig) ->
-	<< _:320, _:96, Direction:32/bits, Coords:96/bits, QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer,
+	<< _:424, Dir:24/little-unsigned-integer, X:32/little-float, Y:32/little-float, Z:32/little-float,
+		QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer,
 		MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer, _/bits >> = Orig,
+	FloatDir = Dir / 46603.375,
 	User = egs_db:users_select(get(gid)),
-	NewUser = User#users{direction=Direction, coords=Coords, questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID},
+	NewUser = User#users{pos=#pos{x=X, y=Y, z=Z, dir=FloatDir}, questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID},
 	egs_db:users_insert(NewUser),
 	broadcast(default, Orig);
 
@@ -833,13 +835,21 @@ handle(16#0e00, Data) ->
 
 %% @doc Object event handler.
 %% @todo Handle all events appropriately.
+%% @todo B should be the ObjType.
 
 handle(16#0f0a, Data) ->
-	<< _:48, _MapID:16/little-unsigned-integer, ObjectID:16/little-unsigned-integer, _:16, A:32/little-unsigned-integer, _:64, B:32/little-unsigned-integer, _:272, Action:8, _/bits >> = Data,
-	log("object event handler: action ~b object ~b", [Action, ObjectID]),
+	<< BlockID:16/little-unsigned-integer, _:16, ObjectNb:16/little-unsigned-integer, _MapID:16/little-unsigned-integer, ObjectID:16/little-unsigned-integer,
+		_:16, A:32/little-unsigned-integer, B:32/little-unsigned-integer, _:32, C:32/little-unsigned-integer, _:272, Action:8, _/bits >> = Data,
+	log("~p", [Data]),
+	log("object event handler: action ~b object ~b a ~b b ~b c ~b", [Action, ObjectID, A, B, C]),
 	case Action of
 		0 -> % warp
-			ignore;
+			User = egs_db:users_select(get(gid)),
+			{X, Y, Z, Dir} = psu_missions:warp_event(User#users.instanceid, BlockID, ObjectNb),
+			NewUser = User#users{pos=#pos{x=X, y=Y, z=Z, dir=Dir}},
+			egs_db:users_insert(NewUser),
+			send_0503(User#users.pos),
+			send_1211(A, C, B, 0);
 		3 -> % crystal activation
 			send_1213(ObjectID, 1);
 		12 -> % pick/use key
@@ -865,9 +875,9 @@ handle(16#0f0a, Data) ->
 			send_1205(EventID, BlockID, 0),
 			send_1213(ObjectID, 1);
 		25 -> % sit on chair
-			send_1211(A, B, 8, 0);
+			send_1211(A, C, 8, 0);
 		26 -> % sit out of chair
-			send_1211(A, B, 8, 2);
+			send_1211(A, C, 8, 2);
 		%~ 30 -> % @todo (phantom ruins block 4)
 			%~ ignore;
 		_ ->
@@ -1222,6 +1232,16 @@ send_0304(FromGID, FromName, Modifiers, Message) ->
 		0 -> send(<< 16#03040300:32, 0:288, 16#00001200:32, FromGID:32/little-unsigned-integer, Modifiers:128/bits, Message/bits >>);
 		_ -> send(<< 16#03040300:32, 0:288, 16#00001200:32, FromGID:32/little-unsigned-integer, Modifiers:128/bits, FromName:512/bits, Message/bits >>)
 	end.
+
+%% @todo Force send a new player location. Used for warps.
+%% @todo The value before IntDir seems to be the player's current animation. 01 stand up, 08 ?, 17 normal sit
+
+send_0503(#pos{x=PrevX, y=PrevY, z=PrevZ, dir=_}) ->
+	#users{gid=GID, pos=#pos{x=X, y=Y, z=Z, dir=Dir}, questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID} = egs_db:users_select(get(gid)),
+	IntDir = trunc(Dir * 182.0416),
+	send(<< 16#05030300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, GID:32/little-unsigned-integer, 0:32,
+		16#1000:16, IntDir:16/little-unsigned-integer, PrevX:32/little-float, PrevY:32/little-float, PrevZ:32/little-float, X:32/little-float, Y:32/little-float, Z:32/little-float,
+		QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer, 1:32/little-unsigned-integer >>).
 
 %% @todo Inventory related. No idea what it does.
 

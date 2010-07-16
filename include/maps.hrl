@@ -59,12 +59,35 @@
 	{1000123, [{type, mission}, {file, "data/missions/fight-for-food.3.s.quest.nbl"},  {start, [0, 1301, 0]}]},
 	{1000124, [{type, mission}, {file, "data/missions/fight-for-food.3.s2.quest.nbl"}, {start, [0, 1301, 0]}]},
 
+	% Dark Satellite
+
+	{1001000, [{type, mission}, {file, "data/missions/dark-satellite.1.c.quest.nbl"},  {start, [0, 101, 0]}]},
+	{1001001, [{type, mission}, {file, "data/missions/dark-satellite.1.b.quest.nbl"},  {start, [0, 101, 0]}]},
+	{1001002, [{type, mission}, {file, "data/missions/dark-satellite.1.a.quest.nbl"},  {start, [0, 101, 0]}]},
+	%~ {1001003, [{type, mission}, {file, "data/missions/dark-satellite.1.s.quest.nbl"},  {start, [0, 101, 0]}]},
+	{1001004, [{type, mission}, {file, "data/missions/dark-satellite.1.s2.quest.nbl"}, {start, [0, 101, 0]}]},
+	{1001005, [{type, mission}, {file, "data/missions/dark-satellite.1.s3.quest.nbl"}, {start, [0, 101, 0]}]},
+
+	{1001010, [{type, mission}, {file, "data/missions/dark-satellite.2.c.quest.nbl"},  {start, [0, 102, 0]}]},
+	{1001011, [{type, mission}, {file, "data/missions/dark-satellite.2.b.quest.nbl"},  {start, [0, 102, 0]}]},
+	{1001012, [{type, mission}, {file, "data/missions/dark-satellite.2.a.quest.nbl"},  {start, [0, 102, 0]}]},
+	{1001013, [{type, mission}, {file, "data/missions/dark-satellite.2.s.quest.nbl"},  {start, [0, 102, 0]}]},
+	%~ {1001014, [{type, mission}, {file, "data/missions/dark-satellite.2.s2.quest.nbl"}, {start, [0, 102, 0]}]},
+	%~ {1001015, [{type, mission}, {file, "data/missions/dark-satellite.2.s3.quest.nbl"}, {start, [0, 102, 0]}]},
+
+	{1001020, [{type, mission}, {file, "data/missions/dark-satellite.3.c.quest.nbl"},  {start, [0, 103, 0]}]},
+	%~ {1001021, [{type, mission}, {file, "data/missions/dark-satellite.3.b.quest.nbl"},  {start, [0, 103, 0]}]},
+	{1001022, [{type, mission}, {file, "data/missions/dark-satellite.3.a.quest.nbl"},  {start, [0, 103, 0]}]},
+	%~ {1001023, [{type, mission}, {file, "data/missions/dark-satellite.3.s.quest.nbl"},  {start, [0, 103, 0]}]},
+	{1001024, [{type, mission}, {file, "data/missions/dark-satellite.3.s2.quest.nbl"}, {start, [0, 103, 0]}]},
+	{1001025, [{type, mission}, {file, "data/missions/dark-satellite.3.s3.quest.nbl"}, {start, [0, 103, 0]}]},
+
 	% Phantom Ruins (Linear Line counter)
 
-	{1060300, [{type, mission}, {file, "data/missions/phantom-ruins.c.quest.nbl"},  {start, [0, 8002, 0]}]},
-	{1060301, [{type, mission}, {file, "data/missions/phantom-ruins.b.quest.nbl"},  {start, [0, 8002, 0]}]},
-	{1060302, [{type, mission}, {file, "data/missions/phantom-ruins.a.quest.nbl"},  {start, [0, 8002, 0]}]},
-	{1060303, [{type, mission}, {file, "data/missions/phantom-ruins.s.quest.nbl"},  {start, [0, 8002, 0]}]},
+	%~ {1060300, [{type, mission}, {file, "data/missions/phantom-ruins.c.quest.nbl"},  {start, [0, 8002, 0]}]},
+	%~ {1060301, [{type, mission}, {file, "data/missions/phantom-ruins.b.quest.nbl"},  {start, [0, 8002, 0]}]},
+	%~ {1060302, [{type, mission}, {file, "data/missions/phantom-ruins.a.quest.nbl"},  {start, [0, 8002, 0]}]},
+	%~ {1060303, [{type, mission}, {file, "data/missions/phantom-ruins.s.quest.nbl"},  {start, [0, 8002, 0]}]},
 
 	% Planetary lobbies
 
@@ -132,16 +155,39 @@
 	%~ {[1000123, 0], [{file, "data/missions/fight-for-food.3.s.zone.nbl"}]},
 	{[1000124, 0], [{file, "data/missions/fight-for-food.3.s2.zone.nbl"}]},
 
+	% Dark Satellite
+
+	{[1001000, 0], [{file, "data/missions/dark-satellite.1.c.zone.nbl"}]},
+	{[1001001, 0], [{file, "data/missions/dark-satellite.1.b.zone.nbl"}]},
+	{[1001002, 0], [{file, "data/missions/dark-satellite.1.a.zone.nbl"}]},
+	%~ {[1001003, 0], [{file, "data/missions/dark-satellite.1.s.zone.nbl"}]},
+	{[1001004, 0], [{file, "data/missions/dark-satellite.1.s2.zone.nbl"}]},
+	{[1001005, 0], [{file, "data/missions/dark-satellite.1.s3.zone.nbl"}]},
+
+	{[1001010, 0], [{file, "data/missions/dark-satellite.2.c.zone.nbl"}]},
+	{[1001011, 0], [{file, "data/missions/dark-satellite.2.b.zone.nbl"}]},
+	{[1001012, 0], [{file, "data/missions/dark-satellite.2.a.zone.nbl"}]},
+	{[1001013, 0], [{file, "data/missions/dark-satellite.2.s.zone.nbl"}]},
+	%~ {[1001014, 0], [{file, "data/missions/dark-satellite.2.s2.zone.nbl"}]},
+	%~ {[1001015, 0], [{file, "data/missions/dark-satellite.2.s3.zone.nbl"}]},
+
+	{[1001020, 0], [{file, "data/missions/dark-satellite.3.c.zone.nbl"}]},
+	%~ {[1001021, 0], [{file, "data/missions/dark-satellite.3.b.zone.nbl"}]},
+	{[1001022, 0], [{file, "data/missions/dark-satellite.3.a.zone.nbl"}]},
+	%~ {[1001023, 0], [{file, "data/missions/dark-satellite.3.s.zone.nbl"}]},
+	{[1001024, 0], [{file, "data/missions/dark-satellite.3.s2.zone.nbl"}]},
+	{[1001025, 0], [{file, "data/missions/dark-satellite.3.s3.zone.nbl"}]},
+
 	% Phantom Ruins (Linear Line counter)
 
-	{[1060300, 0], [{file, "data/missions/phantom-ruins.c-0.zone.nbl"}]},
-	{[1060300, 1], [{file, "data/missions/phantom-ruins.c-1.zone.nbl"}]},
-	{[1060301, 0], [{file, "data/missions/phantom-ruins.b-0.zone.nbl"}]},
-	{[1060301, 1], [{file, "data/missions/phantom-ruins.b-1.zone.nbl"}]},
-	{[1060302, 0], [{file, "data/missions/phantom-ruins.a-0.zone.nbl"}]},
-	{[1060302, 1], [{file, "data/missions/phantom-ruins.a-1.zone.nbl"}]},
-	{[1060303, 0], [{file, "data/missions/phantom-ruins.s-0.zone.nbl"}]},
-	{[1060303, 1], [{file, "data/missions/phantom-ruins.s-1.zone.nbl"}]},
+	%~ {[1060300, 0], [{file, "data/missions/phantom-ruins.c-0.zone.nbl"}]},
+	%~ {[1060300, 1], [{file, "data/missions/phantom-ruins.c-1.zone.nbl"}]},
+	%~ {[1060301, 0], [{file, "data/missions/phantom-ruins.b-0.zone.nbl"}]},
+	%~ {[1060301, 1], [{file, "data/missions/phantom-ruins.b-1.zone.nbl"}]},
+	%~ {[1060302, 0], [{file, "data/missions/phantom-ruins.a-0.zone.nbl"}]},
+	%~ {[1060302, 1], [{file, "data/missions/phantom-ruins.a-1.zone.nbl"}]},
+	%~ {[1060303, 0], [{file, "data/missions/phantom-ruins.s-0.zone.nbl"}]},
+	%~ {[1060303, 1], [{file, "data/missions/phantom-ruins.s-1.zone.nbl"}]},
 
 	% Colony
 
@@ -348,14 +394,23 @@
 
 	% Space docks: Phantom Ruins, Dark Satellite, Familiar Trees (missing), Boss quest category (missing), Unit category (missing), Enemy category (missing)
 
-	{  1, [{quests, "data/counters/colony.docks.pack"}, {bg, 255}, {options, << 16#01805400:32, 3, 3, 0, 0, 0, 0,
-		3, 3, 3, 3, 0, % Phantom Ruins C-S
-		3, 3, 3, 3, % Dark Satellite C-S variant 1
+	{  1, [{quests, "data/counters/colony.docks.pack"}, {bg, 255}, {options, << 16#01805400:32, 0, 3, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, % Phantom Ruins C-S
+		3, 3, 3, 0, % Dark Satellite C-S variant 1
 		3, 3, 3, 3, % Dark Satellite C-S variant 2
-		3, 3, 3, 3, % Dark Satellite C-S variant 3
-		3, 3, 3, % Dark Satellite S2 variant 1-3
-		3, 3, 3, % Dark Satellite S3 variant 1-3
+		3, 0, 3, 0, % Dark Satellite C-S variant 3
+		3, 0, 3, % Dark Satellite S2 variant 1-3
+		3, 0, 3, % Dark Satellite S3 variant 1-3
 	0:440 >>}]},
+
+	%~ {  1, [{quests, "data/counters/colony.docks.pack"}, {bg, 255}, {options, << 16#01805400:32, 3, 3, 0, 0, 0, 0,
+		%~ 3, 3, 3, 3, 0, % Phantom Ruins C-S
+		%~ 3, 3, 3, 3, % Dark Satellite C-S variant 1
+		%~ 3, 3, 3, 3, % Dark Satellite C-S variant 2
+		%~ 3, 3, 3, 3, % Dark Satellite C-S variant 3
+		%~ 3, 3, 3, % Dark Satellite S2 variant 1-3
+		%~ 3, 3, 3, % Dark Satellite S3 variant 1-3
+	%~ 0:440 >>}]},
 
 	% Parum East: Illusionary Shaft, Mad Creatures, Fire purification (missing), Scarred Planet (missing), Scarred Planet
 
