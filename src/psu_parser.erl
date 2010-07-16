@@ -45,7 +45,7 @@ parse_zone(QuestID, NblFilename) ->
 	log("header: end ptr(~b) areaid list ptr(~b)", [EndRelPtr, AreaIDListRelPtr]),
 	{ok, _AreaCode, NbMaps, MapsListPtr} = parse_areaid_list(Data, AreaIDListRelPtr - 16),
 	MapList = parse_mapnumbers_list(Data, NbMaps, MapsListPtr - BasePtr - 16),
-	ObjList = {QuestID, [{MapID, lists:flatten(parse_object_list_headers(BasePtr, Data, NbHeaders, ObjListHeadersPtr - BasePtr - 16))} || {MapID, NbHeaders, ObjListHeadersPtr} <- MapList]},
+	ObjList = {QuestID, [{MapID, parse_object_list_headers(BasePtr, Data, NbHeaders, ObjListHeadersPtr - BasePtr - 16)} || {MapID, NbHeaders, ObjListHeadersPtr} <- MapList]},
 	nbl_cleanup(),
 	ObjList.
 

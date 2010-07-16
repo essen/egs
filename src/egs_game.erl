@@ -838,14 +838,13 @@ handle(16#0e00, Data) ->
 %% @todo B should be the ObjType.
 
 handle(16#0f0a, Data) ->
-	<< BlockID:16/little-unsigned-integer, _:16, ObjectNb:16/little-unsigned-integer, _MapID:16/little-unsigned-integer, ObjectID:16/little-unsigned-integer,
+	<< BlockID:16/little-unsigned-integer, ListNb:16/little-unsigned-integer, ObjectNb:16/little-unsigned-integer, _MapID:16/little-unsigned-integer, ObjectID:16/little-unsigned-integer,
 		_:16, A:32/little-unsigned-integer, B:32/little-unsigned-integer, _:32, C:32/little-unsigned-integer, _:272, Action:8, _/bits >> = Data,
-	log("~p", [Data]),
 	log("object event handler: action ~b object ~b a ~b b ~b c ~b", [Action, ObjectID, A, B, C]),
 	case Action of
 		0 -> % warp
 			User = egs_db:users_select(get(gid)),
-			{X, Y, Z, Dir} = psu_missions:warp_event(User#users.instanceid, BlockID, ObjectNb),
+			{X, Y, Z, Dir} = psu_missions:warp_event(User#users.instanceid, BlockID, ListNb, ObjectNb),
 			NewUser = User#users{pos=#pos{x=X, y=Y, z=Z, dir=Dir}},
 			egs_db:users_insert(NewUser),
 			send_0503(User#users.pos),
