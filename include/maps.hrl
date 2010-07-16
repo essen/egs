@@ -82,6 +82,29 @@
 	{1001024, [{type, mission}, {file, "data/missions/dark-satellite.3.s2.quest.nbl"}, {start, [0, 103, 0]}]},
 	{1001025, [{type, mission}, {file, "data/missions/dark-satellite.3.s3.quest.nbl"}, {start, [0, 103, 0]}]},
 
+	% Seed Awakening
+
+	%~ {1001100, [{type, mission}, {file, "data/missions/seed-awakening.1.c.quest.nbl"},  {start, [0, 130, 0]}]},
+	{1001101, [{type, mission}, {file, "data/missions/seed-awakening.1.b.quest.nbl"},  {start, [0, 130, 0]}]},
+	{1001102, [{type, mission}, {file, "data/missions/seed-awakening.1.a.quest.nbl"},  {start, [0, 130, 0]}]},
+	{1001103, [{type, mission}, {file, "data/missions/seed-awakening.1.s.quest.nbl"},  {start, [0, 130, 0]}]},
+	{1001104, [{type, mission}, {file, "data/missions/seed-awakening.1.s2.quest.nbl"}, {start, [0, 130, 0]}]},
+	{1001105, [{type, mission}, {file, "data/missions/seed-awakening.1.s3.quest.nbl"}, {start, [0, 130, 0]}]},
+
+	{1001110, [{type, mission}, {file, "data/missions/seed-awakening.2.c.quest.nbl"},  {start, [0, 112, 0]}]},
+	{1001111, [{type, mission}, {file, "data/missions/seed-awakening.2.b.quest.nbl"},  {start, [0, 112, 0]}]},
+	{1001112, [{type, mission}, {file, "data/missions/seed-awakening.2.a.quest.nbl"},  {start, [0, 112, 0]}]},
+	%~ {1001113, [{type, mission}, {file, "data/missions/seed-awakening.2.s.quest.nbl"},  {start, [0, 112, 0]}]},
+	{1001114, [{type, mission}, {file, "data/missions/seed-awakening.2.s2.quest.nbl"}, {start, [0, 112, 0]}]},
+	{1001115, [{type, mission}, {file, "data/missions/seed-awakening.2.s3.quest.nbl"}, {start, [0, 112, 0]}]},
+
+	{1001120, [{type, mission}, {file, "data/missions/seed-awakening.3.c.quest.nbl"},  {start, [0, 113, 0]}]},
+	%~ {1001121, [{type, mission}, {file, "data/missions/seed-awakening.3.b.quest.nbl"},  {start, [0, 113, 0]}]},
+	%~ {1001122, [{type, mission}, {file, "data/missions/seed-awakening.3.a.quest.nbl"},  {start, [0, 113, 0]}]},
+	%~ {1001123, [{type, mission}, {file, "data/missions/seed-awakening.3.s.quest.nbl"},  {start, [0, 113, 0]}]},
+	{1001124, [{type, mission}, {file, "data/missions/seed-awakening.3.s2.quest.nbl"}, {start, [0, 113, 0]}]},
+	{1001125, [{type, mission}, {file, "data/missions/seed-awakening.3.s3.quest.nbl"}, {start, [0, 113, 0]}]},
+
 	% Phantom Ruins (Linear Line counter)
 
 	%~ {1060300, [{type, mission}, {file, "data/missions/phantom-ruins.c.quest.nbl"},  {start, [0, 8002, 0]}]},
@@ -177,6 +200,56 @@
 	%~ {[1001023, 0], [{file, "data/missions/dark-satellite.3.s.zone.nbl"}]},
 	{[1001024, 0], [{file, "data/missions/dark-satellite.3.s2.zone.nbl"}]},
 	{[1001025, 0], [{file, "data/missions/dark-satellite.3.s3.zone.nbl"}]},
+
+	% Seed Awakening
+
+	%~ {[1001100, 0], [{file, "data/missions/seed-awakening.1.c.zone-0.nbl"}]},
+	%~ {[1001100, 1], [{file, "data/missions/seed-awakening.1.c.zone-1.nbl"}]},
+	{[1001101, 0], [{file, "data/missions/seed-awakening.1.b.zone-0.nbl"}]},
+	{[1001101, 1], [{file, "data/missions/seed-awakening.1.b.zone-1.nbl"}]},
+	{[1001102, 0], [{file, "data/missions/seed-awakening.1.a.zone-0.nbl"}]},
+	{[1001102, 1], [{file, "data/missions/seed-awakening.1.a.zone-1.nbl"}]},
+	{[1001103, 0], [{file, "data/missions/seed-awakening.1.s.zone-0.nbl"}]},
+	{[1001103, 1], [{file, "data/missions/seed-awakening.1.s.zone-1.nbl"}]},
+	{[1001103, 2], [{file, "data/missions/seed-awakening.1.s.zone-2.nbl"}]},
+	{[1001104, 0], [{file, "data/missions/seed-awakening.1.s2.zone-0.nbl"}]},
+	{[1001104, 1], [{file, "data/missions/seed-awakening.1.s2.zone-1.nbl"}]},
+	{[1001104, 2], [{file, "data/missions/seed-awakening.1.s2.zone-2.nbl"}]},
+	{[1001105, 0], [{file, "data/missions/seed-awakening.1.s3.zone-0.nbl"}]},
+	{[1001105, 1], [{file, "data/missions/seed-awakening.1.s3.zone-1.nbl"}]},
+	{[1001105, 2], [{file, "data/missions/seed-awakening.1.s3.zone-2.nbl"}]},
+
+	{[1001110, 0], [{file, "data/missions/seed-awakening.2.c.zone-0.nbl"}]},
+	{[1001110, 1], [{file, "data/missions/seed-awakening.2.c.zone-1.nbl"}]},
+	{[1001111, 0], [{file, "data/missions/seed-awakening.2.b.zone-0.nbl"}]},
+	{[1001111, 1], [{file, "data/missions/seed-awakening.2.b.zone-1.nbl"}]},
+	{[1001112, 0], [{file, "data/missions/seed-awakening.2.a.zone-0.nbl"}]},
+	{[1001112, 1], [{file, "data/missions/seed-awakening.2.a.zone-1.nbl"}]},
+	%~ {[1001113, 0], [{file, "data/missions/seed-awakening.2.s.zone-0.nbl"}]},
+	%~ {[1001113, 1], [{file, "data/missions/seed-awakening.2.s.zone-1.nbl"}]},
+	%~ {[1001113, 2], [{file, "data/missions/seed-awakening.2.s.zone-2.nbl"}]},
+	{[1001114, 0], [{file, "data/missions/seed-awakening.2.s2.zone-0.nbl"}]},
+	{[1001114, 1], [{file, "data/missions/seed-awakening.2.s2.zone-1.nbl"}]},
+	{[1001114, 2], [{file, "data/missions/seed-awakening.2.s2.zone-2.nbl"}]},
+	{[1001115, 0], [{file, "data/missions/seed-awakening.2.s3.zone-0.nbl"}]},
+	{[1001115, 1], [{file, "data/missions/seed-awakening.2.s3.zone-1.nbl"}]},
+	{[1001115, 2], [{file, "data/missions/seed-awakening.2.s3.zone-2.nbl"}]},
+
+	{[1001120, 0], [{file, "data/missions/seed-awakening.3.c.zone-0.nbl"}]},
+	{[1001120, 1], [{file, "data/missions/seed-awakening.3.c.zone-1.nbl"}]},
+	%~ {[1001121, 0], [{file, "data/missions/seed-awakening.3.b.zone-0.nbl"}]},
+	%~ {[1001121, 1], [{file, "data/missions/seed-awakening.3.b.zone-1.nbl"}]},
+	%~ {[1001122, 0], [{file, "data/missions/seed-awakening.3.a.zone-0.nbl"}]},
+	%~ {[1001122, 1], [{file, "data/missions/seed-awakening.3.a.zone-1.nbl"}]},
+	%~ {[1001123, 0], [{file, "data/missions/seed-awakening.3.s.zone-0.nbl"}]},
+	%~ {[1001123, 1], [{file, "data/missions/seed-awakening.3.s.zone-1.nbl"}]},
+	%~ {[1001123, 2], [{file, "data/missions/seed-awakening.3.s.zone-2.nbl"}]},
+	{[1001124, 0], [{file, "data/missions/seed-awakening.3.s2.zone-0.nbl"}]},
+	%~ {[1001124, 1], [{file, "data/missions/seed-awakening.3.s2.zone-1.nbl"}]},
+	%~ {[1001124, 2], [{file, "data/missions/seed-awakening.3.s2.zone-2.nbl"}]},
+	{[1001125, 0], [{file, "data/missions/seed-awakening.3.s3.zone-0.nbl"}]},
+	{[1001125, 1], [{file, "data/missions/seed-awakening.3.s3.zone-1.nbl"}]},
+	{[1001125, 2], [{file, "data/missions/seed-awakening.3.s3.zone-2.nbl"}]},
 
 	% Phantom Ruins (Linear Line counter)
 
@@ -516,14 +589,23 @@
 
 	% HIVE (entry 1): Phantom Ruins, SEED Awakened
 
-	{ 21, [{quests, "data/counters/colony.hive-1.pack"}, {bg, 255}, {options, << 16#017e1c00:32, 3, 3,
-		3, 3, 3, 3, 0, % Phantom Ruins C-S
-		3, 3, 3, 3, % SEED Awakened C-S variant 1
-		3, 3, 3, 3, % SEED Awakened C-S variant 2
-		3, 3, 3, 3, % SEED Awakened C-S variant 3
+	{ 21, [{quests, "data/counters/colony.hive-1.pack"}, {bg, 255}, {options, << 16#017e1c00:32, 0, 3,
+		0, 0, 0, 0, 0, % Phantom Ruins C-S
+		0, 3, 3, 3, % SEED Awakened C-S variant 1
+		3, 3, 3, 0, % SEED Awakened C-S variant 2
+		3, 0, 0, 0, % SEED Awakened C-S variant 3
 		3, 3, 3, % SEED Awakened S2 variant 1-3
 		3, 3, 3, % SEED Awakened S3 variant 1-3
 	0:24 >>}]},
+
+	%~ { 21, [{quests, "data/counters/colony.hive-1.pack"}, {bg, 255}, {options, << 16#017e1c00:32, 3, 3,
+		%~ 3, 3, 3, 3, 0, % Phantom Ruins C-S
+		%~ 3, 3, 3, 3, % SEED Awakened C-S variant 1
+		%~ 3, 3, 3, 3, % SEED Awakened C-S variant 2
+		%~ 3, 3, 3, 3, % SEED Awakened C-S variant 3
+		%~ 3, 3, 3, % SEED Awakened S2 variant 1-3
+		%~ 3, 3, 3, % SEED Awakened S3 variant 1-3
+	%~ 0:24 >>}]},
 
 	% Dallgun: Phantom Ruins, The Black Nest, True Darkness, (empty name, missing)
 
