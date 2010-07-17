@@ -172,18 +172,25 @@ parse_object_args(22, _Params, Data) ->
 	log("key_console: a(~b) keyset(~b) b(~b) c(~b) reqkeyevents(~p) trigevent(~p) d(~b)", [UnknownA, KeySet, UnknownB, UnknownC, ReqKeyEvents, TrigEvent, UnknownD]),
 	{key_console, KeySet, ReqKeyEvents, TrigEvent};
 
-%% @todo Find out what this object number is.
+%% @doc Small spawn.
 
-parse_object_args(23, _Params, _Data) ->
-	unknown_object;
+parse_object_args(23, _Params, Data) ->
+	%% @todo return meaningful information
+	<< _:704, UnknownA:32/little-unsigned-integer, RawTrigEvent:16/little-unsigned-integer, RawReqEvent:16/little-unsigned-integer, 16#ffff:16, UnknownB:8, SpawnNb:8, _/bits >> = Data,
+	TrigEvent = convert_eventid(RawTrigEvent),
+	ReqEvent = convert_eventid(RawReqEvent),
+	log("spawn (x10): a(~b) trigevent(~p) reqevent(~p) b(~b) spawnnb(~b)", [UnknownA, TrigEvent, ReqEvent, UnknownB, SpawnNb]),
+	{'spawn', 10, TrigEvent, ReqEvent};
+
+%% @doc Big spawn.
 
 parse_object_args(24, _Params, Data) ->
 	%% @todo return meaningful information
 	<< _:704, UnknownA:32/little-unsigned-integer, RawTrigEvent:16/little-unsigned-integer, RawReqEvent:16/little-unsigned-integer, 16#ffff:16, UnknownB:8, SpawnNb:8, _/bits >> = Data,
 	TrigEvent = convert_eventid(RawTrigEvent),
 	ReqEvent = convert_eventid(RawReqEvent),
-	log("spawn: a(~b) trigevent(~p) reqevent(~p) b(~b) spawnnb(~b)", [UnknownA, TrigEvent, ReqEvent, UnknownB, SpawnNb]),
-	{'spawn', TrigEvent, ReqEvent};
+	log("spawn (x30): a(~b) trigevent(~p) reqevent(~p) b(~b) spawnnb(~b)", [UnknownA, TrigEvent, ReqEvent, UnknownB, SpawnNb]),
+	{'spawn', 30, TrigEvent, ReqEvent};
 
 parse_object_args(26, _Params, _Data) ->
 	entrance;

@@ -69,9 +69,9 @@ object_init(InstanceID, BlockID, [{key_console, KeySet, _ReqKeyEventsID, TrigEve
 	object_init(InstanceID, BlockID, Tail, ListNb, ObjectNb + 1, ObjectID + 1, TargetID);
 %% @todo save enemies individually, do something, etc.
 %% @todo temporarily save the spawn to handle events properly
-object_init(InstanceID, BlockID, [{'spawn', TrigEventID, _ReqEventID}|Tail], ListNb, ObjectNb, ObjectID, TargetID) ->
+object_init(InstanceID, BlockID, [{'spawn', NbTargets, TrigEventID, _ReqEventID}|Tail], ListNb, ObjectNb, ObjectID, TargetID) ->
 	egs_db:objects_insert(#objects{id=[InstanceID, {'spawn', TargetID - 1024}], instanceid=InstanceID, type='spawn', blockid=BlockID, triggereventid=TrigEventID}),
-	object_init(InstanceID, BlockID, Tail, ListNb, ObjectNb + 1, ObjectID + 1, TargetID + 30);
+	object_init(InstanceID, BlockID, Tail, ListNb, ObjectNb + 1, ObjectID + 1, TargetID + NbTargets);
 object_init(InstanceID, BlockID, [{warp, DestX, DestY, DestZ, DestDir}|Tail], ListNb, ObjectNb, ObjectID, TargetID) ->
 	egs_db:objects_insert(#objects{id=[InstanceID, {warp, BlockID, ListNb, ObjectNb}], instanceid=InstanceID, type=warp, blockid=BlockID, args={DestX, DestY, DestZ, DestDir}}),
 	object_init(InstanceID, BlockID, Tail, ListNb, ObjectNb + 1, ObjectID, TargetID);
