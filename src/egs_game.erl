@@ -851,14 +851,30 @@ handle(16#0f0a, Data) ->
 			send_1211(A, C, B, 0);
 		3 -> % crystal activation
 			send_1213(ObjectID, 1);
+		4 -> % enter boss gate
+			send_1213(ObjectID, 1);
+		5 -> % leave boss gate
+			% probably 1213, unknown last value
+			ignore;
+		6 -> % activate boss gate
+			send_1213(ObjectID, 0),
+			send_1215(2, 16#7008),
+			%% @todo Sent after warp but not necessarily, also what's 37 (should be a B1 object) and why resend the 1213(id)?
+			send_1213(37, 0),
+			send_1213(ObjectID, 0);
+		9 -> % healing pad
+			% 0117, 0111, 0117?
+			ignore;
 		12 -> % pick/use key
 			User = egs_db:users_select(get(gid)),
 			[[EventID|_], BlockID] = psu_missions:key_event(User#users.instanceid, ObjectID),
 			send_1205(EventID, BlockID, 0),
 			send_1213(ObjectID, 1);
-		13 -> % button on
+		13 -> % floor_button on
+			% 1205 1213
 			ignore;
-		14 -> % button off
+		14 -> % floor_button off
+			% 1205(same, with 1 as last value) 1213(same, with 0 as last value)
 			ignore;
 		%~ 19 -> % @todo (somewhere in phantom ruins block 4)
 			%~ ignore;
@@ -882,6 +898,16 @@ handle(16#0f0a, Data) ->
 		_ ->
 			log("object event ~b", [Action])
 	end;
+
+%% @todo Not sure about that one though. Probably related to 1112 still.
+
+handle(16#1106, Data) ->
+	send_110e(Data);
+
+%% @doc Probably asking permission to start the video (used for syncing?).
+
+handle(16#1112, Data) ->
+	send_1113(Data);
 
 %% @doc Party information recap request.
 %% @todo Handle when the party already exists! And stop doing it wrong.
@@ -1397,6 +1423,16 @@ send_1022(HP) ->
 	GID = get(gid),
 	send(<< 16#10220300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, HP:32/little-unsigned-integer, 0:32 >>).
 
+%% @todo Boss related command.
+
+send_110e(Data) ->
+	send(<< (header(16#110e))/binary, Data/binary, 0:32, 5:16/little-unsigned-integer, 12:16/little-unsigned-integer, 0:32, 260:32/little-unsigned-integer >>).
+
+%% @todo Boss related command.
+
+send_1113(Data) ->
+	send(<< (header(16#1113))/binary, Data/binary >>).
+
 %% @todo Figure out what this packet does. Sane values for counter and missions for now.
 
 send_1202() ->
@@ -1438,6 +1474,11 @@ send_1212() ->
 
 send_1213(A, B) ->
 	send(<< (header(16#1213))/binary, A:32/little-unsigned-integer, B:32/little-unsigned-integer >>).
+
+%% @todo Related to boss gates.
+
+send_1215(A, B) ->
+	send(<< (header(16#1215))/binary, A:32/little-unsigned-integer, 0:16, B:16/little-unsigned-integer >>).
 
 %% @doc Send the player's partner card.
 %% @todo Find out the remaining values.

@@ -105,6 +105,26 @@
 	{1001124, [{type, mission}, {file, "data/missions/seed-awakening.3.s2.quest.nbl"}, {start, [0, 113, 0]}]},
 	{1001125, [{type, mission}, {file, "data/missions/seed-awakening.3.s3.quest.nbl"}, {start, [0, 113, 0]}]},
 
+	% True Darkness
+
+	%~ {1001200, [{type, mission}, {file, "data/missions/true-darkness.1.c.quest.nbl"},  {start, [0, 130, 0]}]},
+	%~ {1001201, [{type, mission}, {file, "data/missions/true-darkness.1.b.quest.nbl"},  {start, [0, 130, 0]}]},
+	%~ {1001202, [{type, mission}, {file, "data/missions/true-darkness.1.a.quest.nbl"},  {start, [0, 130, 0]}]},
+	%~ {1001203, [{type, mission}, {file, "data/missions/true-darkness.1.s.quest.nbl"},  {start, [0, 130, 0]}]},
+	%~ {1001204, [{type, mission}, {file, "data/missions/true-darkness.1.s2.quest.nbl"}, {start, [0, 130, 0]}]},
+
+	{1001210, [{type, mission}, {file, "data/missions/true-darkness.2.c.quest.nbl"},  {start, [0, 131, 0]}]},
+	%~ {1001211, [{type, mission}, {file, "data/missions/true-darkness.2.b.quest.nbl"},  {start, [0, 131, 0]}]},
+	{1001212, [{type, mission}, {file, "data/missions/true-darkness.2.a.quest.nbl"},  {start, [0, 131, 0]}]},
+	{1001213, [{type, mission}, {file, "data/missions/true-darkness.2.s.quest.nbl"},  {start, [0, 131, 0]}]},
+	%~ {1001214, [{type, mission}, {file, "data/missions/true-darkness.2.s2.quest.nbl"}, {start, [0, 131, 0]}]},
+
+	{1001220, [{type, mission}, {file, "data/missions/true-darkness.3.c.quest.nbl"},  {start, [0, 802, 0]}]},
+	{1001221, [{type, mission}, {file, "data/missions/true-darkness.3.b.quest.nbl"},  {start, [0, 802, 0]}]},
+	{1001222, [{type, mission}, {file, "data/missions/true-darkness.3.a.quest.nbl"},  {start, [0, 802, 0]}]},
+	%~ {1001223, [{type, mission}, {file, "data/missions/true-darkness.3.s.quest.nbl"},  {start, [0, 802, 0]}]},
+	{1001224, [{type, mission}, {file, "data/missions/true-darkness.3.s2.quest.nbl"}, {start, [0, 802, 0]}]},
+
 	% Phantom Ruins (Linear Line counter)
 
 	%~ {1060300, [{type, mission}, {file, "data/missions/phantom-ruins.c.quest.nbl"},  {start, [0, 8002, 0]}]},
@@ -250,6 +270,41 @@
 	{[1001125, 0], [{file, "data/missions/seed-awakening.3.s3.zone-0.nbl"}]},
 	{[1001125, 1], [{file, "data/missions/seed-awakening.3.s3.zone-1.nbl"}]},
 	{[1001125, 2], [{file, "data/missions/seed-awakening.3.s3.zone-2.nbl"}]},
+
+	% True Darkness
+
+	%~ {[1001200, 0], [{file, "data/missions/true-darkness.1.c.zone-0.nbl"}]},
+	%~ {[1001200, 1], [{file, "data/missions/true-darkness.1.c.zone-1.nbl"}]},
+	%~ {[1001201, 0], [{file, "data/missions/true-darkness.1.b.zone-0.nbl"}]},
+	%~ {[1001201, 1], [{file, "data/missions/true-darkness.1.b.zone-1.nbl"}]},
+	%~ {[1001202, 0], [{file, "data/missions/true-darkness.1.a.zone-0.nbl"}]},
+	%~ {[1001202, 1], [{file, "data/missions/true-darkness.1.a.zone-1.nbl"}]},
+	%~ {[1001203, 0], [{file, "data/missions/true-darkness.1.s.zone-0.nbl"}]},
+	%~ {[1001203, 1], [{file, "data/missions/true-darkness.1.s.zone-1.nbl"}]},
+	%~ {[1001204, 0], [{file, "data/missions/true-darkness.1.s2.zone-0.nbl"}]},
+	%~ {[1001204, 1], [{file, "data/missions/true-darkness.1.s2.zone-1.nbl"}]},
+
+	{[1001210, 0], [{file, "data/missions/true-darkness.2.c.zone-0.nbl"}]},
+	{[1001210, 1], [{file, "data/missions/true-darkness.2.c.zone-1.nbl"}]},
+	%~ {[1001211, 0], [{file, "data/missions/true-darkness.2.b.zone-0.nbl"}]},
+	%~ {[1001211, 1], [{file, "data/missions/true-darkness.2.b.zone-1.nbl"}]},
+	{[1001212, 0], [{file, "data/missions/true-darkness.2.a.zone-0.nbl"}]},
+	{[1001212, 1], [{file, "data/missions/true-darkness.2.a.zone-1.nbl"}]},
+	{[1001213, 0], [{file, "data/missions/true-darkness.2.s.zone-0.nbl"}]},
+	{[1001213, 1], [{file, "data/missions/true-darkness.2.s.zone-1.nbl"}]},
+	%~ {[1001214, 0], [{file, "data/missions/true-darkness.2.s2.zone-0.nbl"}]},
+	%~ {[1001214, 1], [{file, "data/missions/true-darkness.2.s2.zone-1.nbl"}]},
+
+	{[1001220, 0], [{file, "data/missions/true-darkness.3.c.zone-0.nbl"}]},
+	{[1001220, 1], [{file, "data/missions/true-darkness.3.c.zone-1.nbl"}]},
+	{[1001221, 0], [{file, "data/missions/true-darkness.3.b.zone-0.nbl"}]},
+	{[1001221, 1], [{file, "data/missions/true-darkness.3.b.zone-1.nbl"}]},
+	{[1001222, 0], [{file, "data/missions/true-darkness.3.a.zone-0.nbl"}]},
+	{[1001222, 1], [{file, "data/missions/true-darkness.3.a.zone-1.nbl"}]},
+	%~ {[1001223, 0], [{file, "data/missions/true-darkness.3.s.zone-0.nbl"}]},
+	%~ {[1001223, 1], [{file, "data/missions/true-darkness.3.s.zone-1.nbl"}]},
+	{[1001224, 0], [{file, "data/missions/true-darkness.3.s2.zone-0.nbl"}]},
+	{[1001224, 1], [{file, "data/missions/true-darkness.3.s2.zone-1.nbl"}]},
 
 	% Phantom Ruins (Linear Line counter)
 
@@ -609,15 +664,25 @@
 
 	% Dallgun: Phantom Ruins, The Black Nest, True Darkness, (empty name, missing)
 
-	{ 25, [{quests, "data/counters/colony.dallgun.pack"}, {bg, 255}, {options, << 16#01003c00:32, 3, 3, 3, 0,
-		3, 3, 3, 3, 0, % Phantom Ruins C-S
+	{ 25, [{quests, "data/counters/colony.dallgun.pack"}, {bg, 255}, {options, << 16#01003c00:32, 0, 3, 3, 0,
+		0, 0, 0, 0, 0, % Phantom Ruins C-S
 		3, 3, 3, 3, 3, 0, % The Black Nest C-S2 variant 1
 		3, 3, 3, 3, 3, 0, % The Black Nest C-S2 variant 2
 		3, 3, 3, 3, 3, 0, % The Black Nest C-S2 variant 3
-		3, 3, 3, 3, 3, % True Darkness C-S2 variant 1
-		3, 3, 3, 3, 3, % True Darkness C-S2 variant 2
-		3, 3, 3, 3, 3, % True Darkness C-S2 variant 3
+		0, 0, 0, 0, 0, % True Darkness C-S2 variant 1
+		3, 0, 3, 3, 0, % True Darkness C-S2 variant 2
+		3, 3, 3, 0, 3, % True Darkness C-S2 variant 3
 	0:144 >>}]},
+
+	%~ { 25, [{quests, "data/counters/colony.dallgun.pack"}, {bg, 255}, {options, << 16#01003c00:32, 3, 3, 3, 0,
+		%~ 3, 3, 3, 3, 0, % Phantom Ruins C-S
+		%~ 3, 3, 3, 3, 3, 0, % The Black Nest C-S2 variant 1
+		%~ 3, 3, 3, 3, 3, 0, % The Black Nest C-S2 variant 2
+		%~ 3, 3, 3, 3, 3, 0, % The Black Nest C-S2 variant 3
+		%~ 3, 3, 3, 3, 3, % True Darkness C-S2 variant 1
+		%~ 3, 3, 3, 3, 3, % True Darkness C-S2 variant 2
+		%~ 3, 3, 3, 3, 3, % True Darkness C-S2 variant 3
+	%~ 0:144 >>}]},
 
 	% Raffon Fieldbase (entry 0)
 

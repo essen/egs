@@ -129,6 +129,12 @@ parse_object_args(ObjType, Params, Data, Ptr) ->
 parse_object_args(4, _Params, _Data) ->
 	static_model;
 
+parse_object_args(5, _Params, _Data) ->
+	floor_button;
+
+parse_object_args(6, _Params, _Data) ->
+	fog;
+
 parse_object_args(10, _Params, _Data) ->
 	invisible_block;
 
@@ -196,7 +202,11 @@ parse_object_args(31, _Params, Data) ->
 parse_object_args(35, _Params, _Data) ->
 	boss;
 
-%% @todo Find out what this object number is.
+parse_object_args(43, _Params, _Data) ->
+	shoot_button;
+
+parse_object_args(44, _Params, _Data) ->
+	trap;
 
 parse_object_args(48, _Params, _Data) ->
 	boss_gate;

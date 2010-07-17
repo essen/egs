@@ -50,6 +50,15 @@ object_init(InstanceID, BlockID, [{box, _Model, Breakable, TrigEventID}|Tail], L
 			egs_db:objects_insert(#objects{id=[InstanceID, ObjectID], instanceid=InstanceID, objectid=ObjectID, type=box, targetid=TargetID, blockid=BlockID, triggereventid=TrigEventID})
 	end,
 	object_init(InstanceID, BlockID, Tail, ListNb, ObjectNb + 1, ObjectID + 1, TargetID + 1);
+%% @todo Apparently floor_button has a TargetID. Not sure why yet. Just increment the value.
+object_init(InstanceID, BlockID, [floor_button|Tail], ListNb, ObjectNb, ObjectID, TargetID) ->
+	object_init(InstanceID, BlockID, Tail, ListNb, ObjectNb + 1, ObjectID + 1, TargetID + 1);
+%% @todo Apparently shoot_button has a TargetID. I'm sure why though.
+object_init(InstanceID, BlockID, [shoot_button|Tail], ListNb, ObjectNb, ObjectID, TargetID) ->
+	object_init(InstanceID, BlockID, Tail, ListNb, ObjectNb + 1, ObjectID + 1, TargetID + 1);
+%% @todo Not sure why but it works that way in True Darkness.
+object_init(InstanceID, BlockID, [boss_gate|Tail], ListNb, ObjectNb, ObjectID, TargetID) ->
+	object_init(InstanceID, BlockID, Tail, ListNb, ObjectNb + 1, ObjectID + 1, TargetID + 1);
 %% @todo key and key_console event handling will have to be fixed.
 object_init(InstanceID, BlockID, [{key, _KeySet, TrigEventID, _ReqEventID}|Tail], ListNb, ObjectNb, ObjectID, TargetID) ->
 	egs_db:objects_insert(#objects{id=[InstanceID, {key, ObjectID}], instanceid=InstanceID, objectid=ObjectID, type=key, blockid=BlockID, triggereventid=[TrigEventID]}),
@@ -69,11 +78,6 @@ object_init(InstanceID, BlockID, [{warp, DestX, DestY, DestZ, DestDir}|Tail], Li
 %% @todo Not sure where these 2 come from yet, assuming crystal but might not be that.
 object_init(InstanceID, BlockID, [crystal|Tail], ListNb, ObjectNb, ObjectID, TargetID) ->
 	object_init(InstanceID, BlockID, Tail, ListNb, ObjectNb + 1, ObjectID + 1, TargetID + 2);
-%~ %% @todo Not sure where these 9 come from yet, assuming healing pad + pp cube but might not be that.
-%~ object_init(InstanceID, BlockID, [healing_pad|Tail], ObjectID, TargetID) ->
-	%~ object_init(InstanceID, BlockID, Tail, ObjectID + 1, TargetID + 9);
-%~ object_init(InstanceID, BlockID, [pp_cube|Tail], ObjectID, TargetID) ->
-	%~ object_init(InstanceID, BlockID, Tail, ObjectID + 1, TargetID + 1);
 %% A few object types don't have an ObjectID nor a TargetID. Disregard them completely.
 object_init(InstanceID, BlockID, [ObjType|Tail], ListNb, ObjectNb, ObjectID, TargetID)
 	when	ObjType =:= static_model;
@@ -81,7 +85,10 @@ object_init(InstanceID, BlockID, [ObjType|Tail], ListNb, ObjectNb, ObjectID, Tar
 			ObjType =:= entrance;
 			ObjType =:= 'exit';
 			ObjType =:= label;
-			ObjType =:= hidden_minimap_section ->
+			ObjType =:= hidden_minimap_section;
+			ObjType =:= fog;
+			ObjType =:= pp_cube;
+			ObjType =:= healing_pad ->
 	object_init(InstanceID, BlockID, Tail, ListNb, ObjectNb + 1, ObjectID, TargetID);
 %% Others are normal objects, we don't handle them but they have an ObjectID.
 object_init(InstanceID, BlockID, [_|Tail], ListNb, ObjectNb, ObjectID, TargetID) ->
