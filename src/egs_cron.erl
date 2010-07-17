@@ -26,8 +26,8 @@
 
 start() ->
 	KeepAlivePid = spawn_link(?MODULE, keepalive, []),
-	CleanupPid = spawn_link(?MODULE, cleanup, []),
-	[{keepalive, KeepAlivePid}, {cleanup, CleanupPid}].
+	spawn_link(?MODULE, cleanup, []),
+	{ok, KeepAlivePid}.
 
 %% @doc Cleanup the users table of failures to log into the game server.
 

@@ -17,6 +17,8 @@
 %	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
 {'src/egs.erl', [{outdir, "ebin"}]}.
+{'src/egs_app.erl', [{outdir, "ebin"}]}.
+{'src/egs_sup.erl', [{outdir, "ebin"}]}.
 {'src/egs_cron.erl', [{outdir, "ebin"}]}.
 {'src/egs_db.erl', [{outdir, "ebin"}]}.
 {'src/egs_game.erl', [{outdir, "ebin"}]}.

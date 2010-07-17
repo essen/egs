@@ -27,9 +27,9 @@
 %% @doc Start the game server.
 
 start() ->
-	SPid = spawn(?MODULE, supervisor_init, []),
-	LPid = spawn(?MODULE, listen, [SPid]),
-	[{listener, LPid}, {supervisor, SPid}].
+	SPid = spawn_link(?MODULE, supervisor_init, []),
+	LPid = spawn_link(?MODULE, listen, [SPid]),
+	{ok, LPid}.
 
 %% @doc Game processes supervisor initialization.
 

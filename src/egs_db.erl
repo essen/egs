@@ -31,15 +31,6 @@ do(Q) ->
 	{atomic, Val} = mnesia:transaction(F),
 	Val.
 
-%% @doc Create the database.
-
-create() ->
-	mnesia:create_schema([node()]),
-	mnesia:start(),
-	mnesia:create_table(ids, [{attributes, record_info(fields, ids)}]),
-	mnesia:create_table(objects, [{attributes, record_info(fields, objects)}]),
-	mnesia:create_table(users, [{attributes, record_info(fields, users)}]).
-
 %% @doc Retrieve the next unique ID.
 
 next(Type) ->

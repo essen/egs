@@ -25,9 +25,9 @@
 %% @doc Start the patch server. Currently supports AOTI US and JP.
 
 start() ->
-	JPPid = spawn_link(?MODULE, listen, [?PATCH_PORT_JP]),
+	spawn_link(?MODULE, listen, [?PATCH_PORT_JP]),
 	USPid = spawn_link(?MODULE, listen, [?PATCH_PORT_US]),
-	[{jp, JPPid}, {us, USPid}].
+	{ok, USPid}.
 
 %% @doc Listen for connections.
 

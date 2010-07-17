@@ -31,10 +31,10 @@ clean:
 	rm -f erl_crash.dump
 
 fclean: clean
-	rm -rf Mnesia.console*
+	rm -rf Mnesia.egs*
 
 run:
 	@echo "EGS is free software available under the GNU GPL version 3"
 	@echo "Copyright (C) 2010  Loic Hoguin"
 	@echo 
-	erl -ssl protocol_version '{sslv3}' -sname console -pa ebin -eval 'egs:start()'
+	erl -ssl protocol_version '{sslv3}' -sname egs -pa ebin -s egs
