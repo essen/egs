@@ -212,6 +212,8 @@ parse_object_args(35, _Params, _Data) ->
 parse_object_args(43, _Params, _Data) ->
 	shoot_button;
 
+%% @todo Seems to be a zonde turret "trap".
+
 parse_object_args(44, _Params, _Data) ->
 	trap;
 
@@ -231,7 +233,17 @@ parse_object_args(62, _Params, _Data) ->
 	pp_cube;
 
 parse_object_args(64, _Params, _Data) ->
-	hidden_minimap_section.
+	hidden_minimap_section;
+
+%% @todo Seems to be a megid turret "trap".
+
+parse_object_args(70, _Params, _Data) ->
+	trap;
+
+%% @todo Seems to be a ceiling fall-on-you-and-explode "trap". Possibly also poison room.
+
+parse_object_args(71, _Params, _Data) ->
+	trap.
 
 convert_eventid(16#ffff) ->
 	false;

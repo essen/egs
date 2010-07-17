@@ -56,6 +56,9 @@ object_init(InstanceID, BlockID, [floor_button|Tail], ListNb, ObjectNb, ObjectID
 %% @todo Apparently shoot_button has a TargetID. I'm sure why though.
 object_init(InstanceID, BlockID, [shoot_button|Tail], ListNb, ObjectNb, ObjectID, TargetID) ->
 	object_init(InstanceID, BlockID, Tail, ListNb, ObjectNb + 1, ObjectID + 1, TargetID + 1);
+%% @todo All kinds of traps have a TargetID, even if they're not targettable.
+object_init(InstanceID, BlockID, [trap|Tail], ListNb, ObjectNb, ObjectID, TargetID) ->
+	object_init(InstanceID, BlockID, Tail, ListNb, ObjectNb + 1, ObjectID + 1, TargetID + 1);
 %% @todo Not sure why but it works that way in True Darkness.
 object_init(InstanceID, BlockID, [boss_gate|Tail], ListNb, ObjectNb, ObjectID, TargetID) ->
 	object_init(InstanceID, BlockID, Tail, ListNb, ObjectNb + 1, ObjectID + 1, TargetID + 1);
@@ -75,7 +78,7 @@ object_init(InstanceID, BlockID, [{'spawn', NbTargets, TrigEventID, _ReqEventID}
 object_init(InstanceID, BlockID, [{warp, DestX, DestY, DestZ, DestDir}|Tail], ListNb, ObjectNb, ObjectID, TargetID) ->
 	egs_db:objects_insert(#objects{id=[InstanceID, {warp, BlockID, ListNb, ObjectNb}], instanceid=InstanceID, type=warp, blockid=BlockID, args={DestX, DestY, DestZ, DestDir}}),
 	object_init(InstanceID, BlockID, Tail, ListNb, ObjectNb + 1, ObjectID, TargetID);
-%% @todo Not sure where these 2 come from yet, assuming crystal but might not be that.
+%% @todo Apparently crystal has 2 TargetIDs. Presumably because it has both on/off states.
 object_init(InstanceID, BlockID, [crystal|Tail], ListNb, ObjectNb, ObjectID, TargetID) ->
 	object_init(InstanceID, BlockID, Tail, ListNb, ObjectNb + 1, ObjectID + 1, TargetID + 2);
 %% A few object types don't have an ObjectID nor a TargetID. Disregard them completely.

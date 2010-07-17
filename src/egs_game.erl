@@ -870,13 +870,13 @@ handle(16#0f0a, Data) ->
 			[[EventID|_], BlockID] = psu_missions:key_event(User#users.instanceid, ObjectID),
 			send_1205(EventID, BlockID, 0),
 			send_1213(ObjectID, 1);
-		13 -> % floor_button on
+		13 -> % floor_button on (also sent when clearing a few of the rooms in black nest)
 			% 1205 1213
 			ignore;
 		14 -> % floor_button off
 			% 1205(same, with 1 as last value) 1213(same, with 0 as last value)
 			ignore;
-		%~ 19 -> % @todo (somewhere in phantom ruins block 4)
+		%~ 19 -> % activate trap
 			%~ ignore;
 		20 -> % enter counter/elevator/room/spaceport/pick key/use key
 			ignore;

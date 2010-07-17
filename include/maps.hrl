@@ -125,6 +125,26 @@
 	%~ {1001223, [{type, mission}, {file, "data/missions/true-darkness.3.s.quest.nbl"},  {start, [0, 802, 0]}]},
 	{1001224, [{type, mission}, {file, "data/missions/true-darkness.3.s2.quest.nbl"}, {start, [0, 802, 0]}]},
 
+	% The Black Nest
+
+	{1003000, [{type, mission}, {file, "data/missions/black-nest.1.c.quest.nbl"},  {start, [0, 6301, 0]}]},
+	{1003001, [{type, mission}, {file, "data/missions/black-nest.1.b.quest.nbl"},  {start, [0, 6301, 0]}]},
+	{1003002, [{type, mission}, {file, "data/missions/black-nest.1.a.quest.nbl"},  {start, [0, 6301, 0]}]},
+	{1003003, [{type, mission}, {file, "data/missions/black-nest.1.s.quest.nbl"},  {start, [0, 6301, 0]}]},
+	{1003004, [{type, mission}, {file, "data/missions/black-nest.1.s2.quest.nbl"}, {start, [0, 6301, 0]}]},
+
+	{1003010, [{type, mission}, {file, "data/missions/black-nest.2.c.quest.nbl"},  {start, [0, 6303, 0]}]},
+	%~ {1003011, [{type, mission}, {file, "data/missions/black-nest.2.b.quest.nbl"},  {start, [0, 6303, 0]}]},
+	%~ {1003012, [{type, mission}, {file, "data/missions/black-nest.2.a.quest.nbl"},  {start, [0, 6303, 0]}]},
+	%~ {1003013, [{type, mission}, {file, "data/missions/black-nest.2.s.quest.nbl"},  {start, [0, 6303, 0]}]},
+	{1003014, [{type, mission}, {file, "data/missions/black-nest.2.s2.quest.nbl"}, {start, [0, 6303, 0]}]},
+
+	{1003020, [{type, mission}, {file, "data/missions/black-nest.3.c.quest.nbl"},  {start, [0, 6803, 0]}]},
+	{1003021, [{type, mission}, {file, "data/missions/black-nest.3.b.quest.nbl"},  {start, [0, 6803, 0]}]},
+	%~ {1003022, [{type, mission}, {file, "data/missions/black-nest.3.a.quest.nbl"},  {start, [0, 6803, 0]}]},
+	{1003023, [{type, mission}, {file, "data/missions/black-nest.3.s.quest.nbl"},  {start, [0, 6803, 0]}]},
+	%~ {1003024, [{type, mission}, {file, "data/missions/black-nest.3.s2.quest.nbl"}, {start, [0, 6803, 0]}]},
+
 	% Phantom Ruins (Linear Line counter)
 
 	%~ {1060300, [{type, mission}, {file, "data/missions/phantom-ruins.c.quest.nbl"},  {start, [0, 8002, 0]}]},
@@ -305,6 +325,26 @@
 	%~ {[1001223, 1], [{file, "data/missions/true-darkness.3.s.zone-1.nbl"}]},
 	{[1001224, 0], [{file, "data/missions/true-darkness.3.s2.zone-0.nbl"}]},
 	{[1001224, 1], [{file, "data/missions/true-darkness.3.s2.zone-1.nbl"}]},
+
+	% The Black Nest
+
+	{[1003000, 0], [{file, "data/missions/black-nest.1.c.zone.nbl"}]},
+	{[1003001, 0], [{file, "data/missions/black-nest.1.b.zone.nbl"}]},
+	{[1003002, 0], [{file, "data/missions/black-nest.1.a.zone.nbl"}]},
+	{[1003003, 0], [{file, "data/missions/black-nest.1.s.zone.nbl"}]},
+	{[1003004, 0], [{file, "data/missions/black-nest.1.s2.zone.nbl"}]},
+
+	{[1003010, 0], [{file, "data/missions/black-nest.2.c.zone.nbl"}]},
+	%~ {[1003011, 0], [{file, "data/missions/black-nest.2.b.zone.nbl"}]},
+	%~ {[1003012, 0], [{file, "data/missions/black-nest.2.a.zone.nbl"}]},
+	%~ {[1003013, 0], [{file, "data/missions/black-nest.2.s.zone.nbl"}]},
+	{[1003014, 0], [{file, "data/missions/black-nest.2.s2.zone.nbl"}]},
+
+	{[1003020, 0], [{file, "data/missions/black-nest.3.c.zone.nbl"}]},
+	{[1003021, 0], [{file, "data/missions/black-nest.3.b.zone.nbl"}]},
+	%~ {[1003022, 0], [{file, "data/missions/black-nest.3.a.zone.nbl"}]},
+	{[1003023, 0], [{file, "data/missions/black-nest.3.s.zone.nbl"}]},
+	%~ {[1003024, 0], [{file, "data/missions/black-nest.3.s2.zone.nbl"}]},
 
 	% Phantom Ruins (Linear Line counter)
 
@@ -667,8 +707,8 @@
 	{ 25, [{quests, "data/counters/colony.dallgun.pack"}, {bg, 255}, {options, << 16#01003c00:32, 0, 3, 3, 0,
 		0, 0, 0, 0, 0, % Phantom Ruins C-S
 		3, 3, 3, 3, 3, 0, % The Black Nest C-S2 variant 1
-		3, 3, 3, 3, 3, 0, % The Black Nest C-S2 variant 2
-		3, 3, 3, 3, 3, 0, % The Black Nest C-S2 variant 3
+		3, 0, 0, 0, 3, 0, % The Black Nest C-S2 variant 2
+		3, 3, 0, 3, 0, 0, % The Black Nest C-S2 variant 3
 		0, 0, 0, 0, 0, % True Darkness C-S2 variant 1
 		3, 0, 3, 3, 0, % True Darkness C-S2 variant 2
 		3, 3, 3, 0, 3, % True Darkness C-S2 variant 3
