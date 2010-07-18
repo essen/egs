@@ -16,18 +16,22 @@
 #	You should have received a copy of the GNU General Public License
 #	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
+ERL ?= erl
+ERLC ?= erlc
+APP := egs
+
 all: server
 
-server: clean missions
-	@erl -make
+server: missions
+	@./rebar compile
 
 missions:
-	erlc src/psu_parser.erl
-	erl -noshell -noinput -sname missions -pa ebin -run psu_parser run -run init stop
+	$(ERLC) src/psu_parser.erl
+	$(ERL) -noshell -noinput -sname missions -pa ebin -run psu_parser run -run init stop
 	rm psu_parser.beam
 
 clean:
-	rm -f ebin/*.beam
+	@./rebar clean
 	rm -f erl_crash.dump
 
 fclean: clean
@@ -37,4 +41,4 @@ run:
 	@echo "EGS is free software available under the GNU GPL version 3"
 	@echo "Copyright (C) 2010  Loic Hoguin"
 	@echo 
-	erl -ssl protocol_version '{sslv3}' -sname egs -pa ebin -s egs
+	$(ERL) -ssl protocol_version '{sslv3}' -sname egs -pa ebin -s egs
