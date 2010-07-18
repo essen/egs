@@ -18,16 +18,15 @@
 
 -module(egs_cron).
 -export([start/0]). % external
--export([cleanup/0, keepalive/0]). % internal
+-export([cleanup/0]). % internal
 
 -include("include/records.hrl").
 
 %% @doc Start the cron processes.
 
 start() ->
-	KeepAlivePid = spawn_link(?MODULE, keepalive, []),
-	spawn_link(?MODULE, cleanup, []),
-	{ok, KeepAlivePid}.
+	Pid = spawn_link(?MODULE, cleanup, []),
+	{ok, Pid}.
 
 %% @doc Cleanup the users table of failures to log into the game server.
 
@@ -39,17 +38,4 @@ cleanup() ->
 		egs_db:users_cleanup(),
 		reload,
 		?MODULE:cleanup()
-	end.
-
-%% @doc Keep connected players alive.
-%% @todo Don't even need to send a keepalive packet if we sent a packet in the last Timeout milliseconds.
-
-keepalive() ->
-	receive
-		_ ->
-			?MODULE:keepalive()
-	after 5000 ->
-		lists:foreach(fun(User) -> User#users.pid ! {psu_keepalive} end, egs_db:users_select_all()),
-		reload,
-		?MODULE:keepalive()
 	end.

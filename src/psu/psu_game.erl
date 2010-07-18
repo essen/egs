@@ -66,6 +66,7 @@ process_init(CSocket, MPid) ->
 	link(MPid),
 	put(socket, CSocket),
 	send_0202(),
+	timer:send_interval(5000, {psu_keepalive}),
 	process().
 
 %% @doc Process the new connections.
@@ -427,6 +428,7 @@ myroom_send_packet(Filename) ->
 	send(File).
 
 %% @doc Game's main loop.
+%% @todo We probably don't want to send a keepalive packet unnecessarily.
 
 loop(SoFar) ->
 	receive
