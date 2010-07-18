@@ -6,6 +6,7 @@
 		egs,
 		egs_app,
 		egs_sup,
+		reloader,
 		egs_cron,
 		egs_db,
 		egs_game,

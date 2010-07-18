@@ -22,8 +22,6 @@
 
 -include("include/records.hrl").
 
--define(MODULES, [egs, egs_app, egs_sup, egs_cron, egs_db, egs_game, egs_login, egs_patch, egs_proto, psu_appearance, psu_characters, psu_missions, psu_parser]).
-
 %% @spec ensure_started(App) -> ok
 %% @doc Make sure the given App is started.
 ensure_started(App) ->
@@ -49,12 +47,6 @@ stop() ->
 	application:stop(ssl),
 	application:stop(crypto),
 	Res.
-
-%% @doc Reload all the modules.
-%% @todo Do it the OTP way.
-reload() ->
-	[code:soft_purge(Module) || Module <- ?MODULES],
-	[code:load_file(Module) || Module <- ?MODULES].
 
 %% @doc Send a global message.
 %% @todo Move that in a psu module.

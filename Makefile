@@ -20,9 +20,9 @@ ERL ?= erl
 ERLC ?= erlc
 APP := egs
 
-all: server
+all: clean missions server
 
-server: missions
+server:
 	@./rebar compile
 
 missions:
@@ -41,4 +41,4 @@ run:
 	@echo "EGS is free software available under the GNU GPL version 3"
 	@echo "Copyright (C) 2010  Loic Hoguin"
 	@echo 
-	$(ERL) -ssl protocol_version '{sslv3}' -sname egs -pa ebin -s egs
+	$(ERL) -ssl protocol_version '{sslv3}' -sname egs -pa ebin -boot start_sasl -s reloader -s egs
