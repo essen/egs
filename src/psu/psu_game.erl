@@ -1,34 +1,36 @@
-%	EGS: Erlang Game Server
-%	Copyright (C) 2010  Loic Hoguin
-%
-%	This file is part of EGS.
-%
-%	EGS is free software: you can redistribute it and/or modify
-%	it under the terms of the GNU General Public License as published by
-%	the Free Software Foundation, either version 3 of the License, or
-%	(at your option) any later version.
-%
-%	EGS is distributed in the hope that it will be useful,
-%	but WITHOUT ANY WARRANTY; without even the implied warranty of
-%	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-%	GNU General Public License for more details.
-%
-%	You should have received a copy of the GNU General Public License
-%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
+%% @author Loïc Hoguin <essen@dev-extend.eu>
+%% @copyright 2010 Loïc Hoguin.
+%% @doc Handle game clients.
+%%
+%%	This file is part of EGS.
+%%
+%%	EGS is free software: you can redistribute it and/or modify
+%%	it under the terms of the GNU General Public License as published by
+%%	the Free Software Foundation, either version 3 of the License, or
+%%	(at your option) any later version.
+%%
+%%	EGS is distributed in the hope that it will be useful,
+%%	but WITHOUT ANY WARRANTY; without even the implied warranty of
+%%	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%%	GNU General Public License for more details.
+%%
+%%	You should have received a copy of the GNU General Public License
+%%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
--module(egs_game).
--export([start/0]). % external
--export([supervisor_init/0, supervisor/0, listen/1, accept/2, process_init/2, process/0, char_select/0, area_load/4, loop/1]). % internal
+-module(psu_game).
+-export([start_link/1]). %% External.
+-export([supervisor_init/0, supervisor/0, listen/2, accept/2, process_init/2, process/0, char_select/0, area_load/4, loop/1]). %% Internal.
 
 -include("include/records.hrl").
--include("include/network.hrl").
 -include("include/maps.hrl").
 
-%% @doc Start the game server.
+-define(OPTIONS, [binary, {active, false}, {certfile, "priv/ssl/servercert.pem"}, {keyfile, "priv/ssl/serverkey.pem"}, {password, "alpha"}]).
 
-start() ->
-	SPid = spawn_link(?MODULE, supervisor_init, []),
-	LPid = spawn_link(?MODULE, listen, [SPid]),
+%% @spec start_link(Port) -> {ok,Pid::pid()}
+%% @doc Start the game server.
+start_link(Port) ->
+	SPid = spawn(?MODULE, supervisor_init, []),
+	LPid = spawn(?MODULE, listen, [Port, SPid]),
 	{ok, LPid}.
 
 %% @doc Game processes supervisor initialization.
@@ -64,8 +66,8 @@ supervisor_close(Pid) ->
 
 %% @doc Listen for connections.
 
-listen(SPid) ->
-	{ok, LSocket} = ssl:listen(?GAME_PORT, ?GAME_LISTEN_OPTIONS),
+listen(Port, SPid) ->
+	{ok, LSocket} = ssl:listen(Port, ?OPTIONS),
 	?MODULE:accept(LSocket, SPid).
 
 %% @doc Accept connections.

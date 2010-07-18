@@ -50,7 +50,7 @@ upgrade() ->
 init([]) ->
 	%% Start egs_cron, egs_game, egs_login, egs_patch. To be replaced by configurable modules.
 	Processes = [{egs_cron, {egs_cron, start, []}, permanent, 5000, worker, dynamic},
-				 {egs_game, {egs_game, start, []}, permanent, 5000, worker, dynamic},
+				 {psu_game, {psu_game, start_link, [?GAME_PORT]}, permanent, 5000, worker, dynamic},
 				 {psu_login_jp1, {psu_login, start_link, [?LOGIN_PORT_JP_ONE, 10000001]}, permanent, 5000, worker, dynamic},
 				 {psu_login_jp2, {psu_login, start_link, [?LOGIN_PORT_JP_TWO, 20000001]}, permanent, 5000, worker, dynamic},
 				 {psu_login_us, {psu_login, start_link, [?LOGIN_PORT_US, 30000001]}, permanent, 5000, worker, dynamic},

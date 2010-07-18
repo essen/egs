@@ -9,7 +9,7 @@
 		reloader,
 		egs_cron,
 		egs_db,
-		egs_game,
+		psu_game,
 		psu_login,
 		psu_patch,
 		egs_proto,
