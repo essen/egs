@@ -10,7 +10,7 @@
 		egs_db,
 		egs_game,
 		egs_login,
-		egs_patch,
+		psu_patch,
 		egs_proto,
 		psu_appearance,
 		psu_characters,

@@ -22,6 +22,8 @@
 -export([init/1]). %% Supervisor callbacks.
 -export([start_link/0, upgrade/0]). %% Other functions.
 
+-include("include/network.hrl").
+
 %% @spec start_link() -> ServerRet
 %% @doc API for starting the supervisor.
 start_link() ->
@@ -50,5 +52,6 @@ init([]) ->
 	Processes = [{egs_cron, {egs_cron, start, []}, permanent, 5000, worker, dynamic},
 				 {egs_game, {egs_game, start, []}, permanent, 5000, worker, dynamic},
 				 {egs_login, {egs_login, start, []}, permanent, 5000, worker, dynamic},
-				 {egs_patch, {egs_patch, start, []}, permanent, 5000, worker, dynamic}],
+				 {psu_patch_jp, {psu_patch, start_link, [?PATCH_PORT_JP]}, permanent, 5000, worker, dynamic},
+				 {psu_patch_us, {psu_patch, start_link, [?PATCH_PORT_US]}, permanent, 5000, worker, dynamic}],
 	{ok, {{one_for_one, 10, 10}, Processes}}.
