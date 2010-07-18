@@ -10,7 +10,7 @@
 		egs_cron,
 		egs_db,
 		egs_game,
-		egs_login,
+		psu_login,
 		psu_patch,
 		egs_proto,
 		psu_appearance,

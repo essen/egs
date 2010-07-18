@@ -24,7 +24,7 @@
 -define(OPTIONS, [binary, {send_timeout, 5000}, {packet, 0}, {active, false}, {reuseaddr, true}]).
 
 %% @spec start_link(Port) -> {ok,Pid::pid()}
-%% @doc Starts the patch server for inclusion in a supervisor tree.
+%% @doc Start the PSU patch server for inclusion in a supervisor tree.
 start_link(Port) ->
 	Pid = spawn(?MODULE, listen, [Port]),
 	{ok, Pid}.
