@@ -18,8 +18,8 @@
 %%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
 -module(psu_game).
--export([start_link/1]). %% External.
--export([supervisor_init/0, supervisor/0, listen/2, accept/2, process_init/2, process/0, char_select/0, area_load/4, loop/1]). %% Internal.
+-export([start_link/1, cleanup/1]). %% External.
+-export([listen/2, accept/2, process_init/2, process/0, char_select/0, area_load/4, loop/1]). %% Internal.
 
 -include("include/records.hrl").
 -include("include/maps.hrl").
@@ -29,64 +29,41 @@
 %% @spec start_link(Port) -> {ok,Pid::pid()}
 %% @doc Start the game server.
 start_link(Port) ->
-	SPid = spawn(?MODULE, supervisor_init, []),
-	LPid = spawn(?MODULE, listen, [Port, SPid]),
+	{ok, MPid} = egs_exit_mon:start_link({?MODULE, cleanup}),
+	LPid = spawn(?MODULE, listen, [Port, MPid]),
 	{ok, LPid}.
 
-%% @doc Game processes supervisor initialization.
-
-supervisor_init() ->
-	process_flag(trap_exit, true),
-	supervisor().
-
-%% @doc Game processes supervisor. Make sure everything is cleaned up when an unexpected error occurs.
-
-supervisor() ->
-	receive
-		{'EXIT', Pid, _} ->
-			supervisor_close(Pid);
-		_ ->
-			reload
-	after 5000 ->
-		reload
-	end,
-	?MODULE:supervisor().
-
-%% @doc Close the connection for the given user and cleanup.
-
-supervisor_close(Pid) ->
-	try
-		User = egs_db:users_select_by_pid(Pid),
-		egs_db:users_delete(User#users.gid),
-		lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(User)),
-		io:format("game (~p): quit~n", [User#users.gid])
-	catch _:_ ->
-		ignore
-	end.
+%% @spec cleanup(Pid) -> ok
+%% @doc Cleanup the data associated with the failing process.
+cleanup(Pid) ->
+	User = egs_db:users_select_by_pid(Pid),
+	egs_db:users_delete(User#users.gid),
+	lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(User)),
+	io:format("game (~p): quit~n", [User#users.gid]).
 
 %% @doc Listen for connections.
 
-listen(Port, SPid) ->
+listen(Port, MPid) ->
 	{ok, LSocket} = ssl:listen(Port, ?OPTIONS),
-	?MODULE:accept(LSocket, SPid).
+	?MODULE:accept(LSocket, MPid).
 
 %% @doc Accept connections.
 
-accept(LSocket, SPid) ->
+accept(LSocket, MPid) ->
 	case ssl:transport_accept(LSocket, 5000) of
 		{ok, CSocket} ->
 			ssl:ssl_accept(CSocket),
-			Pid = spawn(?MODULE, process_init, [CSocket, SPid]),
+			Pid = spawn(?MODULE, process_init, [CSocket, MPid]),
 			ssl:controlling_process(CSocket, Pid);
 		_ ->
 			reload
 	end,
-	?MODULE:accept(LSocket, SPid).
+	?MODULE:accept(LSocket, MPid).
 
 %% @doc Initialize the client process by saving the socket to the process dictionary.
 
-process_init(CSocket, SPid) ->
-	link(SPid),
+process_init(CSocket, MPid) ->
+	link(MPid),
 	put(socket, CSocket),
 	send_0202(),
 	process().
