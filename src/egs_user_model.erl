@@ -19,7 +19,7 @@
 
 -module(egs_user_model).
 -behavior(gen_server).
--export([start_link/0, stop/0, count/0, read/1, select/1, write/1, delete/1, cleanup/0]). %% API.
+-export([start_link/0, stop/0, count/0, read/1, select/1, write/1, delete/1]). %% API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
 
 %% Use the module name for the server's name and for the table name.
@@ -70,13 +70,10 @@ write(User) ->
 delete(ID) ->
 	gen_server:cast(?SERVER, {delete, ID}).
 
-%% @spec cleanup() -> ok
-cleanup() ->
-	gen_server:cast(?SERVER, cleanup).
-
 %% gen_server
 
 init([]) ->
+	timer:apply_interval(30000, gen_server, cast, [?SERVER, cleanup]),
 	error_logger:info_report("egs_user_model started"),
 	{ok, undefined}.
 
