@@ -24,28 +24,19 @@
 
 -record(pos, {x, y, z, dir}).
 
-%% @doc Table containing the users currently logged in.
+%% @doc Character area location data structure.
 
--record(users, {
-	gid,
-	pid,
-	socket,
-	auth,
-	time,
-	folder,
-	character,
-	lid,
-	instanceid,
-	areatype,
-	questid,
-	zoneid,
-	mapid,
-	entryid,
-	savedquestid,
-	savedzoneid,
-	savedmapid,
-	savedentryid,
-	pos
+-record(psu_area, {questid, zoneid, mapid}).
+
+%% @doc Table containing the users currently logged in.
+%% @todo Probably can use a "param" or "extra" field to store the game-specific information (for things that don't need to be queried).
+
+-record(egs_user_model, {
+	id, pid, socket, state, time, character, instanceid, areatype, area, entryid, pos,
+	%% psu specific fields
+	lid, prev_area, prev_entryid,
+	%% temporary fields
+	folder
 }).
 
 %% @doc Character main or class level data structure.

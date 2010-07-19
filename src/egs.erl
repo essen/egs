@@ -51,15 +51,17 @@ stop() ->
 %% @doc Send a global message.
 %% @todo Move that in a psu module.
 global(Type, Message) ->
-	lists:foreach(fun(User) -> egs_proto:send_global(User#users.socket, Type, Message) end, egs_db:users_select_all()).
+	{ok, List} = egs_user_model:select(all),
+	lists:foreach(fun(User) -> egs_proto:send_global(User#egs_user_model.socket, Type, Message) end, List).
 
 %% @doc Warp all players to a new map.
 %% @todo Move that in a psu module.
 warp(QuestID, ZoneID, MapID, EntryID) ->
-	lists:foreach(fun(User) -> User#users.pid ! {psu_warp, QuestID, ZoneID, MapID, EntryID} end, egs_db:users_select_all()).
+	{ok, List} = egs_user_model:select(all),
+	lists:foreach(fun(User) -> User#egs_user_model.pid ! {psu_warp, QuestID, ZoneID, MapID, EntryID} end, List).
 
 %% @doc Warp one player to a new map.
 %% @todo Move that in a psu module.
 warp(GID, QuestID, ZoneID, MapID, EntryID) ->
-	User = egs_db:users_select(GID),
-	User#users.pid ! {psu_warp, QuestID, ZoneID, MapID, EntryID}.
+	{ok, User} = egs_user_model:read(GID),
+	User#egs_user_model.pid ! {psu_warp, QuestID, ZoneID, MapID, EntryID}.

@@ -76,7 +76,7 @@ loop(CSocket, SessionID) ->
 			?MODULE:loop(CSocket, SessionID);
 		{error, closed} ->
 			log(SessionID, "quit"),
-			egs_db:users_delete(SessionID)
+			egs_user_model:delete(SessionID)
 	end.
 
 %% @spec handle(Command, CSocket, SessionID, Orig) -> ok | closed
@@ -106,7 +106,7 @@ handle(16#0219, CSocket, SessionID, Orig) ->
 	Auth = crypto:rand_bytes(4),
 	Folder = << Username/binary, "-", Password/binary >>,
 	Time = calendar:datetime_to_gregorian_seconds(calendar:universal_time()),
-	egs_db:users_insert(#users{gid=SessionID, pid=self(), socket=CSocket, auth=Auth, time=Time, folder=Folder}),
+	egs_user_model:write(#egs_user_model{id=SessionID, pid=self(), socket=CSocket, state={wait_for_authentication, Auth}, time=Time, folder=Folder}),
 	Packet = << 16#02230300:32, 0:192, SessionID:32/little-unsigned-integer, 0:64, SessionID:32/little-unsigned-integer, Auth:32/bits >>,
 	egs_proto:packet_send(CSocket, Packet);
 

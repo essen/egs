@@ -36,10 +36,11 @@ start_link(Port) ->
 %% @spec cleanup(Pid) -> ok
 %% @doc Cleanup the data associated with the failing process.
 cleanup(Pid) ->
-	User = egs_db:users_select_by_pid(Pid),
-	egs_db:users_delete(User#users.gid),
-	lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(User)),
-	io:format("game (~p): quit~n", [User#users.gid]).
+	{ok, User} = egs_user_model:read({pid, Pid}),
+	egs_user_model:delete(User#egs_user_model.id),
+	{ok, List} = egs_user_model:select({neighbors, User}),
+	lists:foreach(fun(Other) -> Other#egs_user_model.pid ! {psu_player_unspawn, User} end, List),
+	io:format("game (~p): quit~n", [User#egs_user_model.id]).
 
 %% @doc Listen for connections.
 
@@ -88,23 +89,23 @@ process() ->
 
 process_handle(16#020d, << GID:32/little-unsigned-integer, Auth:32/bits, _/bits >>) ->
 	CSocket = get(socket),
-	case egs_db:users_select(GID) of
-		error ->
+	case egs_user_model:read(GID) of
+		{error, badarg} ->
 			log("can't find user, closing"),
 			ssl:close(CSocket);
-		User ->
-			case User#users.auth of
-				Auth ->
+		{ok, User} ->
+			case User#egs_user_model.state of
+				{wait_for_authentication, Auth} ->
 					put(gid, GID),
 					log("auth success"),
 					LID = 1 + egs_db:next(lobby) rem 1023,
 					Time = calendar:datetime_to_gregorian_seconds(calendar:universal_time()),
-					egs_db:users_insert(#users{gid=GID, pid=self(), socket=CSocket, auth=success, time=Time, folder=User#users.folder, lid=LID}),
+					egs_user_model:write(#egs_user_model{id=GID, pid=self(), socket=CSocket, state=authenticated, time=Time, folder=User#egs_user_model.folder, lid=LID}),
 					send_0d05(),
 					?MODULE:char_select();
 				_ ->
 					log("quit, auth failed"),
-					egs_db:users_delete(GID),
+					egs_user_model:delete(GID),
 					ssl:close(CSocket)
 			end
 	end;
@@ -134,7 +135,7 @@ char_select() ->
 			?MODULE:char_select();
 		{error, closed} ->
 			log("quit"),
-			egs_db:users_delete(get(gid))
+			egs_user_model:delete(get(gid))
 	end.
 
 %% @doc Character selection handler.
@@ -154,17 +155,17 @@ char_select_handle(16#0d02, << Number:32/little-unsigned-integer, Char/bits >>) 
 	Appearance = psu_appearance:binary_to_tuple(Race, AppearanceBin),
 	psu_appearance:validate_char_create(Race, Gender, Appearance),
 	% end of check, continue doing it wrong past that point for now
-	User = egs_db:users_select(get(gid)),
-	_ = file:make_dir(io_lib:format("save/~s", [User#users.folder])),
-	file:write_file(io_lib:format("save/~s/~b-character", [User#users.folder, Number]), Char),
-	file:write_file(io_lib:format("save/~s/~b-character.options", [User#users.folder, Number]), << 0:128, 4, 0:56 >>), % default 0 to everything except brightness 4
+	{ok, User} = egs_user_model:read(get(gid)),
+	_ = file:make_dir(io_lib:format("save/~s", [User#egs_user_model.folder])),
+	file:write_file(io_lib:format("save/~s/~b-character", [User#egs_user_model.folder, Number]), Char),
+	file:write_file(io_lib:format("save/~s/~b-character.options", [User#egs_user_model.folder, Number]), << 0:128, 4, 0:56 >>), % default 0 to everything except brightness 4
 	char_select_load(Number);
 
 %% @doc Character selection screen request.
 
 char_select_handle(16#0d06, _) ->
-	User = egs_db:users_select(get(gid)),
-	send_0d03(data_load(User#users.folder, 0), data_load(User#users.folder, 1), data_load(User#users.folder, 2), data_load(User#users.folder, 3)),
+	{ok, User} = egs_user_model:read(get(gid)),
+	send_0d03(data_load(User#egs_user_model.folder, 0), data_load(User#egs_user_model.folder, 1), data_load(User#egs_user_model.folder, 2), data_load(User#egs_user_model.folder, 3)),
 	?MODULE:char_select();
 
 %% @doc Silently ignore packet 0818. Gives CPU/GPU information.
@@ -182,8 +183,8 @@ char_select_handle(Command, _) ->
 %%      The default entry point currently is 4th floor, Linear Line counter.
 
 char_select_load(Number) ->
-	OldUser = egs_db:users_select(get(gid)),
-	[{status, 1}, {char, CharBin}, {options, OptionsBin}] = data_load(OldUser#users.folder, Number),
+	{ok, OldUser} = egs_user_model:read(get(gid)),
+	[{status, 1}, {char, CharBin}, {options, OptionsBin}] = data_load(OldUser#egs_user_model.folder, Number),
 	<< Name:512/bits, RaceBin:8, GenderBin:8, ClassBin:8, AppearanceBin:776/bits, _/bits >> = CharBin,
 	psu_characters:validate_name(Name), % TODO: don't validate name when loading character, do it at creation
 	Race = psu_characters:race_binary_to_atom(RaceBin),
@@ -192,8 +193,8 @@ char_select_load(Number) ->
 	Appearance = psu_appearance:binary_to_tuple(Race, AppearanceBin),
 	Options = psu_characters:options_binary_to_tuple(OptionsBin),
 	Character = #characters{slot=Number, name=Name, race=Race, gender=Gender, class=Class, appearance=Appearance, options=Options}, % TODO: temporary set the slot here, won't be needed later
-	User = OldUser#users{character=Character, pos=#pos{x=0.0, y=0.0, z=0.0, dir=0.0}},
-	egs_db:users_insert(User),
+	User = OldUser#egs_user_model{state=online, character=Character, area=#psu_area{questid=undefined, zoneid=undefined, mapid=undefined}, pos=#pos{x=0.0, y=0.0, z=0.0, dir=0.0}},
+	egs_user_model:write(User),
 	char_load(User),
 	send_021b(),
 	area_load(1100000, 0, 4, 5),
@@ -219,7 +220,7 @@ char_load(User) ->
 	% 0246
 	send_0a0a(),
 	send_1006(5),
-	send_1005((User#users.character)#characters.name),
+	send_1005((User#egs_user_model.character)#characters.name),
 	send_1006(12),
 	send_0210(),
 	send_0222(),
@@ -232,15 +233,17 @@ char_load(User) ->
 %% @doc Load the given map as a mission counter.
 
 counter_load(QuestID, ZoneID, MapID, EntryID) ->
-	OldUser = egs_db:users_select(get(gid)),
-	User = OldUser#users{areatype=counter, questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID,
-		savedquestid=OldUser#users.questid, savedzoneid=OldUser#users.zoneid, savedmapid=ZoneID, savedentryid=MapID},
-	egs_db:users_insert(User),
+	{ok, OldUser} = egs_user_model:read(get(gid)),
+	OldArea = OldUser#egs_user_model.area,
+	User = OldUser#egs_user_model{areatype=counter, area={psu_area, QuestID, ZoneID, MapID}, entryid=EntryID, prev_entryid=MapID,
+		prev_area={psu_area, OldArea#psu_area.questid, OldArea#psu_area.zoneid, ZoneID}},
+	egs_user_model:write(User),
 	AreaName = "Mission counter",
 	QuestFile = "data/lobby/counter.quest.nbl",
 	ZoneFile = "data/lobby/counter.zone.nbl",
 	% broadcast unspawn to other people
-	lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(OldUser)),
+	{ok, UnspawnList} = egs_user_model:select({neighbors, OldUser}),
+	lists:foreach(fun(Other) -> Other#egs_user_model.pid ! {psu_player_unspawn, User} end, UnspawnList),
 	% load counter
 	send_0c00(16#7fffffff),
 	send_020e(QuestFile),
@@ -306,14 +309,14 @@ area_get_season(QuestID) ->
 %% @doc Load the given map as a standard lobby.
 
 area_load(QuestID, ZoneID, MapID, EntryID) ->
-	OldUser = egs_db:users_select(get(gid)),
+	{ok, OldUser} = egs_user_model:read(get(gid)),
 	[{type, AreaType}, {file, QuestFile}|StartInfo] = proplists:get_value(QuestID, ?QUESTS, [{type, undefined}, {file, undefined}]),
 	[IsStart, InstanceID, RealZoneID, RealMapID, RealEntryID] = case AreaType of
 		mission ->
 			if	ZoneID =:= 65535 ->
 					[{start, [TmpZoneID, TmpMapID, TmpEntryID]}] = StartInfo,
-					[true, OldUser#users.gid, TmpZoneID, TmpMapID, TmpEntryID];
-				true -> [false, OldUser#users.gid, ZoneID, MapID, EntryID]
+					[true, OldUser#egs_user_model.id, TmpZoneID, TmpMapID, TmpEntryID];
+				true -> [false, OldUser#egs_user_model.id, ZoneID, MapID, EntryID]
 			end;
 		myroom ->
 			if	ZoneID =:= 0 ->
@@ -329,8 +332,8 @@ area_load(QuestID, ZoneID, MapID, EntryID) ->
 		true ->
 			[{name, AreaName}] = proplists:get_value([QuestID, RealMapID], ?MAPS, [{name, "dammy"}])
 	end,
-	User = OldUser#users{instanceid=InstanceID, areatype=AreaType, questid=QuestID, zoneid=RealZoneID, mapid=RealMapID, entryid=RealEntryID},
-	egs_db:users_insert(User),
+	User = OldUser#egs_user_model{instanceid=InstanceID, areatype=AreaType, area={psu_area, QuestID, RealZoneID, RealMapID}, entryid=RealEntryID},
+	egs_user_model:write(User),
 	%% @todo Don't recalculate SetID when leaving the mission and back (this changes the spawns).
 	SetID = if IsStart =:= true -> crypto:rand_uniform(0, 4); true -> 0 end,
 	if	IsStart =:= true -> % initialize the mission
@@ -340,28 +343,32 @@ area_load(QuestID, ZoneID, MapID, EntryID) ->
 	area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName).
 
 area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName) ->
-	QuestChange = if OldUser#users.questid /= User#users.questid, QuestFile /= undefined -> true; true -> false end,
+	#psu_area{questid=OldQuestID, zoneid=OldZoneID} = OldUser#egs_user_model.area,
+	#psu_area{questid=QuestID, zoneid=ZoneID} = User#egs_user_model.area,
+	QuestChange = if OldQuestID /= QuestID, QuestFile /= undefined -> true; true -> false end,
 	if	ZoneFile =:= undefined ->
 			ZoneChange = false;
 		true ->
-			ZoneChange = if OldUser#users.questid =:= User#users.questid, OldUser#users.zoneid =:= User#users.zoneid -> false; true -> true end
+			ZoneChange = if OldQuestID =:= QuestID, OldZoneID =:= ZoneID -> false; true -> true end
 	end,
-	[{status, IsSeasonal}, {season, SeasonID}] = area_get_season(User#users.questid),
+	[{status, IsSeasonal}, {season, SeasonID}] = area_get_season(QuestID),
 	% broadcast spawn and unspawn to other people
-	lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_unspawn, User} end, egs_db:users_select_others_in_area(OldUser)),
+	{ok, UnspawnList} = egs_user_model:select({neighbors, OldUser}),
+	{ok, SpawnList} = egs_user_model:select({neighbors, User}),
+	lists:foreach(fun(Other) -> Other#egs_user_model.pid ! {psu_player_unspawn, User} end, UnspawnList),
 	if	AreaType =:= lobby ->
-			lists:foreach(fun(Other) -> Other#users.pid ! {psu_player_spawn, User} end, egs_db:users_select_others_in_area(User));
+			lists:foreach(fun(Other) -> Other#egs_user_model.pid ! {psu_player_spawn, User} end, SpawnList);
 		true -> ignore
 	end,
 	% load area
 	if	QuestChange =:= true ->
 			% reload the character if entering or leaving the room quest
-			if	OldUser#users.questid =:= 1120000; User#users.questid =:= 1120000 ->
+			if	OldQuestID =:= 1120000; QuestID =:= 1120000 ->
 					char_load(User);
 				true -> ignore
 			end,
 			% load new quest
-			send_0c00(User#users.questid),
+			send_0c00(QuestID),
 			send_020e(QuestFile);
 		true -> ignore
 	end,
@@ -381,8 +388,8 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 			send_020f(ZoneFile, SetID, SeasonID);
 		true -> ignore
 	end,
-	send_0205(User#users.zoneid, User#users.mapid, User#users.entryid, IsSeasonal),
-	send_100e(User#users.questid, User#users.zoneid, User#users.mapid, AreaName, 16#ffffffff),
+	send_0205(ZoneID, (User#egs_user_model.area)#psu_area.mapid, User#egs_user_model.entryid, IsSeasonal),
+	send_100e(QuestID, ZoneID, (User#egs_user_model.area)#psu_area.mapid, AreaName, 16#ffffffff),
 	if	AreaType =:= mission ->
 			send_0215(0),
 			if	IsStart =:= true ->
@@ -419,7 +426,7 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 			send_0a06();
 		true -> ignore
 	end,
-	send_0233(egs_db:users_select_others_in_area(User)),
+	send_0233(SpawnList),
 	send_0208(),
 	send_0236().
 
@@ -445,10 +452,12 @@ loop(SoFar) ->
 			?MODULE:loop(SoFar);
 		{psu_player_spawn, _Spawn} ->
 			% Should be something along the lines of 203 201 204 or something.
-			send_0233(egs_db:users_select_others_in_area(egs_db:users_select(get(gid)))),
+			{ok, User} = egs_user_model:read(get(gid)),
+			{ok, SpawnList} = egs_user_model:select({neighbors, User}),
+			send_0233(SpawnList),
 			?MODULE:loop(SoFar);
 		{psu_player_unspawn, Spawn} ->
-			send_0204(Spawn#users.gid, Spawn#users.lid, 5),
+			send_0204(Spawn#egs_user_model.id, Spawn#egs_user_model.lid, 5),
 			?MODULE:loop(SoFar);
 		{psu_warp, QuestID, ZoneID, MapID, EntryID} ->
 			area_load(QuestID, ZoneID, MapID, EntryID),
@@ -484,9 +493,9 @@ broadcast(16#0503, Orig) ->
 	<< _:424, Dir:24/little-unsigned-integer, _PrevCoords:96, X:32/little-float, Y:32/little-float, Z:32/little-float,
 		QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer, _:32 >> = Orig,
 	FloatDir = Dir / 46603.375,
-	User = egs_db:users_select(get(gid)),
-	NewUser = User#users{pos=#pos{x=X, y=Y, z=Z, dir=FloatDir}, questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID},
-	egs_db:users_insert(NewUser),
+	{ok, User} = egs_user_model:read(get(gid)),
+	NewUser = User#egs_user_model{pos=#pos{x=X, y=Y, z=Z, dir=FloatDir}, area=#psu_area{questid=QuestID, zoneid=ZoneID, mapid=MapID}, entryid=EntryID},
+	egs_user_model:write(NewUser),
 	broadcast(default, Orig);
 
 %% @doc Stand still broadcast handler. Save the position and then dispatch it.
@@ -496,9 +505,9 @@ broadcast(16#0514, Orig) ->
 		QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer,
 		MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer, _/bits >> = Orig,
 	FloatDir = Dir / 46603.375,
-	User = egs_db:users_select(get(gid)),
-	NewUser = User#users{pos=#pos{x=X, y=Y, z=Z, dir=FloatDir}, questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID},
-	egs_db:users_insert(NewUser),
+	{ok, User} = egs_user_model:read(get(gid)),
+	NewUser = User#egs_user_model{pos=#pos{x=X, y=Y, z=Z, dir=FloatDir}, area=#psu_area{questid=QuestID, zoneid=ZoneID, mapid=MapID}, entryid=EntryID},
+	egs_user_model:write(NewUser),
 	broadcast(default, Orig);
 
 %% @doc Default broadcast handler. Dispatch the command to everyone.
@@ -516,14 +525,15 @@ broadcast(Command, Orig)
 			Command =:= default ->
 	<< _:32, A:64/bits, _:64, B:192/bits, _:64, C/bits >> = Orig,
 	GID = get(gid),
-	case egs_db:users_select(GID) of
-		error ->
+	case egs_user_model:read(GID) of
+		{error, _Reason} ->
 			ignore;
-		Self ->
-			LID = Self#users.lid,
+		{ok, Self} ->
+			LID = Self#egs_user_model.lid,
 			Packet = << A/binary, 16#00011300:32, GID:32/little-unsigned-integer, B/binary,
 				GID:32/little-unsigned-integer, LID:32/little-unsigned-integer, C/binary >>,
-			lists:foreach(fun(User) -> User#users.pid ! {psu_broadcast, Packet} end, egs_db:users_select_others_in_area(Self))
+			{ok, SpawnList} = egs_user_model:select({neighbors, Self}),
+			lists:foreach(fun(User) -> User#egs_user_model.pid ! {psu_broadcast, Packet} end, SpawnList)
 	end.
 
 %% @doc Movement (non-broadcast) handler. Do nothing.
@@ -647,10 +657,11 @@ handle(16#021f, << Uni:32/little-unsigned-integer, _/bits >>) ->
 			send_0230(),
 			% 0220
 			% force reloading the character and data files (hack)
-			User = egs_db:users_select(get(gid)),
-			NewRow = User#users{questid=1120000, zoneid=undefined},
-			egs_db:users_insert(NewRow),
-			area_load(User#users.questid, User#users.zoneid, User#users.mapid, User#users.entryid)
+			{ok, User} = egs_user_model:read(get(gid)),
+			Area = User#egs_user_model.area,
+			NewRow = User#egs_user_model{area=Area#psu_area{questid=1120000, zoneid=undefined}},
+			egs_user_model:write(NewRow),
+			area_load(Area#psu_area.questid, Area#psu_area.zoneid, Area#psu_area.mapid, User#egs_user_model.entryid)
 	end;
 
 %% @doc Shortcut changes handler. Do nothing.
@@ -665,18 +676,19 @@ handle(16#0302, _) ->
 %% @todo Only broadcast to people in the same map.
 
 handle(16#0304, Data) ->
-	User = egs_db:users_select(get(gid)),
+	{ok, User} = egs_user_model:read(get(gid)),
 	case get(version) of
 		0 -> % AOTI v2.000
 			<< _:64, Modifiers:128/bits, Message/bits >> = Data;
 		_ -> % Above
 			<< _:64, Modifiers:128/bits, _:512, Message/bits >> = Data
 	end,
-	[LogName|_] = re:split((User#users.character)#characters.name, "\\0\\0", [{return, binary}]),
+	[LogName|_] = re:split((User#egs_user_model.character)#characters.name, "\\0\\0", [{return, binary}]),
 	[TmpMessage|_] = re:split(Message, "\\0\\0", [{return, binary}]),
 	LogMessage = re:replace(TmpMessage, "\\n", " ", [global, {return, binary}]),
 	log("chat from ~s: ~s", [[re:replace(LogName, "\\0", "", [global, {return, binary}])], [re:replace(LogMessage, "\\0", "", [global, {return, binary}])]]),
-	lists:foreach(fun(X) -> X#users.pid ! {psu_chat, get(gid), (User#users.character)#characters.name, Modifiers, Message} end, egs_db:users_select_all());
+	{ok, List} = egs_user_model:select(all),
+	lists:foreach(fun(X) -> X#egs_user_model.pid ! {psu_chat, get(gid), (User#egs_user_model.character)#characters.name, Modifiers, Message} end, List);
 
 %% @todo Handle this packet properly.
 %% @todo Spawn cleared response event shouldn't be handled following this packet but when we see the spawn actually dead HP-wise.
@@ -686,8 +698,8 @@ handle(16#0402, Data) ->
 	case Type of
 		7 -> % spawn cleared @todo 1201 sent back with same values apparently, but not always
 			log("cleared spawn ~b", [SpawnID]),
-			User = egs_db:users_select(get(gid)),
-			[EventID, BlockID] = psu_missions:spawn_cleared(User#users.instanceid, SpawnID),
+			{ok, User} = egs_user_model:read(get(gid)),
+			[EventID, BlockID] = psu_missions:spawn_cleared(User#egs_user_model.instanceid, SpawnID),
 			if	EventID =:= false -> ignore;
 				true -> send_1205(EventID, BlockID, 0)
 			end;
@@ -724,8 +736,10 @@ handle(16#0811, Data) ->
 %% @doc Leave mission counter handler. Lobby values depend on which counter was entered.
 
 handle(16#0812, _) ->
-	User = egs_db:users_select(get(gid)),
-	area_load(User#users.savedquestid, User#users.savedzoneid, User#users.zoneid, User#users.mapid);
+	{ok, User} = egs_user_model:read(get(gid)),
+	Area = User#egs_user_model.area,
+	PrevArea = User#egs_user_model.prev_area,
+	area_load(PrevArea#psu_area.questid, PrevArea#psu_area.zoneid, Area#psu_area.zoneid, Area#psu_area.mapid);
 
 %% @doc Item description request.
 %% @todo Send something other than just "dammy".
@@ -747,8 +761,8 @@ handle(16#0c01, << QuestID:32/little-unsigned-integer >>) ->
 %% @todo Handle correctly.
 
 handle(16#0c05, _) ->
-	User = egs_db:users_select(get(gid)),
-	[{quests, Filename}, {bg, _}, {options, _}] = proplists:get_value(User#users.entryid, ?COUNTERS),
+	{ok, User} = egs_user_model:read(get(gid)),
+	[{quests, Filename}, {bg, _}, {options, _}] = proplists:get_value(User#egs_user_model.entryid, ?COUNTERS),
 	send_0c06(Filename);
 
 %% @doc Lobby transport handler? Just ignore the meseta price for now and send the player where he wanna be!
@@ -762,18 +776,19 @@ handle(16#0c07, _) ->
 
 handle(16#0c0e, _) ->
 	send_1006(11),
-	User = egs_db:users_select(get(gid)),
+	{ok, User} = egs_user_model:read(get(gid)),
 	%% delete the mission
-	psu_missions:stop(User#users.instanceid),
+	psu_missions:stop(User#egs_user_model.instanceid),
 	%% full hp
-	Character = User#users.character,
+	Character = User#egs_user_model.character,
 	MaxHP = Character#characters.maxhp,
 	NewCharacter = Character#characters{currenthp=MaxHP},
-	NewUser = User#users{character=NewCharacter},
-	egs_db:users_insert(NewUser),
+	NewUser = User#egs_user_model{character=NewCharacter},
+	egs_user_model:write(NewUser),
 	%% map change (temporary)
-	if	User#users.areatype =:= mission ->
-			area_load(User#users.savedquestid, User#users.savedzoneid, User#users.savedmapid, User#users.savedentryid);
+	if	User#egs_user_model.areatype =:= mission ->
+			Area = User#egs_user_model.prev_area,
+			area_load(Area#psu_area.questid, Area#psu_area.zoneid, Area#psu_area.mapid, User#egs_user_model.prev_entryid);
 		true -> ignore
 	end;
 
@@ -781,8 +796,8 @@ handle(16#0c0e, _) ->
 %% @todo Temporarily allow rare mission and LL all difficulties to all players.
 
 handle(16#0c0f, _) ->
-	User = egs_db:users_select(get(gid)),
-	[{quests, _}, {bg, _}, {options, Options}] = proplists:get_value(User#users.entryid, ?COUNTERS),
+	{ok, User} = egs_user_model:read(get(gid)),
+	[{quests, _}, {bg, _}, {options, Options}] = proplists:get_value(User#egs_user_model.entryid, ?COUNTERS),
 	send_0c10(Options);
 
 %% @doc Set flag handler. Associate a new flag with the character.
@@ -803,8 +818,8 @@ handle(16#0d07, Data) ->
 	Options = psu_characters:options_binary_to_tuple(Data),
 	psu_characters:validate_options(Options),
 	% End of validation
-	User = egs_db:users_select(get(gid)),
-	file:write_file(io_lib:format("save/~s/~b-character.options", [User#users.folder, (User#users.character)#characters.slot]), Data);
+	{ok, User} = egs_user_model:read(get(gid)),
+	file:write_file(io_lib:format("save/~s/~b-character.options", [User#egs_user_model.folder, (User#egs_user_model.character)#characters.slot]), Data);
 
 %% @doc Hit handler.
 %% @todo Finish the work on it.
@@ -824,11 +839,11 @@ handle(16#0f0a, Data) ->
 	log("object event handler: action ~b object ~b a ~b b ~b c ~b", [Action, ObjectID, A, B, C]),
 	case Action of
 		0 -> % warp
-			User = egs_db:users_select(get(gid)),
-			{X, Y, Z, Dir} = psu_missions:warp_event(User#users.instanceid, BlockID, ListNb, ObjectNb),
-			NewUser = User#users{pos=#pos{x=X, y=Y, z=Z, dir=Dir}},
-			egs_db:users_insert(NewUser),
-			send_0503(User#users.pos),
+			{ok, User} = egs_user_model:read(get(gid)),
+			{X, Y, Z, Dir} = psu_missions:warp_event(User#egs_user_model.instanceid, BlockID, ListNb, ObjectNb),
+			NewUser = User#egs_user_model{pos=#pos{x=X, y=Y, z=Z, dir=Dir}},
+			egs_user_model:write(NewUser),
+			send_0503(User#egs_user_model.pos),
 			send_1211(A, C, B, 0);
 		3 -> % crystal activation
 			send_1213(ObjectID, 1);
@@ -847,8 +862,8 @@ handle(16#0f0a, Data) ->
 			% 0117, 0111, 0117?
 			ignore;
 		12 -> % pick/use key
-			User = egs_db:users_select(get(gid)),
-			[[EventID|_], BlockID] = psu_missions:key_event(User#users.instanceid, ObjectID),
+			{ok, User} = egs_user_model:read(get(gid)),
+			[[EventID|_], BlockID] = psu_missions:key_event(User#egs_user_model.instanceid, ObjectID),
 			send_1205(EventID, BlockID, 0),
 			send_1213(ObjectID, 1);
 		13 -> % floor_button on (also sent when clearing a few of the rooms in black nest)
@@ -862,12 +877,12 @@ handle(16#0f0a, Data) ->
 		20 -> % enter counter/elevator/room/spaceport/pick key/use key
 			ignore;
 		23 -> % initialize key slots (called when picking a key or checking the gate directly with no key)
-			User = egs_db:users_select(get(gid)),
-			[[_, EventID, _], BlockID] = psu_missions:key_event(User#users.instanceid, ObjectID),
+			{ok, User} = egs_user_model:read(get(gid)),
+			[[_, EventID, _], BlockID] = psu_missions:key_event(User#egs_user_model.instanceid, ObjectID),
 			send_1205(EventID, BlockID, 0); % in block 1, 202 = key [1] x1, 203 = key [-] x1
 		24 -> % open gate (only when client has key)
-			User = egs_db:users_select(get(gid)),
-			[[_, _, EventID], BlockID] = psu_missions:key_event(User#users.instanceid, ObjectID),
+			{ok, User} = egs_user_model:read(get(gid)),
+			[[_, _, EventID], BlockID] = psu_missions:key_event(User#egs_user_model.instanceid, ObjectID),
 			send_1205(EventID, BlockID, 0),
 			send_1213(ObjectID, 1);
 		25 -> % sit on chair
@@ -894,8 +909,8 @@ handle(16#1112, Data) ->
 %% @todo Handle when the party already exists! And stop doing it wrong.
 
 handle(16#1705, _) ->
-	User = egs_db:users_select(get(gid)),
-	send_1706((User#users.character)#characters.name);
+	{ok, User} = egs_user_model:read(get(gid)),
+	send_1706((User#egs_user_model.character)#characters.name);
 
 %% @doc Mission selected handler. Send the currently selected mission.
 %% @todo Probably need to dispatch that info to other party members in the same counter.
@@ -918,8 +933,8 @@ handle(16#170b, _) ->
 %% @todo Handle correctly.
 
 handle(16#1710, _) ->
-	User = egs_db:users_select(get(gid)),
-	[{quests, _}, {bg, Background}, {options, _}] = proplists:get_value(User#users.entryid, ?COUNTERS),
+	{ok, User} = egs_user_model:read(get(gid)),
+	[{quests, _}, {bg, Background}, {options, _}] = proplists:get_value(User#egs_user_model.entryid, ?COUNTERS),
 	send_1711(Background);
 
 %% @doc Dialog request handler. Do what we can.
@@ -986,7 +1001,7 @@ handle_hits(Data) ->
 	<< _:96, SourceID:32/little-unsigned-integer, TargetID:32/little-unsigned-integer, _/bits >> = A,
 	% retrieve
 	GID = get(gid),
-	User = egs_db:users_select(GID),
+	{ok, User} = egs_user_model:read(GID),
 	% hit!
 	#hit_response{type=Type, user=NewUser, exp=HasEXP, damage=Damage, targethp=TargetHP, targetse=TargetSE, events=Events} = psu_missions:object_hit(User, SourceID, TargetID),
 	case Type of
@@ -994,7 +1009,7 @@ handle_hits(Data) ->
 			% TODO: also has a hit sent, we should send it too
 			handle_events(Events);
 		_ ->
-			PlayerHP = (NewUser#users.character)#characters.currenthp,
+			PlayerHP = (NewUser#egs_user_model.character)#characters.currenthp,
 			case lists:member(death, TargetSE) of
 				true -> SE = 16#01000200;
 				false -> SE = 16#01000000
@@ -1007,13 +1022,13 @@ handle_hits(Data) ->
 	end,
 	% exp
 	if	HasEXP =:= true ->
-			Character = NewUser#users.character,
+			Character = NewUser#egs_user_model.character,
 			Level = Character#characters.mainlevel,
 			send_0115(GID, TargetID, Level#level.number, Level#level.exp, Character#characters.money);
 		true -> ignore
 	end,
 	% save
-	egs_db:users_insert(NewUser),
+	egs_user_model:write(NewUser),
 	% next
 	handle_hits(Rest).
 
@@ -1046,8 +1061,8 @@ send(Packet) ->
 
 send_010d(User) ->
 	GID = get(gid),
-	CharGID = User#users.gid,
-	<< _:640, CharBin/bits >> = psu_characters:character_user_to_binary(User#users{lid=0}),
+	CharGID = User#egs_user_model.id,
+	<< _:640, CharBin/bits >> = psu_characters:character_user_to_binary(User#egs_user_model{lid=0}),
 	send(<< 16#010d0300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
 		1:32/little-unsigned-integer, 0:32, 16#00000300:32, 16#ffff0000:32, 0:32, CharGID:32/little-unsigned-integer,
 		0:192, CharGID:32/little-unsigned-integer, 0:32, 16#ffffffff:32, CharBin/binary >>).
@@ -1100,8 +1115,8 @@ send_0200(ZoneType) ->
 
 send_0201(User) ->
 	GID = get(gid),
-	CharGID = User#users.gid,
-	CharBin = psu_characters:character_user_to_binary(User#users{lid=0}),
+	CharGID = User#egs_user_model.id,
+	CharBin = psu_characters:character_user_to_binary(User#egs_user_model{lid=0}),
 	IsGM = 0,
 	OnlineStatus = 0,
 	GameVersion = 0,
@@ -1175,7 +1190,8 @@ send_021b() ->
 
 send_021e() ->
 	{ok, << File:1184/bits, _/bits >>} = file:read_file("p/unicube.bin"),
-	[StrCount] = io_lib:format("~b", [egs_db:users_count()]),
+	{ok, Count} = egs_user_model:count(),
+	[StrCount] = io_lib:format("~b", [Count]),
 	UCS2Count = << << X:8, 0:8 >> || X <- StrCount >>,
 	PaddingSize = (12 - byte_size(UCS2Count)) * 8,
 	send(<< 16#021e0300:32, 0:288, File/binary, UCS2Count/binary, 0:PaddingSize >>).
@@ -1217,8 +1233,8 @@ build_0233_contents([]) ->
 	<< >>;
 build_0233_contents(Users) ->
 	[User|Rest] = Users,
-	LID = 16#010000 + User#users.lid, % @todo The LID must be 16 bits and 0233 seems to (almost always) require that 01 right there...
-	CharBin = psu_characters:character_user_to_binary(User#users{lid=LID}),
+	LID = 16#010000 + User#egs_user_model.lid, % @todo The LID must be 16 bits and 0233 seems to (almost always) require that 01 right there...
+	CharBin = psu_characters:character_user_to_binary(User#egs_user_model{lid=LID}),
 	IsGM = 0,
 	GameVersion = 0,
 	Chunk = << CharBin/binary, IsGM:8, 0:8, GameVersion:8, 0:8 >>,
@@ -1243,7 +1259,8 @@ send_0304(FromGID, FromName, Modifiers, Message) ->
 %% @todo The value before IntDir seems to be the player's current animation. 01 stand up, 08 ?, 17 normal sit
 
 send_0503(#pos{x=PrevX, y=PrevY, z=PrevZ, dir=_}) ->
-	#users{gid=GID, pos=#pos{x=X, y=Y, z=Z, dir=Dir}, questid=QuestID, zoneid=ZoneID, mapid=MapID, entryid=EntryID} = egs_db:users_select(get(gid)),
+	{ok, User} = egs_user_model:read(get(gid)),
+	#egs_user_model{id=GID, pos=#pos{x=X, y=Y, z=Z, dir=Dir}, area=#psu_area{questid=QuestID, zoneid=ZoneID, mapid=MapID}, entryid=EntryID} = User,
 	IntDir = trunc(Dir * 182.0416),
 	send(<< 16#05030300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, GID:32/little-unsigned-integer, 0:32,
 		16#1000:16, IntDir:16/little-unsigned-integer, PrevX:32/little-float, PrevY:32/little-float, PrevZ:32/little-float, X:32/little-float, Y:32/little-float, Z:32/little-float,
@@ -1320,8 +1337,8 @@ send_0c10(Options) ->
 %% @todo The values after the Char variable are the flags. Probably use bits to define what flag is and isn't set. Handle correctly.
 
 send_0d01(User) ->
-	CharBin = psu_characters:character_tuple_to_binary(User#users.character),
-	OptionsBin = psu_characters:options_tuple_to_binary((User#users.character)#characters.options),
+	CharBin = psu_characters:character_tuple_to_binary(User#egs_user_model.character),
+	OptionsBin = psu_characters:options_tuple_to_binary((User#egs_user_model.character)#characters.options),
 	send(<< (header(16#0d01))/binary, CharBin/binary,
 		16#ffbbef1c:32, 16#f8ff0700:32, 16#fc810916:32, 16#7802134c:32,
 		16#b0c0040f:32, 16#7cf0e583:32, 16#b7bce0c6:32, 16#7ff8f963:32,
@@ -1465,7 +1482,7 @@ send_1215(A, B) ->
 %% @todo Find out the remaining values.
 
 send_1500(User) ->
-	#characters{slot=Slot, name=Name, race=Race, gender=Gender, class=Class} = User#users.character,
+	#characters{slot=Slot, name=Name, race=Race, gender=Gender, class=Class} = User#egs_user_model.character,
 	RaceBin = psu_characters:race_atom_to_binary(Race),
 	GenderBin = psu_characters:gender_atom_to_binary(Gender),
 	ClassBin = psu_characters:class_atom_to_binary(Class),

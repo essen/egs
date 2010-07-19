@@ -35,7 +35,7 @@ cleanup() ->
 		_ ->
 			?MODULE:cleanup()
 	after 300000 ->
-		egs_db:users_cleanup(),
+		egs_user_model:cleanup(),
 		reload,
 		?MODULE:cleanup()
 	end.

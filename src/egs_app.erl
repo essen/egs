@@ -71,5 +71,5 @@ db_init() ->
 	mnesia:start(),
 	mnesia:create_table(ids, [{attributes, record_info(fields, ids)}]),
 	mnesia:create_table(objects, [{attributes, record_info(fields, objects)}]),
-	mnesia:create_table(users, [{attributes, record_info(fields, users)}]),
+	mnesia:create_table(egs_user_model, [{attributes, record_info(fields, egs_user_model)}]),
 	error_logger:info_report("mnesia tables created").

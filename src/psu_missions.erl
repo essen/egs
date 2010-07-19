@@ -110,7 +110,7 @@ warp_event(InstanceID, BlockID, ListNb, ObjectNb) ->
 
 object_hit(User, _SourceID, TargetID) ->
 	try
-		Object = egs_db:objects_select_by_targetid(User#users.instanceid, TargetID),
+		Object = egs_db:objects_select_by_targetid(User#egs_user_model.instanceid, TargetID),
 		if	Object#objects.type =:= box ->
 				box_hit(User, Object);
 			true ->
@@ -135,18 +135,18 @@ box_hit(User, Box) ->
 enemy_hit(User) ->
 	Damage = 1,
 	IncEXP = 1,
-	Character = User#users.character,
+	Character = User#egs_user_model.character,
 	Level = Character#characters.mainlevel,
 	NewEXP = Level#level.exp + IncEXP,
 	NewLevel = Level#level{exp=NewEXP},
 	NewCharacter = Character#characters{mainlevel=NewLevel},
-	NewUser = User#users{character=NewCharacter},
+	NewUser = User#egs_user_model{character=NewCharacter},
 	% todo delete the enemy from the db when it dies
 	#hit_response{type=enemy, user=NewUser, exp=true, damage=Damage, targethp=0, targetse=[death]}.
 
 player_hit(User) ->
 	Damage = 10,
-	Character = User#users.character,
+	Character = User#egs_user_model.character,
 	TmpHP = Character#characters.currenthp - Damage,
 	if	TmpHP =< 0 ->
 			NewHP = 0,
@@ -156,7 +156,7 @@ player_hit(User) ->
 			SE = [flinch]
 	end,
 	NewCharacter = Character#characters{currenthp=NewHP},
-	NewUser = User#users{character=NewCharacter},
+	NewUser = User#egs_user_model{character=NewCharacter},
 	#hit_response{type=player, user=NewUser, damage=Damage, targethp=NewHP, targetse=SE}.
 
 spawn_cleared(InstanceID, SpawnID) ->

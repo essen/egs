@@ -32,7 +32,7 @@ do(Q) ->
 	Val.
 
 %% @doc Retrieve the next unique ID.
-
+%% @todo Used only for the LID so far...
 next(Type) ->
 	mnesia:dirty_update_counter(ids, Type, 1).
 
@@ -72,61 +72,3 @@ objects_delete(InstanceID) ->
 	List = do(qlc:q([X || X <- mnesia:table(objects), X#objects.instanceid =:= InstanceID])),
 	[mnesia:transaction(fun() -> mnesia:delete({objects, ID}) end) || #objects{id=ID} <- List],
 	ok.
-
-%% @doc Count the number of users online.
-
-users_count() ->
-	mnesia:table_info(users, size).
-
-%% @doc Select exactly one user by its GID. Return an #users record.
-
-users_select(GID) ->
-	case mnesia:transaction(fun() -> mnesia:read({users, GID}) end) of
-		{atomic, []} ->
-			error;
-		{atomic, [Val]} ->
-			Val
-	end.
-
-%% @doc Select exactly one user by its Pid. Return an #users record.
-
-users_select_by_pid(Pid) ->
-	[User] = do(qlc:q([X || X <- mnesia:table(users), X#users.pid =:= Pid])),
-	User.
-
-%% @doc Select all users. Return a list of #users records.
-
-users_select_all() ->
-	do(qlc:q([X || X <- mnesia:table(users), (X#users.character)#characters.slot /= undefined])).
-
-%% @doc Select all other users in the same area. Return a list of #users records.
-
-users_select_others_in_area(Self) ->
-	do(qlc:q([X || X <- mnesia:table(users),
-		X#users.gid /= Self#users.gid,
-		(X#users.character)#characters.slot /= undefined,
-		X#users.instanceid =:= Self#users.instanceid,
-		X#users.questid =:= Self#users.questid,
-		X#users.zoneid =:= Self#users.zoneid,
-		X#users.mapid =:= Self#users.mapid
-	])).
-
-%% @doc Insert or update an user.
-
-users_insert(User) ->
-	mnesia:transaction(fun() -> mnesia:write(User) end).
-
-%% @doc Delete an user.
-
-users_delete(GID) ->
-	mnesia:transaction(fun() -> mnesia:delete({users, GID}) end).
-
-%% @doc Cleanup the disconnected users who failed after the login stage but before the game stage.
-
-users_cleanup() ->
-	Timeout = calendar:datetime_to_gregorian_seconds(calendar:universal_time()) - 300,
-	Users = do(qlc:q([X#users.gid || X <- mnesia:table(users),
-		X#users.auth /= success, X#users.time < Timeout])),
-	mnesia:transaction(fun() ->
-		lists:foreach(fun(GID) -> users_delete(GID) end, Users)
-	end).
