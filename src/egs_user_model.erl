@@ -126,6 +126,7 @@ handle_cast({delete, ID}, State) ->
 handle_cast(cleanup, State) ->
 	Timeout = calendar:datetime_to_gregorian_seconds(calendar:universal_time()) - 300,
 	List = do(qlc:q([X#?TABLE.id || X <- mnesia:table(?TABLE),
+		X#?TABLE.state /= authenticated,
 		X#?TABLE.state /= online,
 		X#?TABLE.time < Timeout
 	])),
