@@ -30,6 +30,7 @@ start_link(CallbackFn) ->
 %% @spec start(CallbackFn) -> ok
 %% @doc Start the main loop.
 start(CallbackFn) ->
+	error_logger:info_report(io_lib:format("egs_exit_mon started with callback ~p", [CallbackFn])),
 	process_flag(trap_exit, true),
 	?MODULE:loop(CallbackFn).
 

@@ -35,6 +35,7 @@ start_link(Port, SessionID) ->
 %% @spec listen(Port, SessionID) -> ok
 %% @doc Listen for connections.
 listen(Port, SessionID) ->
+	error_logger:info_report(io_lib:format("psu_login listening on port ~b, with a sessionid of ~b", [Port, SessionID])),
 	{ok, LSocket} = ssl:listen(Port, ?OPTIONS),
 	?MODULE:accept(LSocket, SessionID).
 

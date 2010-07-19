@@ -32,6 +32,7 @@ start_link(Port) ->
 %% @spec listen(Port) -> ok
 %% @doc Listen for connections.
 listen(Port) ->
+	error_logger:info_report(io_lib:format("psu_patch listening on port ~b", [Port])),
 	{ok, LSocket} = gen_tcp:listen(Port, ?OPTIONS),
 	?MODULE:accept(LSocket).
 
