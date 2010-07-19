@@ -145,16 +145,16 @@ char_select_handle(16#020b, << Number:32/little-unsigned-integer, _/bits >>) ->
 	char_select_load(Number);
 
 %% @doc Character creation handler.
-
+%% @todo Reenable appearance validation whenever things go live.
 char_select_handle(16#0d02, << Number:32/little-unsigned-integer, Char/bits >>) ->
 	log("character creation"),
-	% check for valid character appearance
-	<< _Name:512, RaceID:8, GenderID:8, _TypeID:8, AppearanceBin:776/bits, _/bits >> = Char,
-	Race = proplists:get_value(RaceID, [{0, human}, {1, newman}, {2, cast}, {3, beast}]),
-	Gender = proplists:get_value(GenderID, [{0, male}, {1, female}]),
-	Appearance = psu_appearance:binary_to_tuple(Race, AppearanceBin),
-	psu_appearance:validate_char_create(Race, Gender, Appearance),
-	% end of check, continue doing it wrong past that point for now
+	%% check for valid character appearance
+	%~ << _Name:512, RaceID:8, GenderID:8, _TypeID:8, AppearanceBin:776/bits, _/bits >> = Char,
+	%~ Race = proplists:get_value(RaceID, [{0, human}, {1, newman}, {2, cast}, {3, beast}]),
+	%~ Gender = proplists:get_value(GenderID, [{0, male}, {1, female}]),
+	%~ Appearance = psu_appearance:binary_to_tuple(Race, AppearanceBin),
+	%~ psu_appearance:validate_char_create(Race, Gender, Appearance),
+	%% end of check, continue doing it wrong past that point for now
 	{ok, User} = egs_user_model:read(get(gid)),
 	_ = file:make_dir(io_lib:format("save/~s", [User#egs_user_model.folder])),
 	file:write_file(io_lib:format("save/~s/~b-character", [User#egs_user_model.folder, Number]), Char),
