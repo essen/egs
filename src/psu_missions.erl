@@ -56,6 +56,9 @@ object_init(InstanceID, BlockID, [floor_button|Tail], ListNb, ObjectNb, ObjectID
 %% @todo Apparently shoot_button has a TargetID. I'm sure why though.
 object_init(InstanceID, BlockID, [shoot_button|Tail], ListNb, ObjectNb, ObjectID, TargetID) ->
 	object_init(InstanceID, BlockID, Tail, ListNb, ObjectNb + 1, ObjectID + 1, TargetID + 1);
+%% @todo Goggle targets have a targetid.
+object_init(InstanceID, BlockID, [goggle_target|Tail], ListNb, ObjectNb, ObjectID, TargetID) ->
+	object_init(InstanceID, BlockID, Tail, ListNb, ObjectNb + 1, ObjectID + 1, TargetID + 1);
 %% @todo All kinds of traps have a TargetID, even if they're not targettable.
 object_init(InstanceID, BlockID, [trap|Tail], ListNb, ObjectNb, ObjectID, TargetID) ->
 	object_init(InstanceID, BlockID, Tail, ListNb, ObjectNb + 1, ObjectID + 1, TargetID + 1);

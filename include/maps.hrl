@@ -145,6 +145,26 @@
 	{1003023, [{type, mission}, {file, "data/missions/black-nest.3.s.quest.nbl"},  {start, [0, 6803, 0]}]},
 	%~ {1003024, [{type, mission}, {file, "data/missions/black-nest.3.s2.quest.nbl"}, {start, [0, 6803, 0]}]},
 
+	% The Dark God
+
+	{1003100, [{type, mission}, {file, "data/missions/dark-god.1.c.quest.nbl"},  {start, [0, 6302, 0]}]},
+	%~ {1003101, [{type, mission}, {file, "data/missions/dark-god.1.b.quest.nbl"},  {start, [0, 6302, 0]}]},
+	{1003102, [{type, mission}, {file, "data/missions/dark-god.1.a.quest.nbl"},  {start, [0, 6302, 0]}]},
+	{1003103, [{type, mission}, {file, "data/missions/dark-god.1.s.quest.nbl"},  {start, [0, 6302, 0]}]},
+	{1003104, [{type, mission}, {file, "data/missions/dark-god.1.s2.quest.nbl"}, {start, [0, 6302, 0]}]},
+
+	{1003110, [{type, mission}, {file, "data/missions/dark-god.2.c.quest.nbl"},  {start, [0, 6304, 0]}]},
+	{1003111, [{type, mission}, {file, "data/missions/dark-god.2.b.quest.nbl"},  {start, [0, 6304, 0]}]},
+	{1003112, [{type, mission}, {file, "data/missions/dark-god.2.a.quest.nbl"},  {start, [0, 6304, 0]}]},
+	{1003113, [{type, mission}, {file, "data/missions/dark-god.2.s.quest.nbl"},  {start, [0, 6304, 0]}]},
+	{1003114, [{type, mission}, {file, "data/missions/dark-god.2.s2.quest.nbl"}, {start, [0, 6304, 0]}]},
+
+	{1003120, [{type, mission}, {file, "data/missions/dark-god.3.c.quest.nbl"},  {start, [0, 6302, 0]}]},
+	{1003121, [{type, mission}, {file, "data/missions/dark-god.3.b.quest.nbl"},  {start, [0, 6302, 0]}]},
+	{1003122, [{type, mission}, {file, "data/missions/dark-god.3.a.quest.nbl"},  {start, [0, 6302, 0]}]},
+	{1003123, [{type, mission}, {file, "data/missions/dark-god.3.s.quest.nbl"},  {start, [0, 6302, 0]}]},
+	{1003124, [{type, mission}, {file, "data/missions/dark-god.3.s2.quest.nbl"}, {start, [0, 6302, 0]}]},
+
 	% Phantom Ruins (Linear Line counter)
 
 	%~ {1060300, [{type, mission}, {file, "data/missions/phantom-ruins.c.quest.nbl"},  {start, [0, 8002, 0]}]},
@@ -345,6 +365,44 @@
 	%~ {[1003022, 0], [{file, "data/missions/black-nest.3.a.zone.nbl"}]},
 	{[1003023, 0], [{file, "data/missions/black-nest.3.s.zone.nbl"}]},
 	%~ {[1003024, 0], [{file, "data/missions/black-nest.3.s2.zone.nbl"}]},
+
+	% The Dark God
+
+	{[1003100, 0], [{file, "data/missions/dark-god.1.c.zone-0.nbl"}]},
+	{[1003100, 1], [{file, "data/missions/dark-god.1.c.zone-1.nbl"}]},
+	%~ {[1003101, 0], [{file, "data/missions/dark-god.1.b.zone-0.nbl"}]},
+	%~ {[1003101, 1], [{file, "data/missions/dark-god.1.b.zone-1.nbl"}]},
+	{[1003102, 0], [{file, "data/missions/dark-god.1.a.zone-0.nbl"}]},
+	%~ {[1003102, 1], [{file, "data/missions/dark-god.1.a.zone-1.nbl"}]},
+	{[1003103, 0], [{file, "data/missions/dark-god.1.s.zone-0.nbl"}]},
+	{[1003103, 1], [{file, "data/missions/dark-god.1.s.zone-1.nbl"}]},
+	{[1003104, 0], [{file, "data/missions/dark-god.1.s2.zone-0.nbl"}]},
+	{[1003104, 1], [{file, "data/missions/dark-god.1.s2.zone-1.nbl"}]},
+	{[1003104, 2], [{file, "data/missions/dark-god.1.s2.zone-2.nbl"}]},
+
+	{[1003110, 0], [{file, "data/missions/dark-god.2.c.zone-0.nbl"}]},
+	{[1003110, 1], [{file, "data/missions/dark-god.2.c.zone-1.nbl"}]},
+	{[1003111, 0], [{file, "data/missions/dark-god.2.b.zone-0.nbl"}]},
+	{[1003111, 1], [{file, "data/missions/dark-god.2.b.zone-1.nbl"}]},
+	{[1003112, 0], [{file, "data/missions/dark-god.2.a.zone-0.nbl"}]},
+	{[1003112, 1], [{file, "data/missions/dark-god.2.a.zone-1.nbl"}]},
+	{[1003113, 0], [{file, "data/missions/dark-god.2.s.zone-0.nbl"}]},
+	%~ {[1003113, 1], [{file, "data/missions/dark-god.2.s.zone-1.nbl"}]},
+	{[1003114, 0], [{file, "data/missions/dark-god.2.s2.zone-0.nbl"}]},
+	{[1003114, 1], [{file, "data/missions/dark-god.2.s2.zone-1.nbl"}]},
+	{[1003114, 2], [{file, "data/missions/dark-god.2.s2.zone-2.nbl"}]},
+
+	{[1003120, 0], [{file, "data/missions/dark-god.3.c.zone-0.nbl"}]},
+	{[1003120, 1], [{file, "data/missions/dark-god.3.c.zone-1.nbl"}]},
+	{[1003121, 0], [{file, "data/missions/dark-god.3.b.zone-0.nbl"}]},
+	{[1003121, 1], [{file, "data/missions/dark-god.3.b.zone-1.nbl"}]},
+	{[1003122, 0], [{file, "data/missions/dark-god.3.a.zone-0.nbl"}]},
+	{[1003122, 1], [{file, "data/missions/dark-god.3.a.zone-1.nbl"}]},
+	{[1003123, 0], [{file, "data/missions/dark-god.3.s.zone-0.nbl"}]},
+	{[1003123, 1], [{file, "data/missions/dark-god.3.s.zone-1.nbl"}]},
+	{[1003124, 0], [{file, "data/missions/dark-god.3.s2.zone-0.nbl"}]},
+	{[1003124, 1], [{file, "data/missions/dark-god.3.s2.zone-1.nbl"}]},
+	{[1003124, 2], [{file, "data/missions/dark-god.3.s2.zone-2.nbl"}]},
 
 	% Phantom Ruins (Linear Line counter)
 
@@ -1064,12 +1122,19 @@
 
 	% Rykros (entry 1): Phantom Ruins, The Dark God
 
-	{201, [{quests, "data/counters/colony.rykros-1.pack"}, {bg, 255}, {options, << 16#01d11c00:32, 3, 3,
-		3, 3, 3, 3, 0, % Phantom Ruins C-S
-		3, 3, 3, 3, 3, 0, % The Dark God C-S2 variant 1
+	{201, [{quests, "data/counters/colony.rykros-1.pack"}, {bg, 255}, {options, << 16#01d11c00:32, 0, 3,
+		0, 0, 0, 0, 0, % Phantom Ruins C-S
+		3, 0, 3, 3, 3, 0, % The Dark God C-S2 variant 1
 		3, 3, 3, 3, 3, 0, % The Dark God C-S2 variant 2
 		3, 3, 3, 3, 3, 0, % The Dark God C-S2 variant 3
 	0:24 >>}]},
+
+	%~ {201, [{quests, "data/counters/colony.rykros-1.pack"}, {bg, 255}, {options, << 16#01d11c00:32, 3, 3,
+		%~ 3, 3, 3, 3, 0, % Phantom Ruins C-S
+		%~ 3, 3, 3, 3, 3, 0, % The Dark God C-S2 variant 1
+		%~ 3, 3, 3, 3, 3, 0, % The Dark God C-S2 variant 2
+		%~ 3, 3, 3, 3, 3, 0, % The Dark God C-S2 variant 3
+	%~ 0:24 >>}]},
 
 	% Falz Memoria
 

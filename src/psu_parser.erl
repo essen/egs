@@ -114,7 +114,6 @@ parse_object_list(BasePtr, Data, NbObjects, Ptr) ->
 parse_object_list_rec(_Data, 0, Acc) ->
 	lists:reverse(Acc);
 parse_object_list_rec(Data, NbObjects, Acc) ->
-	% todo x z y ??
 	<< 16#ffffffff:32, UnknownA:32/little-unsigned-integer, 16#ffffffff:32, 16#ffff:16, ObjType:16/little-unsigned-integer, 0:32,
 		PosX:32/little-float, PosY:32/little-float, PosZ:32/little-float, RotX:32/little-float, RotY:32/little-float, RotZ:32/little-float,
 		ArgSize:32/little-unsigned-integer, ArgPtr:32/little-unsigned-integer, Rest/bits >> = Data,
@@ -138,17 +137,20 @@ parse_object_args(6, _Params, _Data) ->
 parse_object_args(10, _Params, _Data) ->
 	invisible_block;
 
+%% @todo UnknownG or UnknownH is probably the required event.
 parse_object_args(12, _Params, Data) ->
 	<< Model:16/little-unsigned-integer, UnknownA:16/little-unsigned-integer, UnknownB:32/little-unsigned-integer, UnknownC:16/little-unsigned-integer, Scale:16/little-unsigned-integer,
 		UnknownD:16/little-unsigned-integer, 16#ff00:16, UnknownE:16/little-unsigned-integer, UnknownF:16/little-unsigned-integer,
-		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, RawTrigEvent:16/little-unsigned-integer,
-		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 0:16, _/bits >> = Data,
+		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, RawTrigEvent:16/little-unsigned-integer, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
+		16#ffff:16, UnknownG:16/little-unsigned-integer, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffff:16, UnknownH:16/little-unsigned-integer, 0:16, _/bits >> = Data,
 	Breakable = case UnknownB of
 		0 -> false;
-		1 -> true
+		1 -> true;
+		3 -> true; %% @todo This is probably the kind of box that is only targettable (and thus breakable) after the correct event (probably UnknownG) has been sent.
+		_ -> true %% @todo No idea. One of them has a value of 0x300 ??
 	end,
 	TrigEvent = convert_eventid(RawTrigEvent),
-	log("box: model(~b) a(~b) breakable(~p) c(~b) scale(~b) d(~b) e(~b) f(~b) trigevent(~p)", [Model, UnknownA, Breakable, UnknownC, Scale, UnknownD, UnknownE, UnknownF, TrigEvent]),
+	log("box: model(~b) a(~b) breakable(~p) c(~b) scale(~b) d(~b) e(~b) f(~b) trigevent(~p) g(~b) h(~b)", [Model, UnknownA, Breakable, UnknownC, Scale, UnknownD, UnknownE, UnknownF, TrigEvent, UnknownG, UnknownH]),
 	{box, Model, Breakable, TrigEvent};
 
 parse_object_args(14, {params, {pos, PosX, PosY, PosZ}, _Rot}, Data) ->
@@ -199,12 +201,12 @@ parse_object_args(27, _Params, _Data) ->
 	'exit';
 
 parse_object_args(31, _Params, Data) ->
-	<< KeySet:8, UnknownB:8, 16#0001:16, 16#ffff:16, RawTrigEvent:16/little-unsigned-integer, RawReqEvent:16/little-unsigned-integer, 16#ffff:16,
-		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, _/bits >> = Data,
+	<< KeySet:8, UnknownA:8, UnknownB:8, 1:8, 16#ffff:16, RawTrigEvent:16/little-unsigned-integer, RawReqEvent1:16/little-unsigned-integer, RawReqEvent2:16/little-unsigned-integer,
+		RawReqEvent3:16/little-unsigned-integer, 16#ffff:16, 16#ffffffff:32, 16#ffffffff:32, _/bits >> = Data,
 	TrigEvent = convert_eventid(RawTrigEvent),
-	ReqEvent = convert_eventid(RawReqEvent),
-	log("key: keyset(~b) b(~b) trigevent(~p) reqevent(~p)", [KeySet, UnknownB, TrigEvent, ReqEvent]),
-	{key, KeySet, TrigEvent, ReqEvent};
+	ReqEvents = [convert_eventid(RawReqEvent1), convert_eventid(RawReqEvent2), convert_eventid(RawReqEvent3)],
+	log("key: keyset(~b) a(~b) b(~b) trigevent(~p) reqevents(~p)", [KeySet, UnknownA, UnknownB, TrigEvent, ReqEvents]),
+	{key, KeySet, TrigEvent, ReqEvents};
 
 parse_object_args(35, _Params, _Data) ->
 	boss;
@@ -225,6 +227,9 @@ parse_object_args(49, _Params, _Data) ->
 
 parse_object_args(50, _Params, _Data) ->
 	healing_pad;
+
+parse_object_args(51, _Params, _Data) ->
+	goggle_target;
 
 parse_object_args(53, _Params, _Data) ->
 	label;
