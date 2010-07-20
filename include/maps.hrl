@@ -172,6 +172,14 @@
 	%~ {1060302, [{type, mission}, {file, "data/missions/phantom-ruins.a.quest.nbl"},  {start, [0, 8002, 0]}]},
 	%~ {1060303, [{type, mission}, {file, "data/missions/phantom-ruins.s.quest.nbl"},  {start, [0, 8002, 0]}]},
 
+	% MAG'
+
+	{1072100, [{type, mission}, {file, "data/missions/mag-prime.c.quest.nbl"},  {start, [1, 5000, 0]}]},
+	{1072101, [{type, mission}, {file, "data/missions/mag-prime.b.quest.nbl"},  {start, [1, 5000, 0]}]},
+	{1072102, [{type, mission}, {file, "data/missions/mag-prime.a.quest.nbl"},  {start, [1, 5000, 0]}]},
+	{1072103, [{type, mission}, {file, "data/missions/mag-prime.s.quest.nbl"},  {start, [1, 5000, 0]}]},
+	{1072104, [{type, mission}, {file, "data/missions/mag-prime.s2.quest.nbl"}, {start, [1, 5000, 0]}]},
+
 	% Planetary lobbies
 
 	{1100000, [{type, lobby}, {file, "data/lobby/colony.quest.nbl"}]},
@@ -414,6 +422,24 @@
 	%~ {[1060302, 1], [{file, "data/missions/phantom-ruins.a-1.zone.nbl"}]},
 	%~ {[1060303, 0], [{file, "data/missions/phantom-ruins.s-0.zone.nbl"}]},
 	%~ {[1060303, 1], [{file, "data/missions/phantom-ruins.s-1.zone.nbl"}]},
+
+	% MAG'
+
+	{[1072100, 1], [{file, "data/missions/mag-prime.c.zone-1.nbl"}]},
+	{[1072100, 2], [{file, "data/missions/mag-prime.c.zone-2.nbl"}]},
+	{[1072100, 3], [{file, "data/missions/mag-prime.c.zone-3.nbl"}]},
+	{[1072101, 1], [{file, "data/missions/mag-prime.b.zone-1.nbl"}]},
+	{[1072101, 2], [{file, "data/missions/mag-prime.b.zone-2.nbl"}]},
+	%~ {[1072101, 3], [{file, "data/missions/mag-prime.b.zone-3.nbl"}]},
+	{[1072102, 1], [{file, "data/missions/mag-prime.a.zone-1.nbl"}]},
+	{[1072102, 2], [{file, "data/missions/mag-prime.a.zone-2.nbl"}]},
+	{[1072102, 3], [{file, "data/missions/mag-prime.a.zone-3.nbl"}]},
+	{[1072103, 1], [{file, "data/missions/mag-prime.s.zone-1.nbl"}]},
+	{[1072103, 2], [{file, "data/missions/mag-prime.s.zone-2.nbl"}]},
+	{[1072103, 3], [{file, "data/missions/mag-prime.s.zone-3.nbl"}]},
+	{[1072104, 1], [{file, "data/missions/mag-prime.s2.zone-1.nbl"}]},
+	{[1072104, 2], [{file, "data/missions/mag-prime.s2.zone-2.nbl"}]},
+	{[1072104, 3], [{file, "data/missions/mag-prime.s2.zone-3.nbl"}]},
 
 	% Colony
 

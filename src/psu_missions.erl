@@ -28,6 +28,8 @@ start(InstanceID, QuestID, _SetID) ->
 	MapList = proplists:get_value(QuestID, ?MISSIONS),
 	map_init(InstanceID, MapList, 0, 0, 1024).
 
+map_init(_InstanceID, undefined, _BlockID, _ObjectID, _TargetID) ->
+	ignore; %% @todo Temporary clause until everything works fine.
 map_init(_InstanceID, [], _BlockID, _ObjectID, _TargetID) ->
 	ok;
 map_init(InstanceID, [Map|Tail], BlockID, ObjectID, TargetID) ->
