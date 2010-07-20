@@ -36,11 +36,15 @@ start_link(Port) ->
 %% @spec cleanup(Pid) -> ok
 %% @doc Cleanup the data associated with the failing process.
 cleanup(Pid) ->
-	{ok, User} = egs_user_model:read({pid, Pid}),
-	egs_user_model:delete(User#egs_user_model.id),
-	{ok, List} = egs_user_model:select({neighbors, User}),
-	lists:foreach(fun(Other) -> Other#egs_user_model.pid ! {psu_player_unspawn, User} end, List),
-	io:format("game (~p): quit~n", [User#egs_user_model.id]).
+	case egs_user_model:read({pid, Pid}) of
+		{ok, User} ->
+			egs_user_model:delete(User#egs_user_model.id),
+			{ok, List} = egs_user_model:select({neighbors, User}),
+			lists:foreach(fun(Other) -> Other#egs_user_model.pid ! {psu_player_unspawn, User} end, List),
+			io:format("game (~p): quit~n", [User#egs_user_model.id]);
+		{error, _Reason} ->
+			ignore
+	end.
 
 %% @doc Listen for connections.
 
@@ -134,8 +138,7 @@ char_select() ->
 			reload,
 			?MODULE:char_select();
 		{error, closed} ->
-			log("quit"),
-			egs_user_model:delete(get(gid))
+			closed %% exit
 	end.
 
 %% @doc Character selection handler.
@@ -467,9 +470,9 @@ loop(SoFar) ->
 			[dispatch(Orig) || Orig <- Packets],
 			?MODULE:loop(Rest);
 		{ssl_closed, _} ->
-			exit(ssl_closed);
+			ssl_closed; %% exit
 		{ssl_error, _, _} ->
-			exit(ssl_error);
+			ssl_error; %% exit
 		_ ->
 			?MODULE:loop(SoFar)
 	after 1000 ->
