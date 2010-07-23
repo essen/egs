@@ -20,7 +20,7 @@
 -module(psu_instance).
 -behavior(gen_server).
 
--export([start_link/1, stop/1, key_event/3, spawn_cleared_event/3, warp_event/5, hit/3]). %% API.
+-export([start_link/1, stop/1, floor_button_event/3, key_event/3, spawn_cleared_event/3, warp_event/5, hit/3]). %% API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
 
 -include_lib("stdlib/include/qlc.hrl").
@@ -42,6 +42,10 @@ start_link(Zones) ->
 %% @spec stop() -> stopped
 stop(InstancePid) ->
 	gen_server:call(InstancePid, stop).
+
+%% @todo @spec
+floor_button_event(InstancePid, ZoneID, ObjectID) ->
+	gen_server:call(InstancePid, {floor_button_event, ZoneID, ObjectID}).
 
 %% @todo @spec event(ServerPid, ObjectID, Args) -> Response
 key_event(InstancePid, ZoneID, ObjectID) ->
@@ -88,6 +92,11 @@ object_init([{box, _Model, Breakable, TrigEventID}|Tail], ZoneID, BlockID, Objec
 	end,
 	object_init(Tail, ZoneID, BlockID, ObjectID + 1, TargetID + 1, ListIndex, ObjectIndex + 1);
 
+%% @doc floor_button: {InstancePid, ZoneID, floor_button, ObjectID
+object_init([{floor_button, TrigEventID}|Tail], ZoneID, BlockID, ObjectID, TargetID, ListIndex, ObjectIndex) ->
+	object_insert(#psu_object{id={self(), ZoneID, floor_button, ObjectID}, instancepid=self(), type=floor_button, args={BlockID, TrigEventID}}),
+	object_init(Tail, ZoneID, BlockID, ObjectID + 1, TargetID + 1, ListIndex, ObjectIndex + 1);
+
 %% @doc key: {InstancePid, ZoneID, key, ObjectID}
 object_init([{key, _KeySet, TrigEventID, _ReqEventID}|Tail], ZoneID, BlockID, ObjectID, TargetID, ListIndex, ObjectIndex) ->
 	object_insert(#psu_object{id={self(), ZoneID, key, ObjectID}, instancepid=self(), type=key, args={BlockID, [TrigEventID]}}),
@@ -110,25 +119,22 @@ object_init([{warp, DestX, DestY, DestZ, DestDir}|Tail], ZoneID, BlockID, Object
 	object_insert(#psu_object{id={self(), ZoneID, warp, BlockID, ListIndex, ObjectIndex}, instancepid=self(), type=warp, args=#pos{x=DestX, y=DestY, z=DestZ, dir=DestDir}}),
 	object_init(Tail, ZoneID, BlockID, ObjectID, TargetID, ListIndex, ObjectIndex + 1);
 
-%% @doc Ignore for now: crystal
-%% @todo Probably have 2 TargetID because of its on/off state.
-object_init([crystal|Tail], ZoneID, BlockID, ObjectID, TargetID, ListIndex, ObjectIndex) ->
-	object_init(Tail, ZoneID, BlockID, ObjectID + 1, TargetID + 2, ListIndex, ObjectIndex + 1);
-
-%% @doc Ignore for now: floor_button, shoot_button, google_target, trap (all kinds)
+%% @doc Ignore for now: shoot_button, google_target, trap (all kinds)
 object_init([Object|Tail], ZoneID, BlockID, ObjectID, TargetID, ListIndex, ObjectIndex)
-	when	Object =:= floor_button;
-			Object =:= shoot_button;
-			Object =:= google_target;
+	when	Object =:= shoot_button;
+			Object =:= goggle_target;
 			Object =:= trap ->
 	object_init(Tail, ZoneID, BlockID, ObjectID + 1, TargetID + 1, ListIndex, ObjectIndex + 1);
+
+%% @doc Ignore for now: 'exit' (seems to take a TargetID but not an ObjectID
+object_init(['exit'|Tail], ZoneID, BlockID, ObjectID, TargetID, ListIndex, ObjectIndex) ->
+	object_init(Tail, ZoneID, BlockID, ObjectID, TargetID + 1, ListIndex, ObjectIndex + 1);
 
 %% @doc Ignore for now: objects without any ObjectID or TargetID.
 object_init([Object|Tail], ZoneID, BlockID, ObjectID, TargetID, ListIndex, ObjectIndex)
 	when	Object =:= static_model;
 			Object =:= invisible_block;
 			Object =:= entrance;
-			Object =:= 'exit';
 			Object =:= label;
 			Object =:= hidden_minimap_section;
 			Object =:= fog;
@@ -141,6 +147,10 @@ object_init([_Object|Tail], ZoneID, BlockID, ObjectID, TargetID, ListIndex, Obje
 	object_init(Tail, ZoneID, BlockID, ObjectID + 1, TargetID, ListIndex, ObjectIndex + 1).
 
 %% Event handlers
+
+handle_call({floor_button_event, ZoneID, ObjectID}, _From, State) ->
+	#psu_object{args=Args} = object_select({self(), ZoneID, floor_button, ObjectID}),
+	{reply, Args, State};
 
 handle_call({key_event, ZoneID, ObjectID}, _From, State) ->
 	#psu_object{args=Args} = object_select({self(), ZoneID, key, ObjectID}),

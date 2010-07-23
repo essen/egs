@@ -874,11 +874,16 @@ handle(16#0f0a, Data) ->
 			send_1205(EventID, BlockID, 0),
 			send_1213(ObjectID, 1);
 		13 -> % floor_button on (also sent when clearing a few of the rooms in black nest)
-			% 1205 1213
-			ignore;
+			{ok, User} = egs_user_model:read(get(gid)),
+			{BlockID, EventID} = psu_instance:floor_button_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
+			send_1205(EventID, BlockID, 0),
+			send_1213(ObjectID, 1);
 		14 -> % floor_button off
-			% 1205(same, with 1 as last value) 1213(same, with 0 as last value)
-			ignore;
+			%% @todo Apparently when it's not a floor_button but a light switch, this here should be handled differently.
+			{ok, User} = egs_user_model:read(get(gid)),
+			{BlockID, EventID} = psu_instance:floor_button_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
+			send_1205(EventID, BlockID, 1),
+			send_1213(ObjectID, 0);
 		%~ 19 -> % activate trap
 			%~ ignore;
 		20 -> % enter counter/elevator/room/spaceport/pick key/use key
