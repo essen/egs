@@ -13,10 +13,10 @@
 		psu_game,
 		psu_login,
 		psu_patch,
+		psu_instance,
 		egs_proto,
 		psu_appearance,
 		psu_characters,
-		psu_missions,
 		psu_parser
 	]},
 	{registered, []},

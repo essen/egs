@@ -32,7 +32,7 @@
 %% @todo Probably can use a "param" or "extra" field to store the game-specific information (for things that don't need to be queried).
 
 -record(egs_user_model, {
-	id, pid, socket, state, time, character, instanceid, areatype, area, entryid, pos,
+	id, pid, socket, state, time, character, instancepid, areatype, area, entryid, pos,
 	%% psu specific fields
 	lid, prev_area, prev_entryid,
 	%% temporary fields
@@ -98,7 +98,7 @@
 
 %% @doc Table containing all mission objects.
 
--record(objects, {id, instanceid, objectid, type, targetid, blockid, triggereventid, args}). % id = [instanceid, objectid]
+-record(psu_object, {id, instancepid, type, args}).
 
 %% @doc Hit response data.
 

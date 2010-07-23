@@ -23,6 +23,7 @@
 
 -include("include/records.hrl").
 -include("include/maps.hrl").
+-include("include/missions.hrl").
 
 -define(OPTIONS, [binary, {active, false}, {certfile, "priv/ssl/servercert.pem"}, {keyfile, "priv/ssl/serverkey.pem"}, {password, "alpha"}]).
 
@@ -35,6 +36,7 @@ start_link(Port) ->
 
 %% @spec cleanup(Pid) -> ok
 %% @doc Cleanup the data associated with the failing process.
+%% @todo Cleanup the instance process if there's nobody in it anymore.
 cleanup(Pid) ->
 	case egs_user_model:read({pid, Pid}) of
 		{ok, User} ->
@@ -314,20 +316,20 @@ area_get_season(QuestID) ->
 area_load(QuestID, ZoneID, MapID, EntryID) ->
 	{ok, OldUser} = egs_user_model:read(get(gid)),
 	[{type, AreaType}, {file, QuestFile}|StartInfo] = proplists:get_value(QuestID, ?QUESTS, [{type, undefined}, {file, undefined}]),
-	[IsStart, InstanceID, RealZoneID, RealMapID, RealEntryID] = case AreaType of
+	[IsStart, RealZoneID, RealMapID, RealEntryID] = case AreaType of
 		mission ->
 			if	ZoneID =:= 65535 ->
 					[{start, [TmpZoneID, TmpMapID, TmpEntryID]}] = StartInfo,
-					[true, OldUser#egs_user_model.id, TmpZoneID, TmpMapID, TmpEntryID];
-				true -> [false, OldUser#egs_user_model.id, ZoneID, MapID, EntryID]
+					[true, TmpZoneID, TmpMapID, TmpEntryID];
+				true -> [false, ZoneID, MapID, EntryID]
 			end;
 		myroom ->
 			if	ZoneID =:= 0 ->
-					[false, undefined, 0, 423, EntryID];
-				true -> [false, undefined, ZoneID, MapID, EntryID]
+					[false, 0, 423, EntryID];
+				true -> [false, ZoneID, MapID, EntryID]
 			end;
 		_ ->
-			[false, undefined, ZoneID, MapID, EntryID]
+			[false, ZoneID, MapID, EntryID]
 	end,
 	[{file, ZoneFile}] = proplists:get_value([QuestID, RealZoneID], ?ZONES, [{file, undefined}]),
 	if	AreaType =:= myroom ->
@@ -335,14 +337,16 @@ area_load(QuestID, ZoneID, MapID, EntryID) ->
 		true ->
 			[{name, AreaName}] = proplists:get_value([QuestID, RealMapID], ?MAPS, [{name, "dammy"}])
 	end,
-	User = OldUser#egs_user_model{instanceid=InstanceID, areatype=AreaType, area={psu_area, QuestID, RealZoneID, RealMapID}, entryid=RealEntryID},
-	egs_user_model:write(User),
 	%% @todo Don't recalculate SetID when leaving the mission and back (this changes the spawns).
 	SetID = if IsStart =:= true -> crypto:rand_uniform(0, 4); true -> 0 end,
-	if	IsStart =:= true -> % initialize the mission
-			psu_missions:start(InstanceID, QuestID, SetID);
-		true -> ignore
+	InstancePid = if IsStart =:= true -> % initialize the mission
+			Zones = proplists:get_value(QuestID, ?MISSIONS),
+			{ok, RetPid} = psu_instance:start_link(Zones),
+			RetPid;
+		true -> OldUser#egs_user_model.instancepid
 	end,
+	User = OldUser#egs_user_model{instancepid=InstancePid, areatype=AreaType, area={psu_area, QuestID, RealZoneID, RealMapID}, entryid=RealEntryID},
+	egs_user_model:write(User),
 	area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName).
 
 area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName) ->
@@ -702,7 +706,7 @@ handle(16#0402, Data) ->
 		7 -> % spawn cleared @todo 1201 sent back with same values apparently, but not always
 			log("cleared spawn ~b", [SpawnID]),
 			{ok, User} = egs_user_model:read(get(gid)),
-			[EventID, BlockID] = psu_missions:spawn_cleared(User#egs_user_model.instanceid, SpawnID),
+			{BlockID, EventID} = psu_instance:spawn_cleared_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, SpawnID),
 			if	EventID =:= false -> ignore;
 				true -> send_1205(EventID, BlockID, 0)
 			end;
@@ -781,7 +785,7 @@ handle(16#0c0e, _) ->
 	send_1006(11),
 	{ok, User} = egs_user_model:read(get(gid)),
 	%% delete the mission
-	psu_missions:stop(User#egs_user_model.instanceid),
+	psu_instance:stop(User#egs_user_model.instancepid),
 	%% full hp
 	Character = User#egs_user_model.character,
 	MaxHP = Character#characters.maxhp,
@@ -843,8 +847,8 @@ handle(16#0f0a, Data) ->
 	case Action of
 		0 -> % warp
 			{ok, User} = egs_user_model:read(get(gid)),
-			{X, Y, Z, Dir} = psu_missions:warp_event(User#egs_user_model.instanceid, BlockID, ListNb, ObjectNb),
-			NewUser = User#egs_user_model{pos=#pos{x=X, y=Y, z=Z, dir=Dir}},
+			Pos = psu_instance:warp_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, BlockID, ListNb, ObjectNb),
+			NewUser = User#egs_user_model{pos=Pos},
 			egs_user_model:write(NewUser),
 			send_0503(User#egs_user_model.pos),
 			send_1211(A, C, B, 0);
@@ -866,7 +870,7 @@ handle(16#0f0a, Data) ->
 			ignore;
 		12 -> % pick/use key
 			{ok, User} = egs_user_model:read(get(gid)),
-			[[EventID|_], BlockID] = psu_missions:key_event(User#egs_user_model.instanceid, ObjectID),
+			{BlockID, [EventID|_]} = psu_instance:key_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
 			send_1205(EventID, BlockID, 0),
 			send_1213(ObjectID, 1);
 		13 -> % floor_button on (also sent when clearing a few of the rooms in black nest)
@@ -881,11 +885,11 @@ handle(16#0f0a, Data) ->
 			ignore;
 		23 -> % initialize key slots (called when picking a key or checking the gate directly with no key)
 			{ok, User} = egs_user_model:read(get(gid)),
-			[[_, EventID, _], BlockID] = psu_missions:key_event(User#egs_user_model.instanceid, ObjectID),
+			{BlockID, [_, EventID, _]} = psu_instance:key_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
 			send_1205(EventID, BlockID, 0); % in block 1, 202 = key [1] x1, 203 = key [-] x1
 		24 -> % open gate (only when client has key)
 			{ok, User} = egs_user_model:read(get(gid)),
-			[[_, _, EventID], BlockID] = psu_missions:key_event(User#egs_user_model.instanceid, ObjectID),
+			{BlockID, [_, _, EventID]} = psu_instance:key_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
 			send_1205(EventID, BlockID, 0),
 			send_1213(ObjectID, 1);
 		25 -> % sit on chair
@@ -1006,7 +1010,7 @@ handle_hits(Data) ->
 	GID = get(gid),
 	{ok, User} = egs_user_model:read(GID),
 	% hit!
-	#hit_response{type=Type, user=NewUser, exp=HasEXP, damage=Damage, targethp=TargetHP, targetse=TargetSE, events=Events} = psu_missions:object_hit(User, SourceID, TargetID),
+	#hit_response{type=Type, user=NewUser, exp=HasEXP, damage=Damage, targethp=TargetHP, targetse=TargetSE, events=Events} = psu_instance:hit(User, SourceID, TargetID),
 	case Type of
 		box ->
 			% TODO: also has a hit sent, we should send it too
@@ -1042,7 +1046,7 @@ handle_events([]) ->
 handle_events([{explode, ObjectID}|Tail]) ->
 	send_1213(ObjectID, 3),
 	handle_events(Tail);
-handle_events([{event, [EventID, BlockID]}|Tail]) ->
+handle_events([{event, [BlockID, EventID]}|Tail]) ->
 	send_1205(EventID, BlockID, 0),
 	handle_events(Tail).
 

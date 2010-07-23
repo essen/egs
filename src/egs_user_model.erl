@@ -39,12 +39,10 @@ do(Q) ->
 %% API
 
 %% @spec start_link() -> {ok,Pid::pid()}
-%% @todo Start the cleanup timer.
 start_link() ->
 	gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
 %% @spec stop() -> stopped
-%% @todo Stop the cleanup timer.
 stop() ->
 	gen_server:call(?SERVER, stop).
 
@@ -103,7 +101,7 @@ handle_call({select, {neighbors, User}}, _From, State) ->
 	List = do(qlc:q([X || X <- mnesia:table(?TABLE),
 		X#?TABLE.id /= User#?TABLE.id,
 		X#?TABLE.state =:= online,
-		X#?TABLE.instanceid =:= User#?TABLE.instanceid,
+		X#?TABLE.instancepid =:= User#?TABLE.instancepid,
 		X#?TABLE.area =:= User#?TABLE.area
 	])),
 	{reply, {ok, List}, State};

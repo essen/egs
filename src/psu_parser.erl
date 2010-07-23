@@ -45,7 +45,7 @@ parse_zone(QuestID, NblFilename) ->
 	log("header: end ptr(~b) areaid list ptr(~b)", [EndRelPtr, AreaIDListRelPtr]),
 	{ok, _AreaCode, NbMaps, MapsListPtr} = parse_areaid_list(Data, AreaIDListRelPtr - 16),
 	MapList = parse_mapnumbers_list(Data, NbMaps, MapsListPtr - BasePtr - 16),
-	ObjList = {QuestID, [{MapID, parse_object_list_headers(BasePtr, Data, NbHeaders, ObjListHeadersPtr - BasePtr - 16)} || {MapID, NbHeaders, ObjListHeadersPtr} <- MapList]},
+	ObjList = {QuestID, [{0, [{MapID, parse_object_list_headers(BasePtr, Data, NbHeaders, ObjListHeadersPtr - BasePtr - 16)} || {MapID, NbHeaders, ObjListHeadersPtr} <- MapList]}]},
 	nbl_cleanup(),
 	ObjList.
 
@@ -172,7 +172,7 @@ parse_object_args(22, _Params, Data) ->
 	ReqKeyEvents = [convert_eventid(RawReqKey1Event), convert_eventid(RawReqKey2Event), convert_eventid(RawReqKey3Event), convert_eventid(RawReqKey4Event)],
 	TrigEvent = convert_eventid(RawTrigEvent),
 	log("key_console: a(~b) keyset(~b) b(~b) c(~b) reqkeyevents(~p) trigevent(~p) d(~b)", [UnknownA, KeySet, UnknownB, UnknownC, ReqKeyEvents, TrigEvent, UnknownD]),
-	{key_console, KeySet, ReqKeyEvents, TrigEvent};
+	{key_console, KeySet, TrigEvent, ReqKeyEvents};
 
 %% @doc Small spawn.
 
