@@ -222,7 +222,7 @@ parse_object_args(26, _Params, _Data) ->
 parse_object_args(27, _Params, _Data) ->
 	'exit';
 
-%% @todo Find out! Found in Gifts from Beyond+.
+%% @todo Find out! Found in Gifts from Beyond+ and that other exchange mission. Also tutorial, all of it.
 parse_object_args(28, _Params, _Data) ->
 	unknown_object_28;
 
@@ -234,17 +234,17 @@ parse_object_args(31, _Params, Data) ->
 	log("key: keyset(~b) a(~b) b(~b) trigevent(~p) reqevents(~p)", [KeySet, UnknownA, UnknownB, TrigEvent, ReqEvents]),
 	{key, KeySet, TrigEvent, ReqEvents};
 
-%% @todo Find out! Found in Gifts from Beyond+.
+%% @todo Find out! Found in Gifts from Beyond+ and that other exchange mission. Also tutorial.
 parse_object_args(33, _Params, _Data) ->
 	unknown_object_33;
 
 parse_object_args(35, _Params, _Data) ->
 	boss;
 
-%% @todo Really save sphere? Colony zone 0. Uni cube maybe?
 parse_object_args(40, _Params, _Data) ->
-	unknown_object_40;
+	save_sphere;
 
+%% @todo Seems to be targetable elements found in your room. 3 yellow lines rotating in the otherwise normal map.
 parse_object_args(42, _Params, _Data) ->
 	unknown_object_42;
 
@@ -281,13 +281,12 @@ parse_object_args(53, _Params, _Data) ->
 parse_object_args(56, _Params, _Data) ->
 	chair;
 
-%% @todo Find out! Only used in the cake sisters shop so far.
+%% @todo Apparently used for the custom posters!
 parse_object_args(59, _Params, _Data) ->
-	unknown_object_59;
+	poster;
 
-%% @todo Find out! Only used in colony zone 0 so far.
 parse_object_args(60, _Params, _Data) ->
-	unknown_object_60;
+	uni_cube;
 
 parse_object_args(61, _Params, _Data) ->
 	ghosts_generator;
@@ -295,6 +294,7 @@ parse_object_args(61, _Params, _Data) ->
 parse_object_args(62, _Params, _Data) ->
 	pp_cube;
 
+%% @todo Used at the hot springs dressing room.
 parse_object_args(63, _Params, _Data) ->
 	unknown_object_63;
 
@@ -302,17 +302,20 @@ parse_object_args(64, _Params, _Data) ->
 	colored_minimap_section;
 
 parse_object_args(65, _Params, _Data) ->
-	unknown_object_65;
+	room_decoration_slot;
 
+%% @todo Used for the offering box on shitenkaku.
 parse_object_args(66, _Params, _Data) ->
 	unknown_object_66;
 
+%% @todo Also used for the two ladies: one that gives coins, another that exchanges coins.
 parse_object_args(67, _Params, _Data) ->
-	unknown_object_67;
+	casino_bets;
 
 parse_object_args(68, _Params, _Data) ->
-	unknown_object_68;
+	casino_slots;
 
+%% @todo Apparently is in a version of the room that we aren't using yet.
 parse_object_args(69, _Params, _Data) ->
 	unknown_object_69;
 
