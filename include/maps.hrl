@@ -168,9 +168,9 @@
 	% Phantom Ruins (Linear Line counter)
 
 	%~ {1060300, [{type, mission}, {file, "data/missions/phantom-ruins.c.quest.nbl"},  {start, [0, 8002, 0]}, {sets, 3}]},
-	%~ {1060301, [{type, mission}, {file, "data/missions/phantom-ruins.b.quest.nbl"},  {start, [0, 8002, 0]}, {sets, 3}]},
+	{1060301, [{type, mission}, {file, "data/missions/phantom-ruins.b.quest.nbl"},  {start, [0, 8002, 0]}, {sets, 3}]},
 	%~ {1060302, [{type, mission}, {file, "data/missions/phantom-ruins.a.quest.nbl"},  {start, [0, 8002, 0]}, {sets, 3}]},
-	%~ {1060303, [{type, mission}, {file, "data/missions/phantom-ruins.s.quest.nbl"},  {start, [0, 8002, 0]}, {sets, 3}]},
+	{1060303, [{type, mission}, {file, "data/missions/phantom-ruins.s.quest.nbl"},  {start, [0, 8002, 0]}, {sets, 3}]},
 
 	% MAG'
 
@@ -416,12 +416,12 @@
 
 	%~ {[1060300, 0], [{file, "data/missions/phantom-ruins.c-0.zone.nbl"}, {sets, 3}]},
 	%~ {[1060300, 1], [{file, "data/missions/phantom-ruins.c-1.zone.nbl"}, {sets, 1}]},
-	%~ {[1060301, 0], [{file, "data/missions/phantom-ruins.b-0.zone.nbl"}, {sets, 3}]},
-	%~ {[1060301, 1], [{file, "data/missions/phantom-ruins.b-1.zone.nbl"}, {sets, 1}]},
+	{[1060301, 0], [{file, "data/missions/phantom-ruins.b-0.zone.nbl"}, {sets, 3}]},
+	{[1060301, 1], [{file, "data/missions/phantom-ruins.b-1.zone.nbl"}, {sets, 1}]},
 	%~ {[1060302, 0], [{file, "data/missions/phantom-ruins.a-0.zone.nbl"}, {sets, 3}]},
 	%~ {[1060302, 1], [{file, "data/missions/phantom-ruins.a-1.zone.nbl"}, {sets, 1}]},
-	%~ {[1060303, 0], [{file, "data/missions/phantom-ruins.s-0.zone.nbl"}, {sets, 3}]},
-	%~ {[1060303, 1], [{file, "data/missions/phantom-ruins.s-1.zone.nbl"}, {sets, 1}]},
+	{[1060303, 0], [{file, "data/missions/phantom-ruins.s-0.zone.nbl"}, {sets, 3}]},
+	{[1060303, 1], [{file, "data/missions/phantom-ruins.s-1.zone.nbl"}, {sets, 1}]},
 
 	% MAG'
 
@@ -630,8 +630,8 @@
 	% Linear Line: Phantom Ruins, Unsafe Passage, Unsafe Passage (AOTI, missing)
 
 	%% @todo Temporarily only enable the 3rd Unsafe Passage C variant.
-	{  0, [{quests, "data/counters/colony.ll.pack"}, {bg, 255}, {options, << 16#01a92800:32, 0, 3, 0,
-		0, 0, 0, 0, 0, % Phantom Ruins C-S
+	{  0, [{quests, "data/counters/colony.ll.pack"}, {bg, 255}, {options, << 16#01a92800:32, 3, 3, 0,
+		0, 3, 0, 3, 0, % Phantom Ruins C-S
 		3, 3, 3, 3, 3, % Unsafe Passage C-S2 variant 1
 		3, 3, 3, 3, 3, % Unsafe Passage C-S2 variant 2
 		3, 3, 3, 3, 3, % Unsafe Passage C-S2 variant 3
