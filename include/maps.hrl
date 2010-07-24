@@ -172,6 +172,10 @@
 	%~ {1060302, [{type, mission}, {file, "data/missions/phantom-ruins.a.quest.nbl"},  {start, [0, 8002, 0]}, {sets, 3}]},
 	{1060303, [{type, mission}, {file, "data/missions/phantom-ruins.s.quest.nbl"},  {start, [0, 8002, 0]}, {sets, 3}]},
 
+	% Dark Crystal Seeker
+
+	{1070742, [{type, mission}, {file, "data/missions/dark-crystal-seeker.quest.nbl"}, {start, [0, 1002, 0]}, {sets, 1}]},
+
 	% MAG'
 
 	{1072100, [{type, mission}, {file, "data/missions/mag-prime.c.quest.nbl"},  {start, [1, 5000, 0]}, {sets, 2}]},
@@ -426,6 +430,10 @@
 	%~ {[1060302, 1], [{file, "data/missions/phantom-ruins.a-1.zone.nbl"}, {sets, 1}]},
 	{[1060303, 0], [{file, "data/missions/phantom-ruins.s-0.zone.nbl"}, {sets, 3}]},
 	{[1060303, 1], [{file, "data/missions/phantom-ruins.s-1.zone.nbl"}, {sets, 1}]},
+
+	% Dark Crystal Seeker
+
+	{[1070742, 0], [{file, "data/missions/dark-crystal-seeker.zone.nbl"}, {sets, 1}]},
 
 	% MAG'
 
