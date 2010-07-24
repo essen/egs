@@ -198,7 +198,7 @@ char_select_load(Number) ->
 	Appearance = psu_appearance:binary_to_tuple(Race, AppearanceBin),
 	Options = psu_characters:options_binary_to_tuple(OptionsBin),
 	Character = #characters{slot=Number, name=Name, race=Race, gender=Gender, class=Class, appearance=Appearance, options=Options}, % TODO: temporary set the slot here, won't be needed later
-	User = OldUser#egs_user_model{state=online, character=Character, area=#psu_area{questid=undefined, zoneid=undefined, mapid=undefined}, pos=#pos{x=0.0, y=0.0, z=0.0, dir=0.0}},
+	User = OldUser#egs_user_model{state=online, character=Character, area=#psu_area{questid=undefined, zoneid=undefined, mapid=undefined}, pos=#pos{x=0.0, y=0.0, z=0.0, dir=0.0}, setid=0},
 	egs_user_model:write(User),
 	char_load(User),
 	send_021b(),
@@ -315,39 +315,40 @@ area_get_season(QuestID) ->
 
 area_load(QuestID, ZoneID, MapID, EntryID) ->
 	{ok, OldUser} = egs_user_model:read(get(gid)),
-	[{type, AreaType}, {file, QuestFile}|StartInfo] = proplists:get_value(QuestID, ?QUESTS, [{type, undefined}, {file, undefined}]),
-	[IsStart, RealZoneID, RealMapID, RealEntryID] = case AreaType of
+	[{type, AreaType}, {file, QuestFile}|MissionInfo] = proplists:get_value(QuestID, ?QUESTS, [{type, undefined}, {file, undefined}]),
+	[IsStart, RealZoneID, RealMapID, RealEntryID, NbSetsInQuest] = case AreaType of
 		mission ->
 			if	ZoneID =:= 65535 ->
-					[{start, [TmpZoneID, TmpMapID, TmpEntryID]}] = StartInfo,
-					[true, TmpZoneID, TmpMapID, TmpEntryID];
-				true -> [false, ZoneID, MapID, EntryID]
+					[{start, [TmpZoneID, TmpMapID, TmpEntryID]}, {sets, TmpNbSets}] = MissionInfo,
+					[true, TmpZoneID, TmpMapID, TmpEntryID, TmpNbSets];
+				true -> [false, ZoneID, MapID, EntryID, ignored]
 			end;
 		myroom ->
 			if	ZoneID =:= 0 ->
-					[false, 0, 423, EntryID];
-				true -> [false, ZoneID, MapID, EntryID]
+					[false, 0, 423, EntryID, ignored];
+				true -> [false, ZoneID, MapID, EntryID, ignored]
 			end;
 		_ ->
-			[false, ZoneID, MapID, EntryID]
+			[false, ZoneID, MapID, EntryID, ignored]
 	end,
-	[{file, ZoneFile}] = proplists:get_value([QuestID, RealZoneID], ?ZONES, [{file, undefined}]),
+	[{file, ZoneFile}|ZoneSetInfo] = proplists:get_value([QuestID, RealZoneID], ?ZONES, [{file, undefined}]),
+	NbSetsInZone = case ZoneSetInfo of [] -> 1; [{sets, TmpNbSetsInZone}] -> TmpNbSetsInZone end,
 	if	AreaType =:= myroom ->
 			AreaName = "Your Room";
 		true ->
 			[{name, AreaName}] = proplists:get_value([QuestID, RealMapID], ?MAPS, [{name, "dammy"}])
 	end,
-	%% @todo Don't recalculate SetID when leaving the mission and back (this changes the spawns).
-	SetID = if IsStart =:= true -> crypto:rand_uniform(0, 4); true -> 0 end,
-	InstancePid = if IsStart =:= true -> % initialize the mission
+	{InstancePid, SetID} = if IsStart =:= true -> % initialize the mission
 			Zones = proplists:get_value(QuestID, ?MISSIONS),
 			{ok, RetPid} = psu_instance:start_link(Zones),
-			RetPid;
-		true -> OldUser#egs_user_model.instancepid
+			RetSetID = crypto:rand_uniform(0, NbSetsInQuest),
+			{RetPid, RetSetID};
+		true -> {OldUser#egs_user_model.instancepid, OldUser#egs_user_model.setid}
 	end,
 	User = OldUser#egs_user_model{instancepid=InstancePid, areatype=AreaType, area={psu_area, QuestID, RealZoneID, RealMapID}, entryid=RealEntryID},
 	egs_user_model:write(User),
-	area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName).
+	RealSetID = if SetID > NbSetsInZone - 1 -> NbSetsInZone - 1; true -> SetID end,
+	area_load(AreaType, IsStart, RealSetID, OldUser, User, QuestFile, ZoneFile, AreaName).
 
 area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName) ->
 	#psu_area{questid=OldQuestID, zoneid=OldZoneID} = OldUser#egs_user_model.area,
@@ -790,7 +791,7 @@ handle(16#0c0e, _) ->
 	Character = User#egs_user_model.character,
 	MaxHP = Character#characters.maxhp,
 	NewCharacter = Character#characters{currenthp=MaxHP},
-	NewUser = User#egs_user_model{character=NewCharacter},
+	NewUser = User#egs_user_model{character=NewCharacter, setid=0},
 	egs_user_model:write(NewUser),
 	%% map change (temporary)
 	if	User#egs_user_model.areatype =:= mission ->

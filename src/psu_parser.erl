@@ -36,7 +36,7 @@ run() ->
 	file:write_file("include/missions.hrl", Missions).
 
 parse_quest(QuestID) ->
-	[{ZoneID, parse_zone(Filename)} || {[ZoneQuestID, ZoneID], [{file, Filename}]} <- ?ZONES, ZoneQuestID =:= QuestID].
+	[{ZoneID, parse_zone(Filename)} || {[ZoneQuestID, ZoneID], [{file, Filename}|_]} <- ?ZONES, ZoneQuestID =:= QuestID].
 
 parse_zone(NblFilename) ->
 	Files = nbl_list_files(NblFilename),

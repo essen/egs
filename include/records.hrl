@@ -34,7 +34,7 @@
 -record(egs_user_model, {
 	id, pid, socket, state, time, character, instancepid, areatype, area, entryid, pos,
 	%% psu specific fields
-	lid, prev_area, prev_entryid,
+	lid, setid, prev_area, prev_entryid,
 	%% temporary fields
 	folder
 }).
