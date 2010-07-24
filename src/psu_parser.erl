@@ -212,6 +212,10 @@ parse_object_args(26, _Params, _Data) ->
 parse_object_args(27, _Params, _Data) ->
 	'exit';
 
+%% @todo Find out! Found in Gifts from Beyond+.
+parse_object_args(28, _Params, _Data) ->
+	unknown_object_28;
+
 parse_object_args(31, _Params, Data) ->
 	<< KeySet:8, UnknownA:8, UnknownB:8, 1:8, 16#ffff:16, RawTrigEvent:16/little-unsigned-integer, RawReqEvent1:16/little-unsigned-integer, RawReqEvent2:16/little-unsigned-integer,
 		RawReqEvent3:16/little-unsigned-integer, 16#ffff:16, 16#ffffffff:32, 16#ffffffff:32, _/bits >> = Data,
@@ -219,6 +223,10 @@ parse_object_args(31, _Params, Data) ->
 	ReqEvents = [convert_eventid(RawReqEvent1), convert_eventid(RawReqEvent2), convert_eventid(RawReqEvent3)],
 	log("key: keyset(~b) a(~b) b(~b) trigevent(~p) reqevents(~p)", [KeySet, UnknownA, UnknownB, TrigEvent, ReqEvents]),
 	{key, KeySet, TrigEvent, ReqEvents};
+
+%% @todo Find out! Found in Gifts from Beyond+.
+parse_object_args(33, _Params, _Data) ->
+	unknown_object_33;
 
 parse_object_args(35, _Params, _Data) ->
 	boss;
@@ -251,7 +259,7 @@ parse_object_args(53, _Params, _Data) ->
 
 %% @todo Find out! Only used in the cake sisters shop so far.
 parse_object_args(59, _Params, _Data) ->
-	unknown_object;
+	unknown_object_59;
 
 parse_object_args(62, _Params, _Data) ->
 	pp_cube;

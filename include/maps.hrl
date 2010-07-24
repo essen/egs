@@ -180,6 +180,10 @@
 	{1072103, [{type, mission}, {file, "data/missions/mag-prime.s.quest.nbl"},  {start, [1, 5000, 0]}, {sets, 2}]},
 	{1072104, [{type, mission}, {file, "data/missions/mag-prime.s2.quest.nbl"}, {start, [1, 5000, 0]}, {sets, 2}]},
 
+	% Gifts from Beyond
+
+	{1072300, [{type, mission}, {file, "data/missions/gifts-from-beyond-plus.quest.nbl"}, {start, [0, 300, 0]}, {sets, 1}]},
+
 	% Planetary lobbies
 
 	{1100000, [{type, lobby}, {file, "data/lobby/colony.quest.nbl"}]},
@@ -440,6 +444,10 @@
 	{[1072104, 1], [{file, "data/missions/mag-prime.s2.zone-1.nbl"}, {sets, 1}]},
 	{[1072104, 2], [{file, "data/missions/mag-prime.s2.zone-2.nbl"}, {sets, 2}]},
 	{[1072104, 3], [{file, "data/missions/mag-prime.s2.zone-3.nbl"}, {sets, 1}]},
+
+	% Gifts from Beyond
+
+	{[1072300, 0], [{file, "data/missions/gifts-from-beyond-plus.zone.nbl"}, {sets, 1}]},
 
 	% Colony
 
