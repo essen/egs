@@ -299,7 +299,7 @@ parse_object_args(63, _Params, _Data) ->
 	unknown_object_63;
 
 parse_object_args(64, _Params, _Data) ->
-	hidden_minimap_section;
+	colored_minimap_section;
 
 parse_object_args(65, _Params, _Data) ->
 	unknown_object_65;

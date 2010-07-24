@@ -137,7 +137,7 @@ object_init([Object|Tail], ZoneID, BlockID, ObjectID, TargetID, ListIndex, Objec
 			Object =:= invisible_block;
 			Object =:= entrance;
 			Object =:= label;
-			Object =:= hidden_minimap_section;
+			Object =:= colored_minimap_section;
 			Object =:= fog;
 			Object =:= pp_cube;
 			Object =:= healing_pad ->
