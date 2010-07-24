@@ -383,34 +383,34 @@
 	{[1003102, 0], [{file, "data/missions/dark-god.1.a.zone-0.nbl"}, {sets, 4}]},
 	%~ {[1003102, 1], [{file, "data/missions/dark-god.1.a.zone-1.nbl"}, {sets, 1}]},
 	{[1003103, 0], [{file, "data/missions/dark-god.1.s.zone-0.nbl"}, {sets, 4}]},
-	%~ {[1003103, 1], [{file, "data/missions/dark-god.1.s.zone-1.nbl"}, {sets, 1}]}, %% @todo
+	{[1003103, 1], [{file, "data/missions/dark-god.1.s.zone-1.nbl"}, {sets, 1}]},
 	{[1003104, 0], [{file, "data/missions/dark-god.1.s2.zone-0.nbl"}, {sets, 4}]},
-	%~ {[1003104, 1], [{file, "data/missions/dark-god.1.s2.zone-1.nbl"}, {sets, 1}]}, %% @todo
-	%~ {[1003104, 2], [{file, "data/missions/dark-god.1.s2.zone-2.nbl"}, {sets, 1}]}, %% @todo
+	{[1003104, 1], [{file, "data/missions/dark-god.1.s2.zone-1.nbl"}, {sets, 1}]},
+	{[1003104, 2], [{file, "data/missions/dark-god.1.s2.zone-2.nbl"}, {sets, 1}]},
 
 	{[1003110, 0], [{file, "data/missions/dark-god.2.c.zone-0.nbl"}, {sets, 4}]},
-	%~ {[1003110, 1], [{file, "data/missions/dark-god.2.c.zone-1.nbl"}, {sets, 1}]}, %% @todo
+	{[1003110, 1], [{file, "data/missions/dark-god.2.c.zone-1.nbl"}, {sets, 1}]},
 	{[1003111, 0], [{file, "data/missions/dark-god.2.b.zone-0.nbl"}, {sets, 4}]},
-	%~ {[1003111, 1], [{file, "data/missions/dark-god.2.b.zone-1.nbl"}, {sets, 1}]}, %% @todo
+	{[1003111, 1], [{file, "data/missions/dark-god.2.b.zone-1.nbl"}, {sets, 1}]},
 	{[1003112, 0], [{file, "data/missions/dark-god.2.a.zone-0.nbl"}, {sets, 4}]},
-	%~ {[1003112, 1], [{file, "data/missions/dark-god.2.a.zone-1.nbl"}, {sets, 1}]}, %% @todo
+	{[1003112, 1], [{file, "data/missions/dark-god.2.a.zone-1.nbl"}, {sets, 1}]},
 	{[1003113, 0], [{file, "data/missions/dark-god.2.s.zone-0.nbl"}, {sets, 4}]},
 	%~ {[1003113, 1], [{file, "data/missions/dark-god.2.s.zone-1.nbl"}, {sets, 1}]},
 	{[1003114, 0], [{file, "data/missions/dark-god.2.s2.zone-0.nbl"}, {sets, 4}]},
-	%~ {[1003114, 1], [{file, "data/missions/dark-god.2.s2.zone-1.nbl"}, {sets, 1}]}, %% @todo
-	%~ {[1003114, 2], [{file, "data/missions/dark-god.2.s2.zone-2.nbl"}, {sets, 1}]}, %% @todo
+	{[1003114, 1], [{file, "data/missions/dark-god.2.s2.zone-1.nbl"}, {sets, 1}]},
+	{[1003114, 2], [{file, "data/missions/dark-god.2.s2.zone-2.nbl"}, {sets, 1}]},
 
 	{[1003120, 0], [{file, "data/missions/dark-god.3.c.zone-0.nbl"}, {sets, 4}]},
-	%~ {[1003120, 1], [{file, "data/missions/dark-god.3.c.zone-1.nbl"}, {sets, 1}]}, %% @todo
+	{[1003120, 1], [{file, "data/missions/dark-god.3.c.zone-1.nbl"}, {sets, 1}]},
 	{[1003121, 0], [{file, "data/missions/dark-god.3.b.zone-0.nbl"}, {sets, 4}]},
-	%~ {[1003121, 1], [{file, "data/missions/dark-god.3.b.zone-1.nbl"}, {sets, 1}]}, %% @todo
+	{[1003121, 1], [{file, "data/missions/dark-god.3.b.zone-1.nbl"}, {sets, 1}]},
 	{[1003122, 0], [{file, "data/missions/dark-god.3.a.zone-0.nbl"}, {sets, 4}]},
-	%~ {[1003122, 1], [{file, "data/missions/dark-god.3.a.zone-1.nbl"}, {sets, 1}]}, %% @todo
+	{[1003122, 1], [{file, "data/missions/dark-god.3.a.zone-1.nbl"}, {sets, 1}]},
 	{[1003123, 0], [{file, "data/missions/dark-god.3.s.zone-0.nbl"}, {sets, 4}]},
-	%~ {[1003123, 1], [{file, "data/missions/dark-god.3.s.zone-1.nbl"}, {sets, 1}]}, %% @todo
+	{[1003123, 1], [{file, "data/missions/dark-god.3.s.zone-1.nbl"}, {sets, 1}]},
 	{[1003124, 0], [{file, "data/missions/dark-god.3.s2.zone-0.nbl"}, {sets, 4}]},
-	%~ {[1003124, 1], [{file, "data/missions/dark-god.3.s2.zone-1.nbl"}, {sets, 1}]}, %% @todo
-	%~ {[1003124, 2], [{file, "data/missions/dark-god.3.s2.zone-2.nbl"}, {sets, 1}]}, %% @todo
+	{[1003124, 1], [{file, "data/missions/dark-god.3.s2.zone-1.nbl"}, {sets, 1}]},
+	{[1003124, 2], [{file, "data/missions/dark-god.3.s2.zone-2.nbl"}, {sets, 1}]},
 
 	% Phantom Ruins (Linear Line counter)
 
