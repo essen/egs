@@ -70,7 +70,9 @@ nbl_extract_files(NblFilename) ->
 	ok.
 
 nbl_cleanup() ->
-	os:cmd("rm -rf tmp/"),
+	{ok, Filenames} = file:list_dir("tmp/"),
+	[file:delete(io_lib:format("tmp/~s", [Filename])) || Filename <- Filenames],
+	file:del_dir("tmp/"),
 	ok.
 
 calc_base_ptr(Filename, [Current|_Tail], Ptr) when Filename =:= Current ->
