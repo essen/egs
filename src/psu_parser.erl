@@ -122,7 +122,7 @@ parse_object_list(BasePtr, Data, NbObjects, Ptr) ->
 	Bits = Ptr * 8,
 	<< _:Bits/bits, Rest/bits >> = Data,
 	List = parse_object_list_rec(Rest, NbObjects, []),
-	[parse_object_args(ObjType, Params, Data, ArgPtr - BasePtr - 16) || {ObjType, Params, _ArgSize, ArgPtr} <- List].
+	[parse_object_args(ObjType, Params, Data, ArgSize, ArgPtr - BasePtr - 16) || {ObjType, Params, ArgSize, ArgPtr} <- List].
 
 parse_object_list_rec(_Data, 0, Acc) ->
 	lists:reverse(Acc);
@@ -133,17 +133,18 @@ parse_object_list_rec(Data, NbObjects, Acc) ->
 	log("object entry: a(~b) nb(~b) pos[x(~p) y(~p) z(~p)] rot[x(~p) y(~p) z(~p)] argsize(~b) argptr(~b)", [UnknownA, ObjType, PosX, PosY, PosZ, RotX, RotY, RotZ, ArgSize, ArgPtr]),
 	parse_object_list_rec(Rest, NbObjects - 1, [{ObjType, {params, {pos, PosX, PosY, PosZ}, {rot, RotX, RotY, RotZ}}, ArgSize, ArgPtr}|Acc]).
 
-parse_object_args(ObjType, Params, Data, Ptr) ->
-	Bits = Ptr * 8,
-	<< _:Bits/bits, Rest/bits >> = Data,
-	parse_object_args(ObjType, Params, Rest).
+parse_object_args(ObjType, Params, Data, Size, Ptr) ->
+	BeforeBits = Ptr * 8,
+	SizeBits = Size * 8,
+	<< _:BeforeBits/bits, Args:SizeBits/bits, _/bits >> = Data,
+	parse_object_args(ObjType, Params, Args).
 
 parse_object_args(4, _Params, _Data) ->
 	static_model;
 
 %% @todo Many unknowns.
 parse_object_args(5, _Params, Data) ->
-	<< _:352, TrigEvent:16/little-unsigned-integer, _/bits >> = Data,
+	<< _:352, TrigEvent:16/little-unsigned-integer, _Unknown:112 >> = Data,
 	log("floor_button: trigevent(~p)", [TrigEvent]),
 	{floor_button, TrigEvent};
 
@@ -161,7 +162,7 @@ parse_object_args(12, _Params, Data) ->
 	<< Model:16/little-unsigned-integer, UnknownA:16/little-unsigned-integer, UnknownB:32/little-unsigned-integer, UnknownC:16/little-unsigned-integer, Scale:16/little-unsigned-integer,
 		UnknownD:16/little-unsigned-integer, 16#ff00:16, UnknownE:16/little-unsigned-integer, UnknownF:16/little-unsigned-integer,
 		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, RawTrigEvent:16/little-unsigned-integer, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
-		16#ffff:16, UnknownG:16/little-unsigned-integer, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffff:16, UnknownH:16/little-unsigned-integer, 0:16, _/bits >> = Data,
+		16#ffff:16, UnknownG:16/little-unsigned-integer, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffff:16, UnknownH:16/little-unsigned-integer, 0:16 >> = Data,
 	Breakable = case UnknownB of
 		0 -> false;
 		1 -> true;
@@ -173,7 +174,7 @@ parse_object_args(12, _Params, Data) ->
 	{box, Model, Breakable, TrigEvent};
 
 parse_object_args(14, {params, {pos, PosX, PosY, PosZ}, _Rot}, Data) ->
-	<< _:96, DiffX:32/little-float, DiffY:32/little-float, DiffZ:32/little-float, DestDir:32/little-float, _/bits >> = Data,
+	<< _:96, DiffX:32/little-float, DiffY:32/little-float, DiffZ:32/little-float, DestDir:32/little-float, _Unknown:512 >> = Data,
 	log("warp: diffpos[x(~p) y(~p) z(~p)] destdir(~p)", [DiffX, DiffY, DiffZ, DestDir]),
 	{warp, PosX + DiffX, PosY + DiffY, PosZ + DiffZ, DestDir};
 
@@ -187,34 +188,38 @@ parse_object_args(20, _Params, _Data) ->
 	door;
 
 parse_object_args(22, _Params, Data) ->
-	<< UnknownA:8, 0, KeySet:8, 1, 0:16, UnknownB:8, 0, 0:16, UnknownC:16/little-unsigned-integer, RawReqKey1Event:16/little-unsigned-integer,
+	<< UnknownA:8, 0, KeySet:8, UnknownB:8, 0:16, UnknownC:8, 0, 0:16, UnknownD:16/little-unsigned-integer, RawReqKey1Event:16/little-unsigned-integer,
 		RawReqKey2Event:16/little-unsigned-integer, RawReqKey3Event:16/little-unsigned-integer, RawReqKey4Event:16/little-unsigned-integer,
-		16#ffffffff:32, 16#ffffffff:32, RawTrigEvent:16/little-unsigned-integer, UnknownD:16/little-unsigned-integer,
-		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, _/bits >> = Data,
+		16#ffffffff:32, 16#ffffffff:32, RawTrigEvent:16/little-unsigned-integer, UnknownE:16/little-unsigned-integer,
+		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32 >> = Data,
 	ReqKeyEvents = [convert_eventid(RawReqKey1Event), convert_eventid(RawReqKey2Event), convert_eventid(RawReqKey3Event), convert_eventid(RawReqKey4Event)],
 	TrigEvent = convert_eventid(RawTrigEvent),
-	log("key_console: a(~b) keyset(~b) b(~b) c(~b) reqkeyevents(~p) trigevent(~p) d(~b)", [UnknownA, KeySet, UnknownB, UnknownC, ReqKeyEvents, TrigEvent, UnknownD]),
+	log("key_console: a(~b) keyset(~b) b(~b) c(~b) d(~b) reqkeyevents(~p) trigevent(~p) e(~b)", [UnknownA, KeySet, UnknownB, UnknownC, UnknownD, ReqKeyEvents, TrigEvent, UnknownE]),
 	{key_console, KeySet, TrigEvent, ReqKeyEvents};
 
 %% @doc Small spawn.
 
 parse_object_args(23, _Params, Data) ->
 	%% @todo return meaningful information
-	<< _:704, UnknownA:32/little-unsigned-integer, RawTrigEvent:16/little-unsigned-integer, RawReqEvent:16/little-unsigned-integer, 16#ffff:16, UnknownB:8, SpawnNb:8, _/bits >> = Data,
+	<< _:704, UnknownA:32/little-unsigned-integer, RawTrigEvent:16/little-unsigned-integer, RawReqEvent:16/little-unsigned-integer, UnknownB:16/little-unsigned-integer, UnknownC:8, SpawnNb:8 >> = Data,
 	TrigEvent = convert_eventid(RawTrigEvent),
 	ReqEvent = convert_eventid(RawReqEvent),
-	log("spawn (x10): a(~b) trigevent(~p) reqevent(~p) b(~b) spawnnb(~b)", [UnknownA, TrigEvent, ReqEvent, UnknownB, SpawnNb]),
+	log("spawn (x10): a(~b) trigevent(~p) reqevent(~p) b(~b) c(~b) spawnnb(~b)", [UnknownA, TrigEvent, ReqEvent, UnknownB, UnknownC, SpawnNb]),
 	{'spawn', 10, TrigEvent, ReqEvent};
 
 %% @doc Big spawn.
 
 parse_object_args(24, _Params, Data) ->
 	%% @todo return meaningful information
-	<< _:704, UnknownA:32/little-unsigned-integer, RawTrigEvent:16/little-unsigned-integer, RawReqEvent:16/little-unsigned-integer, 16#ffff:16, UnknownB:8, SpawnNb:8, _/bits >> = Data,
+	<< _:704, UnknownA:32/little-unsigned-integer, RawTrigEvent:16/little-unsigned-integer, RawReqEvent:16/little-unsigned-integer, 16#ffff:16, UnknownB:8, SpawnNb:8 >> = Data,
 	TrigEvent = convert_eventid(RawTrigEvent),
 	ReqEvent = convert_eventid(RawReqEvent),
 	log("spawn (x30): a(~b) trigevent(~p) reqevent(~p) b(~b) spawnnb(~b)", [UnknownA, TrigEvent, ReqEvent, UnknownB, SpawnNb]),
 	{'spawn', 30, TrigEvent, ReqEvent};
+
+%% @todo Find out! Big push 3rd zone file.
+parse_object_args(25, _Params, _Data) ->
+	unknown_object_25;
 
 parse_object_args(26, _Params, _Data) ->
 	entrance;
@@ -228,7 +233,7 @@ parse_object_args(28, _Params, _Data) ->
 
 parse_object_args(31, _Params, Data) ->
 	<< KeySet:8, UnknownA:8, UnknownB:8, 1:8, 16#ffff:16, RawTrigEvent:16/little-unsigned-integer, RawReqEvent1:16/little-unsigned-integer, RawReqEvent2:16/little-unsigned-integer,
-		RawReqEvent3:16/little-unsigned-integer, 16#ffff:16, 16#ffffffff:32, 16#ffffffff:32, _/bits >> = Data,
+		RawReqEvent3:16/little-unsigned-integer, 16#ffff:16, 16#ffffffff:32, 16#ffffffff:32 >> = Data,
 	TrigEvent = convert_eventid(RawTrigEvent),
 	ReqEvents = [convert_eventid(RawReqEvent1), convert_eventid(RawReqEvent2), convert_eventid(RawReqEvent3)],
 	log("key: keyset(~b) a(~b) b(~b) trigevent(~p) reqevents(~p)", [KeySet, UnknownA, UnknownB, TrigEvent, ReqEvents]),
@@ -240,6 +245,10 @@ parse_object_args(33, _Params, _Data) ->
 
 parse_object_args(35, _Params, _Data) ->
 	boss;
+
+%% @todo Find out! Big push 2nd zone file.
+parse_object_args(39, _Params, _Data) ->
+	unknown_object_39;
 
 parse_object_args(40, _Params, _Data) ->
 	save_sphere;
@@ -281,6 +290,14 @@ parse_object_args(53, _Params, _Data) ->
 parse_object_args(56, _Params, _Data) ->
 	chair;
 
+%% @todo Airboard Rally, floaders. Speed boost and healing.
+parse_object_args(57, _Params, _Data) ->
+	vehicle_boost;
+
+%% @todo Apparently used both for floaders and airboard.
+parse_object_args(58, _Params, _Data) ->
+	vehicle;
+
 %% @todo Apparently used for the custom posters!
 parse_object_args(59, _Params, _Data) ->
 	poster;
@@ -320,12 +337,10 @@ parse_object_args(69, _Params, _Data) ->
 	unknown_object_69;
 
 %% @todo Seems to be a megid turret "trap".
-
 parse_object_args(70, _Params, _Data) ->
 	trap;
 
-%% @todo Seems to be a ceiling fall-on-you-and-explode "trap". Possibly also poison room.
-
+%% @todo Seems to be a ceiling fall-on-you-and-explode "trap". Possibly also poison room. Apparently also fake key.
 parse_object_args(71, _Params, _Data) ->
 	trap.
 

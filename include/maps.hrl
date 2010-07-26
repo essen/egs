@@ -192,6 +192,10 @@
 
 	{1072300, [{type, mission}, {file, "data/missions/gifts-from-beyond-plus.quest.nbl"}, {start, [0, 300, 0]}, {sets, 1}]},
 
+	% Airboard Rally
+
+	{1090700, [{type, mission}, {file, "data/missions/airboard-rally.quest.nbl"}, {start, [0, 800, 0]}, {sets, 1}]},
+
 	% Planetary lobbies
 
 	{1100000, [{type, lobby}, {file, "data/lobby/colony.quest.nbl"}]},
@@ -464,6 +468,10 @@
 	% Gifts from Beyond
 
 	{[1072300, 0], [{file, "data/missions/gifts-from-beyond-plus.zone.nbl"}, {sets, 1}]},
+
+	% Airboard Rally
+
+	{[1090700, 0], [{file, "data/missions/airboard-rally.zone.nbl"}, {sets, 1}]},
 
 	% Colony
 

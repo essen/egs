@@ -837,6 +837,32 @@ handle(16#0e00, Data) ->
 	<< _:96, Hits/bits >> = Data,
 	handle_hits(Hits);
 
+%% @doc Initialize a vehicle object.
+%% @todo Find what are the many values, including the odd Whut value (and whether it's used in the reply).
+%% @todo Separate the reply.
+handle(16#0f00, Data) ->
+	<< A:32/little-unsigned-integer, 0:16, B:16/little-unsigned-integer, 0:16, C:16/little-unsigned-integer, 0, Whut:8, D:16/little-unsigned-integer, 0:16,
+		E:16/little-unsigned-integer, 0:16, F:16/little-unsigned-integer, G:16/little-unsigned-integer, H:16/little-unsigned-integer, I:32/little-unsigned-integer >> = Data,
+	log("init vehicle: ~b ~b ~b ~b ~b ~b ~b ~b ~b ~b", [A, B, C, Whut, D, E, F, G, H, I]),
+	send(<< (header(16#1208))/binary, A:32/little-unsigned-integer, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
+		0:16, B:16/little-unsigned-integer, 0:16, C:16/little-unsigned-integer, 0:16, D:16/little-unsigned-integer, 0:112,
+		E:16/little-unsigned-integer, 0:16, F:16/little-unsigned-integer, H:16/little-unsigned-integer, 1, 0, 100, 0, 10, 0, G:16/little-unsigned-integer, 0:16 >>);
+
+%% @doc Enter vehicle.
+%% @todo Separate the reply.
+handle(16#0f02, Data) ->
+	<< A:32/little-unsigned-integer, B:32/little-unsigned-integer, C:32/little-unsigned-integer >> = Data,
+	log("enter vehicle: ~b ~b ~b", [A, B, C]),
+	HP = 100,
+	send(<< (header(16#120a))/binary, A:32/little-unsigned-integer, B:32/little-unsigned-integer, C:32/little-unsigned-integer, HP:32/little-unsigned-integer >>);
+
+%% @doc Sent right after entering the vehicle. Can't move without it.
+%% @todo Separate the reply.
+handle(16#0f07, Data) ->
+	<< A:32/little-unsigned-integer, B:32/little-unsigned-integer >> = Data,
+	log("after enter vehicle: ~b ~b", [A, B]),
+	send(<< (header(16#120f))/binary, A:32/little-unsigned-integer, B:32/little-unsigned-integer >>);
+
 %% @doc Object event handler.
 %% @todo Handle all events appropriately.
 %% @todo B should be the ObjType.
@@ -869,20 +895,25 @@ handle(16#0f0a, Data) ->
 		9 -> % healing pad
 			% 0117, 0111, 0117?
 			ignore;
-		12 -> % pick/use key
+		12 -> % pick/use key, pick vehicle_boost
 			{ok, User} = egs_user_model:read(get(gid)),
-			{BlockID, [EventID|_]} = psu_instance:key_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
-			send_1205(EventID, BlockID, 0),
+			Args = psu_instance:std_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
+			case Args of
+				undefined -> %% vehicle boost doesn't send an event
+					ignore;
+				{BlockID, [EventID|_]} ->
+					send_1205(EventID, BlockID, 0)
+			end,
 			send_1213(ObjectID, 1);
 		13 -> % floor_button on (also sent when clearing a few of the rooms in black nest)
 			{ok, User} = egs_user_model:read(get(gid)),
-			{BlockID, EventID} = psu_instance:floor_button_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
+			{BlockID, EventID} = psu_instance:std_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
 			send_1205(EventID, BlockID, 0),
 			send_1213(ObjectID, 1);
 		14 -> % floor_button off
 			%% @todo Apparently when it's not a floor_button but a light switch, this here should be handled differently.
 			{ok, User} = egs_user_model:read(get(gid)),
-			{BlockID, EventID} = psu_instance:floor_button_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
+			{BlockID, EventID} = psu_instance:std_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
 			send_1205(EventID, BlockID, 1),
 			send_1213(ObjectID, 0);
 		%~ 19 -> % activate trap
@@ -891,22 +922,30 @@ handle(16#0f0a, Data) ->
 			ignore;
 		23 -> % initialize key slots (called when picking a key or checking the gate directly with no key)
 			{ok, User} = egs_user_model:read(get(gid)),
-			{BlockID, [_, EventID, _]} = psu_instance:key_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
+			{BlockID, [_, EventID, _]} = psu_instance:std_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
 			send_1205(EventID, BlockID, 0); % in block 1, 202 = key [1] x1, 203 = key [-] x1
 		24 -> % open gate (only when client has key)
 			{ok, User} = egs_user_model:read(get(gid)),
-			{BlockID, [_, _, EventID]} = psu_instance:key_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
+			{BlockID, [_, _, EventID]} = psu_instance:std_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
 			send_1205(EventID, BlockID, 0),
 			send_1213(ObjectID, 1);
 		25 -> % sit on chair
 			send_1211(A, C, 8, 0);
 		26 -> % sit out of chair
 			send_1211(A, C, 8, 2);
-		%~ 30 -> % @todo (phantom ruins block 4)
+		28 -> % respawn object picked (like vehicle_boost)
+			send_1213(ObjectID, 0);
+		%~ 30 -> % @todo (phantom ruins block 4, dark god 2 block 1 (fake key block))
 			%~ ignore;
 		_ ->
 			log("object event ~b", [Action])
 	end;
+
+%% @todo Not sure yet.
+handle(16#1019, Data) ->
+	<< Value:32/little-unsigned-integer >> = Data,
+	log("command 1019 with value ~b", [Value]);
+	%~ send(<< (header(16#1019))/binary, 0:192, 16#00200000:32, 0:32 >>);
 
 %% @todo Not sure about that one though. Probably related to 1112 still.
 
@@ -917,6 +956,12 @@ handle(16#1106, Data) ->
 
 handle(16#1112, Data) ->
 	send_1113(Data);
+
+%% @todo Not sure yet. Value is probably a TargetID. Used in Airboard Rally. Replying with the same value starts the race.
+handle(16#1216, Data) ->
+	<< Value:32/little-unsigned-integer >> = Data,
+	log("command 1216 with value ~b", [Value]),
+	send_1216(Value);
 
 %% @doc Party information recap request.
 %% @todo Handle when the party already exists! And stop doing it wrong.
@@ -1490,6 +1535,11 @@ send_1213(A, B) ->
 
 send_1215(A, B) ->
 	send(<< (header(16#1215))/binary, A:32/little-unsigned-integer, 0:16, B:16/little-unsigned-integer >>).
+
+%% @todo Not sure yet. Value is probably a TargetID. Used in Airboard Rally. Replying with the same value starts the race.
+send_1216(Value) ->
+	GID = get(gid),
+	send(<< 16#12160300:32, 0:32, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Value:32/little-unsigned-integer >>).
 
 %% @doc Send the player's partner card.
 %% @todo Find out the remaining values.

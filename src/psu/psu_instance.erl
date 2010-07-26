@@ -20,7 +20,7 @@
 -module(psu_instance).
 -behavior(gen_server).
 
--export([start_link/1, stop/1, floor_button_event/3, key_event/3, spawn_cleared_event/3, warp_event/5, hit/3]). %% API.
+-export([start_link/1, stop/1, std_event/3, spawn_cleared_event/3, warp_event/5, hit/3]). %% API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
 
 -include_lib("stdlib/include/qlc.hrl").
@@ -44,12 +44,8 @@ stop(InstancePid) ->
 	gen_server:call(InstancePid, stop).
 
 %% @todo @spec
-floor_button_event(InstancePid, ZoneID, ObjectID) ->
-	gen_server:call(InstancePid, {floor_button_event, ZoneID, ObjectID}).
-
-%% @todo @spec event(ServerPid, ObjectID, Args) -> Response
-key_event(InstancePid, ZoneID, ObjectID) ->
-	gen_server:call(InstancePid, {key_event, ZoneID, ObjectID}).
+std_event(InstancePid, ZoneID, ObjectID) ->
+	gen_server:call(InstancePid, {std_event, ZoneID, ObjectID}).
 
 spawn_cleared_event(InstancePid, ZoneID, SpawnID) ->
 	gen_server:call(InstancePid, {spawn_cleared_event, ZoneID, SpawnID}).
@@ -92,19 +88,24 @@ object_init([{box, _Model, Breakable, TrigEventID}|Tail], ZoneID, BlockID, Objec
 	end,
 	object_init(Tail, ZoneID, BlockID, ObjectID + 1, TargetID + 1, ListIndex, ObjectIndex + 1);
 
-%% @doc floor_button: {InstancePid, ZoneID, floor_button, ObjectID
+%% @doc floor_button: {InstancePid, ZoneID, ObjectID}
 object_init([{floor_button, TrigEventID}|Tail], ZoneID, BlockID, ObjectID, TargetID, ListIndex, ObjectIndex) ->
-	object_insert(#psu_object{id={self(), ZoneID, floor_button, ObjectID}, instancepid=self(), type=floor_button, args={BlockID, TrigEventID}}),
+	object_insert(#psu_object{id={self(), ZoneID, ObjectID}, instancepid=self(), type=floor_button, args={BlockID, TrigEventID}}),
 	object_init(Tail, ZoneID, BlockID, ObjectID + 1, TargetID + 1, ListIndex, ObjectIndex + 1);
 
-%% @doc key: {InstancePid, ZoneID, key, ObjectID}
+%% @doc key: {InstancePid, ZoneID, ObjectID}
 object_init([{key, _KeySet, TrigEventID, _ReqEventID}|Tail], ZoneID, BlockID, ObjectID, TargetID, ListIndex, ObjectIndex) ->
-	object_insert(#psu_object{id={self(), ZoneID, key, ObjectID}, instancepid=self(), type=key, args={BlockID, [TrigEventID]}}),
+	object_insert(#psu_object{id={self(), ZoneID, ObjectID}, instancepid=self(), type=key, args={BlockID, [TrigEventID]}}),
 	object_init(Tail, ZoneID, BlockID, ObjectID + 1, TargetID, ListIndex, ObjectIndex + 1);
 
 %% @doc key_console: @see key; @todo handled the same for now
 object_init([{key_console, KeySet, TrigEventID, _ReqEventID}|Tail], ZoneID, BlockID, ObjectID, TargetID, ListIndex, ObjectIndex) ->
-	object_insert(#psu_object{id={self(), ZoneID, key, ObjectID}, instancepid=self(), type=key_console, args={BlockID, [243 + KeySet, 201 + KeySet, TrigEventID]}}),
+	object_insert(#psu_object{id={self(), ZoneID, ObjectID}, instancepid=self(), type=key_console, args={BlockID, [243 + KeySet, 201 + KeySet, TrigEventID]}}),
+	object_init(Tail, ZoneID, BlockID, ObjectID + 1, TargetID, ListIndex, ObjectIndex + 1);
+
+%% @doc vehicle_boost: {InstancePid, ZoneID, ObjectID}
+object_init([vehicle_boost|Tail], ZoneID, BlockID, ObjectID, TargetID, ListIndex, ObjectIndex) ->
+	object_insert(#psu_object{id={self(), ZoneID, ObjectID}, instancepid=self(), type=vehicle_boost, args=undefined}),
 	object_init(Tail, ZoneID, BlockID, ObjectID + 1, TargetID, ListIndex, ObjectIndex + 1);
 
 %% @doc spawn: {InstancePid, ZoneID, 'spawn', SpawnID}
@@ -149,12 +150,8 @@ object_init([_Object|Tail], ZoneID, BlockID, ObjectID, TargetID, ListIndex, Obje
 
 %% Event handlers
 
-handle_call({floor_button_event, ZoneID, ObjectID}, _From, State) ->
-	#psu_object{args=Args} = object_select({self(), ZoneID, floor_button, ObjectID}),
-	{reply, Args, State};
-
-handle_call({key_event, ZoneID, ObjectID}, _From, State) ->
-	#psu_object{args=Args} = object_select({self(), ZoneID, key, ObjectID}),
+handle_call({std_event, ZoneID, ObjectID}, _From, State) ->
+	#psu_object{args=Args} = object_select({self(), ZoneID, ObjectID}),
 	{reply, Args, State};
 
 handle_call({spawn_cleared_event, ZoneID, SpawnID}, _From, State) ->
