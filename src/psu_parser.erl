@@ -162,9 +162,9 @@ parse_object_args(10, _Params, _Data) ->
 %% @todo UnknownG or UnknownH is probably the required event.
 parse_object_args(12, _Params, Data) ->
 	<< Model:16/little-unsigned-integer, UnknownA:16/little-unsigned-integer, UnknownB:32/little-unsigned-integer, UnknownC:16/little-unsigned-integer, Scale:16/little-unsigned-integer,
-		UnknownD:16/little-unsigned-integer, 16#ff00:16, UnknownE:16/little-unsigned-integer, UnknownF:16/little-unsigned-integer,
-		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, RawTrigEvent:16/little-unsigned-integer, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
-		16#ffff:16, UnknownG:16/little-unsigned-integer, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffff:16, UnknownH:16/little-unsigned-integer, 0:16 >> = Data,
+		UnknownD:16/little-unsigned-integer, 16#ff00:16, UnknownE:16/little-unsigned-integer, UnknownF:16/little-unsigned-integer, UnknownG:16/little-unsigned-integer,
+		16#ffff:16, 16#ffffffff:32, 16#ffffffff:32, RawTrigEvent:16/little-unsigned-integer, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
+		16#ffff:16, UnknownH:16/little-unsigned-integer, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffff:16, UnknownI:16/little-unsigned-integer, 0:16 >> = Data,
 	Breakable = case UnknownB of
 		0 -> false;
 		1 -> true;
@@ -172,7 +172,7 @@ parse_object_args(12, _Params, Data) ->
 		_ -> true %% @todo No idea. One of them has a value of 0x300 ??
 	end,
 	TrigEvent = convert_eventid(RawTrigEvent),
-	log("box: model(~b) a(~b) breakable(~p) c(~b) scale(~b) d(~b) e(~b) f(~b) trigevent(~p) g(~b) h(~b)", [Model, UnknownA, Breakable, UnknownC, Scale, UnknownD, UnknownE, UnknownF, TrigEvent, UnknownG, UnknownH]),
+	log("box: model(~b) a(~b) breakable(~p) c(~b) scale(~b) d(~b) e(~b) f(~b) g(~b) trigevent(~p) h(~b) i(~b)", [Model, UnknownA, Breakable, UnknownC, Scale, UnknownD, UnknownE, UnknownF, UnknownG, TrigEvent, UnknownH, UnknownI]),
 	{box, Model, Breakable, TrigEvent};
 
 parse_object_args(14, {params, {pos, PosX, PosY, PosZ}, _Rot}, Data) ->
@@ -288,6 +288,10 @@ parse_object_args(51, _Params, _Data) ->
 
 parse_object_args(53, _Params, _Data) ->
 	label;
+
+%% @todo Found in Scorched Valley, probably is the photon-erasable pods.
+parse_object_args(54, _Params, _Data) ->
+	unknown_object_54;
 
 parse_object_args(56, _Params, _Data) ->
 	chair;
