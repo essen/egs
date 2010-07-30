@@ -750,6 +750,20 @@ handle(16#0812, _) ->
 	PrevArea = User#egs_user_model.prev_area,
 	area_load(PrevArea#psu_area.questid, PrevArea#psu_area.zoneid, Area#psu_area.zoneid, Area#psu_area.mapid);
 
+%% @doc NPC invite.
+%% @todo Also happening a 1506 -> 1507? Only on first selection from menu.
+%% @todo Apparently Unknown is ffffffff.
+%% @todo Also sent a 101a (NPC:16, PartyPos:16, ffffffff). Not sure about PartyPos.
+%% @todo Replace 1 by the actual character level.
+%% @todo PartyPos isn't handled yet, it's always 5.
+handle(16#0813, Data) ->
+	<< _Unknown:32, NPCid:32/little-unsigned-integer >> = Data,
+	NPC = proplists:get_value(NPCid, ?NPC),
+	log("invited npc ~s", [NPC#psu_npc.name]),
+	PartyPos = 5,
+	send_022c(0, 2),
+	send_1004(NPCid, NPCid, NPC#psu_npc.name, 1 + NPC#psu_npc.level, PartyPos);
+
 %% @doc Item description request.
 %% @todo Send something other than just "dammy".
 
@@ -1264,6 +1278,10 @@ send_0222() ->
 	send(<< 16#02220300:32, 0:32, 16#00001200:32, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
 		2:32/little-unsigned-integer, 0:32, UCS2Name/binary, 0:16 >>).
 
+%% @todo No idea!
+send_022c(A, B) ->
+	send(<< (header(16#022c))/binary, A:16/little-unsigned-integer, B:16/little-unsigned-integer >>).
+
 %% @todo Not sure. Sent when going to or from room.
 
 send_0230() ->
@@ -1428,6 +1446,22 @@ send_0d05() ->
 	Packet = << 16#0d050300:32, 0:32, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Flags/binary >>,
 	Size = 4 + byte_size(Packet),
 	ssl:send(get(socket), << Size:32/little-unsigned-integer, Packet/binary >>).
+
+%% @todo Add a character (NPC or real) to the party members on the right of the screen.
+%% @todo NPCid is 65535 for normal characters.
+send_1004(GID, NPCid, Name, Level, PartyPos) ->
+	UCS2Name = << << X:8, 0:8 >> || X <- Name >>,
+	PaddingSize = (64 - byte_size(UCS2Name)) * 8,
+	%% 5 = NPC id
+	%% avant le 2nd 5 : 3rd byte : party color
+	send(<< (header(16#1004))/binary, 0:32, GID:32/little-unsigned-integer, 0:64, UCS2Name/binary, 0:PaddingSize,
+		Level:16/little-unsigned-integer, 16#ffff:16, 16#0301:16, PartyPos:8, 1,
+		NPCid:16/little-unsigned-integer, 0:16, 16#00001f08:32, 0:32,
+		16#07000000:32, 16#04e41f08:32, 0:32,
+		16#01000000:32, 16#64e41f08:32, 0:32,
+		16#02000000:32, 16#64e41f08:32, 0:32,
+		16#03000000:32, 16#64e41f08:32, 0:32,
+		16#12000000:32, 16#24e41f08:32, 0:128, 16#ffffffff:32, 0:64, 16#01000000:32, 16#01000000:32, 0:608 >>).
 
 %% @todo Figure out what the packet is.
 
