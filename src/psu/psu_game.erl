@@ -50,13 +50,11 @@ cleanup(Pid) ->
 	end.
 
 %% @doc Listen for connections.
-
 listen(Port, MPid) ->
 	{ok, LSocket} = ssl:listen(Port, ?OPTIONS),
 	?MODULE:accept(LSocket, MPid).
 
 %% @doc Accept connections.
-
 accept(LSocket, MPid) ->
 	case ssl:transport_accept(LSocket, 5000) of
 		{ok, CSocket} ->
@@ -69,7 +67,6 @@ accept(LSocket, MPid) ->
 	?MODULE:accept(LSocket, MPid).
 
 %% @doc Initialize the client process by saving the socket to the process dictionary.
-
 process_init(CSocket, MPid) ->
 	link(MPid),
 	put(socket, CSocket),
@@ -79,7 +76,6 @@ process_init(CSocket, MPid) ->
 
 %% @doc Process the new connections.
 %%      Send an hello packet, authenticate the user and send him to character select.
-
 process() ->
 	case egs_proto:packet_recv(get(socket), 5000) of
 		{ok, Orig} ->
@@ -93,7 +89,6 @@ process() ->
 	end.
 
 %% @doc Game server auth request handler. Save the GID in the process dictionary after checking it.
-
 process_handle(16#020d, << GID:32/little-unsigned-integer, Auth:32/bits, _/bits >>) ->
 	CSocket = get(socket),
 	case egs_user_model:read(GID) of
@@ -118,19 +113,16 @@ process_handle(16#020d, << GID:32/little-unsigned-integer, Auth:32/bits, _/bits 
 	end;
 
 %% @doc Platform information handler. Obtain the game version and save it into the process dictionary.
-
 process_handle(16#080e, << _:64, Version:32/little-unsigned-integer, _/bits >>) ->
 	put(version, Version),
 	?MODULE:process();
 
 %% @doc Unknown command handler. Do nothing.
-
 process_handle(Command, _) ->
 	log("(process) dismissed packet ~4.16.0b", [Command]),
 	?MODULE:process().
 
 %% @doc Character selection screen loop.
-
 char_select() ->
 	case egs_proto:packet_recv(get(socket), 5000) of
 		{ok, Orig} ->
@@ -145,7 +137,6 @@ char_select() ->
 	end.
 
 %% @doc Character selection handler.
-
 char_select_handle(16#020b, << Number:32/little-unsigned-integer, _/bits >>) ->
 	log("selected character ~b", [Number]),
 	char_select_load(Number);
@@ -168,26 +159,22 @@ char_select_handle(16#0d02, << Number:32/little-unsigned-integer, Char/bits >>) 
 	char_select_load(Number);
 
 %% @doc Character selection screen request.
-
 char_select_handle(16#0d06, _) ->
 	{ok, User} = egs_user_model:read(get(gid)),
 	send_0d03(data_load(User#egs_user_model.folder, 0), data_load(User#egs_user_model.folder, 1), data_load(User#egs_user_model.folder, 2), data_load(User#egs_user_model.folder, 3)),
 	?MODULE:char_select();
 
 %% @doc Silently ignore packet 0818. Gives CPU/GPU information.
-
 char_select_handle(16#0818, _) ->
 	?MODULE:char_select();
 
 %% @doc Unknown command handler. Do nothing.
-
 char_select_handle(Command, _) ->
 	log("(char_select) dismissed packet ~4.16.0b", [Command]),
 	?MODULE:char_select().
 
 %% @doc Load the selected character in the start lobby and start the main game's loop.
 %%      The default entry point currently is 4th floor, Linear Line counter.
-
 char_select_load(Number) ->
 	{ok, OldUser} = egs_user_model:read(get(gid)),
 	[{status, 1}, {char, CharBin}, {options, OptionsBin}] = data_load(OldUser#egs_user_model.folder, Number),
@@ -208,7 +195,6 @@ char_select_load(Number) ->
 	?MODULE:loop(<< >>).
 
 %% @doc Load the given character's data.
-
 data_load(Folder, Number) ->
 	Filename = io_lib:format("save/~s/~b-character", [Folder, Number]),
 	case file:read_file(Filename) of
@@ -220,7 +206,6 @@ data_load(Folder, Number) ->
 	end.
 
 %% @doc Load and send the character information to the client.
-
 char_load(User) ->
 	send_0d01(User),
 	% 0246
@@ -237,7 +222,6 @@ char_load(User) ->
 	send_1602().
 
 %% @doc Load the given map as a mission counter.
-
 counter_load(QuestID, ZoneID, MapID, EntryID) ->
 	{ok, OldUser} = egs_user_model:read(get(gid)),
 	OldArea = OldUser#egs_user_model.area,
@@ -273,7 +257,6 @@ counter_load(QuestID, ZoneID, MapID, EntryID) ->
 	send_0236().
 
 %% @doc Return the current season information.
-
 area_get_season(QuestID) ->
 	{{_, Month, Day}, _} = calendar:universal_time(),
 	[IsSeasonal, SeasonID, SeasonQuestIDs] = if
@@ -313,7 +296,6 @@ area_get_season(QuestID) ->
 	end.
 
 %% @doc Load the given map as a standard lobby.
-
 area_load(QuestID, ZoneID, MapID, EntryID) ->
 	{ok, OldUser} = egs_user_model:read(get(gid)),
 	[{type, AreaType}, {file, QuestFile}|MissionInfo] = proplists:get_value(QuestID, ?QUESTS, [{type, undefined}, {file, undefined}]),
@@ -445,7 +427,6 @@ myroom_send_packet(Filename) ->
 
 %% @doc Game's main loop.
 %% @todo We probably don't want to send a keepalive packet unnecessarily.
-
 loop(SoFar) ->
 	receive
 		{psu_broadcast, Orig} ->
@@ -487,7 +468,6 @@ loop(SoFar) ->
 	end.
 
 %% @doc Dispatch the command to the right handler.
-
 dispatch(Orig) ->
 	{command, Command, Channel, Data} = egs_proto:packet_parse(Orig),
 	case Channel of
@@ -497,7 +477,6 @@ dispatch(Orig) ->
 	end.
 
 %% @doc Position change broadcast handler. Save the position and then dispatch it.
-
 broadcast(16#0503, Orig) ->
 	<< _:424, Dir:24/little-unsigned-integer, _PrevCoords:96, X:32/little-float, Y:32/little-float, Z:32/little-float,
 		QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer, _:32 >> = Orig,
@@ -508,7 +487,6 @@ broadcast(16#0503, Orig) ->
 	broadcast(default, Orig);
 
 %% @doc Stand still broadcast handler. Save the position and then dispatch it.
-
 broadcast(16#0514, Orig) ->
 	<< _:424, Dir:24/little-unsigned-integer, X:32/little-float, Y:32/little-float, Z:32/little-float,
 		QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer,
@@ -523,7 +501,6 @@ broadcast(16#0514, Orig) ->
 %%      We clean up the command and use the real GID and LID of the user, disregarding what was sent and possibly tampered with.
 %%      Only a handful of commands are allowed to broadcast. An user tampering with it would get disconnected instantly.
 %% @todo Don't query the user data everytime! Keep an User instead of a GID probably.
-
 broadcast(Command, Orig)
 	when	Command =:= 16#0101;
 			Command =:= 16#0102;
@@ -546,7 +523,6 @@ broadcast(Command, Orig)
 	end.
 
 %% @doc Movement (non-broadcast) handler. Do nothing.
-
 handle(16#0102, _) ->
 	ignore;
 
@@ -557,7 +533,6 @@ handle(16#0102, _) ->
 %% @todo Others probably want to see that you changed your weapon.
 %% @todo Apparently B is always ItemID+1. Not sure why.
 %% @todo Currently use a separate file for the data sent for the weapons.
-
 handle(16#0105, Data) ->
 	<< _:32, A:32/little-unsigned-integer, ItemID:8, Action:8, _:8, B:8, C:32/little-unsigned-integer, _/bits >> = Data,
 	log("0105 action ~b item ~b (~b ~b ~b)", [Action, ItemID, A, B, C]),
@@ -606,7 +581,6 @@ handle(16#0105, Data) ->
 
 %% @doc Shop listing request. Currently return the normal item shop for everything.
 %% @todo Return the other shops appropriately.
-
 handle(16#010a, Data) ->
 	<< _:32, A:32/little-unsigned-integer, B:32/little-unsigned-integer, C:32/little-unsigned-integer >> = Data,
 	log("shop listing request (~b, ~b, ~b)", [A, B, C]),
@@ -617,7 +591,6 @@ handle(16#010a, Data) ->
 
 %% @doc Character death, and more, handler. Warp to 4th floor for now.
 %% @todo Recover from death correctly.
-
 handle(16#0110, Data) ->
 	<< _:32, A:32/little-unsigned-integer, B:32/little-unsigned-integer, C:32/little-unsigned-integer >> = Data,
 	case B of
@@ -643,7 +616,6 @@ handle(16#0110, Data) ->
 	end;
 
 %% @doc Uni cube handler.
-
 handle(16#021d, _) ->
 	send_021e();
 
@@ -651,7 +623,6 @@ handle(16#021d, _) ->
 %%      When selecting 'Your room', load a default room.
 %%      When selecting 'Reload', reload the character in the current lobby.
 %% @todo There's probably an entryid given in the uni selection packet.
-
 handle(16#021f, << Uni:32/little-unsigned-integer, _/bits >>) ->
 	case Uni of
 		0 -> % cancelled uni selection
@@ -675,7 +646,6 @@ handle(16#021f, << Uni:32/little-unsigned-integer, _/bits >>) ->
 
 %% @doc Shortcut changes handler. Do nothing.
 %% @todo Save it.
-
 handle(16#0302, _) ->
 	log("dismissed shortcut changes");
 
@@ -683,7 +653,6 @@ handle(16#0302, _) ->
 %%      We must take extra precautions to handle different versions of the game correctly.
 %%      Disregard the name sent by the server in later versions of the game. Use the name saved in memory instead, to prevent client-side editing.
 %% @todo Only broadcast to people in the same map.
-
 handle(16#0304, Data) ->
 	{ok, User} = egs_user_model:read(get(gid)),
 	case get(version) of
@@ -701,7 +670,6 @@ handle(16#0304, Data) ->
 
 %% @todo Handle this packet properly.
 %% @todo Spawn cleared response event shouldn't be handled following this packet but when we see the spawn actually dead HP-wise.
-
 handle(16#0402, Data) ->
 	<< SpawnID:32/little-unsigned-integer, _:64, Type:32/little-unsigned-integer, _:64 >> = Data,
 	case Type of
@@ -718,7 +686,6 @@ handle(16#0402, Data) ->
 
 %% @todo Handle this packet.
 %% @todo 3rd Unsafe Passage C, EventID 10 BlockID 2 = mission cleared?
-
 handle(16#0404, Data) ->
 	<< EventID:8, BlockID:8, _:16, Value:8, _/bits >> = Data,
 	log("unknown command 0404: eventid ~b blockid ~b value ~b", [EventID, BlockID, Value]),
@@ -727,7 +694,6 @@ handle(16#0404, Data) ->
 %% @doc Map change handler.
 %%      Rooms are handled differently than normal lobbies.
 %% @todo When changing lobby to the room, 0230 must also be sent. Same when going from room to lobby.
-
 handle(16#0807, Data) ->
 	<< QuestID:32/little-unsigned-integer, ZoneID:16/little-unsigned-integer,
 		MapID:16/little-unsigned-integer, EntryID:16/little-unsigned-integer, _/bits >> = Data,
@@ -735,7 +701,6 @@ handle(16#0807, Data) ->
 	area_load(QuestID, ZoneID, MapID, EntryID);
 
 %% @doc Mission counter handler.
-
 handle(16#0811, Data) ->
 	<< QuestID:32/little-unsigned-integer, ZoneID:16/little-unsigned-integer,
 		MapID:16/little-unsigned-integer, EntryID:16/little-unsigned-integer, _/bits >> = Data,
@@ -743,7 +708,6 @@ handle(16#0811, Data) ->
 	counter_load(QuestID, ZoneID, MapID, EntryID);
 
 %% @doc Leave mission counter handler. Lobby values depend on which counter was entered.
-
 handle(16#0812, _) ->
 	{ok, User} = egs_user_model:read(get(gid)),
 	Area = User#egs_user_model.area,
@@ -766,13 +730,11 @@ handle(16#0813, Data) ->
 
 %% @doc Item description request.
 %% @todo Send something other than just "dammy".
-
 handle(16#0a10, << ItemID:32/unsigned-integer >>) ->
 	send_0a11(ItemID, "dammy");
 
 %% @doc Start mission handler.
 %% @todo Forward the mission start to other players of the same party, whatever their location is.
-
 handle(16#0c01, << QuestID:32/little-unsigned-integer >>) ->
 	log("start mission ~b", [QuestID]),
 	send_170c(),
@@ -782,7 +744,6 @@ handle(16#0c01, << QuestID:32/little-unsigned-integer >>) ->
 
 %% @doc Counter quests files request handler? Send huge number of quest files.
 %% @todo Handle correctly.
-
 handle(16#0c05, _) ->
 	{ok, User} = egs_user_model:read(get(gid)),
 	[{quests, Filename}, {bg, _}, {options, _}] = proplists:get_value(User#egs_user_model.entryid, ?COUNTERS),
@@ -790,13 +751,11 @@ handle(16#0c05, _) ->
 
 %% @doc Lobby transport handler? Just ignore the meseta price for now and send the player where he wanna be!
 %% @todo Handle correctly.
-
 handle(16#0c07, _) ->
 	send_0c08(true);
 
 %% @doc Abort mission handler.
 %%      Replenish the player HP.
-
 handle(16#0c0e, _) ->
 	send_1006(11),
 	{ok, User} = egs_user_model:read(get(gid)),
@@ -817,7 +776,6 @@ handle(16#0c0e, _) ->
 
 %% @doc Counter available mission list request handler.
 %% @todo Temporarily allow rare mission and LL all difficulties to all players.
-
 handle(16#0c0f, _) ->
 	{ok, User} = egs_user_model:read(get(gid)),
 	[{quests, _}, {bg, _}, {options, Options}] = proplists:get_value(User#egs_user_model.entryid, ?COUNTERS),
@@ -826,7 +784,6 @@ handle(16#0c0f, _) ->
 %% @doc Set flag handler. Associate a new flag with the character.
 %%      Just reply with a success value for now.
 %% @todo God save the flags.
-
 handle(16#0d04, Data) ->
 	<< Flag:128/bits, A:16/bits, _:8, B/bits >> = Data,
 	log("flag handler for ~s", [re:replace(Flag, "\\0+", "", [global, {return, binary}])]),
@@ -834,7 +791,6 @@ handle(16#0d04, Data) ->
 	send(<< 16#0d040300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Flag/binary, A/binary, 1, B/binary >>);
 
 %% @doc Options changes handler.
-
 handle(16#0d07, Data) ->
 	log("options changes"),
 	% Translate options into a tuple, validate them and do nothing with it for now
@@ -847,7 +803,6 @@ handle(16#0d07, Data) ->
 %% @doc Hit handler.
 %% @todo Finish the work on it.
 %% @todo First value at 2C is the number of hits. We don't need to know it though.
-
 handle(16#0e00, Data) ->
 	<< _:96, Hits/bits >> = Data,
 	handle_hits(Hits);
@@ -881,7 +836,6 @@ handle(16#0f07, Data) ->
 %% @doc Object event handler.
 %% @todo Handle all events appropriately.
 %% @todo B should be the ObjType.
-
 handle(16#0f0a, Data) ->
 	<< BlockID:16/little-unsigned-integer, ListNb:16/little-unsigned-integer, ObjectNb:16/little-unsigned-integer, _MapID:16/little-unsigned-integer, ObjectID:16/little-unsigned-integer,
 		_:16, A:32/little-unsigned-integer, B:32/little-unsigned-integer, _:32, C:32/little-unsigned-integer, _:272, Action:8, _/bits >> = Data,
@@ -963,12 +917,10 @@ handle(16#1019, Data) ->
 	%~ send(<< (header(16#1019))/binary, 0:192, 16#00200000:32, 0:32 >>);
 
 %% @todo Not sure about that one though. Probably related to 1112 still.
-
 handle(16#1106, Data) ->
 	send_110e(Data);
 
 %% @doc Probably asking permission to start the video (used for syncing?).
-
 handle(16#1112, Data) ->
 	send_1113(Data);
 
@@ -980,31 +932,26 @@ handle(16#1216, Data) ->
 
 %% @doc Party information recap request.
 %% @todo Handle when the party already exists! And stop doing it wrong.
-
 handle(16#1705, _) ->
 	{ok, User} = egs_user_model:read(get(gid)),
 	send_1706((User#egs_user_model.character)#characters.name);
 
 %% @doc Mission selected handler. Send the currently selected mission.
 %% @todo Probably need to dispatch that info to other party members in the same counter.
-
 handle(16#1707, _) ->
 	ignore;
 
 %% @doc Party settings request handler. Item distribution is random for now.
 %% @todo Handle correctly.
-
 handle(16#1709, _) ->
 	send_170a();
 
 %% @doc Counter-related handler.
-
 handle(16#170b, _) ->
 	send_170c();
 
 %% @doc Counter initialization handler? Send the code for the background image to use.
 %% @todo Handle correctly.
-
 handle(16#1710, _) ->
 	{ok, User} = egs_user_model:read(get(gid)),
 	[{quests, _}, {bg, Background}, {options, _}] = proplists:get_value(User#egs_user_model.entryid, ?COUNTERS),
@@ -1012,7 +959,6 @@ handle(16#1710, _) ->
 
 %% @doc Dialog request handler. Do what we can.
 %% @todo Handle correctly.
-
 handle(16#1a01, Data) ->
 	<< _:32, A:8, B:8, _:16, C:8, _/bits >> = Data,
 	case [A, B, C] of
@@ -1048,7 +994,6 @@ handle(16#1a01, Data) ->
 	end;
 
 %% @doc Unknown command handler. Do nothing.
-
 handle(Command, _) ->
 	log("dismissed packet ~4.16.0b", [Command]).
 
@@ -1106,7 +1051,6 @@ handle_hits(Data) ->
 	handle_hits(Rest).
 
 %% @doc Handle a list of events.
-
 handle_events([]) ->
 	ok;
 handle_events([{explode, ObjectID}|Tail]) ->
@@ -1117,21 +1061,18 @@ handle_events([{event, [BlockID, EventID]}|Tail]) ->
 	handle_events(Tail).
 
 %% @doc Build the packet header.
-
 header(Command) ->
 	GID = get(gid),
 	<< Command:16/unsigned-integer, 16#0300:16, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64 >>.
 
 %% @doc Send the given packet to the client.
 %% @todo Consolidate the receive and send functions better.
-
 send(Packet) ->
 	egs_proto:packet_send(get(socket), Packet).
 
 %% @todo Figure out what this does compared to 0201(self).
 %% @todo Figure out the unknown values.
 %% @todo Probably don't pattern match the data like this...
-
 send_010d(User) ->
 	GID = get(gid),
 	CharGID = User#egs_user_model.id,
@@ -1141,21 +1082,18 @@ send_010d(User) ->
 		0:192, CharGID:32/little-unsigned-integer, 0:32, 16#ffffffff:32, CharBin/binary >>).
 
 %% @todo Possibly related to 010d. Just send seemingly safe values.
-
 send_0111(A, B) ->
 	GID = get(gid),
 	send(<< 16#01110300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
 		GID:32/little-unsigned-integer, 0:32, A:32/little-unsigned-integer, B:32/little-unsigned-integer >>).
 
 %% @todo Types capability list.
-
 send_0113() ->
 	{ok, File} = file:read_file("p/typesinfo.bin"),
 	GID = get(gid),
 	send(<< 16#01130300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, GID:32/little-unsigned-integer, File/binary >>).
 
 %% @doc Update the character's EXP.
-
 send_0115(GID, TargetID, LV, EXP, Money) ->
 	send(<< 16#01150300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, GID:32/little-unsigned-integer,
 		0:32, TargetID:32/little-unsigned-integer, LV:32/little-unsigned-integer, 0:32, 0:32, EXP:32/little-unsigned-integer, 0:32, Money:32/little-unsigned-integer, 16#f5470500:32, 0:96, 0:64,
@@ -1164,14 +1102,12 @@ send_0115(GID, TargetID, LV, EXP, Money) ->
 
 %% @doc Revive player?
 %% @todo Figure out more of it.
-
 send_0117(HP) ->
 	GID = get(gid),
 	send(<< 16#01170300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
 		GID:32/little-unsigned-integer, 0:96, HP:32/little-unsigned-integer, 0:32 >>).
 
 %% @doc Send the zone initialization notification.
-
 send_0200(ZoneType) ->
 	case ZoneType of
 		mission ->
@@ -1185,7 +1121,6 @@ send_0200(ZoneType) ->
 
 %% @todo Figure out what the other things are.
 %% @todo Handle LID correctly (should be ffffffff for self, apparently).
-
 send_0201(User) ->
 	GID = get(gid),
 	CharGID = User#egs_user_model.id,
@@ -1197,12 +1132,10 @@ send_0201(User) ->
 		GID:32/little-unsigned-integer, 0:64, CharBin/binary, IsGM:8, 0:8, OnlineStatus:8, GameVersion:8, 0:608 >>).
 
 %% @doc Hello packet, always sent on client connection.
-
 send_0202() ->
 	send(<< 16#02020300:32, 0:352 >>).
 
 %% @todo Not sure. Used for unspawning, and more.
-
 send_0204(PlayerGID, PlayerLID, Action) ->
 	GID = get(gid),
 	send(<< 16#02040300:32, 0:32, 16#00001200:32, PlayerGID:32/little-unsigned-integer, 0:64,
@@ -1211,56 +1144,47 @@ send_0204(PlayerGID, PlayerLID, Action) ->
 
 %% @doc Send the map ID to be loaded by the client.
 %% @todo Last two values are unknown.
-
 send_0205(MapType, MapNumber, MapEntry, IsSeasonal) ->
 	send(<< 16#02050300:32, 0:288, 16#ffffffff:32, MapType:32/little-unsigned-integer,
 		MapNumber:32/little-unsigned-integer, MapEntry:32/little-unsigned-integer, 0:56, IsSeasonal >>).
 
 %% @doc Indicate to the client that loading should finish.
 %% @todo Last value seems to be 2 most of the time. Never 0 though. Apparently counters have it at 4.
-
 send_0208() ->
 	send(<< (header(16#0208))/binary, 2:32/little-unsigned-integer >>).
 
 %% @todo No idea what this one does. For unknown reasons it uses channel 2.
-
 send_020c() ->
 	send(<< 16#020c020c:32, 16#fffff20c:32, 0:256 >>).
 
 %% @doc Send the quest file to be loaded.
 %% @todo Probably should try sending the checksum like value (right before the file) and see if it magically fixes anything.
-
 send_020e(Filename) ->
 	{ok, File} = file:read_file(Filename),
 	Size = byte_size(File),
 	send(<< 16#020e0300:32, 0:288, Size:32/little-unsigned-integer, 0:32, File/binary, 0:32 >>).
 
 %% @doc Send the zone file to be loaded.
-
 send_020f(Filename, SetID, SeasonID) ->
 	{ok, File} = file:read_file(Filename),
 	Size = byte_size(File),
 	send(<< 16#020f0300:32, 0:288, SetID, SeasonID, 0:16, Size:32/little-unsigned-integer, File/binary >>).
 
 %% @doc Send the current UNIX time.
-
 send_0210() ->
 	CurrentTime = calendar:datetime_to_gregorian_seconds(calendar:now_to_universal_time(now()))
 		- calendar:datetime_to_gregorian_seconds({{1970, 1, 1}, {0, 0, 0}}),
 	send(<< (header(16#0210))/binary, 0:32, CurrentTime:32/little-unsigned-integer >>).
 
 %% @todo No idea what this do. Nor why it's sent twice when loading a counter.
-
 send_0215(N) ->
 	send(<< (header(16#0215))/binary, N:32/little-unsigned-integer >>).
 
 %% @todo End of character loading. Just send it.
-
 send_021b() ->
 	send(header(16#021b)).
 
 %% @doc Send the list of available universes.
-
 send_021e() ->
 	{ok, << File:1184/bits, _/bits >>} = file:read_file("p/unicube.bin"),
 	{ok, Count} = egs_user_model:count(),
@@ -1271,7 +1195,6 @@ send_021e() ->
 
 %% @doc Send the current universe name and number.
 %% @todo Currently only have universe number 2, named EGS Test.
-
 send_0222() ->
 	UCS2Name = << << X:8, 0:8 >> || X <- "EGS Test" >>,
 	GID = get(gid),
@@ -1283,13 +1206,11 @@ send_022c(A, B) ->
 	send(<< (header(16#022c))/binary, A:16/little-unsigned-integer, B:16/little-unsigned-integer >>).
 
 %% @todo Not sure. Sent when going to or from room.
-
 send_0230() ->
 	GID = get(gid),
 	send(<< 16#02300300:32, 0:32, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64 >>).
 
 %% @todo Figure out what the other things are.
-
 send_0233(Users) ->
 	NbUsers = length(Users),
 	case NbUsers of
@@ -1305,7 +1226,6 @@ send_0233(Users) ->
 
 %% @todo God this function is ugly. Use tail recursion!
 %% @todo Do it properly without relying on the temporary file.
-
 build_0233_contents([]) ->
 	<< >>;
 build_0233_contents(Users) ->
@@ -1320,12 +1240,10 @@ build_0233_contents(Users) ->
 
 %% @doc Center the camera on the player, if possible.
 %% @todo Probably.
-
 send_0236() ->
 	send(header(16#0236)).
 
 %% @doc Send a chat command. Handled differently at v2.0000 and all versions starting somewhere above that.
-
 send_0304(FromGID, FromName, Modifiers, Message) ->
 	case get(version) of
 		0 -> send(<< 16#03040300:32, 0:288, 16#00001200:32, FromGID:32/little-unsigned-integer, Modifiers:128/bits, Message/bits >>);
@@ -1334,7 +1252,6 @@ send_0304(FromGID, FromName, Modifiers, Message) ->
 
 %% @todo Force send a new player location. Used for warps.
 %% @todo The value before IntDir seems to be the player's current animation. 01 stand up, 08 ?, 17 normal sit
-
 send_0503(#pos{x=PrevX, y=PrevY, z=PrevZ, dir=_}) ->
 	{ok, User} = egs_user_model:read(get(gid)),
 	#egs_user_model{id=GID, pos=#pos{x=X, y=Y, z=Z, dir=Dir}, area=#psu_area{questid=QuestID, zoneid=ZoneID, mapid=MapID}, entryid=EntryID} = User,
@@ -1344,34 +1261,29 @@ send_0503(#pos{x=PrevX, y=PrevY, z=PrevZ, dir=_}) ->
 		QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer, 1:32/little-unsigned-integer >>).
 
 %% @todo Inventory related. No idea what it does.
-
 send_0a05() ->
 	send(header(16#0a05)).
 
 %% @todo Inventory related. Figure out everything in this packet and handle it correctly.
 %% @todo It sends 60 values so it's probably some kind of options for all 60 items in the inventory?
-
 send_0a06() ->
 	{ok, << _:32, A:96/bits, _:32, B:96/bits, _:32, C:1440/bits, _:32, D/bits >>} = file:read_file("p/packet0a06.bin"),
 	GID = get(gid),
 	send(<< A/binary, GID:32/little-unsigned-integer, B/binary, GID:32/little-unsigned-integer, C/binary, GID:32/little-unsigned-integer, D/binary >>).
 
 %% @todo Inventory. Figure out everything in this packet and handle it correctly.
-
 send_0a0a() ->
 	{ok, << _:32, A:224/bits, _:32, B/bits >>} = file:read_file("p/packet0a0a.bin"),
 	GID = get(gid),
 	send(<< A/binary, GID:32/little-unsigned-integer, B/binary >>).
 
 %% @doc Item description.
-
 send_0a11(ItemID, ItemDesc) ->
 	Size = 1 + length(ItemDesc),
 	UCS2Desc = << << X:8, 0:8 >> || X <- ItemDesc >>,
 	send(<< (header(16#0a11))/binary, ItemID:32/unsigned-integer, Size:32/little-unsigned-integer, UCS2Desc/binary, 0:16 >>).
 
 %% @doc Init quest.
-
 send_0c00(QuestID) ->
 	send(<< (header(16#0c00))/binary, QuestID:32/little-unsigned-integer,
 		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
@@ -1380,30 +1292,25 @@ send_0c00(QuestID) ->
 		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32 >>).
 
 %% @todo Figure out last 4 bytes!
-
 send_0c02() ->
 	send(<< (header(16#0c02))/binary, 0:32 >>).
 
 %% @doc Send the huge pack of quest files available in the counter.
-
 send_0c06(Filename) ->
 	{ok, << File/bits >>} = file:read_file(Filename),
 	send(<< 16#0c060300:32, 0:288, 1:32/little-unsigned-integer, File/binary >>).
 
 %% @doc Reply whether the player is allowed to use the transport option.
 %%      Use true for allowing it, and false otherwise.
-
 send_0c08(Response) ->
 	Value = if Response =:= true -> 0; true -> 1 end,
 	send(<< (header(16#0c08))/binary, Value:32 >>).
 
 %% @doc Send the trial start notification.
-
 send_0c09() ->
 	send(<< (header(16#0c09))/binary, 0:64 >>).
 
 %% @doc Send the counter's mission options (0 = invisible, 2 = disabled, 3 = available).
-
 send_0c10(Options) ->
 	GID = get(gid),
 	send(<< 16#0c100300:32, 0:32, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
@@ -1412,7 +1319,6 @@ send_0c10(Options) ->
 %% @doc Send the data for the selected character.
 %% @todo The large chunk of 0s can have some values set... but what are they used for?
 %% @todo The values after the Char variable are the flags. Probably use bits to define what flag is and isn't set. Handle correctly.
-
 send_0d01(User) ->
 	CharBin = psu_characters:character_tuple_to_binary(User#egs_user_model.character),
 	OptionsBin = psu_characters:options_tuple_to_binary((User#egs_user_model.character)#characters.options),
@@ -1424,7 +1330,6 @@ send_0d01(User) ->
 
 %% @doc Send the character list for selection.
 %% @todo There's a few odd values blanked, also the last known location apparently.
-
 send_0d03(Data0, Data1, Data2, Data3) ->
 	[{status, Status0}, {char, Char0}|_] = Data0,
 	[{status, Status1}, {char, Char1}|_] = Data1,
@@ -1439,7 +1344,6 @@ send_0d03(Data0, Data1, Data2, Data3) ->
 
 %% @doc Send the character flags list. This is the whole list of available values, not the character's.
 %%      Sent without fragmentation on official for unknown reasons. Do the same here.
-
 send_0d05() ->
 	{ok, Flags} = file:read_file("p/flags.bin"),
 	GID = get(gid),
@@ -1464,7 +1368,6 @@ send_1004(GID, NPCid, Name, Level, PartyPos) ->
 		16#12000000:32, 16#24e41f08:32, 0:128, 16#ffffffff:32, 0:64, 16#01000000:32, 16#01000000:32, 0:608 >>).
 
 %% @todo Figure out what the packet is.
-
 send_1005(Name) ->
 	{ok, File} = file:read_file("p/packet1005.bin"),
 	<< _:352, Before:160/bits, _:608, After/bits >> = File,
@@ -1474,12 +1377,10 @@ send_1005(Name) ->
 %% @doc Party-related command probably controlling the party state.
 %%      Value 11 aborts the mission.
 %% @todo Figure out what the packet is.
-
 send_1006(N) ->
 	send(<< (header(16#1006))/binary, N:32/little-unsigned-integer >>).
 
 %% @doc Send the player's current location.
-
 send_100e(QuestID, ZoneID, MapID, Location, CounterID) ->
 	UCS2Location = << << X:8, 0:8 >> || X <- Location >>,
 	Packet = << (header(16#100e))/binary, 1:32/little-unsigned-integer, MapID:16/little-unsigned-integer,
@@ -1495,7 +1396,6 @@ send_100e(QuestID, ZoneID, MapID, Location, CounterID) ->
 
 %% @doc Send the mission's quest file when starting a new mission.
 %% @todo Handle correctly. 0:32 is actually a missing value. Value before that is unknown too.
-
 send_1015(QuestID) ->
 	[{type, _}, {file, QuestFile}|_] = proplists:get_value(QuestID, ?QUESTS),
 	{ok, File} = file:read_file(QuestFile),
@@ -1503,71 +1403,58 @@ send_1015(QuestID) ->
 	send(<< (header(16#1015))/binary, QuestID:32/little-unsigned-integer, 16#01010000:32, 0:32, Size:32/little-unsigned-integer, File/binary >>).
 
 %% @todo Totally unknown.
-
 send_1020() ->
 	send(header(16#1020)).
 
 %% @doc Update HP in the party members information on the left.
 %% @todo Figure out more of it.
-
 send_1022(HP) ->
 	GID = get(gid),
 	send(<< 16#10220300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, HP:32/little-unsigned-integer, 0:32 >>).
 
 %% @todo Boss related command.
-
 send_110e(Data) ->
 	send(<< (header(16#110e))/binary, Data/binary, 0:32, 5:16/little-unsigned-integer, 12:16/little-unsigned-integer, 0:32, 260:32/little-unsigned-integer >>).
 
 %% @todo Boss related command.
-
 send_1113(Data) ->
 	send(<< (header(16#1113))/binary, Data/binary >>).
 
 %% @todo Figure out what this packet does. Sane values for counter and missions for now.
-
 send_1202() ->
 	send(<< (header(16#1202))/binary, 0:32, 16#10000000:32, 0:64, 16#14000000:32, 0:32 >>).
 
 %% @todo Figure out what this packet does. Seems it's the same values all the time.
-
 send_1204() ->
 	send(<< (header(16#1204))/binary, 0:32, 16#20000000:32, 0:256 >>).
 
 %% @doc Object events response?
 %% @todo Not sure what Value does exactly. It's either 0 or 1.
-
 send_1205(EventID, BlockID, Value) ->
 	send(<< (header(16#1205))/binary, EventID, BlockID, 0:16, Value, 0:24 >>).
 
 %% @todo Figure out what this packet does. Sane values for counter and missions for now.
-
 send_1206() ->
 	send(<< (header(16#1206))/binary, 0:32, 16#80020000:32, 0:5120 >>).
 
 %% @todo Figure out what this packet does. Sane values for counter and missions for now.
-
 send_1207() ->
 	Chunk = << 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 0:224, 16#0000ffff:32, 16#ff000000:32, 16#64000a00:32 >>,
 	send(<< (header(16#1207))/binary, Chunk/binary, Chunk/binary, Chunk/binary, Chunk/binary, Chunk/binary, Chunk/binary >>).
 
 %% @todo Object interaction? Figure out. C probably the interaction type.
-
 send_1211(A, B, C, D) ->
 	send(<< (header(16#1211))/binary, A:32/little-unsigned-integer, B:32/little-unsigned-integer, C:32/little-unsigned-integer, D:32/little-unsigned-integer >>).
 
 %% @doc Make the client load the quest previously sent.
-
 send_1212() ->
 	send(<< (header(16#1212))/binary, 0:19200 >>).
 
 %% @todo Not sure. Related to keys.
-
 send_1213(A, B) ->
 	send(<< (header(16#1213))/binary, A:32/little-unsigned-integer, B:32/little-unsigned-integer >>).
 
 %% @todo Related to boss gates.
-
 send_1215(A, B) ->
 	send(<< (header(16#1215))/binary, A:32/little-unsigned-integer, 0:16, B:16/little-unsigned-integer >>).
 
@@ -1578,7 +1465,6 @@ send_1216(Value) ->
 
 %% @doc Send the player's partner card.
 %% @todo Find out the remaining values.
-
 send_1500(User) ->
 	#characters{slot=Slot, name=Name, race=Race, gender=Gender, class=Class} = User#egs_user_model.character,
 	RaceBin = psu_characters:race_atom_to_binary(Race),
@@ -1587,12 +1473,10 @@ send_1500(User) ->
 	send(<< (header(16#1500))/binary, Name/binary, RaceBin:8, GenderBin:8, ClassBin:8, 0:3112, 16#010401:24, Slot:8, 0:64 >>).
 
 %% @todo Send an empty partner card list.
-
 send_1501() ->
 	send(<< (header(16#1501))/binary, 0:32 >>).
 
 %% @todo Send an empty blacklist.
-
 send_1512() ->
 	send(<< (header(16#1512))/binary, 0:46080 >>).
 
@@ -1610,59 +1494,50 @@ send_1602() ->
 
 %% @doc Party information.
 %% @todo Handle existing parties.
-
 send_1706(CharName) ->
 	send(<< (header(16#1706))/binary, 16#00000300:32, 16#d5c0faff:32, 0:64, CharName/binary,
 		16#78000000:32, 16#01010000:32, 0:1536, 16#0100c800:32, 16#0601010a:32, 16#ffffffff:32, 0:32 >>).
 
 %% @doc Party settings. Item distribution is random for now.
 %% @todo Handle correctly.
-
 send_170a() ->
 	send(<< (header(16#170a))/binary, 16#01010c08:32 >>).
 
 %% @todo Find what the heck this packet is.
-
 send_170c() ->
 	{ok, File} = file:read_file("p/packet170c.bin"),
 	send(<< (header(16#170c))/binary, File/binary >>).
 
 %% @doc Send the background to use for the counter.
 %% @todo Background has more info past the first byte.
-
 send_1711(Background) ->
 	send(<< (header(16#1711))/binary, Background:32/little-unsigned-integer >>).
 
 %% @doc Unknown dialog-related handler.
 %% @todo Everything!
-
 send_1a02(A, B, C, D, E) ->
 	send(<< (header(16#1a02))/binary, A:32/little-unsigned-integer, B:16/little-unsigned-integer,
 		C:16/little-unsigned-integer, D:16/little-unsigned-integer, E:16/little-unsigned-integer >>).
 
 %% @doc Lumilass handler. Possibly more.
 %% @todo Figure out how Lumilass work exactly. The 4 bytes before the file may vary.
-
 send_1a03() ->
 	{ok, File} = file:read_file("p/lumilassA.bin"),
 	send(<< (header(16#1a03))/binary, 0:32, File/binary >>).
 
 %% @doc PP cube handler.
 %% @todo The 4 bytes before the file may vary. Everything past that is the same. Figure things out.
-
 send_1a04() ->
 	{ok, File} = file:read_file("p/ppcube.bin"),
 	send(<< (header(16#1a04))/binary, 0:32, File/binary >>).
 
 %% @doc Types menu handler.
 %% @todo Handle correctly.
-
 send_1a07() ->
 	send(<< (header(16#1a07))/binary, 16#085b5d0a:32, 16#3a200000:32, 0:32,
 		16#01010101:32, 16#01010101:32, 16#01010101:32, 16#01010101:32 >>).
 
 %% @doc Log message to the console.
-
 log(Message) ->
 	io:format("game (~p): ~s~n", [get(gid), Message]).
 
