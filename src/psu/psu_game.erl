@@ -24,6 +24,7 @@
 -include("include/records.hrl").
 -include("include/maps.hrl").
 -include("include/missions.hrl").
+-include("include/psu_npc.hrl").
 
 -define(OPTIONS, [binary, {active, false}, {certfile, "priv/ssl/servercert.pem"}, {keyfile, "priv/ssl/serverkey.pem"}, {password, "alpha"}]).
 
@@ -1562,10 +1563,16 @@ send_1512() ->
 	send(<< (header(16#1512))/binary, 0:46080 >>).
 
 %% @doc Send the player's NPC and PM information.
-
+%% @todo Do we really want to give all NPCs to everyone? Probably.
+%% @todo The value 4 is the card priority. Find what 3 is. When sending, the first 0 is an unknown value.
 send_1602() ->
-	{ok, File} = file:read_file("p/npc.bin"),
-	send(<< (header(16#1602))/binary, 0:32, File/binary >>).
+	NbNPC = lists:sum([1 || {_NPCid, Data} <- ?NPC, Data#psu_npc.has_card =:= true]),
+	Bin = iolist_to_binary([<< NPCid:8, 0, 4, 0, 3, 0:24 >> || {NPCid, Data} <- ?NPC, Data#psu_npc.has_card =:= true]),
+	MiddlePaddingSize = 8 * (344 - byte_size(Bin)),
+	PMName = "My PM",
+	UCS2PMName = << << X:8, 0:8 >> || X <- PMName >>,
+	EndPaddingSize = 8 * (64 - byte_size(UCS2PMName)),
+	send(<< (header(16#1602))/binary, 0:32, Bin/binary, 0:MiddlePaddingSize, NbNPC, 0:24, UCS2PMName/binary, 0:EndPaddingSize >>).
 
 %% @doc Party information.
 %% @todo Handle existing parties.
