@@ -9,7 +9,6 @@
 		egs_exit_mon,
 		egs_user_model,
 		reloader,
-		egs_db,
 		psu_game,
 		psu_login,
 		psu_patch,

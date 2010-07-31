@@ -16,9 +16,8 @@
 %	You should have received a copy of the GNU General Public License
 %	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
-%% @doc Temporary table for generating a new GID at each connection.
-
--record(ids, {type, id}).
+%% @doc Table containing counters current values.
+-record(counters, {name, id}).
 
 %% @doc Character position data structure.
 

@@ -105,7 +105,7 @@ process_handle(16#020d, << GID:32/little-unsigned-integer, Auth:32/bits, _/bits 
 				{wait_for_authentication, Auth} ->
 					put(gid, GID),
 					log("auth success"),
-					LID = 1 + egs_db:next(lobby) rem 1023,
+					LID = 1 + mnesia:dirty_update_counter(counters, lobby, 1) rem 1023,
 					Time = calendar:datetime_to_gregorian_seconds(calendar:universal_time()),
 					egs_user_model:write(#egs_user_model{id=GID, pid=self(), socket=CSocket, state=authenticated, time=Time, folder=User#egs_user_model.folder, lid=LID}),
 					send_0d05(),
