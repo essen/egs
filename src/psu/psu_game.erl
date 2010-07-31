@@ -340,7 +340,7 @@ area_load(QuestID, ZoneID, MapID, EntryID) ->
 
 area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName) ->
 	#psu_area{questid=OldQuestID, zoneid=OldZoneID} = OldUser#egs_user_model.area,
-	#psu_area{questid=QuestID, zoneid=ZoneID} = User#egs_user_model.area,
+	#psu_area{questid=QuestID, zoneid=ZoneID, mapid=_MapID} = User#egs_user_model.area,
 	QuestChange = if OldQuestID /= QuestID, QuestFile /= undefined -> true; true -> false end,
 	if	ZoneFile =:= undefined ->
 			ZoneChange = false;
@@ -731,7 +731,7 @@ handle(16#0813, Data) ->
 	log("invited npc ~s", [NPC#psu_npc.name]),
 	PartyPos = 5,
 	send_022c(0, 2),
-	send_1004(NPCid, NPCid, NPC#psu_npc.name, 1 + NPC#psu_npc.level, PartyPos);
+	send_1004(NPCid, NPCid, NPC#psu_npc.name, 1 + NPC#psu_npc.level, PartyPos, 0, 0, 0, 0);
 
 %% @doc Item description request.
 %% @todo Send something other than just "dammy".
@@ -1358,19 +1358,24 @@ send_0d05() ->
 
 %% @todo Add a character (NPC or real) to the party members on the right of the screen.
 %% @todo NPCid is 65535 for normal characters.
-send_1004(GID, NPCid, Name, Level, PartyPos) ->
+%% @todo Apparently the 4 location ids are set to 0 when inviting an NPC in the lobby
+send_1004(GID, NPCid, Name, Level, PartyPos, QuestID, ZoneID, MapID, EntryID) ->
 	UCS2Name = << << X:8, 0:8 >> || X <- Name >>,
 	PaddingSize = (64 - byte_size(UCS2Name)) * 8,
-	%% 5 = NPC id
-	%% avant le 2nd 5 : 3rd byte : party color
-	send(<< (header(16#1004))/binary, 0:32, GID:32/little-unsigned-integer, 0:64, UCS2Name/binary, 0:PaddingSize,
-		Level:16/little-unsigned-integer, 16#ffff:16, 16#0301:16, PartyPos:8, 1,
-		NPCid:16/little-unsigned-integer, 0:16, 16#00001f08:32, 0:32,
-		16#07000000:32, 16#04e41f08:32, 0:32,
-		16#01000000:32, 16#64e41f08:32, 0:32,
-		16#02000000:32, 16#64e41f08:32, 0:32,
-		16#03000000:32, 16#64e41f08:32, 0:32,
-		16#12000000:32, 16#24e41f08:32, 0:128, 16#ffffffff:32, 0:64, 16#01000000:32, 16#01000000:32, 0:608 >>).
+	send(<< (header(16#1004))/binary, 0:32, %% first 0:32, should be 0:16, something:16
+		GID:32/little-unsigned-integer, 0:64, UCS2Name/binary, 0:PaddingSize,
+		Level:16/little-unsigned-integer, 16#ffff:16,
+		16#0301:16, PartyPos:8, 1, %% 03 before PartyPos, sometimes is 02 too?
+		NPCid:16/little-unsigned-integer, 0:16,
+		%% over 512 it's sometimes just full of 0s
+		16#00001f08:32, 0:32, 16#07000000:32,
+		16#04e41f08:32, 0:32, 16#01000000:32,
+		16#64e41f08:32, 0:32, 16#02000000:32,
+		16#64e41f08:32, 0:32, 16#03000000:32,
+		16#64e41f08:32, 0:32, 16#12000000:32, 16#24e41f08:32,
+		QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer,
+		16#ffffffff:32, 0:64, 16#01000000:32, 16#01000000:32, %% different values here too
+		0:608 >>).
 
 %% @todo Figure out what the packet is.
 send_1005(Name) ->
@@ -1399,6 +1404,10 @@ send_100e(QuestID, ZoneID, MapID, Location, CounterID) ->
 	end,
 	send(<< Packet/binary, 0:PaddingSize, Footer/binary >>).
 
+%% @todo No idea. Also the 2 PartyPos in the built packet more often than not match, but sometimes don't?
+send_100f(NPCid, PartyPos) ->
+	send(<< (header(16#100f))/binary, NPCid:16/little-unsigned-integer, 1, PartyPos:8, PartyPos:32/little-unsigned-integer >>).
+
 %% @doc Send the mission's quest file when starting a new mission.
 %% @todo Handle correctly. 0:32 is actually a missing value. Value before that is unknown too.
 send_1015(QuestID) ->
@@ -1406,6 +1415,10 @@ send_1015(QuestID) ->
 	{ok, File} = file:read_file(QuestFile),
 	Size = byte_size(File),
 	send(<< (header(16#1015))/binary, QuestID:32/little-unsigned-integer, 16#01010000:32, 0:32, Size:32/little-unsigned-integer, File/binary >>).
+
+%% @todo No idea.
+send_1016(PartyPos) ->
+	send(<< (header(16#1016))/binary, PartyPos:32/little-unsigned-integer >>).
 
 %% @todo Totally unknown.
 send_1020() ->
