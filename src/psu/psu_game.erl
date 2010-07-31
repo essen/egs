@@ -1191,12 +1191,22 @@ send_021b() ->
 
 %% @doc Send the list of available universes.
 send_021e() ->
-	{ok, << File:1184/bits, _/bits >>} = file:read_file("p/unicube.bin"),
 	{ok, Count} = egs_user_model:count(),
 	[StrCount] = io_lib:format("~b", [Count]),
-	UCS2Count = << << X:8, 0:8 >> || X <- StrCount >>,
-	PaddingSize = (12 - byte_size(UCS2Count)) * 8,
-	send(<< 16#021e0300:32, 0:288, File/binary, UCS2Count/binary, 0:PaddingSize >>).
+	Unis = [{16#ffffffff, center, "Your Room", ""}, {1, justify, "Reload", "     "}, {2, justify, "EGS Test", StrCount}],
+	NbUnis = length(Unis),
+	Bin = send_021e_build(Unis, []),
+	send(<< 16#021e0300:32, 0:288, NbUnis:32/little-unsigned-integer, Bin/binary >>).
+
+send_021e_build([], Acc) ->
+	iolist_to_binary(lists:reverse(Acc));
+send_021e_build([{ID, Align, Name, Pop}|Tail], Acc) ->
+	UCS2Name = << << X:8, 0:8 >> || X <- Name >>,
+	UCS2Pop = << << X:8, 0:8 >> || X <- Pop >>,
+	NamePadding = 8 * (32 - byte_size(UCS2Name)),
+	PopPadding = 8 * (12 - byte_size(UCS2Pop)),
+	IntAlign = case Align of justify -> 643; center -> 0 end,
+	send_021e_build(Tail, [<< ID:32/little-unsigned-integer, 0:16, IntAlign:16/little-unsigned-integer, UCS2Name/binary, 0:NamePadding, UCS2Pop/binary, 0:PopPadding >>|Acc]).
 
 %% @doc Send the current universe name and number.
 %% @todo Currently only have universe number 2, named EGS Test.
