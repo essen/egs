@@ -398,7 +398,7 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 	end,
 	case AreaType of
 		myroom ->
-			myroom_send_packet("p/packet1332.bin"),
+			send_1332(),
 			send_1202(),
 			send_1204(),
 			send_1206();
@@ -414,7 +414,7 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 		true -> ignore
 	end,
 	if	AreaType =:= myroom ->
-			myroom_send_packet("p/packet1309.bin");
+			send_1309();
 		true -> ignore
 	end,
 	send_0201(User),
@@ -425,10 +425,6 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 	send_0233(SpawnList),
 	send_0208(),
 	send_0236().
-
-myroom_send_packet(Filename) ->
-	{ok, << _:32, File/bits >>} = file:read_file(Filename),
-	send(File).
 
 %% @doc Game's main loop.
 %% @todo We probably don't want to send a keepalive packet unnecessarily.
@@ -1490,6 +1486,16 @@ send_1215(A, B) ->
 send_1216(Value) ->
 	GID = get(gid),
 	send(<< 16#12160300:32, 0:32, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Value:32/little-unsigned-integer >>).
+
+%% @todo Figure out this room packet.
+send_1309() ->
+	{ok, << _Size:32, Packet/bits >>} = file:read_file("p/packet1309.bin"),
+	send(Packet).
+
+%% @todo Figure out this room packet.
+send_1332() ->
+	{ok, << _Size:32, Packet/bits >>} = file:read_file("p/packet1332.bin"),
+	send(Packet).
 
 %% @doc Send the player's partner card.
 %% @todo Find out the remaining values.
