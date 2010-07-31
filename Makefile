@@ -26,7 +26,7 @@ server:
 	@./rebar compile
 
 missions:
-	$(ERLC) src/psu_parser.erl
+	$(ERLC) src/psu/psu_parser.erl
 	$(ERL) -noshell -noinput -sname missions -pa ebin -run psu_parser run -run init stop
 	rm psu_parser.beam
 
