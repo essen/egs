@@ -211,10 +211,10 @@
 
 	% SEED-Form Purge
 
-	{1113000, [{type, mission}, {file, "data/tutorial/seed-form-purge.hyuga.quest.nbl"}, {start, [0, 1121, 0]}]},
-	{1113001, [{type, mission}, {file, "data/tutorial/seed-form-purge.maya.quest.nbl"}, {start, [0, 1121, 0]}]},
-	{1113002, [{type, mission}, {file, "data/tutorial/seed-form-purge.lou.quest.nbl"}, {start, [0, 1121, 0]}]},
-	{1113003, [{type, mission}, {file, "data/tutorial/seed-form-purge.leo.quest.nbl"}, {start, [0, 1121, 0]}]},
+	{1113000, [{type, mission}, {file, "data/tutorial/seed-form-purge.hyuga.quest.nbl"}, {start, [0, 1121, 0]}, {sets, 1}]},
+	{1113001, [{type, mission}, {file, "data/tutorial/seed-form-purge.maya.quest.nbl"}, {start, [0, 1121, 0]}, {sets, 1}]},
+	{1113002, [{type, mission}, {file, "data/tutorial/seed-form-purge.lou.quest.nbl"}, {start, [0, 1121, 0]}, {sets, 1}]},
+	{1113003, [{type, mission}, {file, "data/tutorial/seed-form-purge.leo.quest.nbl"}, {start, [0, 1121, 0]}, {sets, 1}]},
 
 	% My room
 
@@ -534,10 +534,10 @@
 
 	% SEED-Form Purge
 
-	{[1113000, 0], [{file, "data/tutorial/seed-form-purge.hyuga.zone.nbl"}]},
-	{[1113001, 0], [{file, "data/tutorial/seed-form-purge.maya.zone.nbl"}]},
-	{[1113002, 0], [{file, "data/tutorial/seed-form-purge.lou.zone.nbl"}]},
-	{[1113003, 0], [{file, "data/tutorial/seed-form-purge.leo.zone.nbl"}]},
+	{[1113000, 0], [{file, "data/tutorial/seed-form-purge.hyuga.zone.nbl"}, {sets, 1}]},
+	{[1113001, 0], [{file, "data/tutorial/seed-form-purge.maya.zone.nbl"}, {sets, 1}]},
+	{[1113002, 0], [{file, "data/tutorial/seed-form-purge.lou.zone.nbl"}, {sets, 1}]},
+	{[1113003, 0], [{file, "data/tutorial/seed-form-purge.leo.zone.nbl"}, {sets, 1}]},
 
 	% My room
 
