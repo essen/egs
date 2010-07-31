@@ -26,7 +26,7 @@
 -include("include/missions.hrl").
 -include("include/psu_npc.hrl").
 
--define(OPTIONS, [binary, {active, false}, {certfile, "priv/ssl/servercert.pem"}, {keyfile, "priv/ssl/serverkey.pem"}, {password, "alpha"}]).
+-define(OPTIONS, [binary, {active, false}, {reuseaddr, true}, {certfile, "priv/ssl/servercert.pem"}, {keyfile, "priv/ssl/serverkey.pem"}, {password, "alpha"}]).
 
 %% @spec start_link(Port) -> {ok,Pid::pid()}
 %% @doc Start the game server.
@@ -51,6 +51,7 @@ cleanup(Pid) ->
 
 %% @doc Listen for connections.
 listen(Port, MPid) ->
+	error_logger:info_report(io_lib:format("psu_game listening on port ~b", [Port])),
 	{ok, LSocket} = ssl:listen(Port, ?OPTIONS),
 	?MODULE:accept(LSocket, MPid).
 
@@ -58,9 +59,13 @@ listen(Port, MPid) ->
 accept(LSocket, MPid) ->
 	case ssl:transport_accept(LSocket, 5000) of
 		{ok, CSocket} ->
-			ssl:ssl_accept(CSocket),
-			Pid = spawn(?MODULE, process_init, [CSocket, MPid]),
-			ssl:controlling_process(CSocket, Pid);
+			case ssl:ssl_accept(CSocket, 5000) of
+				ok ->
+					Pid = spawn(?MODULE, process_init, [CSocket, MPid]),
+					ssl:controlling_process(CSocket, Pid);
+				{error, _Reason} ->
+					reload
+			end;
 		_ ->
 			reload
 	end,

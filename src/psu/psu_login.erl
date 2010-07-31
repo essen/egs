@@ -24,7 +24,7 @@
 -include("include/records.hrl").
 -include("include/network.hrl").
 
--define(OPTIONS, [binary, {active, false}, {certfile, "priv/ssl/servercert.pem"}, {keyfile, "priv/ssl/serverkey.pem"}, {password, "alpha"}]).
+-define(OPTIONS, [binary, {active, false}, {reuseaddr, true}, {certfile, "priv/ssl/servercert.pem"}, {keyfile, "priv/ssl/serverkey.pem"}, {password, "alpha"}]).
 
 %% @spec start_link(Port) -> {ok,Pid::pid()}
 %% @doc Start the PSU login server for inclusion in a supervisor tree.
