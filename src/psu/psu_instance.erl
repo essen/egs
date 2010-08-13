@@ -120,12 +120,13 @@ object_init([{warp, DestX, DestY, DestZ, DestDir}|Tail], ZoneID, BlockID, Object
 	object_insert(#psu_object{id={self(), ZoneID, warp, BlockID, ListIndex, ObjectIndex}, instancepid=self(), type=warp, args=#pos{x=DestX, y=DestY, z=DestZ, dir=DestDir}}),
 	object_init(Tail, ZoneID, BlockID, ObjectID, TargetID, ListIndex, ObjectIndex + 1);
 
-%% @doc Ignore for now: boss_gate, shoot_button, goggle_target, trap (all kinds)
+%% @doc Ignore for now: boss_gate, shoot_button, goggle_target, trap (all kinds), menu_prompt
 object_init([Object|Tail], ZoneID, BlockID, ObjectID, TargetID, ListIndex, ObjectIndex)
 	when	Object =:= boss_gate;
 			Object =:= shoot_button;
 			Object =:= goggle_target;
-			Object =:= trap ->
+			Object =:= trap;
+			Object =:= menu_prompt ->
 	object_init(Tail, ZoneID, BlockID, ObjectID + 1, TargetID + 1, ListIndex, ObjectIndex + 1);
 
 %% @doc Ignore for now: 'exit' (seems to take a TargetID but not an ObjectID
