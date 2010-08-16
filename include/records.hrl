@@ -31,7 +31,7 @@
 %% @todo Probably can use a "param" or "extra" field to store the game-specific information (for things that don't need to be queried).
 
 -record(egs_user_model, {
-	id, pid, socket, state, time, character, instancepid, areatype, area, entryid, pos,
+	id, pid, socket, state, time, character, instancepid, partypid, areatype, area, entryid, pos,
 	%% psu specific fields
 	lid, setid, prev_area, prev_entryid,
 	%% temporary fields
@@ -48,15 +48,32 @@
 
 %% @doc Character appearance data structure, flesh version.
 
--record(flesh_appearance, {voicetype, voicepitch, jacket, pants, shoes, ears, face, hairstyle, jacketcolor, pantscolor, shoescolor,
-	lineshieldcolor, badge, eyebrows, eyelashes, eyesgroup, eyes, bodysuit, eyescolory, eyescolorx, lipsintensity, lipscolory, lipscolorx,
-	skincolor, hairstylecolory, hairstylecolorx, proportion, proportionboxx, proportionboxy, faceboxx, faceboxy}).
+-record(flesh_appearance, {
+	voicetype, voicepitch=127,
+	jacket, pants, shoes, ears, face, hairstyle,
+	jacketcolor=0, pantscolor=0, shoescolor=0, lineshieldcolor=0, badge=0,
+	eyebrows=0, eyelashes=0, eyesgroup=0, eyes=0,
+	bodysuit=0,
+	eyescolory=32767, eyescolorx=0,
+	lipsintensity=32767, lipscolory=32767, lipscolorx=0,
+	skincolor=65535,
+	hairstylecolory=32767, hairstylecolorx=0,
+	proportion=65535, proportionboxx=65535, proportionboxy=65535,
+	faceboxx=65535, faceboxy=65535
+}).
 
 %% @doc Character appearance data structure, metal version.
-
--record(metal_appearance, {voicetype, voicepitch, torso, legs, arms, ears, face, headtype, maincolor, lineshieldcolor,
-	eyebrows, eyelashes, eyesgroup, eyes, eyescolory, eyescolorx, bodycolor, subcolor, hairstylecolory, hairstylecolorx,
-	proportion, proportionboxx, proportionboxy, faceboxx, faceboxy}).
+-record(metal_appearance, {
+	voicetype, voicepitch=127,
+	torso, legs, arms, ears, face, headtype,
+	maincolor=0, lineshieldcolor=0,
+	eyebrows=0, eyelashes=0, eyesgroup=0, eyes=0,
+	eyescolory=32767, eyescolorx=0,
+	bodycolor=65535, subcolor=196607,
+	hairstylecolory=32767, hairstylecolorx=0,
+	proportion=65535, proportionboxx=65535, proportionboxy=65535,
+	faceboxx=65535, faceboxy=65535
+}).
 
 %% @doc Character options data structure.
 
@@ -76,6 +93,7 @@
 	gid,
 	type=white,
 	slot,
+	npcid=0,
 	name,
 	race,
 	gender,

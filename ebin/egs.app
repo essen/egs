@@ -16,6 +16,8 @@
 		egs_proto,
 		psu_appearance,
 		psu_characters,
+		psu_party,
+		psu_npc,
 		psu_parser
 	]},
 	{registered, []},

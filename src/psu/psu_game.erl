@@ -24,7 +24,7 @@
 -include("include/records.hrl").
 -include("include/maps.hrl").
 -include("include/missions.hrl").
--include("include/psu_npc.hrl").
+-include("include/psu/npc.hrl").
 
 -define(OPTIONS, [binary, {active, false}, {reuseaddr, true}, {certfile, "priv/ssl/servercert.pem"}, {keyfile, "priv/ssl/serverkey.pem"}, {password, "alpha"}]).
 
@@ -243,7 +243,7 @@ counter_load(QuestID, ZoneID, MapID, EntryID) ->
 	send_0c00(16#7fffffff),
 	send_020e(QuestFile),
 	send_0a05(),
-	send_010d(User),
+	send_010d(User#egs_user_model{lid=0}),
 	send_0200(mission),
 	send_020f(ZoneFile, 0, 16#ff),
 	send_0205(0, 0, 0, 0),
@@ -256,7 +256,7 @@ counter_load(QuestID, ZoneID, MapID, EntryID) ->
 	send_1206(),
 	send_1207(),
 	send_1212(),
-	send_0201(User),
+	send_0201(User#egs_user_model{lid=0}),
 	send_0a06(),
 	send_0208(),
 	send_0236().
@@ -379,7 +379,7 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 					send_0111(6, 0);
 				true -> ignore
 			end,
-			send_010d(User),
+			send_010d(User#egs_user_model{lid=0}),
 			send_0200(AreaType),
 			send_020f(ZoneFile, SetID, SeasonID);
 		true -> ignore
@@ -417,14 +417,41 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 			send_1309();
 		true -> ignore
 	end,
-	send_0201(User),
+	send_0201(User#egs_user_model{lid=0}),
 	if	ZoneChange =:= true ->
 			send_0a06();
 		true -> ignore
 	end,
 	send_0233(SpawnList),
 	send_0208(),
-	send_0236().
+	send_0236(),
+	if	User#egs_user_model.partypid =/= undefined, AreaType =:= mission ->
+			{ok, NPCList} = psu_party:get_npc(User#egs_user_model.partypid),
+			npc_load(User, NPCList);
+		true -> ok
+	end.
+
+%% @todo Make NPC hide in lobbies but show-up in missions.
+%% @todo Don't change the NPC info unless you are the leader!
+npc_load(_Leader, []) ->
+	ok;
+npc_load(Leader, [{PartyPos, NPCGID}|NPCList]) ->
+	{ok, OldNPCUser} = egs_user_model:read(NPCGID),
+	#egs_user_model{instancepid=InstancePid, area=Area, entryid=EntryID, pos=Pos} = Leader,
+	NPCUser = OldNPCUser#egs_user_model{lid=PartyPos, instancepid=InstancePid, areatype=mission, area=Area, entryid=EntryID, pos=Pos},
+	io:format("~p", [NPCUser]),
+	%% @todo This one on mission end/abort?
+	%~ OldNPCUser#egs_user_model{lid=PartyPos, instancepid=undefined, areatype=AreaType, area={psu_area, 0, 0, 0}, entryid=0, pos={pos, 0.0, 0.0, 0.0, 0}}
+	egs_user_model:write(NPCUser),
+	send_010d(NPCUser),
+	send_0201(NPCUser),
+	send_0215(0),
+	send_0a04(NPCUser#egs_user_model.id),
+	send_1004(npc_mission, NPCUser, PartyPos),
+	send_100f((NPCUser#egs_user_model.character)#characters.npcid, PartyPos),
+	send_1601(),
+	send_1016(PartyPos),
+	npc_load(Leader, NPCList).
 
 %% @doc Game's main loop.
 %% @todo We probably don't want to send a keepalive packet unnecessarily.
@@ -435,8 +462,8 @@ loop(SoFar) ->
 			GID = get(gid),
 			send(<< A/binary, 16#00011300:32, B/binary, 16#00011300:32, GID:32/little-unsigned-integer, C/binary >>),
 			?MODULE:loop(SoFar);
-		{psu_chat, ChatGID, ChatName, ChatModifiers, ChatMessage} ->
-			send_0304(ChatGID, ChatName, ChatModifiers, ChatMessage),
+		{psu_chat, ChatTypeID, ChatGID, ChatName, ChatModifiers, ChatMessage} ->
+			send_0304(ChatTypeID, ChatGID, ChatName, ChatModifiers, ChatMessage),
 			?MODULE:loop(SoFar);
 		{psu_keepalive} ->
 			egs_proto:send_keepalive(get(socket)),
@@ -534,9 +561,10 @@ handle(16#0102, _) ->
 %% @todo Others probably want to see that you changed your weapon.
 %% @todo Apparently B is always ItemID+1. Not sure why.
 %% @todo Currently use a separate file for the data sent for the weapons.
+%% @todo We must also handle here the NPC characters. PartyPos can be used for that, and more info in unknown values maybe too?
 handle(16#0105, Data) ->
-	<< _:32, A:32/little-unsigned-integer, ItemID:8, Action:8, _:8, B:8, C:32/little-unsigned-integer, _/bits >> = Data,
-	log("0105 action ~b item ~b (~b ~b ~b)", [Action, ItemID, A, B, C]),
+	<< _:32, PartyPos:32/little-unsigned-integer, ItemID:8, Action:8, _:8, A:8, B:32/little-unsigned-integer, _/bits >> = Data,
+	log("0105 action ~b item ~b partypos ~b (~b ~b)", [Action, ItemID, PartyPos, A, B]),
 	GID = get(gid),
 	Category = case ItemID of
 		% units would be 8, traps would be 12
@@ -569,11 +597,11 @@ handle(16#0105, Data) ->
 				_ -> {ok, File} = file:read_file(Filename)
 			end,
 			send(<< 16#01050300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer,
-				0:64, GID:32/little-unsigned-integer, A:32/little-unsigned-integer, ItemID, Action, Category, B, C:32/little-unsigned-integer,
+				0:64, GID:32/little-unsigned-integer, PartyPos:32/little-unsigned-integer, ItemID, Action, Category, A, B:32/little-unsigned-integer,
 				File/binary >>);
 		2 -> % unequip item
 			send(<< 16#01050300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer,
-				0:64, GID:32/little-unsigned-integer, A:32/little-unsigned-integer, ItemID, Action, Category, B, C:32/little-unsigned-integer >>);
+				0:64, GID:32/little-unsigned-integer, PartyPos:32/little-unsigned-integer, ItemID, Action, Category, A, B:32/little-unsigned-integer >>);
 		5 -> % drop item
 			ignore;
 		_ ->
@@ -592,6 +620,7 @@ handle(16#010a, Data) ->
 
 %% @doc Character death, and more, handler. Warp to 4th floor for now.
 %% @todo Recover from death correctly.
+%% @todo A is probably PartyPos or LID.
 handle(16#0110, Data) ->
 	<< _:32, A:32/little-unsigned-integer, B:32/little-unsigned-integer, C:32/little-unsigned-integer >> = Data,
 	case B of
@@ -599,6 +628,8 @@ handle(16#0110, Data) ->
 			send_0113();
 		3 -> % type change
 			log("changed type to ~b", [C]);
+		4 -> % related to npc death, ignore for now
+			ignore;
 		7 -> % player death: if the player has a scape, use it! otherwise red screen @todo Right now we force revive and don't reset the HP.
 			% @todo send_0115(get(gid), 16#ffffffff, LV=1, EXP=idk, Money=1000), % apparently sent everytime you die...
 			% use scape
@@ -639,8 +670,15 @@ handle(16#021f, << Uni:32/little-unsigned-integer, _/bits >>) ->
 			% 0220
 			% force reloading the character and data files (hack)
 			{ok, User} = egs_user_model:read(get(gid)),
+			if	User#egs_user_model.partypid =:= undefined ->
+					ignore;
+				true ->
+					%% @todo Replace stop by leave when leaving stops the party correctly when nobody's there anymore.
+					%~ psu_party:leave(User#egs_user_model.partypid, User#egs_user_model.id)
+					psu_party:stop(User#egs_user_model.partypid)
+			end,
 			Area = User#egs_user_model.area,
-			NewRow = User#egs_user_model{area=Area#psu_area{questid=1120000, zoneid=undefined}},
+			NewRow = User#egs_user_model{partypid=undefined, area=Area#psu_area{questid=1120000, zoneid=undefined}},
 			egs_user_model:write(NewRow),
 			area_load(Area#psu_area.questid, Area#psu_area.zoneid, Area#psu_area.mapid, User#egs_user_model.entryid)
 	end;
@@ -654,20 +692,32 @@ handle(16#0302, _) ->
 %%      We must take extra precautions to handle different versions of the game correctly.
 %%      Disregard the name sent by the server in later versions of the game. Use the name saved in memory instead, to prevent client-side editing.
 %% @todo Only broadcast to people in the same map.
+%% @todo In the case of NPC characters, when FromTypeID is 00001d00, check that the NPC is in the party and broadcast only to the party (probably).
+%% @todo When the game doesn't find an NPC and forces it to talk like in the tutorial mission it seems FromTypeID, FromGID and Name are both 0.
 handle(16#0304, Data) ->
-	{ok, User} = egs_user_model:read(get(gid)),
 	case get(version) of
 		0 -> % AOTI v2.000
-			<< _:64, Modifiers:128/bits, Message/bits >> = Data;
+			<< FromTypeID:32/unsigned-integer, FromGID:32/little-unsigned-integer, Modifiers:128/bits, Message/bits >> = Data;
 		_ -> % Above
-			<< _:64, Modifiers:128/bits, _:512, Message/bits >> = Data
+			<< FromTypeID:32/unsigned-integer, FromGID:32/little-unsigned-integer, Modifiers:128/bits, _:512, Message/bits >> = Data
 	end,
+
+	UserGID = get(gid),
+	GID = if UserGID =:= FromGID ->
+			UserGID;
+		true ->
+			%% @todo Check that FromGID is an NPC in the UserGID's party; that UserGID is the party leader; that the message is using party chat.
+			FromGID
+	end,
+
+	{ok, User} = egs_user_model:read(GID),
+
 	[LogName|_] = re:split((User#egs_user_model.character)#characters.name, "\\0\\0", [{return, binary}]),
 	[TmpMessage|_] = re:split(Message, "\\0\\0", [{return, binary}]),
 	LogMessage = re:replace(TmpMessage, "\\n", " ", [global, {return, binary}]),
 	log("chat from ~s: ~s", [[re:replace(LogName, "\\0", "", [global, {return, binary}])], [re:replace(LogMessage, "\\0", "", [global, {return, binary}])]]),
 	{ok, List} = egs_user_model:select(all),
-	lists:foreach(fun(X) -> X#egs_user_model.pid ! {psu_chat, get(gid), (User#egs_user_model.character)#characters.name, Modifiers, Message} end, List);
+	lists:foreach(fun(X) -> X#egs_user_model.pid ! {psu_chat, FromTypeID, GID, (User#egs_user_model.character)#characters.name, Modifiers, Message} end, List);
 
 %% @todo Handle this packet properly.
 %% @todo Spawn cleared response event shouldn't be handled following this packet but when we see the spawn actually dead HP-wise.
@@ -717,17 +767,36 @@ handle(16#0812, _) ->
 
 %% @doc NPC invite.
 %% @todo Also happening a 1506 -> 1507? Only on first selection from menu.
-%% @todo Apparently Unknown is ffffffff.
-%% @todo Also sent a 101a (NPC:16, PartyPos:16, ffffffff). Not sure about PartyPos.
-%% @todo Replace 1 by the actual character level.
-%% @todo PartyPos isn't handled yet, it's always 5.
+%% @todo Apparently Unknown is always ffffffff.
+%% @todo Also at the end send a 101a (NPC:16, PartyPos:16, ffffffff). Not sure about PartyPos.
+%% @todo Probably needs to make the NPC show up if he's invited while in-mission.
 handle(16#0813, Data) ->
+	GID = get(gid),
+	{ok, User} = egs_user_model:read(GID),
+	%% Create NPC.
 	<< _Unknown:32, NPCid:32/little-unsigned-integer >> = Data,
-	NPC = proplists:get_value(NPCid, ?NPC),
-	log("invited npc ~s", [NPC#psu_npc.name]),
-	PartyPos = 5,
-	send_022c(0, 2),
-	send_1004(NPCid, NPCid, NPC#psu_npc.name, 1 + NPC#psu_npc.level, PartyPos, 0, 0, 0, 0);
+	log("invited npcid ~b", [NPCid]),
+	TmpNPCUser = psu_npc:user_init(NPCid, ((User#egs_user_model.character)#characters.mainlevel)#level.number),
+	%% Create and join party.
+	%% @todo Check if party already exists.
+	{ok, PartyPid} = psu_party:start_link(GID),
+	{ok, PartyPos} = psu_party:join(PartyPid, npc, TmpNPCUser#egs_user_model.id),
+	NPCUser = TmpNPCUser#egs_user_model{lid=PartyPos, partypid=PartyPid},
+	egs_user_model:write(NPCUser),
+	egs_user_model:write(User#egs_user_model{partypid=PartyPid}),
+	%% Send stuff.
+	Character = NPCUser#egs_user_model.character,
+	SentNPCCharacter = Character#characters{gid=NPCid},
+	SentNPCUser = NPCUser#egs_user_model{id=NPCid, character=SentNPCCharacter},
+	%% @todo send_022c(0, 2),
+	send_1004(npc_invite, SentNPCUser, PartyPos),
+	send_101a(NPCid, PartyPos);
+
+%% @todo Used in the tutorial. Not sure what it does. Give an item (the PA) maybe?
+handle(16#0a09, Data) ->
+	log("~p", [Data]),
+	GID = get(gid),
+	send(<< 16#0a090300:32, 0:32, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#00003300:32, 0:32 >>);
 
 %% @doc Item description request.
 %% @todo Send something other than just "dammy".
@@ -776,7 +845,6 @@ handle(16#0c0e, _) ->
 	end;
 
 %% @doc Counter available mission list request handler.
-%% @todo Temporarily allow rare mission and LL all difficulties to all players.
 handle(16#0c0f, _) ->
 	{ok, User} = egs_user_model:read(get(gid)),
 	[{quests, _}, {bg, _}, {options, Options}] = proplists:get_value(User#egs_user_model.entryid, ?COUNTERS),
@@ -1077,10 +1145,11 @@ send(Packet) ->
 send_010d(User) ->
 	GID = get(gid),
 	CharGID = User#egs_user_model.id,
-	<< _:640, CharBin/bits >> = psu_characters:character_user_to_binary(User#egs_user_model{lid=0}),
+	CharLID = User#egs_user_model.lid,
+	<< _:640, CharBin/bits >> = psu_characters:character_user_to_binary(User),
 	send(<< 16#010d0300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
 		1:32/little-unsigned-integer, 0:32, 16#00000300:32, 16#ffff0000:32, 0:32, CharGID:32/little-unsigned-integer,
-		0:192, CharGID:32/little-unsigned-integer, 0:32, 16#ffffffff:32, CharBin/binary >>).
+		0:192, CharGID:32/little-unsigned-integer, CharLID:32/little-unsigned-integer, 16#ffffffff:32, CharBin/binary >>).
 
 %% @todo Possibly related to 010d. Just send seemingly safe values.
 send_0111(A, B) ->
@@ -1125,7 +1194,7 @@ send_0200(ZoneType) ->
 send_0201(User) ->
 	GID = get(gid),
 	CharGID = User#egs_user_model.id,
-	CharBin = psu_characters:character_user_to_binary(User#egs_user_model{lid=0}),
+	CharBin = psu_characters:character_user_to_binary(User),
 	IsGM = 0,
 	OnlineStatus = 0,
 	GameVersion = 0,
@@ -1255,10 +1324,10 @@ send_0236() ->
 	send(header(16#0236)).
 
 %% @doc Send a chat command. Handled differently at v2.0000 and all versions starting somewhere above that.
-send_0304(FromGID, FromName, Modifiers, Message) ->
+send_0304(FromTypeID, FromGID, FromName, Modifiers, Message) ->
 	case get(version) of
-		0 -> send(<< 16#03040300:32, 0:288, 16#00001200:32, FromGID:32/little-unsigned-integer, Modifiers:128/bits, Message/bits >>);
-		_ -> send(<< 16#03040300:32, 0:288, 16#00001200:32, FromGID:32/little-unsigned-integer, Modifiers:128/bits, FromName:512/bits, Message/bits >>)
+		0 -> send(<< 16#03040300:32, 0:288, FromTypeID:32/unsigned-integer, FromGID:32/little-unsigned-integer, Modifiers:128/bits, Message/bits >>);
+		_ -> send(<< 16#03040300:32, 0:288, FromTypeID:32/unsigned-integer, FromGID:32/little-unsigned-integer, Modifiers:128/bits, FromName:512/bits, Message/bits >>)
 	end.
 
 %% @todo Force send a new player location. Used for warps.
@@ -1270,6 +1339,12 @@ send_0503(#pos{x=PrevX, y=PrevY, z=PrevZ, dir=_}) ->
 	send(<< 16#05030300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, GID:32/little-unsigned-integer, 0:32,
 		16#1000:16, IntDir:16/little-unsigned-integer, PrevX:32/little-float, PrevY:32/little-float, PrevZ:32/little-float, X:32/little-float, Y:32/little-float, Z:32/little-float,
 		QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer, 1:32/little-unsigned-integer >>).
+
+%% @todo NPC inventory. Guessing it's only for NPC characters...
+send_0a04(NPCGID) ->
+	GID = get(gid),
+	{ok, Bin} = file:read_file("p/packet0a04.bin"),
+	send(<< 16#0a040300:32, 0:32, 16#00001d00:32, NPCGID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Bin/binary >>).
 
 %% @todo Inventory related. No idea what it does.
 send_0a05() ->
@@ -1364,23 +1439,38 @@ send_0d05() ->
 
 %% @todo Add a character (NPC or real) to the party members on the right of the screen.
 %% @todo NPCid is 65535 for normal characters.
-%% @todo Apparently the 4 location ids are set to 0 when inviting an NPC in the lobby
-send_1004(GID, NPCid, Name, Level, PartyPos, QuestID, ZoneID, MapID, EntryID) ->
-	UCS2Name = << << X:8, 0:8 >> || X <- Name >>,
-	PaddingSize = (64 - byte_size(UCS2Name)) * 8,
-	send(<< (header(16#1004))/binary, 0:32, %% first 0:32, should be 0:16, something:16
-		GID:32/little-unsigned-integer, 0:64, UCS2Name/binary, 0:PaddingSize,
+%% @todo Apparently the 4 location ids are set to 0 when inviting an NPC in the lobby - NPCs have their location set to 0 when in lobby; also odd value before PartyPos related to missions
+%% @todo Not sure about LID. But seems like it.
+send_1004(Type, User, PartyPos) ->
+	io:format("~p ~p", [User, PartyPos]),
+
+	[TypeID, LID, SomeFlag] = case Type of
+		npc_mission -> [16#00001d00, PartyPos, 2];
+		npc_invite -> [0, 16#ffffffff, 3];
+		_ -> 1 %% seems to be for players
+	end,
+
+	#egs_user_model{id=GID, character=Character, area={psu_area, QuestID, ZoneID, MapID}, entryid=EntryID} = User,
+	#characters{npcid=NPCid, name=Name, mainlevel=MainLevel} = Character,
+	Level = MainLevel#level.number,
+	send(<< (header(16#1004))/binary, TypeID:32,
+		GID:32/little-unsigned-integer, 0:64, Name/binary,
 		Level:16/little-unsigned-integer, 16#ffff:16,
-		16#0301:16, PartyPos:8, 1, %% 03 before PartyPos, sometimes is 02 too?
+		SomeFlag, 1, PartyPos:8, 1,
 		NPCid:16/little-unsigned-integer, 0:16,
-		%% over 512 it's sometimes just full of 0s
+
+		%% Odd unknown values. PA related? No idea. Values on invite, 0 in-mission.
 		16#00001f08:32, 0:32, 16#07000000:32,
 		16#04e41f08:32, 0:32, 16#01000000:32,
 		16#64e41f08:32, 0:32, 16#02000000:32,
 		16#64e41f08:32, 0:32, 16#03000000:32,
-		16#64e41f08:32, 0:32, 16#12000000:32, 16#24e41f08:32,
+		16#64e41f08:32, 0:32, 16#12000000:32,
+		16#24e41f08:32,
+
 		QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer,
-		16#ffffffff:32, 0:64, 16#01000000:32, 16#01000000:32, %% different values here too
+		LID:32,
+		0:64,
+		16#01000000:32, 16#01000000:32, %% @todo first is current hp, second is max hp
 		0:608 >>).
 
 %% @todo Figure out what the packet is.
@@ -1425,6 +1515,10 @@ send_1015(QuestID) ->
 %% @todo No idea.
 send_1016(PartyPos) ->
 	send(<< (header(16#1016))/binary, PartyPos:32/little-unsigned-integer >>).
+
+%% @todo No idea.
+send_101a(NPCid, PartyPos) ->
+	send(<< (header(16#101a))/binary, NPCid:16/little-unsigned-integer, PartyPos:16/little-unsigned-integer, 16#ffffffff:32 >>).
 
 %% @todo Totally unknown.
 send_1020() ->
@@ -1513,6 +1607,11 @@ send_1501() ->
 %% @todo Send an empty blacklist.
 send_1512() ->
 	send(<< (header(16#1512))/binary, 0:46080 >>).
+
+%% @todo NPC related packet, sent when there's an NPC in the area.
+send_1601() ->
+	{ok, Bin} = file:read_file("p/packet1601.bin"),
+	send(<< (header(16#1601))/binary, Bin/binary >>).
 
 %% @doc Send the player's NPC and PM information.
 %% @todo Do we really want to give all NPCs to everyone? Probably.

@@ -94,12 +94,16 @@ handle_call({read, ID}, _From, State) ->
 
 %% @todo state = undefined | {wait_for_authentication, Key} | authenticated | online
 handle_call({select, all}, _From, State) ->
-	List = do(qlc:q([X || X <- mnesia:table(?TABLE), X#?TABLE.state =:= online])),
+	List = do(qlc:q([X || X <- mnesia:table(?TABLE),
+		X#?TABLE.pid /= undefined,
+		X#?TABLE.state =:= online
+	])),
 	{reply, {ok, List}, State};
 
 handle_call({select, {neighbors, User}}, _From, State) ->
 	List = do(qlc:q([X || X <- mnesia:table(?TABLE),
 		X#?TABLE.id /= User#?TABLE.id,
+		X#?TABLE.pid /= undefined,
 		X#?TABLE.state =:= online,
 		X#?TABLE.instancepid =:= User#?TABLE.instancepid,
 		X#?TABLE.area =:= User#?TABLE.area

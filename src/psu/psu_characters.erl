@@ -29,29 +29,36 @@
 %%      Only contains the actually saved data, not the stats and related information.
 
 character_tuple_to_binary(Tuple) ->
-	#characters{name=Name, race=Race, gender=Gender, class=Class, appearance=Appearance,
+	#characters{type=Type, name=Name, race=Race, gender=Gender, class=Class, appearance=Appearance,
 		mainlevel=Level, blastbar=BlastBar, luck=Luck, money=Money, playtime=PlayTime} = Tuple,
 	#level{number=LV, exp=EXP} = Level,
 	RaceBin = race_atom_to_binary(Race),
 	GenderBin = gender_atom_to_binary(Gender),
 	ClassBin = class_atom_to_binary(Class),
 	AppearanceBin = psu_appearance:tuple_to_binary(Race, Appearance),
+	FooterBin = case Type of
+		npc ->
+			<<	16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32,
+				16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32,
+				16#4e4f4630:32, 16#08000000:32, 0:32, 0:32, 16#4e454e44:32 >>;
+		_ -> %% @todo Handle classes.
+			<<	0:160,
+				16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32,
+				16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32 >>
+	end,
 	<<	Name/binary, RaceBin:8, GenderBin:8, ClassBin:8, AppearanceBin/binary, LV:32/little-unsigned-integer, BlastBar:16/little-unsigned-integer,
-		Luck:8, 0:40, EXP:32/little-unsigned-integer, 0:32, Money:32/little-unsigned-integer, PlayTime:32/little-unsigned-integer, 0:160,
-		% then classes hardcoded for now @todo
-		16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32,
-		16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32 >>.
+		Luck:8, 0:40, EXP:32/little-unsigned-integer, 0:32, Money:32/little-unsigned-integer, PlayTime:32/little-unsigned-integer, FooterBin/binary >>.
 
 %% @doc Convert a character tuple into a binary to be sent to clients.
 %%      Contains everything from character_tuple_to_binary/1 along with location, stats, SE and more.
-%% @todo One of the two QuestID lists has a different use. No idea what though.
+%% @todo One of the two QuestID lists has a different use. No idea what though. The second is probably the previous area.
 %% @todo The second StatsBin seems unused. Not sure what it's for.
 %% @todo Find out what the big block of 0 is at the end.
 %% @todo The value before IntDir seems to be the player's current animation. 01 stand up, 08 ?, 17 normal sit
 
 character_user_to_binary(User) ->
 	#egs_user_model{id=CharGID, lid=CharLID, character=Character, pos=#pos{x=X, y=Y, z=Z, dir=Dir}, area={psu_area, QuestID, ZoneID, MapID}, entryid=EntryID} = User,
-	#characters{mainlevel=Level, stats=Stats, se=SE, currenthp=CurrentHP, maxhp=MaxHP} = Character,
+	#characters{type=Type, mainlevel=Level, stats=Stats, se=SE, currenthp=CurrentHP, maxhp=MaxHP} = Character,
 	#level{number=LV} = Level,
 	CharBin = psu_characters:character_tuple_to_binary(Character),
 	StatsBin = psu_characters:stats_tuple_to_binary(Stats),
@@ -59,12 +66,15 @@ character_user_to_binary(User) ->
 	EXPNextLevel = 100,
 	EXPPreviousLevel = 0,
 	IntDir = trunc(Dir * 182.0416),
-	<<	16#00001200:32, CharGID:32/little-unsigned-integer, 0:64, CharLID:32/little-unsigned-integer, 16#0000ffff:32, QuestID:32/little-unsigned-integer,
+	TypeID = case Type of npc -> 16#00001d00; _ -> 16#00001200 end,
+	NPCStuff = case Type of npc -> 16#01ff0700; _ -> 16#0000ffff end,
+	<<	TypeID:32, CharGID:32/little-unsigned-integer, 0:64, CharLID:32/little-unsigned-integer, NPCStuff:32, QuestID:32/little-unsigned-integer,
 		ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer,
 		16#0100:16, IntDir:16/little-unsigned-integer, X:32/little-float, Y:32/little-float, Z:32/little-float, 0:64,
 		QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer,
 		CharBin/binary, EXPNextLevel:32/little-unsigned-integer, EXPPreviousLevel:32/little-unsigned-integer, MaxHP:32/little-unsigned-integer, % not sure if this one is current or max
-		StatsBin/binary, 0:32, SEBin/binary, 0:32, LV:32/little-unsigned-integer, StatsBin/binary, CurrentHP:32/little-unsigned-integer, MaxHP:32/little-unsigned-integer, 0:2304 >>.
+		StatsBin/binary, 0:32, SEBin/binary, 0:32, LV:32/little-unsigned-integer, StatsBin/binary, CurrentHP:32/little-unsigned-integer, MaxHP:32/little-unsigned-integer,
+		0:1344, 16#0000803f:32, 0:64, 16#0000803f:32, 0:64, 16#0000803f:32, 0:64, 16#0000803f:32, 0:64, 16#0000803f:32, 0:160, 16#0000803f:32, 0:352 >>.
 
 %% @doc Convert a class atom into a binary to be sent to clients.
 
