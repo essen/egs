@@ -16,7 +16,7 @@
 %	You should have received a copy of the GNU General Public License
 %	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
--module(egs_proto).
+-module(psu_proto).
 -compile(export_all).
 
 %% @doc Prepare a packet. Return the real size and padding at the end.

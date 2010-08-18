@@ -59,13 +59,13 @@ accept(LSocket, SessionID) ->
 %% @doc Process the new connections. Send an hello packet and start the loop.
 process(CSocket, SessionID) ->
 	log(SessionID, "hello"),
-	egs_proto:packet_send(CSocket, << 16#02020300:32, 0:288, SessionID:32/little-unsigned-integer >>),
+	psu_proto:packet_send(CSocket, << 16#02020300:32, 0:288, SessionID:32/little-unsigned-integer >>),
 	?MODULE:loop(CSocket, SessionID).
 
 %% @spec loop(CSocket, SessionID) -> ok
 %% @doc Main loop for the login server.
 loop(CSocket, SessionID) ->
-	case egs_proto:packet_recv(CSocket, 5000) of
+	case psu_proto:packet_recv(CSocket, 5000) of
 		{ok, Orig} ->
 			<< _:32, Command:16/unsigned-integer, _/bits >> = Orig,
 			case handle(Command, CSocket, SessionID, Orig) of
@@ -90,7 +90,7 @@ handle(16#0217, CSocket, SessionID, _) ->
 	IP = ?GAME_IP,
 	Port = ?GAME_PORT,
 	Packet = << 16#02160300:32, 0:192, SessionID:32/little-unsigned-integer, 0:64, IP/binary, Port:32/little-unsigned-integer >>,
-	egs_proto:packet_send(CSocket, Packet),
+	psu_proto:packet_send(CSocket, Packet),
 	ssl:close(CSocket),
 	closed;
 
@@ -109,7 +109,7 @@ handle(16#0219, CSocket, SessionID, Orig) ->
 	Time = calendar:datetime_to_gregorian_seconds(calendar:universal_time()),
 	egs_user_model:write(#egs_user_model{id=SessionID, pid=self(), socket=CSocket, state={wait_for_authentication, Auth}, time=Time, folder=Folder}),
 	Packet = << 16#02230300:32, 0:192, SessionID:32/little-unsigned-integer, 0:64, SessionID:32/little-unsigned-integer, Auth:32/bits >>,
-	egs_proto:packet_send(CSocket, Packet);
+	psu_proto:packet_send(CSocket, Packet);
 
 %% MOTD request handler. Handles both forms of MOTD requests, US and JP. Page number starts at 0.
 %% @todo Currently ignore the language and send the same MOTD file to everyone. Language is 8 bits next to Page.
@@ -122,7 +122,7 @@ handle(Command, CSocket, SessionID, Orig) when Command =:= 16#0226; Command =:= 
 	MOTD = << << Line/binary, "\n", 0 >> || Line <- lists:sublist(Tokens, 1 + Page * 15, 15) >>,
 	NbPages = 1 + length(Tokens) div 15,
 	Packet = << 16#0225:16, 0:304, NbPages:8, Page:8, 16#8200:16/unsigned-integer, MOTD/binary, 0:16 >>,
-	egs_proto:packet_send(CSocket, Packet);
+	psu_proto:packet_send(CSocket, Packet);
 
 %% Silently ignore packets 0227 and 080e.
 handle(Command, _, _, _) when Command =:= 16#0227; Command =:= 16#080e ->

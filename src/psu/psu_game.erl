@@ -82,9 +82,9 @@ process_init(CSocket, MPid) ->
 %% @doc Process the new connections.
 %%      Send an hello packet, authenticate the user and send him to character select.
 process() ->
-	case egs_proto:packet_recv(get(socket), 5000) of
+	case psu_proto:packet_recv(get(socket), 5000) of
 		{ok, Orig} ->
-			{command, Command, _, Data} = egs_proto:packet_parse(Orig),
+			{command, Command, _, Data} = psu_proto:packet_parse(Orig),
 			process_handle(Command, Data);
 		{error, timeout} ->
 			reload,
@@ -129,12 +129,12 @@ process_handle(Command, _) ->
 
 %% @doc Character selection screen loop.
 char_select() ->
-	case egs_proto:packet_recv(get(socket), 5000) of
+	case psu_proto:packet_recv(get(socket), 5000) of
 		{ok, Orig} ->
-			{command, Command, _, Data} = egs_proto:packet_parse(Orig),
+			{command, Command, _, Data} = psu_proto:packet_parse(Orig),
 			char_select_handle(Command, Data);
 		{error, timeout} ->
-			egs_proto:send_keepalive(get(socket)),
+			psu_proto:send_keepalive(get(socket)),
 			reload,
 			?MODULE:char_select();
 		{error, closed} ->
@@ -466,7 +466,7 @@ loop(SoFar) ->
 			send_0304(ChatTypeID, ChatGID, ChatName, ChatModifiers, ChatMessage),
 			?MODULE:loop(SoFar);
 		{psu_keepalive} ->
-			egs_proto:send_keepalive(get(socket)),
+			psu_proto:send_keepalive(get(socket)),
 			?MODULE:loop(SoFar);
 		{psu_player_spawn, _Spawn} ->
 			% Should be something along the lines of 203 201 204 or something.
@@ -481,7 +481,7 @@ loop(SoFar) ->
 			area_load(QuestID, ZoneID, MapID, EntryID),
 			?MODULE:loop(SoFar);
 		{ssl, _, Data} ->
-			{Packets, Rest} = egs_proto:packet_split(<< SoFar/bits, Data/bits >>),
+			{Packets, Rest} = psu_proto:packet_split(<< SoFar/bits, Data/bits >>),
 			[dispatch(Orig) || Orig <- Packets],
 			?MODULE:loop(Rest);
 		{ssl_closed, _} ->
@@ -497,7 +497,7 @@ loop(SoFar) ->
 
 %% @doc Dispatch the command to the right handler.
 dispatch(Orig) ->
-	{command, Command, Channel, Data} = egs_proto:packet_parse(Orig),
+	{command, Command, Channel, Data} = psu_proto:packet_parse(Orig),
 	case Channel of
 		ignore -> ignore;
 		1 -> broadcast(Command, Orig);
@@ -1137,7 +1137,7 @@ header(Command) ->
 %% @doc Send the given packet to the client.
 %% @todo Consolidate the receive and send functions better.
 send(Packet) ->
-	egs_proto:packet_send(get(socket), Packet).
+	psu_proto:packet_send(get(socket), Packet).
 
 %% @todo Figure out what this does compared to 0201(self).
 %% @todo Figure out the unknown values.
