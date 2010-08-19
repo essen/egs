@@ -497,11 +497,16 @@ loop(SoFar) ->
 
 %% @doc Dispatch the command to the right handler.
 dispatch(Orig) ->
-	{command, Command, Channel, Data} = psu_proto:packet_parse(Orig),
-	case Channel of
-		ignore -> ignore;
-		1 -> broadcast(Command, Orig);
-		_ -> handle(Command, Data)
+	case psu_proto:parse(Orig) of
+		{command, Command, Channel, Data} ->
+			case Channel of
+				1 -> broadcast(Command, Orig);
+				_ -> handle(Command, Data)
+			end;
+		ignore ->
+			ignore;
+		Event ->
+			event(Event)
 	end.
 
 %% @doc Position change broadcast handler. Save the position and then dispatch it.
@@ -550,21 +555,15 @@ broadcast(Command, Orig)
 			lists:foreach(fun(User) -> User#egs_user_model.pid ! {psu_broadcast, Packet} end, SpawnList)
 	end.
 
-%% @doc Movement (non-broadcast) handler. Do nothing.
-handle(16#0102, _) ->
-	ignore;
-
-%% @doc Weapon equip, unequip, item drop, and more... handler. Do what we can.
+%% @todo A and B are unknown.
 %%      Melee uses a format similar to: AAAA--BBCCCC----DDDDDDDDEE----FF with
 %%      AAAA the attack sound effect, BB the range, CCCC and DDDDDDDD unknown but related to angular range or similar, EE number of targets and FF the model.
 %%      Bullets and tech weapons formats are unknown but likely use a slightly different format.
 %% @todo Others probably want to see that you changed your weapon.
 %% @todo Apparently B is always ItemID+1. Not sure why.
 %% @todo Currently use a separate file for the data sent for the weapons.
-%% @todo We must also handle here the NPC characters. PartyPos can be used for that, and more info in unknown values maybe too?
-handle(16#0105, Data) ->
-	<< _:32, PartyPos:32/little-unsigned-integer, ItemID:8, Action:8, _:8, A:8, B:32/little-unsigned-integer, _/bits >> = Data,
-	log("0105 action ~b item ~b partypos ~b (~b ~b)", [Action, ItemID, PartyPos, A, B]),
+%% @todo TargetGID and TargetLID must be validated, they're either the player's or his NPC characters.
+event({item_equip, ItemID, TargetGID, TargetLID, A, B}) ->
 	GID = get(gid),
 	Category = case ItemID of
 		% units would be 8, traps would be 12
@@ -572,41 +571,48 @@ handle(16#0105, Data) ->
 		Y when Y =:= 5; Y =:= 6; Y =:= 7 -> 0; % clothes
 		_ -> 1 % weapons
 	end,
-	case Action of
-		1 -> % equip item
-			Filename = case ItemID of
-				% weapons
-				16 -> "p/packet0105_sword.bin";
-				13 -> "p/packet0105_twindaggers.bin";
-				15 -> "p/packet0105_dagger.bin";
-				 9 -> "p/packet0105_rcsm.bin";
-				14 -> "p/packet0105_saber.bin";
-				 8 -> "p/packet0105_mgun.bin";
-				X when X =:= 17; X =:= 18 ->
-					"p/packet0105_twinguns.bin";
-				% armor
-				19 -> "p/packet0105_armor.bin";
-				% clothes
-				X when X =:= 5; X =:= 6; X =:= 7 ->
-					none;
-				_ -> % default: do nothing
-					none
-			end,
-			case Filename of
-				none -> File = << >>;
-				_ -> {ok, File} = file:read_file(Filename)
-			end,
-			send(<< 16#01050300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer,
-				0:64, GID:32/little-unsigned-integer, PartyPos:32/little-unsigned-integer, ItemID, Action, Category, A, B:32/little-unsigned-integer,
-				File/binary >>);
-		2 -> % unequip item
-			send(<< 16#01050300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer,
-				0:64, GID:32/little-unsigned-integer, PartyPos:32/little-unsigned-integer, ItemID, Action, Category, A, B:32/little-unsigned-integer >>);
-		5 -> % drop item
-			ignore;
-		_ ->
-			ignore
-	end;
+	Filename = case ItemID of
+		% weapons
+		16 -> "p/packet0105_sword.bin";
+		13 -> "p/packet0105_twindaggers.bin";
+		15 -> "p/packet0105_dagger.bin";
+		 9 -> "p/packet0105_rcsm.bin";
+		14 -> "p/packet0105_saber.bin";
+		 8 -> "p/packet0105_mgun.bin";
+		X when X =:= 17; X =:= 18 ->
+			"p/packet0105_twinguns.bin";
+		% armor
+		19 -> "p/packet0105_armor.bin";
+		% clothes
+		X when X =:= 5; X =:= 6; X =:= 7 ->
+			none;
+		_ -> % default, for lou
+			"p/packet0105_twindaggers.bin"
+	end,
+	case Filename of
+		none -> File = << >>;
+		_ -> {ok, File} = file:read_file(Filename)
+	end,
+	send(<< 16#01050300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer,
+		0:64, TargetGID:32/little-unsigned-integer, TargetLID:32/little-unsigned-integer, ItemID, 1, Category, A, B:32/little-unsigned-integer,
+		File/binary >>);
+
+%% @todo A and B are unknown.
+%% @see item_equip
+event({item_unequip, ItemID, TargetGID, TargetLID, A, B}) ->
+	GID = get(gid),
+	Category = case ItemID of
+		% units would be 8, traps would be 12
+		19 -> 2; % armor
+		Y when Y =:= 5; Y =:= 6; Y =:= 7 -> 0; % clothes
+		_ -> 1 % weapons
+	end,
+	send(<< 16#01050300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer,
+		0:64, TargetGID:32/little-unsigned-integer, TargetLID:32/little-unsigned-integer, ItemID, 2, Category, A, B:32/little-unsigned-integer >>).
+
+%% @doc Movement (non-broadcast) handler. Do nothing.
+handle(16#0102, _) ->
+	ignore;
 
 %% @doc Shop listing request. Currently return the normal item shop for everything.
 %% @todo Return the other shops appropriately.

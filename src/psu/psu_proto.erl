@@ -1,23 +1,105 @@
-%	EGS: Erlang Game Server
-%	Copyright (C) 2010  Loic Hoguin
-%
-%	This file is part of EGS.
-%
-%	EGS is free software: you can redistribute it and/or modify
-%	it under the terms of the GNU General Public License as published by
-%	the Free Software Foundation, either version 3 of the License, or
-%	(at your option) any later version.
-%
-%	EGS is distributed in the hope that it will be useful,
-%	but WITHOUT ANY WARRANTY; without even the implied warranty of
-%	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-%	GNU General Public License for more details.
-%
-%	You should have received a copy of the GNU General Public License
-%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
+%% @author Loïc Hoguin <essen@dev-extend.eu>
+%% @copyright 2010 Loïc Hoguin.
+%% @doc Independent implementation of the PSU protocol.
+%%
+%%	This file is part of EGS.
+%%
+%%	EGS is free software: you can redistribute it and/or modify
+%%	it under the terms of the GNU General Public License as published by
+%%	the Free Software Foundation, either version 3 of the License, or
+%%	(at your option) any later version.
+%%
+%%	EGS is distributed in the hope that it will be useful,
+%%	but WITHOUT ANY WARRANTY; without even the implied warranty of
+%%	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%%	GNU General Public License for more details.
+%%
+%%	You should have received a copy of the GNU General Public License
+%%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
 -module(psu_proto).
 -compile(export_all).
+
+%~ %% @todo We probably want to use active connections everywhere instead of doing this.
+%~ recv %% remove later?
+
+%~ %% @todo We probably want to remove this after all send functions are moved back in psu_proto.
+%~ send %% fragments automatically if needed
+
+%~ split
+
+%% @doc Log the message.
+log(Msg) ->
+	io:format("~p ~s~n", [get(gid), Msg]).
+
+%% @spec log(Msg, FmtVars) -> ok
+%% @doc Format and log the message.
+log(Msg, FmtVars) ->
+	FmtMsg = io_lib:format(Msg, FmtVars),
+	log(FmtMsg).
+
+%% @spec assert() -> ok
+%% @doc Log a detailed message when the function is called.
+-define(ASSERT(), log("assert error in module ~p on line ~p~n", [?MODULE, ?LINE])).
+
+%% @spec assert(A, B) -> ok
+%% @doc Log a detailed message when the assertion A =:= B fails.
+-define(ASSERT_EQ(A, B), if A =:= B -> ok; true -> log("assert error in module ~p on line ~p~n", [?MODULE, ?LINE]) end).
+
+%% @spec parse(Packet) -> Result
+%% @doc Parse the packet and return a result accordingly.
+parse(<< Size:32/little, Command:16, Channel:8, _Unknown:8, Data/bits >>) ->
+	parse(Size, Command, Channel, Data).
+
+%% @todo One of the missing events is probably learning a new PA.
+parse(Size, 16#0105, Channel, Data) ->
+	<<	_VarA:16/little, _VarB:16/little, VarC:32/little, _FromGID:32/little, VarD:32/little, VarE:32/little, TypeID:32/little, GID:32/little,
+		VarF:32/little, VarG:32/little, TargetGID:32/little, TargetLID:32/little, ItemID:8, EventID:8, _PAID:8, VarH:8, VarI:32/little, Rest/bits >> = Data,
+	?ASSERT_EQ(Channel, 2),
+	?ASSERT_EQ(VarC, 0),
+	?ASSERT_EQ(VarD, 0),
+	?ASSERT_EQ(VarE, 0),
+	?ASSERT_EQ(TypeID, 0),
+	?ASSERT_EQ(GID, 0),
+	?ASSERT_EQ(VarF, 0),
+	?ASSERT_EQ(VarG, 0),
+	Event = case EventID of
+		1 -> item_equip;
+		2 -> item_unequip;
+		3 -> ignore; %% @todo item_link_pa;
+		4 -> ignore; %% @todo item_unlink_pa;
+		5 -> item_drop;
+		7 -> ?ASSERT(), ignore;
+		8 -> ignore; %% @todo item_use;
+		9 -> ?ASSERT(), ignore;
+		18 -> ignore; %% @todo item_unlearn_pa;
+		_ -> log("unknown 0105 EventID ~p", [EventID])
+	end,
+	case Event of
+		item_drop ->
+			?ASSERT_EQ(Size, 76),
+			<< _Quantity:32/little, _PosX:32/little-float, _PosY:32/little-float, _PosZ:32/little-float >> = Rest,
+			%~ {Event, ItemID, Quantity, ...};
+			ignore;
+		ignore ->
+			?ASSERT_EQ(Size, 60),
+			ignore;
+		_ ->
+			?ASSERT_EQ(Size, 60),
+			{Event, ItemID, TargetGID, TargetLID, VarH, VarI}
+	end;
+
+parse(Size, 16#0b05, _Channel, _Data) ->
+	?ASSERT_EQ(Size, 8),
+	ignore;
+
+parse(_Size, Command, Channel, Data) ->
+	%% @todo log unknown command?
+	%~ ignore.
+	<< _:288, Rest/bits >> = Data,
+	{command, Command, Channel, Rest}.
+
+
 
 %% @doc Prepare a packet. Return the real size and padding at the end.
 
