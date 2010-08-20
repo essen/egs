@@ -608,7 +608,41 @@ event({item_unequip, ItemID, TargetGID, TargetLID, A, B}) ->
 		_ -> 1 % weapons
 	end,
 	send(<< 16#01050300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer,
-		0:64, TargetGID:32/little-unsigned-integer, TargetLID:32/little-unsigned-integer, ItemID, 2, Category, A, B:32/little-unsigned-integer >>).
+		0:64, TargetGID:32/little-unsigned-integer, TargetLID:32/little-unsigned-integer, ItemID, 2, Category, A, B:32/little-unsigned-integer >>);
+
+%% @doc Uni cube handler.
+event(unicube_request) ->
+	send_021e();
+
+%% @doc Uni selection handler.
+%% @todo When selecting 'Your room', load a default room.
+%% @todo When selecting 'Reload', reload the character in the current lobby.
+event({unicube_select, Selection, EntryID}) ->
+	case Selection of
+		cancel -> ignore;
+		16#ffffffff ->
+			log("uni selection (my room)"),
+			send_0230(),
+			% 0220
+			area_load(1120000, 0, 100, 0);
+		_UniID ->
+			log("uni selection (reload)"),
+			send_0230(),
+			% 0220
+			%% force reloading the character and data files (@todo hack, uses myroom questid to do it)
+			{ok, User} = egs_user_model:read(get(gid)),
+			if	User#egs_user_model.partypid =:= undefined ->
+					ignore;
+				true ->
+					%% @todo Replace stop by leave when leaving stops the party correctly when nobody's there anymore.
+					%~ psu_party:leave(User#egs_user_model.partypid, User#egs_user_model.id)
+					psu_party:stop(User#egs_user_model.partypid)
+			end,
+			Area = User#egs_user_model.area,
+			NewRow = User#egs_user_model{partypid=undefined, area=Area#psu_area{questid=1120000, zoneid=undefined}, entryid=EntryID},
+			egs_user_model:write(NewRow),
+			area_load(Area#psu_area.questid, Area#psu_area.zoneid, Area#psu_area.mapid, EntryID)
+	end.
 
 %% @doc Movement (non-broadcast) handler. Do nothing.
 handle(16#0102, _) ->
@@ -651,42 +685,6 @@ handle(16#0110, Data) ->
 			log("changed status to ~b", [C]);
 		_ ->
 			log("unknown 0110 (~b, ~b, ~b)", [A, B, C])
-	end;
-
-%% @doc Uni cube handler.
-handle(16#021d, _) ->
-	send_021e();
-
-%% @doc Uni selection handler.
-%%      When selecting 'Your room', load a default room.
-%%      When selecting 'Reload', reload the character in the current lobby.
-%% @todo There's probably an entryid given in the uni selection packet.
-handle(16#021f, << Uni:32/little-unsigned-integer, _/bits >>) ->
-	case Uni of
-		0 -> % cancelled uni selection
-			ignore;
-		16#ffffffff ->
-			log("uni selection (my room)"),
-			send_0230(),
-			% 0220
-			area_load(1120000, 0, 100, 0);
-		_ ->
-			log("uni selection (reload)"),
-			send_0230(),
-			% 0220
-			% force reloading the character and data files (hack)
-			{ok, User} = egs_user_model:read(get(gid)),
-			if	User#egs_user_model.partypid =:= undefined ->
-					ignore;
-				true ->
-					%% @todo Replace stop by leave when leaving stops the party correctly when nobody's there anymore.
-					%~ psu_party:leave(User#egs_user_model.partypid, User#egs_user_model.id)
-					psu_party:stop(User#egs_user_model.partypid)
-			end,
-			Area = User#egs_user_model.area,
-			NewRow = User#egs_user_model{partypid=undefined, area=Area#psu_area{questid=1120000, zoneid=undefined}},
-			egs_user_model:write(NewRow),
-			area_load(Area#psu_area.questid, Area#psu_area.zoneid, Area#psu_area.mapid, User#egs_user_model.entryid)
 	end;
 
 %% @doc Shortcut changes handler. Do nothing.

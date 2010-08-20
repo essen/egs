@@ -53,7 +53,7 @@ parse(<< Size:32/little, Command:16, Channel:8, _Unknown:8, Data/bits >>) ->
 
 %% @todo One of the missing events is probably learning a new PA.
 parse(Size, 16#0105, Channel, Data) ->
-	<<	_VarA:16/little, _VarB:16/little, VarC:32/little, _FromGID:32/little, VarD:32/little, VarE:32/little, TypeID:32/little, GID:32/little,
+	<<	_LID:16/little, _VarB:16/little, VarC:32/little, _FromGID:32/little, VarD:32/little, VarE:32/little, TypeID:32/little, GID:32/little,
 		VarF:32/little, VarG:32/little, TargetGID:32/little, TargetLID:32/little, ItemID:8, EventID:8, _PAID:8, VarH:8, VarI:32/little, Rest/bits >> = Data,
 	?ASSERT_EQ(Channel, 2),
 	?ASSERT_EQ(VarC, 0),
@@ -88,6 +88,42 @@ parse(Size, 16#0105, Channel, Data) ->
 			?ASSERT_EQ(Size, 60),
 			{Event, ItemID, TargetGID, TargetLID, VarH, VarI}
 	end;
+
+parse(Size, 16#021d, Channel, Data) ->
+	<< _LID:16/little, VarB:16/little, VarC:32/little, VarD:32/little, VarE:32/little, VarF:32/little,
+		VarG:32/little, VarH:32/little, VarI:32/little, VarJ:32/little, _EntryID:32/little >> = Data,
+	?ASSERT_EQ(Size, 48),
+	?ASSERT_EQ(Channel, 2),
+	?ASSERT_EQ(VarB, 0),
+	?ASSERT_EQ(VarC, 0),
+	?ASSERT_EQ(VarD, 0),
+	?ASSERT_EQ(VarE, 0),
+	?ASSERT_EQ(VarF, 0),
+	?ASSERT_EQ(VarG, 0),
+	?ASSERT_EQ(VarH, 0),
+	?ASSERT_EQ(VarI, 0),
+	?ASSERT_EQ(VarJ, 0),
+	unicube_request;
+
+parse(Size, 16#021f, Channel, Data) ->
+	<< _LID:16/little, VarB:16/little, VarC:32/little, VarD:32/little, VarE:32/little, VarF:32/little,
+		VarG:32/little, VarH:32/little, VarI:32/little, VarJ:32/little, UniID:32/little, EntryID:32/little >> = Data,
+	?ASSERT_EQ(Size, 52),
+	?ASSERT_EQ(Channel, 2),
+	?ASSERT_EQ(VarB, 0),
+	?ASSERT_EQ(VarC, 0),
+	?ASSERT_EQ(VarD, 0),
+	?ASSERT_EQ(VarE, 0),
+	?ASSERT_EQ(VarF, 0),
+	?ASSERT_EQ(VarG, 0),
+	?ASSERT_EQ(VarH, 0),
+	?ASSERT_EQ(VarI, 0),
+	?ASSERT_EQ(VarJ, 0),
+	Selection = case UniID of
+		0 -> cancel;
+		_ -> UniID
+	end,
+	{unicube_select, Selection, EntryID};
 
 parse(Size, 16#0b05, _Channel, _Data) ->
 	?ASSERT_EQ(Size, 8),
