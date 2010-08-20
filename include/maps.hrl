@@ -661,7 +661,6 @@
 -define(COUNTERS, [
 	% Linear Line: Phantom Ruins, Unsafe Passage, Unsafe Passage (AOTI, missing)
 
-	%% @todo Temporarily only enable the 3rd Unsafe Passage C variant.
 	{  0, [{quests, "data/counters/colony.ll.pack"}, {bg, 255}, {options, << 16#01a92800:32, 3, 3, 0,
 		0, 3, 0, 3, 0, % Phantom Ruins C-S
 		3, 3, 3, 3, 3, % Unsafe Passage C-S2 variant 1
