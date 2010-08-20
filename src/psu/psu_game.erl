@@ -610,6 +610,26 @@ event({item_unequip, ItemID, TargetGID, TargetLID, A, B}) ->
 	send(<< 16#01050300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer,
 		0:64, TargetGID:32/little-unsigned-integer, TargetLID:32/little-unsigned-integer, ItemID, 2, Category, A, B:32/little-unsigned-integer >>);
 
+%% @todo If the player has a scape, use it! Otherwise red screen.
+%% @todo Right now we force revive and don't update the player's HP.
+event(player_death) ->
+	% @todo send_0115(get(gid), 16#ffffffff, LV=1, EXP=idk, Money=1000), % apparently sent everytime you die...
+	%% use scape:
+	NewHP = 10,
+	send_0117(NewHP),
+	send_1022(NewHP);
+	%% red screen with return to lobby choice:
+	%~ send_0111(3, 1);
+
+%% @todo Refill the player's HP to maximum, remove SEs etc.
+event(player_death_return_to_lobby) ->
+	{ok, User} = egs_user_model:read(get(gid)),
+	Area = User#egs_user_model.prev_area,
+	area_load(Area#psu_area.questid, Area#psu_area.zoneid, Area#psu_area.mapid, User#egs_user_model.prev_entryid);
+
+event(player_type_capabilities_request) ->
+	send_0113();
+
 %% @doc Uni cube handler.
 event(unicube_request) ->
 	send_021e();
@@ -657,35 +677,6 @@ handle(16#010a, Data) ->
 	{ok, File} = file:read_file("p/itemshop.bin"),
 	send(<< 16#010a0300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32,
 		GID:32/little-unsigned-integer, 0:64, GID:32/little-unsigned-integer, 0:32, File/binary >>);
-
-%% @doc Character death, and more, handler. Warp to 4th floor for now.
-%% @todo Recover from death correctly.
-%% @todo A is probably PartyPos or LID.
-handle(16#0110, Data) ->
-	<< _:32, A:32/little-unsigned-integer, B:32/little-unsigned-integer, C:32/little-unsigned-integer >> = Data,
-	case B of
-		2 -> % triggered when looking at the type menu
-			send_0113();
-		3 -> % type change
-			log("changed type to ~b", [C]);
-		4 -> % related to npc death, ignore for now
-			ignore;
-		7 -> % player death: if the player has a scape, use it! otherwise red screen @todo Right now we force revive and don't reset the HP.
-			% @todo send_0115(get(gid), 16#ffffffff, LV=1, EXP=idk, Money=1000), % apparently sent everytime you die...
-			% use scape
-			NewHP = 10,
-			send_0117(NewHP),
-			send_1022(NewHP);
-			% red screen with return to lobby choice:
-			%~ send_0111(3, 1);
-		8 -> % return to lobby after death
-			log("return to lobby after death"),
-			area_load(1100000, 0, 4, 6); %% @todo temporary handler
-		10 -> % online status change
-			log("changed status to ~b", [C]);
-		_ ->
-			log("unknown 0110 (~b, ~b, ~b)", [A, B, C])
-	end;
 
 %% @doc Shortcut changes handler. Do nothing.
 %% @todo Save it.

@@ -69,9 +69,9 @@ parse(Size, 16#0105, Channel, Data) ->
 		3 -> ignore; %% @todo item_link_pa;
 		4 -> ignore; %% @todo item_unlink_pa;
 		5 -> item_drop;
-		7 -> ?ASSERT(), ignore;
+		7 -> ?ASSERT(), ignore; %% @todo
 		8 -> ignore; %% @todo item_use;
-		9 -> ?ASSERT(), ignore;
+		9 -> ?ASSERT(), ignore; %% @todo
 		18 -> ignore; %% @todo item_unlearn_pa;
 		_ -> log("unknown 0105 EventID ~p", [EventID])
 	end,
@@ -87,6 +87,33 @@ parse(Size, 16#0105, Channel, Data) ->
 		_ ->
 			?ASSERT_EQ(Size, 60),
 			{Event, ItemID, TargetGID, TargetLID, VarH, VarI}
+	end;
+
+parse(Size, 16#0110, Channel, Data) ->
+	<<	_LID:16/little, VarA:16/little, VarB:32/little, HeaderGID:32/little, VarC:32/little, VarD:32/little, VarE:32/little,
+		VarF:32/little, VarG:32/little, VarH:32/little, BodyGID:32/little, _PartyPosOrLID:32/little, EventID:32/little, Param:32/little >> = Data,
+	?ASSERT_EQ(Size, 60),
+	?ASSERT_EQ(Channel, 2),
+	?ASSERT_EQ(VarA, 0),
+	?ASSERT_EQ(VarB, 0),
+	?ASSERT_EQ(VarC, 0),
+	?ASSERT_EQ(VarD, 0),
+	?ASSERT_EQ(VarE, 0),
+	?ASSERT_EQ(VarF, 0),
+	?ASSERT_EQ(VarG, 0),
+	?ASSERT_EQ(VarH, 0),
+	?ASSERT_EQ(HeaderGID, BodyGID),
+	case EventID of
+		1 -> ?ASSERT_EQ(Param, 0), ?ASSERT(), ignore;
+		2 -> ?ASSERT_EQ(Param, 0), player_type_capabilities_request;
+		3 -> ignore; %% @todo {player_type_change, Param};
+		4 -> ?ASSERT_EQ(Param, 0), ignore; %% @todo (related to npc death)
+		6 -> ?ASSERT_EQ(Param, 0), ignore; %% @todo
+		7 -> ?ASSERT_EQ(Param, 0), player_death;
+		8 -> ?ASSERT_EQ(Param, 0), player_death_return_to_lobby;
+		9 -> ?ASSERT_EQ(Param, 10), ignore; %% @todo
+		10 -> ignore; %% @todo {player_online_status_change, Param};
+		_ -> log("unknown 0110 EventID ~p", [EventID])
 	end;
 
 parse(Size, 16#021d, Channel, Data) ->
