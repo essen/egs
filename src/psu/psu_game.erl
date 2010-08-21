@@ -634,6 +634,25 @@ event({item_unequip, ItemID, TargetGID, TargetLID, A, B}) ->
 event(lobby_transport_request) ->
 	send_0c08(true);
 
+%% @todo Probably replenish the player HP when entering a non-mission area rather than when aborting the mission?
+event(mission_abort) ->
+	send_1006(11),
+	{ok, User} = egs_user_model:read(get(gid)),
+	%% delete the mission
+	psu_instance:stop(User#egs_user_model.instancepid),
+	%% full hp
+	Character = User#egs_user_model.character,
+	MaxHP = Character#characters.maxhp,
+	NewCharacter = Character#characters{currenthp=MaxHP},
+	NewUser = User#egs_user_model{character=NewCharacter, setid=0},
+	egs_user_model:write(NewUser),
+	%% map change
+	if	User#egs_user_model.areatype =:= mission ->
+			Area = User#egs_user_model.prev_area,
+			area_load(Area#psu_area.questid, Area#psu_area.zoneid, Area#psu_area.mapid, User#egs_user_model.prev_entryid);
+		true -> ignore
+	end;
+
 %% @todo Forward the mission start to other players of the same party, whatever their location is.
 event({mission_start, QuestID}) ->
 	log("mission start ~b", [QuestID]),
@@ -802,26 +821,6 @@ handle(16#0a09, Data) ->
 %% @todo Send something other than just "dammy".
 handle(16#0a10, << ItemID:32/unsigned-integer >>) ->
 	send_0a11(ItemID, "dammy");
-
-%% @doc Abort mission handler.
-%%      Replenish the player HP.
-handle(16#0c0e, _) ->
-	send_1006(11),
-	{ok, User} = egs_user_model:read(get(gid)),
-	%% delete the mission
-	psu_instance:stop(User#egs_user_model.instancepid),
-	%% full hp
-	Character = User#egs_user_model.character,
-	MaxHP = Character#characters.maxhp,
-	NewCharacter = Character#characters{currenthp=MaxHP},
-	NewUser = User#egs_user_model{character=NewCharacter, setid=0},
-	egs_user_model:write(NewUser),
-	%% map change (temporary)
-	if	User#egs_user_model.areatype =:= mission ->
-			Area = User#egs_user_model.prev_area,
-			area_load(Area#psu_area.questid, Area#psu_area.zoneid, Area#psu_area.mapid, User#egs_user_model.prev_entryid);
-		true -> ignore
-	end;
 
 %% @doc Counter available mission list request handler.
 handle(16#0c0f, _) ->
