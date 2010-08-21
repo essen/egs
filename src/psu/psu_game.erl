@@ -564,6 +564,12 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}) ->
 	send_0208(),
 	send_0236();
 
+%% @doc Leave mission counter handler.
+event(counter_leave) ->
+	{ok, User} = egs_user_model:read(get(gid)),
+	PrevArea = User#egs_user_model.prev_area,
+	area_load(PrevArea#psu_area.questid, PrevArea#psu_area.zoneid, PrevArea#psu_area.mapid, User#egs_user_model.prev_entryid);
+
 %% @todo A and B are unknown.
 %%      Melee uses a format similar to: AAAA--BBCCCC----DDDDDDDDEE----FF with
 %%      AAAA the attack sound effect, BB the range, CCCC and DDDDDDDD unknown but related to angular range or similar, EE number of targets and FF the model.
@@ -745,12 +751,6 @@ handle(16#0404, Data) ->
 	<< EventID:8, BlockID:8, _:16, Value:8, _/bits >> = Data,
 	log("unknown command 0404: eventid ~b blockid ~b value ~b", [EventID, BlockID, Value]),
 	send_1205(EventID, BlockID, Value);
-
-%% @doc Leave mission counter handler. Lobby values depend on which counter was entered.
-handle(16#0812, _) ->
-	{ok, User} = egs_user_model:read(get(gid)),
-	PrevArea = User#egs_user_model.prev_area,
-	area_load(PrevArea#psu_area.questid, PrevArea#psu_area.zoneid, PrevArea#psu_area.mapid, User#egs_user_model.prev_entryid);
 
 %% @doc NPC invite.
 %% @todo Also happening a 1506 -> 1507? Only on first selection from menu.
