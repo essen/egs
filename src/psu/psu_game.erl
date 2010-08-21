@@ -630,6 +630,10 @@ event({item_unequip, ItemID, TargetGID, TargetLID, A, B}) ->
 	send(<< 16#01050300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer,
 		0:64, TargetGID:32/little-unsigned-integer, TargetLID:32/little-unsigned-integer, ItemID, 2, Category, A, B:32/little-unsigned-integer >>);
 
+%% @todo Just ignore the meseta price for now and send the player where he wanna be!
+event(lobby_transport_request) ->
+	send_0c08(true);
+
 %% @todo Forward the mission start to other players of the same party, whatever their location is.
 event({mission_start, QuestID}) ->
 	log("mission start ~b", [QuestID]),
@@ -798,11 +802,6 @@ handle(16#0a09, Data) ->
 %% @todo Send something other than just "dammy".
 handle(16#0a10, << ItemID:32/unsigned-integer >>) ->
 	send_0a11(ItemID, "dammy");
-
-%% @doc Lobby transport handler? Just ignore the meseta price for now and send the player where he wanna be!
-%% @todo Handle correctly.
-handle(16#0c07, _) ->
-	send_0c08(true);
 
 %% @doc Abort mission handler.
 %%      Replenish the player HP.
