@@ -569,6 +569,13 @@ event(counter_leave) ->
 	PrevArea = User#egs_user_model.prev_area,
 	area_load(PrevArea#psu_area.questid, PrevArea#psu_area.zoneid, PrevArea#psu_area.mapid, User#egs_user_model.prev_entryid);
 
+%% @doc Send the code for the background image to use. But there's more that should be sent though.
+%% @todo Apparently background values 1 2 3 are never used on official servers. Find out why.
+event({counter_options_request, CounterID}) ->
+	log("counter options request ~p", [CounterID]),
+	[{quests, _}, {bg, Background}|_Tail] = proplists:get_value(CounterID, ?COUNTERS),
+	send_1711(Background);
+
 %% @doc Request the counter's quest files.
 event({counter_quest_files_request, CounterID}) ->
 	log("counter quest files request ~p", [CounterID]),
@@ -996,13 +1003,6 @@ handle(16#1709, _) ->
 %% @doc Counter-related handler.
 handle(16#170b, _) ->
 	send_170c();
-
-%% @doc Counter initialization handler? Send the code for the background image to use.
-%% @todo Handle correctly.
-handle(16#1710, _) ->
-	{ok, User} = egs_user_model:read(get(gid)),
-	[{quests, _}, {bg, Background}, {options, _}] = proplists:get_value(User#egs_user_model.counterid, ?COUNTERS),
-	send_1711(Background);
 
 %% @doc Dialog request handler. Do what we can.
 %% @todo Handle correctly.
