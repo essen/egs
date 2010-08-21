@@ -555,6 +555,12 @@ broadcast(Command, Orig)
 			lists:foreach(fun(User) -> User#egs_user_model.pid ! {psu_broadcast, Packet} end, SpawnList)
 	end.
 
+%% @todo When changing lobby to the room, 0230 must also be sent. Same when going from room to lobby.
+%% @todo Probably move area_load inside the event and make other events call this one when needed.
+event({area_change, QuestID, ZoneID, MapID, EntryID}) ->
+	log("area change (~b,~b,~b,~b)", [QuestID, ZoneID, MapID, EntryID]),
+	area_load(QuestID, ZoneID, MapID, EntryID);
+
 %% @todo A and B are unknown.
 %%      Melee uses a format similar to: AAAA--BBCCCC----DDDDDDDDEE----FF with
 %%      AAAA the attack sound effect, BB the range, CCCC and DDDDDDDD unknown but related to angular range or similar, EE number of targets and FF the model.
@@ -736,15 +742,6 @@ handle(16#0404, Data) ->
 	<< EventID:8, BlockID:8, _:16, Value:8, _/bits >> = Data,
 	log("unknown command 0404: eventid ~b blockid ~b value ~b", [EventID, BlockID, Value]),
 	send_1205(EventID, BlockID, Value);
-
-%% @doc Map change handler.
-%%      Rooms are handled differently than normal lobbies.
-%% @todo When changing lobby to the room, 0230 must also be sent. Same when going from room to lobby.
-handle(16#0807, Data) ->
-	<< QuestID:32/little-unsigned-integer, ZoneID:16/little-unsigned-integer,
-		MapID:16/little-unsigned-integer, EntryID:16/little-unsigned-integer, _/bits >> = Data,
-	log("map change (~b,~b,~b,~b)", [QuestID, ZoneID, MapID, EntryID]),
-	area_load(QuestID, ZoneID, MapID, EntryID);
 
 %% @doc Mission counter handler.
 handle(16#0811, Data) ->
