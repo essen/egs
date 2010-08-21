@@ -169,6 +169,24 @@ parse(Size, 16#0807, Channel, Data) ->
 	?ASSERT_EQ(VarJ, 16#ffffffff),
 	{area_change, QuestID, ZoneID, MapID, EntryID};
 
+parse(Size, 16#0811, Channel, Data) ->
+	<<	_LID:16/little, VarA:16/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little, VarF:32/little, VarG:32/little, VarH:32/little, VarI:32/little,
+		_CounterType:8, VarJ:8, FromZoneID:16/little, FromMapID:16/little, FromEntryID:16/little, CounterID:32/little, VarK:32/little >> = Data,
+	?ASSERT_EQ(Size, 60),
+	?ASSERT_EQ(Channel, 2),
+	?ASSERT_EQ(VarA, 0),
+	?ASSERT_EQ(VarB, 0),
+	?ASSERT_EQ(VarC, 0),
+	?ASSERT_EQ(VarD, 0),
+	?ASSERT_EQ(VarE, 0),
+	?ASSERT_EQ(VarF, 0),
+	?ASSERT_EQ(VarG, 0),
+	?ASSERT_EQ(VarH, 0),
+	?ASSERT_EQ(VarI, 0),
+	?ASSERT_EQ(VarJ, 41),
+	?ASSERT_EQ(VarK, 16#ffffffff),
+	{counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID};
+
 parse(Size, 16#0b05, _Channel, _Data) ->
 	?ASSERT_EQ(Size, 8),
 	ignore;

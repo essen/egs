@@ -191,7 +191,8 @@ char_select_load(Number) ->
 	Appearance = psu_appearance:binary_to_tuple(Race, AppearanceBin),
 	Options = psu_characters:options_binary_to_tuple(OptionsBin),
 	Character = #characters{slot=Number, name=Name, race=Race, gender=Gender, class=Class, appearance=Appearance, options=Options}, % TODO: temporary set the slot here, won't be needed later
-	User = OldUser#egs_user_model{state=online, character=Character, area=#psu_area{questid=undefined, zoneid=undefined, mapid=undefined}, pos=#pos{x=0.0, y=0.0, z=0.0, dir=0.0}, setid=0},
+	User = OldUser#egs_user_model{state=online, character=Character, area=#psu_area{questid=undefined, zoneid=undefined, mapid=undefined},
+		prev_area={psu_area, 0, 0, 0}, prev_entryid=0, pos=#pos{x=0.0, y=0.0, z=0.0, dir=0.0}, setid=0},
 	egs_user_model:write(User),
 	char_load(User),
 	send_021b(),
@@ -225,41 +226,6 @@ char_load(User) ->
 	send_1512(),
 	% 0303
 	send_1602().
-
-%% @doc Load the given map as a mission counter.
-counter_load(QuestID, ZoneID, MapID, EntryID) ->
-	{ok, OldUser} = egs_user_model:read(get(gid)),
-	OldArea = OldUser#egs_user_model.area,
-	User = OldUser#egs_user_model{areatype=counter, area={psu_area, QuestID, ZoneID, MapID}, entryid=EntryID, prev_entryid=MapID,
-		prev_area={psu_area, OldArea#psu_area.questid, OldArea#psu_area.zoneid, ZoneID}},
-	egs_user_model:write(User),
-	AreaName = "Mission counter",
-	QuestFile = "data/lobby/counter.quest.nbl",
-	ZoneFile = "data/lobby/counter.zone.nbl",
-	% broadcast unspawn to other people
-	{ok, UnspawnList} = egs_user_model:select({neighbors, OldUser}),
-	lists:foreach(fun(Other) -> Other#egs_user_model.pid ! {psu_player_unspawn, User} end, UnspawnList),
-	% load counter
-	send_0c00(16#7fffffff),
-	send_020e(QuestFile),
-	send_0a05(),
-	send_010d(User#egs_user_model{lid=0}),
-	send_0200(mission),
-	send_020f(ZoneFile, 0, 16#ff),
-	send_0205(0, 0, 0, 0),
-	send_100e(16#7fffffff, 0, 0, AreaName, EntryID),
-	send_0215(0),
-	send_0215(0),
-	send_020c(),
-	send_1202(),
-	send_1204(),
-	send_1206(),
-	send_1207(),
-	send_1212(),
-	send_0201(User#egs_user_model{lid=0}),
-	send_0a06(),
-	send_0208(),
-	send_0236().
 
 %% @doc Return the current season information.
 area_get_season(QuestID) ->
@@ -333,7 +299,7 @@ area_load(QuestID, ZoneID, MapID, EntryID) ->
 			{RetPid, RetSetID};
 		true -> {OldUser#egs_user_model.instancepid, OldUser#egs_user_model.setid}
 	end,
-	User = OldUser#egs_user_model{instancepid=InstancePid, areatype=AreaType, area={psu_area, QuestID, RealZoneID, RealMapID}, entryid=RealEntryID},
+	User = OldUser#egs_user_model{instancepid=InstancePid, areatype=AreaType, area={psu_area, QuestID, RealZoneID, RealMapID}, entryid=RealEntryID, counterid=undefined},
 	egs_user_model:write(User),
 	RealSetID = if SetID > NbSetsInZone - 1 -> NbSetsInZone - 1; true -> SetID end,
 	area_load(AreaType, IsStart, RealSetID, OldUser, User, QuestFile, ZoneFile, AreaName).
@@ -561,6 +527,43 @@ event({area_change, QuestID, ZoneID, MapID, EntryID}) ->
 	log("area change (~b,~b,~b,~b)", [QuestID, ZoneID, MapID, EntryID]),
 	area_load(QuestID, ZoneID, MapID, EntryID);
 
+%% @todo Make sure non-mission counters follow the same loading process.
+%% @todo Probably validate the From* values, to not send the player back inside a mission.
+event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}) ->
+	log("counter load ~b", [CounterID]),
+	{ok, OldUser} = egs_user_model:read(get(gid)),
+	OldArea = OldUser#egs_user_model.area,
+	FromArea = {psu_area, OldArea#psu_area.questid, FromZoneID, FromMapID},
+	User = OldUser#egs_user_model{areatype=counter, area={psu_area, 16#7fffffff, 0, 0}, entryid=0, counterid=CounterID, prev_area=FromArea, prev_entryid=FromEntryID},
+	egs_user_model:write(User),
+	AreaName = "Counter",
+	QuestFile = "data/lobby/counter.quest.nbl",
+	ZoneFile = "data/lobby/counter.zone.nbl",
+	%% broadcast unspawn to other people
+	{ok, UnspawnList} = egs_user_model:select({neighbors, OldUser}),
+	lists:foreach(fun(Other) -> Other#egs_user_model.pid ! {psu_player_unspawn, User} end, UnspawnList),
+	%% load counter
+	send_0c00(16#7fffffff),
+	send_020e(QuestFile),
+	send_0a05(),
+	send_010d(User#egs_user_model{lid=0}),
+	send_0200(mission),
+	send_020f(ZoneFile, 0, 16#ff),
+	send_0205(0, 0, 0, 0),
+	send_100e(16#7fffffff, 0, 0, AreaName, CounterID),
+	send_0215(0),
+	send_0215(0),
+	send_020c(),
+	send_1202(),
+	send_1204(),
+	send_1206(),
+	send_1207(),
+	send_1212(),
+	send_0201(User#egs_user_model{lid=0}),
+	send_0a06(),
+	send_0208(),
+	send_0236();
+
 %% @todo A and B are unknown.
 %%      Melee uses a format similar to: AAAA--BBCCCC----DDDDDDDDEE----FF with
 %%      AAAA the attack sound effect, BB the range, CCCC and DDDDDDDD unknown but related to angular range or similar, EE number of targets and FF the model.
@@ -743,19 +746,11 @@ handle(16#0404, Data) ->
 	log("unknown command 0404: eventid ~b blockid ~b value ~b", [EventID, BlockID, Value]),
 	send_1205(EventID, BlockID, Value);
 
-%% @doc Mission counter handler.
-handle(16#0811, Data) ->
-	<< QuestID:32/little-unsigned-integer, ZoneID:16/little-unsigned-integer,
-		MapID:16/little-unsigned-integer, EntryID:16/little-unsigned-integer, _/bits >> = Data,
-	log("mission counter (~b,~b,~b,~b)", [QuestID, ZoneID, MapID, EntryID]),
-	counter_load(QuestID, ZoneID, MapID, EntryID);
-
 %% @doc Leave mission counter handler. Lobby values depend on which counter was entered.
 handle(16#0812, _) ->
 	{ok, User} = egs_user_model:read(get(gid)),
-	Area = User#egs_user_model.area,
 	PrevArea = User#egs_user_model.prev_area,
-	area_load(PrevArea#psu_area.questid, PrevArea#psu_area.zoneid, Area#psu_area.zoneid, Area#psu_area.mapid);
+	area_load(PrevArea#psu_area.questid, PrevArea#psu_area.zoneid, PrevArea#psu_area.mapid, User#egs_user_model.prev_entryid);
 
 %% @doc NPC invite.
 %% @todo Also happening a 1506 -> 1507? Only on first selection from menu.
@@ -808,7 +803,7 @@ handle(16#0c01, << QuestID:32/little-unsigned-integer >>) ->
 %% @todo Handle correctly.
 handle(16#0c05, _) ->
 	{ok, User} = egs_user_model:read(get(gid)),
-	[{quests, Filename}, {bg, _}, {options, _}] = proplists:get_value(User#egs_user_model.entryid, ?COUNTERS),
+	[{quests, Filename}, {bg, _}, {options, _}] = proplists:get_value(User#egs_user_model.counterid, ?COUNTERS),
 	send_0c06(Filename);
 
 %% @doc Lobby transport handler? Just ignore the meseta price for now and send the player where he wanna be!
@@ -839,7 +834,7 @@ handle(16#0c0e, _) ->
 %% @doc Counter available mission list request handler.
 handle(16#0c0f, _) ->
 	{ok, User} = egs_user_model:read(get(gid)),
-	[{quests, _}, {bg, _}, {options, Options}] = proplists:get_value(User#egs_user_model.entryid, ?COUNTERS),
+	[{quests, _}, {bg, _}, {options, Options}] = proplists:get_value(User#egs_user_model.counterid, ?COUNTERS),
 	send_0c10(Options);
 
 %% @doc Set flag handler. Associate a new flag with the character.
@@ -1015,7 +1010,7 @@ handle(16#170b, _) ->
 %% @todo Handle correctly.
 handle(16#1710, _) ->
 	{ok, User} = egs_user_model:read(get(gid)),
-	[{quests, _}, {bg, Background}, {options, _}] = proplists:get_value(User#egs_user_model.entryid, ?COUNTERS),
+	[{quests, _}, {bg, Background}, {options, _}] = proplists:get_value(User#egs_user_model.counterid, ?COUNTERS),
 	send_1711(Background);
 
 %% @doc Dialog request handler. Do what we can.

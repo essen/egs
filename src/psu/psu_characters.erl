@@ -51,13 +51,13 @@ character_tuple_to_binary(Tuple) ->
 
 %% @doc Convert a character tuple into a binary to be sent to clients.
 %%      Contains everything from character_tuple_to_binary/1 along with location, stats, SE and more.
-%% @todo One of the two QuestID lists has a different use. No idea what though. The second is probably the previous area.
 %% @todo The second StatsBin seems unused. Not sure what it's for.
 %% @todo Find out what the big block of 0 is at the end.
 %% @todo The value before IntDir seems to be the player's current animation. 01 stand up, 08 ?, 17 normal sit
 
 character_user_to_binary(User) ->
-	#egs_user_model{id=CharGID, lid=CharLID, character=Character, pos=#pos{x=X, y=Y, z=Z, dir=Dir}, area={psu_area, QuestID, ZoneID, MapID}, entryid=EntryID} = User,
+	#egs_user_model{id=CharGID, lid=CharLID, character=Character, pos=#pos{x=X, y=Y, z=Z, dir=Dir}, area={psu_area, QuestID, ZoneID, MapID}, entryid=EntryID,
+		prev_area={psu_area, PrevQuestID, PrevZoneID, PrevMapID}, prev_entryid=PrevEntryID} = User,
 	#characters{type=Type, mainlevel=Level, stats=Stats, se=SE, currenthp=CurrentHP, maxhp=MaxHP} = Character,
 	#level{number=LV} = Level,
 	CharBin = psu_characters:character_tuple_to_binary(Character),
@@ -71,7 +71,7 @@ character_user_to_binary(User) ->
 	<<	TypeID:32, CharGID:32/little-unsigned-integer, 0:64, CharLID:32/little-unsigned-integer, NPCStuff:32, QuestID:32/little-unsigned-integer,
 		ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer,
 		16#0100:16, IntDir:16/little-unsigned-integer, X:32/little-float, Y:32/little-float, Z:32/little-float, 0:64,
-		QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer,
+		PrevQuestID:32/little-unsigned-integer, PrevZoneID:32/little-unsigned-integer, PrevMapID:32/little-unsigned-integer, PrevEntryID:32/little-unsigned-integer,
 		CharBin/binary, EXPNextLevel:32/little-unsigned-integer, EXPPreviousLevel:32/little-unsigned-integer, MaxHP:32/little-unsigned-integer, % not sure if this one is current or max
 		StatsBin/binary, 0:32, SEBin/binary, 0:32, LV:32/little-unsigned-integer, StatsBin/binary, CurrentHP:32/little-unsigned-integer, MaxHP:32/little-unsigned-integer,
 		0:1344, 16#0000803f:32, 0:64, 16#0000803f:32, 0:64, 16#0000803f:32, 0:64, 16#0000803f:32, 0:64, 16#0000803f:32, 0:160, 16#0000803f:32, 0:352 >>.
