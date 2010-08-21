@@ -569,6 +569,12 @@ event(counter_leave) ->
 	PrevArea = User#egs_user_model.prev_area,
 	area_load(PrevArea#psu_area.questid, PrevArea#psu_area.zoneid, PrevArea#psu_area.mapid, User#egs_user_model.prev_entryid);
 
+%% @doc Request the counter's quest files.
+event({counter_quest_files_request, CounterID}) ->
+	log("counter quest files request ~p", [CounterID]),
+	[{quests, Filename}|_Tail] = proplists:get_value(CounterID, ?COUNTERS),
+	send_0c06(Filename);
+
 %% @todo A and B are unknown.
 %%      Melee uses a format similar to: AAAA--BBCCCC----DDDDDDDDEE----FF with
 %%      AAAA the attack sound effect, BB the range, CCCC and DDDDDDDD unknown but related to angular range or similar, EE number of targets and FF the model.
@@ -792,13 +798,6 @@ handle(16#0a09, Data) ->
 %% @todo Send something other than just "dammy".
 handle(16#0a10, << ItemID:32/unsigned-integer >>) ->
 	send_0a11(ItemID, "dammy");
-
-%% @doc Counter quests files request handler? Send huge number of quest files.
-%% @todo Handle correctly.
-handle(16#0c05, _) ->
-	{ok, User} = egs_user_model:read(get(gid)),
-	[{quests, Filename}, {bg, _}, {options, _}] = proplists:get_value(User#egs_user_model.counterid, ?COUNTERS),
-	send_0c06(Filename);
 
 %% @doc Lobby transport handler? Just ignore the meseta price for now and send the player where he wanna be!
 %% @todo Handle correctly.
@@ -1423,8 +1422,6 @@ send_0d05() ->
 %% @todo Apparently the 4 location ids are set to 0 when inviting an NPC in the lobby - NPCs have their location set to 0 when in lobby; also odd value before PartyPos related to missions
 %% @todo Not sure about LID. But seems like it.
 send_1004(Type, User, PartyPos) ->
-	io:format("~p ~p", [User, PartyPos]),
-
 	[TypeID, LID, SomeFlag] = case Type of
 		npc_mission -> [16#00001d00, PartyPos, 2];
 		npc_invite -> [0, 16#ffffffff, 3];
