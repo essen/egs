@@ -299,7 +299,7 @@ area_load(QuestID, ZoneID, MapID, EntryID) ->
 			{RetPid, RetSetID};
 		true -> {OldUser#egs_user_model.instancepid, OldUser#egs_user_model.setid}
 	end,
-	User = OldUser#egs_user_model{instancepid=InstancePid, areatype=AreaType, area={psu_area, QuestID, RealZoneID, RealMapID}, entryid=RealEntryID, counterid=undefined},
+	User = OldUser#egs_user_model{instancepid=InstancePid, areatype=AreaType, area={psu_area, QuestID, RealZoneID, RealMapID}, entryid=RealEntryID},
 	egs_user_model:write(User),
 	RealSetID = if SetID > NbSetsInZone - 1 -> NbSetsInZone - 1; true -> SetID end,
 	area_load(AreaType, IsStart, RealSetID, OldUser, User, QuestFile, ZoneFile, AreaName).
@@ -533,7 +533,7 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}) ->
 	{ok, OldUser} = egs_user_model:read(get(gid)),
 	OldArea = OldUser#egs_user_model.area,
 	FromArea = {psu_area, OldArea#psu_area.questid, FromZoneID, FromMapID},
-	User = OldUser#egs_user_model{areatype=counter, area={psu_area, 16#7fffffff, 0, 0}, entryid=0, counterid=CounterID, prev_area=FromArea, prev_entryid=FromEntryID},
+	User = OldUser#egs_user_model{areatype=counter, area={psu_area, 16#7fffffff, 0, 0}, entryid=0, prev_area=FromArea, prev_entryid=FromEntryID},
 	egs_user_model:write(User),
 	AreaName = "Counter",
 	QuestFile = "data/lobby/counter.quest.nbl",

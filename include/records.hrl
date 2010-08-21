@@ -31,7 +31,7 @@
 %% @todo Probably can use a "param" or "extra" field to store the game-specific information (for things that don't need to be queried).
 
 -record(egs_user_model, {
-	id, pid, socket, state, time, character, instancepid, partypid, areatype, area, entryid, counterid, pos,
+	id, pid, socket, state, time, character, instancepid, partypid, areatype, area, entryid, pos,
 	%% psu specific fields
 	lid, setid, prev_area, prev_entryid,
 	%% temporary fields
