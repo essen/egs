@@ -405,7 +405,6 @@ npc_load(Leader, [{PartyPos, NPCGID}|NPCList]) ->
 	{ok, OldNPCUser} = egs_user_model:read(NPCGID),
 	#egs_user_model{instancepid=InstancePid, area=Area, entryid=EntryID, pos=Pos} = Leader,
 	NPCUser = OldNPCUser#egs_user_model{lid=PartyPos, instancepid=InstancePid, areatype=mission, area=Area, entryid=EntryID, pos=Pos},
-	io:format("~p", [NPCUser]),
 	%% @todo This one on mission end/abort?
 	%~ OldNPCUser#egs_user_model{lid=PartyPos, instancepid=undefined, areatype=AreaType, area={psu_area, 0, 0, 0}, entryid=0, pos={pos, 0.0, 0.0, 0.0, 0}}
 	egs_user_model:write(NPCUser),
