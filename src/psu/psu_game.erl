@@ -575,6 +575,12 @@ event({counter_quest_files_request, CounterID}) ->
 	[{quests, Filename}|_Tail] = proplists:get_value(CounterID, ?COUNTERS),
 	send_0c06(Filename);
 
+%% @doc Counter available mission list request handler.
+event({counter_quest_options_request, CounterID}) ->
+	log("counter quest options request ~p", [CounterID]),
+	[{quests, _}, {bg, _}, {options, Options}] = proplists:get_value(CounterID, ?COUNTERS),
+	send_0c10(Options);
+
 %% @todo A and B are unknown.
 %%      Melee uses a format similar to: AAAA--BBCCCC----DDDDDDDDEE----FF with
 %%      AAAA the attack sound effect, BB the range, CCCC and DDDDDDDD unknown but related to angular range or similar, EE number of targets and FF the model.
@@ -821,12 +827,6 @@ handle(16#0a09, Data) ->
 %% @todo Send something other than just "dammy".
 handle(16#0a10, << ItemID:32/unsigned-integer >>) ->
 	send_0a11(ItemID, "dammy");
-
-%% @doc Counter available mission list request handler.
-handle(16#0c0f, _) ->
-	{ok, User} = egs_user_model:read(get(gid)),
-	[{quests, _}, {bg, _}, {options, Options}] = proplists:get_value(User#egs_user_model.counterid, ?COUNTERS),
-	send_0c10(Options);
 
 %% @doc Set flag handler. Associate a new flag with the character.
 %%      Just reply with a success value for now.
