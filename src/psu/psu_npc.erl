@@ -34,4 +34,5 @@ user_init(NPCid, BaseLevel) ->
 	#psu_npc{race=Race, gender=Gender, class=Class, level=LevelDiff, appearance=Appearance} = Settings,
 	Character = #characters{gid=NPCGID, slot=0, type=npc, npcid=NPCid, name=UCS2Name, race=Race, gender=Gender, class=Class, appearance=Appearance,
 		mainlevel={level, BaseLevel + LevelDiff, 0}, blastbar=0, luck=2, money=0, playtime=0, stats={stats, 0, 0, 0, 0, 0, 0, 0}, se=[], currenthp=100, maxhp=100},
-	#egs_user_model{id=NPCGID, state=online, character=Character, areatype=lobby, area={psu_area, 0, 0, 0}, entryid=0, pos={pos, 0.0, 0.0, 0.0, 0.0}}.
+	#egs_user_model{id=NPCGID, state=online, character=Character, areatype=lobby, area={psu_area, 0, 0, 0}, entryid=0,
+		prev_area={psu_area, 0, 0, 0}, prev_entryid=0, pos={pos, 0.0, 0.0, 0.0, 0.0}}.

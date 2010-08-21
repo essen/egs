@@ -625,6 +625,29 @@ event({item_unequip, ItemID, TargetGID, TargetLID, A, B}) ->
 	send(<< 16#01050300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer,
 		0:64, TargetGID:32/little-unsigned-integer, TargetLID:32/little-unsigned-integer, ItemID, 2, Category, A, B:32/little-unsigned-integer >>);
 
+%% @todo Also happening a 1506 -> 1507? Only on first selection from menu.
+%% @todo Also at the end send a 101a (NPC:16, PartyPos:16, ffffffff). Not sure about PartyPos.
+event({npc_invite, NPCid}) ->
+	GID = get(gid),
+	{ok, User} = egs_user_model:read(GID),
+	%% Create NPC.
+	log("invited npcid ~b", [NPCid]),
+	TmpNPCUser = psu_npc:user_init(NPCid, ((User#egs_user_model.character)#characters.mainlevel)#level.number),
+	%% Create and join party.
+	%% @todo Check if party already exists.
+	{ok, PartyPid} = psu_party:start_link(GID),
+	{ok, PartyPos} = psu_party:join(PartyPid, npc, TmpNPCUser#egs_user_model.id),
+	NPCUser = TmpNPCUser#egs_user_model{lid=PartyPos, partypid=PartyPid},
+	egs_user_model:write(NPCUser),
+	egs_user_model:write(User#egs_user_model{partypid=PartyPid}),
+	%% Send stuff.
+	Character = NPCUser#egs_user_model.character,
+	SentNPCCharacter = Character#characters{gid=NPCid},
+	SentNPCUser = NPCUser#egs_user_model{id=NPCid, character=SentNPCCharacter},
+	%% @todo send_022c(0, 2),
+	send_1004(npc_invite, SentNPCUser, PartyPos),
+	send_101a(NPCid, PartyPos);
+
 %% @todo If the player has a scape, use it! Otherwise red screen.
 %% @todo Right now we force revive and don't update the player's HP.
 event(player_death) ->
@@ -751,33 +774,6 @@ handle(16#0404, Data) ->
 	<< EventID:8, BlockID:8, _:16, Value:8, _/bits >> = Data,
 	log("unknown command 0404: eventid ~b blockid ~b value ~b", [EventID, BlockID, Value]),
 	send_1205(EventID, BlockID, Value);
-
-%% @doc NPC invite.
-%% @todo Also happening a 1506 -> 1507? Only on first selection from menu.
-%% @todo Apparently Unknown is always ffffffff.
-%% @todo Also at the end send a 101a (NPC:16, PartyPos:16, ffffffff). Not sure about PartyPos.
-%% @todo Probably needs to make the NPC show up if he's invited while in-mission.
-handle(16#0813, Data) ->
-	GID = get(gid),
-	{ok, User} = egs_user_model:read(GID),
-	%% Create NPC.
-	<< _Unknown:32, NPCid:32/little-unsigned-integer >> = Data,
-	log("invited npcid ~b", [NPCid]),
-	TmpNPCUser = psu_npc:user_init(NPCid, ((User#egs_user_model.character)#characters.mainlevel)#level.number),
-	%% Create and join party.
-	%% @todo Check if party already exists.
-	{ok, PartyPid} = psu_party:start_link(GID),
-	{ok, PartyPos} = psu_party:join(PartyPid, npc, TmpNPCUser#egs_user_model.id),
-	NPCUser = TmpNPCUser#egs_user_model{lid=PartyPos, partypid=PartyPid},
-	egs_user_model:write(NPCUser),
-	egs_user_model:write(User#egs_user_model{partypid=PartyPid}),
-	%% Send stuff.
-	Character = NPCUser#egs_user_model.character,
-	SentNPCCharacter = Character#characters{gid=NPCid},
-	SentNPCUser = NPCUser#egs_user_model{id=NPCid, character=SentNPCCharacter},
-	%% @todo send_022c(0, 2),
-	send_1004(npc_invite, SentNPCUser, PartyPos),
-	send_101a(NPCid, PartyPos);
 
 %% @todo Used in the tutorial. Not sure what it does. Give an item (the PA) maybe?
 handle(16#0a09, Data) ->
