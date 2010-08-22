@@ -19,7 +19,7 @@
 
 -module(psu_game).
 -export([start_link/1, cleanup/1]). %% External.
--export([listen/2, accept/2, process_init/2, process/0, char_select/0, area_load/4, loop/1]). %% Internal.
+-export([listen/2, accept/2, process_init/2, process/0, char_select/0, loop/1]). %% Internal.
 
 -include("include/records.hrl").
 -include("include/maps.hrl").
@@ -397,7 +397,6 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 		true -> ok
 	end.
 
-%% @todo Make NPC hide in lobbies but show-up in missions.
 %% @todo Don't change the NPC info unless you are the leader!
 npc_load(_Leader, []) ->
 	ok;
@@ -796,11 +795,6 @@ event({unicube_select, Selection, EntryID}) ->
 handle(16#0102, _) ->
 	ignore;
 
-%% @doc Shortcut changes handler. Do nothing.
-%% @todo Save it.
-handle(16#0302, _) ->
-	log("dismissed shortcut changes");
-
 %% @doc Chat broadcast handler. Dispatch the message to everyone (for now).
 %%      We must take extra precautions to handle different versions of the game correctly.
 %%      Disregard the name sent by the server in later versions of the game. Use the name saved in memory instead, to prevent client-side editing.
@@ -997,8 +991,7 @@ handle(16#0f0a, Data) ->
 
 %% @todo Not sure yet.
 handle(16#1019, Data) ->
-	<< Value:32/little-unsigned-integer >> = Data,
-	log("command 1019 with value ~b", [Value]);
+	ignore;
 	%~ send(<< (header(16#1019))/binary, 0:192, 16#00200000:32, 0:32 >>);
 
 %% @todo Not sure about that one though. Probably related to 1112 still.
@@ -1041,8 +1034,6 @@ handle(Command, _) ->
 
 %% @doc Handle all hits received.
 %% @todo Finish the work on it.
-%% @todo Type EXP.
-%% @todo Boxes give EXP too but it doesn't show up on the screen.
 
 %~ log_hits(Data) ->
 	%~ <<	A:32/unsigned-integer, B:32/unsigned-integer, C:32/unsigned-integer, D:32/unsigned-integer,
@@ -1163,7 +1154,7 @@ send_0200(ZoneType) ->
 	send(<< (header(16#0200))/binary, 0:32, 16#01000000:32, 16#ffffffff:32, Var/binary, 16#ffffffff:32, 16#ffffffff:32 >>).
 
 %% @todo Figure out what the other things are.
-%% @todo Handle LID correctly (should be ffffffff for self, apparently).
+%% @todo Handle LID correctly (should be ffffffff for self? yet LID should be 16 bits).
 send_0201(User) ->
 	GID = get(gid),
 	CharGID = User#egs_user_model.id,
@@ -1278,12 +1269,11 @@ send_0233(Users) ->
 	end.
 
 %% @todo God this function is ugly. Use tail recursion!
-%% @todo Do it properly without relying on the temporary file.
 build_0233_contents([]) ->
 	<< >>;
 build_0233_contents(Users) ->
 	[User|Rest] = Users,
-	LID = 16#010000 + User#egs_user_model.lid, % @todo The LID must be 16 bits and 0233 seems to (almost always) require that 01 right there...
+	LID = 16#010000 + User#egs_user_model.lid, %% @todo The LID must be 16 bits and 0233 seems to (almost always) require that 01 right there...
 	CharBin = psu_characters:character_user_to_binary(User#egs_user_model{lid=LID}),
 	IsGM = 0,
 	GameVersion = 0,
@@ -1471,7 +1461,7 @@ send_100e(QuestID, ZoneID, MapID, Location, CounterID) ->
 	end,
 	send(<< Packet/binary, 0:PaddingSize, Footer/binary >>).
 
-%% @todo No idea. Also the 2 PartyPos in the built packet more often than not match, but sometimes don't?
+%% @todo No idea. Also the 2 PartyPos in the built packet more often than not match, but sometimes don't? That's probably because one is PartyPos and the other is LID or something.
 send_100f(NPCid, PartyPos) ->
 	send(<< (header(16#100f))/binary, NPCid:16/little-unsigned-integer, 1, PartyPos:8, PartyPos:32/little-unsigned-integer >>).
 
@@ -1585,7 +1575,6 @@ send_1601() ->
 	send(<< (header(16#1601))/binary, Bin/binary >>).
 
 %% @doc Send the player's NPC and PM information.
-%% @todo Do we really want to give all NPCs to everyone? Probably.
 %% @todo The value 4 is the card priority. Find what 3 is. When sending, the first 0 is an unknown value.
 send_1602() ->
 	NbNPC = lists:sum([1 || {_NPCid, Data} <- ?NPC, Data#psu_npc.has_card =:= true]),
