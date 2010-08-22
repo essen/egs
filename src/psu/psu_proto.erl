@@ -261,6 +261,22 @@ parse(Size, 16#0813, Channel, Data) ->
 	?ASSERT_EQ(VarJ, 16#ffffffff),
 	{npc_invite, NPCid};
 
+parse(Size, 16#0a10, Channel, Data) ->
+	<<	_LID:16/little, VarA:16/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little,
+		VarF:32/little, VarG:32/little, VarH:32/little, VarI:32/little, ItemID:32 >> = Data,
+	?ASSERT_EQ(Size, 48),
+	?ASSERT_EQ(Channel, 2),
+	?ASSERT_EQ(VarA, 0),
+	?ASSERT_EQ(VarB, 0),
+	?ASSERT_EQ(VarC, 0),
+	?ASSERT_EQ(VarD, 0),
+	?ASSERT_EQ(VarE, 0),
+	?ASSERT_EQ(VarF, 0),
+	?ASSERT_EQ(VarG, 0),
+	?ASSERT_EQ(VarH, 0),
+	?ASSERT_EQ(VarI, 0),
+	{item_description_request, ItemID};
+
 parse(Size, 16#0b05, _Channel, _Data) ->
 	?ASSERT_EQ(Size, 8),
 	ignore;

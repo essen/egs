@@ -596,6 +596,10 @@ event({counter_quest_options_request, CounterID}) ->
 	[{quests, _}, {bg, _}, {options, Options}] = proplists:get_value(CounterID, ?COUNTERS),
 	send_0c10(Options);
 
+%% @todo Send something other than just "dammy".
+event({item_description_request, ItemID}) ->
+	send_0a11(ItemID, "dammy");
+
 %% @todo A and B are unknown.
 %%      Melee uses a format similar to: AAAA--BBCCCC----DDDDDDDDEE----FF with
 %%      AAAA the attack sound effect, BB the range, CCCC and DDDDDDDD unknown but related to angular range or similar, EE number of targets and FF the model.
@@ -865,11 +869,6 @@ handle(16#0a09, Data) ->
 	log("~p", [Data]),
 	GID = get(gid),
 	send(<< 16#0a090300:32, 0:32, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#00003300:32, 0:32 >>);
-
-%% @doc Item description request.
-%% @todo Send something other than just "dammy".
-handle(16#0a10, << ItemID:32/unsigned-integer >>) ->
-	send_0a11(ItemID, "dammy");
 
 %% @doc Set flag handler. Associate a new flag with the character.
 %%      Just reply with a success value for now.
