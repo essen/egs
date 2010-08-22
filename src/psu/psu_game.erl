@@ -580,6 +580,10 @@ event(counter_party_info_request) ->
 	{ok, User} = egs_user_model:read(get(gid)),
 	send_1706((User#egs_user_model.character)#characters.name);
 
+%% @todo Item distribution is always set to random for now.
+event(counter_party_options_request) ->
+	send_170a();
+
 %% @doc Request the counter's quest files.
 event({counter_quest_files_request, CounterID}) ->
 	log("counter quest files request ~p", [CounterID]),
@@ -1019,11 +1023,6 @@ handle(16#1216, Data) ->
 %% @todo Probably need to dispatch that info to other party members in the same counter.
 handle(16#1707, _) ->
 	ignore;
-
-%% @doc Party settings request handler. Item distribution is random for now.
-%% @todo Handle correctly.
-handle(16#1709, _) ->
-	send_170a();
 
 %% @doc Counter-related handler.
 handle(16#170b, _) ->
