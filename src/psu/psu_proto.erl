@@ -319,6 +319,48 @@ parse(Size, 16#1710, Channel, Data) ->
 	?ASSERT_EQ(VarI, 0),
 	{counter_options_request, CounterID};
 
+parse(Size, 16#1a01, Channel, Data) ->
+	<<	HeaderLID:16/little, VarA:16/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little, VarF:32/little, VarG:32/little, VarH:32/little, VarI:32/little,
+		BodyLID:32/little, ShopID:32/little, EventID:32/little, VarJ:32/little, VarK:32/little >> = Data,
+	?ASSERT_EQ(Size, 64),
+	?ASSERT_EQ(Channel, 2),
+	?ASSERT_EQ(VarA, 0),
+	?ASSERT_EQ(VarB, 0),
+	?ASSERT_EQ(VarC, 0),
+	?ASSERT_EQ(VarD, 0),
+	?ASSERT_EQ(VarE, 0),
+	?ASSERT_EQ(VarF, 0),
+	?ASSERT_EQ(VarG, 0),
+	?ASSERT_EQ(VarH, 0),
+	?ASSERT_EQ(VarI, 0),
+	?ASSERT_EQ(HeaderLID, BodyLID),
+	case EventID of
+		0 -> ?ASSERT_EQ(VarJ, 0), {npc_shop_request, ShopID};
+		2 ->
+			?ASSERT_EQ(ShopID, 0),
+			?ASSERT_EQ(VarJ, 0),
+			lumilass_options_request;
+		3 ->
+			?ASSERT_EQ(ShopID, 0),
+			?ASSERT_EQ(VarJ, 0),
+			ppcube_request;
+		4 -> ?ASSERT_EQ(ShopID, 0), ignore; %% @todo ppcube_recharge_all
+		5 -> ?ASSERT_EQ(ShopID, 0), ignore; %% @todo ppcube_recharge_one
+		6 ->
+			?ASSERT_EQ(ShopID, 0),
+			?ASSERT_EQ(VarJ, 0),
+			?ASSERT(), ignore;
+		7 ->
+			?ASSERT_EQ(ShopID, 0),
+			?ASSERT(), ignore;
+		9 ->
+			?ASSERT_EQ(ShopID, 0),
+			?ASSERT_EQ(VarJ, 0),
+			?ASSERT_EQ(VarK, 0),
+			player_type_availability_request;
+		_ -> log("unknown 1a01 EventID ~p", [EventID])
+	end;
+
 parse(_Size, Command, Channel, Data) ->
 	%% @todo log unknown command?
 	%~ ignore.

@@ -647,6 +647,10 @@ event({item_unequip, ItemID, TargetGID, TargetLID, A, B}) ->
 event(lobby_transport_request) ->
 	send_0c08(true);
 
+%% @todo Handle all different Lumilass.
+event(lumilass_options_request) ->
+	send_1a03();
+
 %% @todo Probably replenish the player HP when entering a non-mission area rather than when aborting the mission?
 event(mission_abort) ->
 	send_1006(11),
@@ -697,6 +701,23 @@ event({npc_invite, NPCid}) ->
 	send_1004(npc_invite, SentNPCUser, PartyPos),
 	send_101a(NPCid, PartyPos);
 
+%% @todo First 1a02 value should be non-0.
+%% @todo Could the 2nd 1a02 parameter simply be the shop type or something?
+%% @todo Although the values replied should be right, they seem mostly ignored by the client.
+event({npc_shop_request, ShopID}) ->
+	log("npc shop request ~p", [ShopID]),
+	case ShopID of
+		80 -> send_1a02(0, 17, 17, 3, 9); %% lumilass
+		90 -> send_1a02(0, 5, 1, 4, 5);   %% parum weapon grinding
+		91 -> send_1a02(0, 5, 5, 4, 7);   %% tenora weapon grinding
+		92 -> send_1a02(0, 5, 0, 4, 0);   %% yohmei weapon grinding
+		93 -> send_1a02(0, 5, 18, 4, 0);  %% kubara weapon grinding
+		_  -> send_1a02(0, 0, 1, 0, 0)
+	end;
+
+event(player_type_availability_request) ->
+	send_1a07();
+
 %% @todo If the player has a scape, use it! Otherwise red screen.
 %% @todo Right now we force revive and don't update the player's HP.
 event(player_death) ->
@@ -716,6 +737,9 @@ event(player_death_return_to_lobby) ->
 
 event(player_type_capabilities_request) ->
 	send_0113();
+
+event(ppcube_request) ->
+	send_1a04();
 
 %% @doc Uni cube handler.
 event(unicube_request) ->
@@ -751,6 +775,9 @@ event({unicube_select, Selection, EntryID}) ->
 			area_load(Area#psu_area.questid, Area#psu_area.zoneid, Area#psu_area.mapid, EntryID)
 	end.
 
+
+
+
 %% @doc Movement (non-broadcast) handler. Do nothing.
 handle(16#0102, _) ->
 	ignore;
@@ -758,8 +785,8 @@ handle(16#0102, _) ->
 %% @doc Shop listing request. Currently return the normal item shop for everything.
 %% @todo Return the other shops appropriately.
 handle(16#010a, Data) ->
-	<< _:32, A:32/little-unsigned-integer, B:32/little-unsigned-integer, C:32/little-unsigned-integer >> = Data,
-	log("shop listing request (~b, ~b, ~b)", [A, B, C]),
+	<< _:64, A:16/little, B:8, C:8, D:16/little, E:16/little >> = Data,
+	log("shop listing request (~b,~b,~b,~b,~b)", [A, B, C, D, E]),
 	GID = get(gid),
 	{ok, File} = file:read_file("p/itemshop.bin"),
 	send(<< 16#010a0300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32,
@@ -1003,42 +1030,6 @@ handle(16#1709, _) ->
 %% @doc Counter-related handler.
 handle(16#170b, _) ->
 	send_170c();
-
-%% @doc Dialog request handler. Do what we can.
-%% @todo Handle correctly.
-handle(16#1a01, Data) ->
-	<< _:32, A:8, B:8, _:16, C:8, _/bits >> = Data,
-	case [A, B, C] of
-		[ 0, 0, 2] ->
-			log("lumilass (and more?)"),
-			send_1a03();
-		[ 0, 0, 3] ->
-			log("pp cube"),
-			send_1a04();
-		[ 0, 0, 9] ->
-			log("types menu"),
-			send_1a07();
-		[80, 0, _] ->
-			log("npc dialog choice"),
-			send_1a02(0, 17, 17, 3, 9);
-		[90, 0, _] -> % All the replies from here are consistent but their effect is unknown.
-			log("1a01 unknown (~b ~b ~b)", [A, B, C]),
-			send_1a02(0, 5, 1, 4, 5);
-		[91, 0, _] ->
-			log("1a01 unknown (~b ~b ~b)", [A, B, C]),
-			send_1a02(0, 5, 5, 4, 7);
-		[92, 0, _] ->
-			log("1a01 unknown (~b ~b ~b)", [A, B, C]),
-			send_1a02(0, 5, 0, 4, 0);
-		[93, 0, _] ->
-			log("1a01 unknown (~b ~b ~b)", [A, B, C]),
-			send_1a02(0, 5, 18, 4, 0);
-		[ _, 2, _] ->
-			log("1a01 unknown (~b ~b ~b)", [A, B, C]),
-			send_1a02(0, 0, 1, 0, 0);
-		_ ->
-			log("1a01 unknown (~b ~b ~b) - do nothing", [A, B, C])
-	end;
 
 %% @doc Unknown command handler. Do nothing.
 handle(Command, _) ->
