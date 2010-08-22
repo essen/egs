@@ -575,6 +575,11 @@ event({counter_options_request, CounterID}) ->
 	[{quests, _}, {bg, Background}|_Tail] = proplists:get_value(CounterID, ?COUNTERS),
 	send_1711(Background);
 
+%% @todo Handle when the party already exists! And stop doing it wrong.
+event(counter_party_info_request) ->
+	{ok, User} = egs_user_model:read(get(gid)),
+	send_1706((User#egs_user_model.character)#characters.name);
+
 %% @doc Request the counter's quest files.
 event({counter_quest_files_request, CounterID}) ->
 	log("counter quest files request ~p", [CounterID]),
@@ -990,7 +995,7 @@ handle(16#0f0a, Data) ->
 	end;
 
 %% @todo Not sure yet.
-handle(16#1019, Data) ->
+handle(16#1019, _) ->
 	ignore;
 	%~ send(<< (header(16#1019))/binary, 0:192, 16#00200000:32, 0:32 >>);
 
@@ -1007,12 +1012,6 @@ handle(16#1216, Data) ->
 	<< Value:32/little-unsigned-integer >> = Data,
 	log("command 1216 with value ~b", [Value]),
 	send_1216(Value);
-
-%% @doc Party information recap request.
-%% @todo Handle when the party already exists! And stop doing it wrong.
-handle(16#1705, _) ->
-	{ok, User} = egs_user_model:read(get(gid)),
-	send_1706((User#egs_user_model.character)#characters.name);
 
 %% @doc Mission selected handler. Send the currently selected mission.
 %% @todo Probably need to dispatch that info to other party members in the same counter.
