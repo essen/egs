@@ -660,7 +660,9 @@ event(mission_abort) ->
 	send_1006(11),
 	{ok, User} = egs_user_model:read(get(gid)),
 	%% delete the mission
-	psu_instance:stop(User#egs_user_model.instancepid),
+	if	User#egs_user_model.instancepid =:= undefined -> ignore;
+		true -> psu_instance:stop(User#egs_user_model.instancepid)
+	end,
 	%% full hp
 	Character = User#egs_user_model.character,
 	MaxHP = Character#characters.maxhp,
