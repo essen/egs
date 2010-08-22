@@ -701,6 +701,20 @@ event({npc_invite, NPCid}) ->
 	send_1004(npc_invite, SentNPCUser, PartyPos),
 	send_101a(NPCid, PartyPos);
 
+%% @todo Currently send the normal items shop for all shops, differentiate.
+event({npc_shop_enter, ShopID}) ->
+	log("npc shop enter ~p", [ShopID]),
+	GID = get(gid),
+	{ok, File} = file:read_file("p/itemshop.bin"),
+	send(<< 16#010a0300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32,
+		GID:32/little-unsigned-integer, 0:64, GID:32/little-unsigned-integer, 0:32, File/binary >>);
+
+event({npc_shop_leave, ShopID}) ->
+	log("npc shop leave ~p", [ShopID]),
+	GID = get(gid),
+	send(<< 16#010a0300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32,
+		GID:32/little-unsigned-integer, 0:64, GID:32/little-unsigned-integer, 0:32 >>);
+
 %% @todo First 1a02 value should be non-0.
 %% @todo Could the 2nd 1a02 parameter simply be the shop type or something?
 %% @todo Although the values replied should be right, they seem mostly ignored by the client.
@@ -781,16 +795,6 @@ event({unicube_select, Selection, EntryID}) ->
 %% @doc Movement (non-broadcast) handler. Do nothing.
 handle(16#0102, _) ->
 	ignore;
-
-%% @doc Shop listing request. Currently return the normal item shop for everything.
-%% @todo Return the other shops appropriately.
-handle(16#010a, Data) ->
-	<< _:64, A:16/little, B:8, C:8, D:16/little, E:16/little >> = Data,
-	log("shop listing request (~b,~b,~b,~b,~b)", [A, B, C, D, E]),
-	GID = get(gid),
-	{ok, File} = file:read_file("p/itemshop.bin"),
-	send(<< 16#010a0300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32,
-		GID:32/little-unsigned-integer, 0:64, GID:32/little-unsigned-integer, 0:32, File/binary >>);
 
 %% @doc Shortcut changes handler. Do nothing.
 %% @todo Save it.
