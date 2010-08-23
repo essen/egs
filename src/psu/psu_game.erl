@@ -117,9 +117,8 @@ process_handle(16#020d, << GID:32/little-unsigned-integer, Auth:32/bits, _/bits 
 			end
 	end;
 
-%% @doc Platform information handler. Obtain the game version and save it into the process dictionary.
-process_handle(16#080e, << _:64, Version:32/little-unsigned-integer, _/bits >>) ->
-	put(version, Version),
+%% @doc Platform information handler.
+process_handle(16#080e, << _:64, _Version:32/little-unsigned-integer, _/bits >>) ->
 	?MODULE:process();
 
 %% @doc Unknown command handler. Do nothing.
@@ -811,18 +810,12 @@ handle(16#0102, _) ->
 	ignore;
 
 %% @doc Chat broadcast handler. Dispatch the message to everyone (for now).
-%%      We must take extra precautions to handle different versions of the game correctly.
-%%      Disregard the name sent by the server in later versions of the game. Use the name saved in memory instead, to prevent client-side editing.
+%%      Disregard the name sent by the server. Use the name saved in memory instead, to prevent client-side editing.
 %% @todo Only broadcast to people in the same map.
 %% @todo In the case of NPC characters, when FromTypeID is 00001d00, check that the NPC is in the party and broadcast only to the party (probably).
 %% @todo When the game doesn't find an NPC and forces it to talk like in the tutorial mission it seems FromTypeID, FromGID and Name are both 0.
 handle(16#0304, Data) ->
-	case get(version) of
-		0 -> % AOTI v2.000
-			<< FromTypeID:32/unsigned-integer, FromGID:32/little-unsigned-integer, Modifiers:128/bits, Message/bits >> = Data;
-		_ -> % Above
-			<< FromTypeID:32/unsigned-integer, FromGID:32/little-unsigned-integer, Modifiers:128/bits, _:512, Message/bits >> = Data
-	end,
+	<< FromTypeID:32/unsigned-integer, FromGID:32/little-unsigned-integer, Modifiers:128/bits, _:512, Message/bits >> = Data,
 
 	UserGID = get(gid),
 	GID = if UserGID =:= FromGID ->
@@ -1285,12 +1278,9 @@ build_0233_contents(Users) ->
 send_0236() ->
 	send(header(16#0236)).
 
-%% @doc Send a chat command. Handled differently at v2.0000 and all versions starting somewhere above that.
+%% @doc Send a chat command.
 send_0304(FromTypeID, FromGID, FromName, Modifiers, Message) ->
-	case get(version) of
-		0 -> send(<< 16#03040300:32, 0:288, FromTypeID:32/unsigned-integer, FromGID:32/little-unsigned-integer, Modifiers:128/bits, Message/bits >>);
-		_ -> send(<< 16#03040300:32, 0:288, FromTypeID:32/unsigned-integer, FromGID:32/little-unsigned-integer, Modifiers:128/bits, FromName:512/bits, Message/bits >>)
-	end.
+	send(<< 16#03040300:32, 0:288, FromTypeID:32/unsigned-integer, FromGID:32/little-unsigned-integer, Modifiers:128/bits, FromName:512/bits, Message/bits >>).
 
 %% @todo Force send a new player location. Used for warps.
 %% @todo The value before IntDir seems to be the player's current animation. 01 stand up, 08 ?, 17 normal sit
