@@ -524,6 +524,36 @@ event({area_change, QuestID, ZoneID, MapID, EntryID}) ->
 	log("area change (~b,~b,~b,~b)", [QuestID, ZoneID, MapID, EntryID]),
 	area_load(QuestID, ZoneID, MapID, EntryID);
 
+%% @doc Chat broadcast handler. Dispatch the message to everyone (for now).
+%%      Disregard the name sent by the server. Use the name saved in memory instead, to prevent client-side editing.
+%% @todo Only broadcast to people in the same map.
+%% @todo In the case of NPC characters, when FromTypeID is 00001d00, check that the NPC is in the party and broadcast only to the party (probably).
+%% @todo When the game doesn't find an NPC (probably) and forces it to talk like in the tutorial mission it seems FromTypeID, FromGID and Name are all 0.
+%% @todo Make sure modifiers have correct values.
+event({chat, _FromTypeID, FromGID, _FromName, Modifiers, ChatMsg}) ->
+	UserGID = get(gid),
+	[BcastTypeID, BcastGID, BcastName] = case FromGID of
+		0 -> %% @todo unknown; just fail for now.
+			log("event chat FromGID=0"),
+			ignore; %% @todo This will trigger an error.
+		UserGID -> %% player chat: disregard whatever was sent except modifiers and message.
+			{ok, User} = egs_user_model:read(UserGID),
+			[16#00001200, User#egs_user_model.id, (User#egs_user_model.character)#characters.name];
+		NPCGID -> %% npc chat: @todo Check that the player is the party leader and this npc is in his party.
+			{ok, User} = egs_user_model:read(NPCGID),
+			[16#00001d00, FromGID, (User#egs_user_model.character)#characters.name]
+	end,
+	%% log the message as ascii to the console
+	if	FromGID =:= 0 -> ignore; true ->
+		[LogName|_] = re:split(BcastName, "\\0\\0", [{return, binary}]),
+		[TmpMessage|_] = re:split(ChatMsg, "\\0\\0", [{return, binary}]),
+		LogMessage = re:replace(TmpMessage, "\\n", " ", [global, {return, binary}]),
+		log("chat from ~s: ~s", [[re:replace(LogName, "\\0", "", [global, {return, binary}])], [re:replace(LogMessage, "\\0", "", [global, {return, binary}])]])
+	end,
+	%% broadcast
+	{ok, List} = egs_user_model:select(all),
+	lists:foreach(fun(X) -> X#egs_user_model.pid ! {psu_chat, BcastTypeID, BcastGID, BcastName, Modifiers, ChatMsg} end, List);
+
 %% @todo Make sure non-mission counters follow the same loading process.
 %% @todo Probably validate the From* values, to not send the player back inside a mission.
 event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}) ->
@@ -808,31 +838,6 @@ event({unicube_select, Selection, EntryID}) ->
 %% @doc Movement (non-broadcast) handler. Do nothing.
 handle(16#0102, _) ->
 	ignore;
-
-%% @doc Chat broadcast handler. Dispatch the message to everyone (for now).
-%%      Disregard the name sent by the server. Use the name saved in memory instead, to prevent client-side editing.
-%% @todo Only broadcast to people in the same map.
-%% @todo In the case of NPC characters, when FromTypeID is 00001d00, check that the NPC is in the party and broadcast only to the party (probably).
-%% @todo When the game doesn't find an NPC and forces it to talk like in the tutorial mission it seems FromTypeID, FromGID and Name are both 0.
-handle(16#0304, Data) ->
-	<< FromTypeID:32/unsigned-integer, FromGID:32/little-unsigned-integer, Modifiers:128/bits, _:512, Message/bits >> = Data,
-
-	UserGID = get(gid),
-	GID = if UserGID =:= FromGID ->
-			UserGID;
-		true ->
-			%% @todo Check that FromGID is an NPC in the UserGID's party; that UserGID is the party leader; that the message is using party chat.
-			FromGID
-	end,
-
-	{ok, User} = egs_user_model:read(GID),
-
-	[LogName|_] = re:split((User#egs_user_model.character)#characters.name, "\\0\\0", [{return, binary}]),
-	[TmpMessage|_] = re:split(Message, "\\0\\0", [{return, binary}]),
-	LogMessage = re:replace(TmpMessage, "\\n", " ", [global, {return, binary}]),
-	log("chat from ~s: ~s", [[re:replace(LogName, "\\0", "", [global, {return, binary}])], [re:replace(LogMessage, "\\0", "", [global, {return, binary}])]]),
-	{ok, List} = egs_user_model:select(all),
-	lists:foreach(fun(X) -> X#egs_user_model.pid ! {psu_chat, FromTypeID, GID, (User#egs_user_model.character)#characters.name, Modifiers, Message} end, List);
 
 %% @todo Handle this packet properly.
 %% @todo Spawn cleared response event shouldn't be handled following this packet but when we see the spawn actually dead HP-wise.
@@ -1280,7 +1285,9 @@ send_0236() ->
 
 %% @doc Send a chat command.
 send_0304(FromTypeID, FromGID, FromName, Modifiers, Message) ->
-	send(<< 16#03040300:32, 0:288, FromTypeID:32/unsigned-integer, FromGID:32/little-unsigned-integer, Modifiers:128/bits, FromName:512/bits, Message/bits >>).
+	{chat_modifiers, ChatType, ChatCutIn, ChatCutInAngle, ChatMsgLength, ChatChannel, ChatCharacterType} = Modifiers,
+	send(<< 16#03040300:32, 0:288, FromTypeID:32/unsigned-integer, FromGID:32/little-unsigned-integer, 0:64,
+		ChatType:8, ChatCutIn:8, ChatCutInAngle:8, ChatMsgLength:8, ChatChannel:8, ChatCharacterType:8, 0:16, FromName:512/bits, Message/bits >>).
 
 %% @todo Force send a new player location. Used for warps.
 %% @todo The value before IntDir seems to be the player's current animation. 01 stand up, 08 ?, 17 normal sit
