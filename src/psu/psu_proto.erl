@@ -40,11 +40,11 @@ log(Msg, FmtVars) ->
 
 %% @spec assert() -> ok
 %% @doc Log a detailed message when the function is called.
--define(ASSERT(), log("assert error in module ~p on line ~p~n", [?MODULE, ?LINE])).
+-define(ASSERT(), log("assert error in module ~p on line ~p", [?MODULE, ?LINE])).
 
 %% @spec assert(A, B) -> ok
 %% @doc Log a detailed message when the assertion A =:= B fails.
--define(ASSERT_EQ(A, B), if A =:= B -> ok; true -> log("assert error in module ~p on line ~p~n", [?MODULE, ?LINE]) end).
+-define(ASSERT_EQ(A, B), if A =:= B -> ok; true -> log("assert error in module ~p on line ~p", [?MODULE, ?LINE]) end).
 
 %% @spec parse(Packet) -> Result
 %% @doc Parse the packet and return a result accordingly.
@@ -381,6 +381,189 @@ parse(Size, 16#0c0f, Channel, Data) ->
 	?ASSERT_EQ(VarH, 0),
 	?ASSERT_EQ(VarI, 0),
 	{counter_quest_options_request, CounterID};
+
+parse(Size, 16#0f0a, Channel, Data) ->
+	<<	_LID:16/little, VarA:16/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little,
+		VarF:32/little, VarG:32/little, VarH:32/little, VarI:32/little, BlockID:16/little, ListNb:16/little,
+		ObjectNb:16/little, _MapID:16/little, ObjectID:16/little, VarJ:16/little, ObjectTargetID:32/little,
+		ObjectType:16/little, VarK:16/little, ObjectBaseTargetID:16/little, VarL:16/little, _PartyPosOrLID:32/little,
+		VarN:32/little, VarO:32/little, VarP:32/little, VarQ:32/little, VarR:32/little, VarS:32/little,
+		VarT:32/little, VarU:32/little, ObjectType2:16/little, EventID:8, VarV:8, VarW:32/little >> = Data,
+	?ASSERT_EQ(Size, 112),
+	?ASSERT_EQ(Channel, 2),
+	?ASSERT_EQ(VarA, 0),
+	?ASSERT_EQ(VarB, 0),
+	?ASSERT_EQ(VarC, 0),
+	?ASSERT_EQ(VarD, 0),
+	?ASSERT_EQ(VarE, 0),
+	?ASSERT_EQ(VarF, 0),
+	?ASSERT_EQ(VarG, 0),
+	?ASSERT_EQ(VarH, 0),
+	?ASSERT_EQ(VarI, 0),
+	?ASSERT_EQ(VarK, 0),
+	?ASSERT_EQ(VarP, 16#ffffffff),
+	?ASSERT_EQ(VarQ, 16#ffffffff),
+	?ASSERT_EQ(VarR, 16#ffffffff),
+	?ASSERT_EQ(VarS, 0),
+	?ASSERT_EQ(VarT, 0),
+	?ASSERT_EQ(VarU, 0),
+	?ASSERT_EQ(ObjectType, ObjectType2),
+	case [ObjectType, EventID] of
+		[ 5, 13] ->
+			?ASSERT_EQ(VarN, 16#ffffffff),
+			?ASSERT_EQ(VarO, 16#ffffffff),
+			?ASSERT_EQ(VarV, 1),
+			?ASSERT_EQ(VarW, 0),
+			{object_switch_on, ObjectID};
+		[ 5, 14] ->
+			?ASSERT_EQ(VarN, 16#ffffffff),
+			?ASSERT_EQ(VarO, 16#ffffffff),
+			?ASSERT_EQ(VarV, 1),
+			?ASSERT_EQ(VarW, 0),
+			{object_switch_off, ObjectID};
+		[ 9, 20] ->
+			%% @todo We probably need to handle it for Airboard Rally.
+			ignore; %% object_sensor_trigger
+		[14,  0] ->
+			?ASSERT_EQ(ObjectID, 16#ffff),
+			?ASSERT_EQ(ObjectTargetID, 16#ffffffff),
+			?ASSERT_EQ(ObjectBaseTargetID, 16#ffff),
+			?ASSERT_EQ(VarN, 16#ffffffff),
+			?ASSERT_EQ(VarO, 16#ffffffff),
+			?ASSERT_EQ(VarV, 1),
+			{object_warp_take, BlockID, ListNb, ObjectNb};
+		[22, 12] ->
+			?ASSERT_EQ(VarJ, 134),
+			?ASSERT_EQ(ObjectTargetID, 16#ffffffff),
+			?ASSERT_EQ(ObjectBaseTargetID, 16#ffff),
+			?ASSERT_EQ(VarL, 116),
+			?ASSERT_EQ(VarN, 16#ffffffff),
+			?ASSERT_EQ(VarO, 16#ffffffff),
+			?ASSERT_EQ(VarV, 1),
+			?ASSERT_EQ(VarW, 0),
+			{object_key_console_enable, ObjectID};
+		[22, 23] ->
+			?ASSERT_EQ(VarJ, 134),
+			?ASSERT_EQ(ObjectTargetID, 16#ffffffff),
+			?ASSERT_EQ(ObjectBaseTargetID, 16#ffff),
+			?ASSERT_EQ(VarN, 16#ffffffff),
+			?ASSERT_EQ(VarO, 16#ffffffff),
+			?ASSERT_EQ(VarV, 1),
+			?ASSERT_EQ(VarW, 0),
+			{object_key_console_init, ObjectID};
+		[22, 24] ->
+			?ASSERT_EQ(VarJ, 134),
+			?ASSERT_EQ(ObjectTargetID, 16#ffffffff),
+			?ASSERT_EQ(ObjectBaseTargetID, 16#ffff),
+			?ASSERT_EQ(VarL, 116),
+			?ASSERT_EQ(VarN, 16#ffffffff),
+			?ASSERT_EQ(VarO, 16#ffffffff),
+			?ASSERT_EQ(VarV, 1),
+			?ASSERT_EQ(VarW, 0),
+			{object_key_console_open_gate, ObjectID};
+		[31, 12] ->
+			?ASSERT_EQ(VarJ, 134),
+			?ASSERT_EQ(ObjectTargetID, 16#ffffffff),
+			?ASSERT_EQ(ObjectBaseTargetID, 16#ffff),
+			?ASSERT_EQ(VarN, 16#ffffffff),
+			?ASSERT_EQ(VarO, 16#ffffffff),
+			?ASSERT_EQ(VarV, 1),
+			?ASSERT_EQ(VarW, 0),
+			{object_key_enable, ObjectID};
+		[48,  4] ->
+			?ASSERT_EQ(VarJ, 134),
+			?ASSERT_EQ(VarL, 116),
+			?ASSERT_EQ(VarN, 16#ffffffff),
+			?ASSERT_EQ(VarO, 16#ffffffff),
+			?ASSERT_EQ(VarV, 1),
+			?ASSERT_EQ(VarW, 0),
+			{object_boss_gate_enter, ObjectID};
+		[48,  5] ->
+			?ASSERT_EQ(VarJ, 134),
+			?ASSERT_EQ(VarL, 116),
+			?ASSERT_EQ(VarN, 16#ffffffff),
+			?ASSERT_EQ(VarO, 16#ffffffff),
+			?ASSERT_EQ(VarV, 1),
+			?ASSERT_EQ(VarW, 0),
+			{object_boss_gate_leave, ObjectID};
+		[48,  6] ->
+			?ASSERT_EQ(VarJ, 134),
+			?ASSERT_EQ(VarL, 116),
+			?ASSERT_EQ(VarN, 16#ffffffff),
+			?ASSERT_EQ(VarO, 16#ffffffff),
+			?ASSERT_EQ(VarV, 1),
+			?ASSERT_EQ(VarW, 0),
+			{object_boss_gate_activate, ObjectID};
+		[48,  7] ->
+			?ASSERT_EQ(VarJ, 134),
+			?ASSERT_EQ(VarL, 116),
+			?ASSERT_EQ(VarN, 16#ffffffff),
+			?ASSERT_EQ(VarO, 16#ffffffff),
+			?ASSERT_EQ(VarV, 1),
+			?ASSERT_EQ(VarW, 0),
+			?ASSERT(),
+			ignore; %% @todo object_boss_gate_???
+		[49,  3] ->
+			?ASSERT_EQ(VarJ, 134),
+			?ASSERT_EQ(ObjectTargetID, 16#ffffffff),
+			?ASSERT_EQ(ObjectBaseTargetID, 16#ffff),
+			?ASSERT_EQ(VarL, 116),
+			?ASSERT_EQ(VarN, 16#ffffffff),
+			?ASSERT_EQ(VarO, 16#ffffffff),
+			?ASSERT_EQ(VarV, 1),
+			?ASSERT_EQ(VarW, 0),
+			{object_crystal_activate, ObjectID};
+		[51,  1] ->
+			?ASSERT_EQ(VarL, 116),
+			?ASSERT_EQ(ObjectTargetID, VarN),
+			?ASSERT_EQ(VarO, 16#ffffffff),
+			?ASSERT_EQ(VarV, 1),
+			?ASSERT_EQ(VarW, 0),
+			?ASSERT(),
+			ignore; %% @todo object_goggle_target_???
+		[56, 25] ->
+			?ASSERT_EQ(VarN, 16#ffffffff),
+			?ASSERT_EQ(VarO, 16#ffffffff),
+			?ASSERT_EQ(VarV, 1),
+			?ASSERT_EQ(VarW, 0),
+			{object_chair_sit, ObjectTargetID};
+		[56, 26] ->
+			?ASSERT_EQ(VarN, 16#ffffffff),
+			?ASSERT_EQ(VarO, 16#ffffffff),
+			?ASSERT_EQ(VarV, 1),
+			?ASSERT_EQ(VarW, 0),
+			{object_chair_stand, ObjectTargetID};
+		[57, 12] ->
+			?ASSERT_EQ(VarJ, 134),
+			?ASSERT_EQ(ObjectTargetID, 16#ffffffff),
+			?ASSERT_EQ(ObjectBaseTargetID, 16#ffff),
+			?ASSERT_EQ(VarL, 116),
+			?ASSERT_EQ(VarN, 16#ffffffff),
+			?ASSERT_EQ(VarO, 16#ffffffff),
+			?ASSERT_EQ(VarV, 1),
+			{object_vehicle_boost_enable, ObjectID};
+		[57, 28] ->
+			?ASSERT_EQ(VarJ, 134),
+			?ASSERT_EQ(ObjectTargetID, 16#ffffffff),
+			?ASSERT_EQ(ObjectBaseTargetID, 16#ffff),
+			?ASSERT_EQ(VarL, 116),
+			?ASSERT_EQ(VarN, 16#ffffffff),
+			?ASSERT_EQ(VarO, 16#ffffffff),
+			?ASSERT_EQ(VarV, 1),
+			?ASSERT_EQ(VarW, 0),
+			{object_vehicle_boost_respawn, ObjectID};
+		[71, 27] ->
+			?ASSERT_EQ(VarJ, 134),
+			?ASSERT_EQ(ObjectTargetID, VarN),
+			?ASSERT_EQ(VarO, 16#ffffffff),
+			?ASSERT_EQ(VarV, 1),
+			?ASSERT_EQ(VarW, 0),
+			?ASSERT(),
+			ignore; %% @todo object_trap(3rd)_???
+		_ -> %% Unhandled actions.
+			log("unknown 0f0a ObjectType ~p EventID ~p", [ObjectType, EventID]),
+			ignore
+	end;
 
 parse(Size, 16#1705, Channel, Data) ->
 	<< _LID:16/little, VarA:16/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little, VarF:32/little, VarG:32/little, VarH:32/little, VarI:32/little >> = Data,

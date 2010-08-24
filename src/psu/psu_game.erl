@@ -772,6 +772,87 @@ event({npc_shop_request, ShopID}) ->
 		_  -> send_1a02(0, 0, 1, 0, 0)
 	end;
 
+%% @todo Not sure what are those hardcoded values.
+event({object_boss_gate_activate, ObjectID}) ->
+	send_1213(ObjectID, 0),
+	send_1215(2, 16#7008),
+	%% @todo Following sent after the warp?
+	send_1213(37, 0),
+	%% @todo Why resend this?
+	send_1213(ObjectID, 0);
+
+event({object_boss_gate_enter, ObjectID}) ->
+	send_1213(ObjectID, 1);
+
+%% @todo Do we need to send something back here?
+event({object_boss_gate_leave, _ObjectID}) ->
+	ignore;
+
+%% @todo Second send_1211 argument should be User#egs_user_model.lid. Fix when it's correctly handled.
+event({object_chair_sit, ObjectTargetID}) ->
+	%~ {ok, User} = egs_user_model:read(get(gid)),
+	send_1211(ObjectTargetID, 0, 8, 0);
+
+%% @todo Second send_1211 argument should be User#egs_user_model.lid. Fix when it's correctly handled.
+event({object_chair_stand, ObjectTargetID}) ->
+	%~ {ok, User} = egs_user_model:read(get(gid)),
+	send_1211(ObjectTargetID, 0, 8, 2);
+
+event({object_crystal_activate, ObjectID}) ->
+	send_1213(ObjectID, 1);
+
+event({object_key_console_enable, ObjectID}) ->
+	{ok, User} = egs_user_model:read(get(gid)),
+	{BlockID, [EventID|_]} = psu_instance:std_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
+	send_1205(EventID, BlockID, 0),
+	send_1213(ObjectID, 1);
+
+event({object_key_console_init, ObjectID}) ->
+	{ok, User} = egs_user_model:read(get(gid)),
+	{BlockID, [_, EventID, _]} = psu_instance:std_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
+	send_1205(EventID, BlockID, 0);
+
+event({object_key_console_open_gate, ObjectID}) ->
+	{ok, User} = egs_user_model:read(get(gid)),
+	{BlockID, [_, _, EventID]} = psu_instance:std_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
+	send_1205(EventID, BlockID, 0),
+	send_1213(ObjectID, 1);
+
+%% @todo Now that it's separate from object_key_console_enable, handle it better than that, don't need a list of events.
+event({object_key_enable, ObjectID}) ->
+	{ok, User} = egs_user_model:read(get(gid)),
+	{BlockID, [EventID|_]} = psu_instance:std_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
+	send_1205(EventID, BlockID, 0),
+	send_1213(ObjectID, 1);
+
+%% @todo Some switch objects apparently work differently, like the light switch in Mines in MAG'.
+event({object_switch_off, ObjectID}) ->
+	{ok, User} = egs_user_model:read(get(gid)),
+	{BlockID, EventID} = psu_instance:std_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
+	send_1205(EventID, BlockID, 1),
+	send_1213(ObjectID, 0);
+
+event({object_switch_on, ObjectID}) ->
+	{ok, User} = egs_user_model:read(get(gid)),
+	{BlockID, EventID} = psu_instance:std_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
+	send_1205(EventID, BlockID, 0),
+	send_1213(ObjectID, 1);
+
+event({object_vehicle_boost_enable, ObjectID}) ->
+	send_1213(ObjectID, 1);
+
+event({object_vehicle_boost_respawn, ObjectID}) ->
+	send_1213(ObjectID, 0);
+
+%% @todo Second send_1211 argument should be User#egs_user_model.lid. Fix when it's correctly handled.
+event({object_warp_take, BlockID, ListNb, ObjectNb}) ->
+	{ok, User} = egs_user_model:read(get(gid)),
+	Pos = psu_instance:warp_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, BlockID, ListNb, ObjectNb),
+	NewUser = User#egs_user_model{pos=Pos},
+	egs_user_model:write(NewUser),
+	send_0503(User#egs_user_model.pos),
+	send_1211(16#ffffffff, 0, 14, 0);
+
 event(player_type_availability_request) ->
 	send_1a07();
 
@@ -919,83 +1000,6 @@ handle(16#0f07, Data) ->
 	<< A:32/little-unsigned-integer, B:32/little-unsigned-integer >> = Data,
 	log("after enter vehicle: ~b ~b", [A, B]),
 	send(<< (header(16#120f))/binary, A:32/little-unsigned-integer, B:32/little-unsigned-integer >>);
-
-%% @doc Object event handler.
-%% @todo Handle all events appropriately.
-%% @todo B should be the ObjType.
-handle(16#0f0a, Data) ->
-	<< BlockID:16/little-unsigned-integer, ListNb:16/little-unsigned-integer, ObjectNb:16/little-unsigned-integer, _MapID:16/little-unsigned-integer, ObjectID:16/little-unsigned-integer,
-		_:16, A:32/little-unsigned-integer, B:32/little-unsigned-integer, _:32, C:32/little-unsigned-integer, _:272, Action:8, _/bits >> = Data,
-	log("object event handler: action ~b object ~b a ~b b ~b c ~b", [Action, ObjectID, A, B, C]),
-	case Action of
-		0 -> % warp
-			{ok, User} = egs_user_model:read(get(gid)),
-			Pos = psu_instance:warp_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, BlockID, ListNb, ObjectNb),
-			NewUser = User#egs_user_model{pos=Pos},
-			egs_user_model:write(NewUser),
-			send_0503(User#egs_user_model.pos),
-			send_1211(A, C, B, 0);
-		3 -> % crystal activation
-			send_1213(ObjectID, 1);
-		4 -> % enter boss gate
-			send_1213(ObjectID, 1);
-		5 -> % leave boss gate
-			% probably 1213, unknown last value
-			ignore;
-		6 -> % activate boss gate
-			send_1213(ObjectID, 0),
-			send_1215(2, 16#7008),
-			%% @todo Sent after warp but not necessarily, also what's 37 (should be a B1 object) and why resend the 1213(id)?
-			send_1213(37, 0),
-			send_1213(ObjectID, 0);
-		9 -> % healing pad
-			% 0117, 0111, 0117?
-			ignore;
-		12 -> % pick/use key, pick vehicle_boost
-			{ok, User} = egs_user_model:read(get(gid)),
-			Args = psu_instance:std_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
-			case Args of
-				undefined -> %% vehicle boost doesn't send an event
-					ignore;
-				{BlockID, [EventID|_]} ->
-					send_1205(EventID, BlockID, 0)
-			end,
-			send_1213(ObjectID, 1);
-		13 -> % floor_button on (also sent when clearing a few of the rooms in black nest)
-			{ok, User} = egs_user_model:read(get(gid)),
-			{BlockID, EventID} = psu_instance:std_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
-			send_1205(EventID, BlockID, 0),
-			send_1213(ObjectID, 1);
-		14 -> % floor_button off
-			%% @todo Apparently when it's not a floor_button but a light switch, this here should be handled differently.
-			{ok, User} = egs_user_model:read(get(gid)),
-			{BlockID, EventID} = psu_instance:std_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
-			send_1205(EventID, BlockID, 1),
-			send_1213(ObjectID, 0);
-		%~ 19 -> % activate trap
-			%~ ignore;
-		20 -> % enter counter/elevator/room/spaceport/pick key/use key
-			ignore;
-		23 -> % initialize key slots (called when picking a key or checking the gate directly with no key)
-			{ok, User} = egs_user_model:read(get(gid)),
-			{BlockID, [_, EventID, _]} = psu_instance:std_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
-			send_1205(EventID, BlockID, 0); % in block 1, 202 = key [1] x1, 203 = key [-] x1
-		24 -> % open gate (only when client has key)
-			{ok, User} = egs_user_model:read(get(gid)),
-			{BlockID, [_, _, EventID]} = psu_instance:std_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
-			send_1205(EventID, BlockID, 0),
-			send_1213(ObjectID, 1);
-		25 -> % sit on chair
-			send_1211(A, C, 8, 0);
-		26 -> % sit out of chair
-			send_1211(A, C, 8, 2);
-		28 -> % respawn object picked (like vehicle_boost)
-			send_1213(ObjectID, 0);
-		%~ 30 -> % @todo (phantom ruins block 4, dark god 2 block 1 (fake key block))
-			%~ ignore;
-		_ ->
-			log("object event ~b", [Action])
-	end;
 
 %% @todo Not sure yet.
 handle(16#1019, _) ->
@@ -1518,6 +1522,7 @@ send_1207() ->
 	send(<< (header(16#1207))/binary, Chunk/binary, Chunk/binary, Chunk/binary, Chunk/binary, Chunk/binary, Chunk/binary >>).
 
 %% @todo Object interaction? Figure out. C probably the interaction type.
+%% @todo Apparently A would be TargetID/ffffffff, B would be the player LID, C would be the object type? D still completely unknown.
 send_1211(A, B, C, D) ->
 	send(<< (header(16#1211))/binary, A:32/little-unsigned-integer, B:32/little-unsigned-integer, C:32/little-unsigned-integer, D:32/little-unsigned-integer >>).
 
