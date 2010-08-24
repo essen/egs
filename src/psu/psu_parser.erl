@@ -160,7 +160,7 @@ parse_object_args(6, _Params, _Data) ->
 	fog;
 
 parse_object_args(9, _Params, _Data) ->
-	menu_prompt;
+	sensor;
 
 parse_object_args(10, _Params, _Data) ->
 	invisible_block;
