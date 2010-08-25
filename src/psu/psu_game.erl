@@ -118,7 +118,8 @@ process_handle(16#020d, << GID:32/little-unsigned-integer, Auth:32/bits, _/bits 
 	end;
 
 %% @doc Platform information handler.
-process_handle(16#080e, << _:64, _Version:32/little-unsigned-integer, _/bits >>) ->
+process_handle(16#080e, << _:64, Version:32/little-unsigned-integer, _/bits >>) ->
+	file:write_file("versions.txt", io_lib:format("~b~n", [Version]), [append]),
 	?MODULE:process();
 
 %% @doc Unknown command handler. Do nothing.
