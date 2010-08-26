@@ -131,6 +131,28 @@ parse(Size, 16#010a, Channel, Data) ->
 		6 -> ?ASSERT(), ignore
 	end;
 
+%% @todo We probably want to check some of those values and save the others. It's mostly harmless though, ignore for now.
+%% @todo We also probably should send the spawn to everyone in response to this command rather than on area_change.
+parse(Size, 16#010b, Channel, Data) ->
+	<<	_LID:16/little, VarA:16/little, VarB:32/little, HeaderGID:32/little, VarD:32/little, VarE:32/little, VarF:32/little, VarG:32/little, VarH:32/little, VarI:32/little,
+		BodyGID:32/little, _PartyPosOrLID:32/little, VarJ:16/little, _IntDir:16/little-unsigned-integer, _X:32/little-float, _Y:32/little-float, _Z:32/little-float,
+		VarK:32/little, VarL:32/little, _QuestID:32/little, _ZoneID:32/little, _MapID:32/little, _EntryID:32/little >> = Data,
+	?ASSERT_EQ(Size, 92),
+	?ASSERT_EQ(Channel, 2),
+	?ASSERT_EQ(VarA, 0),
+	?ASSERT_EQ(VarB, 0),
+	?ASSERT_EQ(VarD, 0),
+	?ASSERT_EQ(VarE, 0),
+	?ASSERT_EQ(VarF, 0),
+	?ASSERT_EQ(VarG, 0),
+	?ASSERT_EQ(VarH, 0),
+	?ASSERT_EQ(VarI, 0),
+	?ASSERT_EQ(VarJ, 0),
+	?ASSERT_EQ(VarK, 0),
+	?ASSERT_EQ(VarL, 0),
+	?ASSERT_EQ(HeaderGID, BodyGID),
+	ignore; %% @todo player_enter_area
+
 parse(Size, 16#0110, Channel, Data) ->
 	<<	_LID:16/little, VarA:16/little, VarB:32/little, HeaderGID:32/little, VarC:32/little, VarD:32/little, VarE:32/little,
 		VarF:32/little, VarG:32/little, VarH:32/little, BodyGID:32/little, _PartyPosOrLID:32/little, EventID:32/little, Param:32/little >> = Data,
