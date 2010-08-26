@@ -626,6 +626,43 @@ event({counter_quest_options_request, CounterID}) ->
 	[{quests, _}, {bg, _}, {options, Options}] = proplists:get_value(CounterID, ?COUNTERS),
 	send_0c10(Options);
 
+%% @todo A and B are mostly unknown. Like most of everything else from the command 0e00...
+event({hit, FromTargetID, ToTargetID, A, B}) ->
+	GID = get(gid),
+	{ok, User} = egs_user_model:read(GID),
+	%% hit!
+	#hit_response{type=Type, user=NewUser, exp=HasEXP, damage=Damage, targethp=TargetHP, targetse=TargetSE, events=Events} = psu_instance:hit(User, FromTargetID, ToTargetID),
+	case Type of
+		box ->
+			%% @todo also has a hit sent, we should send it too
+			handle_events(Events);
+		_ ->
+			PlayerHP = (NewUser#egs_user_model.character)#characters.currenthp,
+			case lists:member(death, TargetSE) of
+				true -> SE = 16#01000200;
+				false -> SE = 16#01000000
+			end,
+			send(<< 16#0e070300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
+				1:32/little-unsigned-integer, 16#01050000:32, Damage:32/little-unsigned-integer,
+				A/binary, 0:64, PlayerHP:32/little-unsigned-integer, 0:32, SE:32,
+				0:32, TargetHP:32/little-unsigned-integer, 0:32, B/binary,
+				16#04320000:32, 16#80000000:32, 16#26030000:32, 16#89068d00:32, 16#0c1c0105:32, 0:64 >>)
+				% after TargetHP is SE-related too?
+	end,
+	%% exp
+	if	HasEXP =:= true ->
+			Character = NewUser#egs_user_model.character,
+			Level = Character#characters.mainlevel,
+			send_0115(GID, ToTargetID, Level#level.number, Level#level.exp, Character#characters.money);
+		true -> ignore
+	end,
+	%% save
+	egs_user_model:write(NewUser);
+
+event({hits, Hits}) ->
+	[event(Hit) || Hit <- Hits],
+	ok;
+
 %% @todo Send something other than just "dammy".
 event({item_description_request, ItemID}) ->
 	send_0a11(ItemID, "dammy");
@@ -969,13 +1006,6 @@ handle(16#0d07, Data) ->
 	{ok, User} = egs_user_model:read(get(gid)),
 	file:write_file(io_lib:format("save/~s/~b-character.options", [User#egs_user_model.folder, (User#egs_user_model.character)#characters.slot]), Data);
 
-%% @doc Hit handler.
-%% @todo Finish the work on it.
-%% @todo First value at 2C is the number of hits. We don't need to know it though.
-handle(16#0e00, Data) ->
-	<< _:96, Hits/bits >> = Data,
-	handle_hits(Hits);
-
 %% @doc Initialize a vehicle object.
 %% @todo Find what are the many values, including the odd Whut value (and whether it's used in the reply).
 %% @todo Separate the reply.
@@ -1033,57 +1063,6 @@ handle(16#170b, _) ->
 %% @doc Unknown command handler. Do nothing.
 handle(Command, _) ->
 	log("dismissed packet ~4.16.0b", [Command]).
-
-%% @doc Handle all hits received.
-%% @todo Finish the work on it.
-
-%~ log_hits(Data) ->
-	%~ <<	A:32/unsigned-integer, B:32/unsigned-integer, C:32/unsigned-integer, D:32/unsigned-integer,
-		%~ E:32/unsigned-integer, F:32/unsigned-integer, G:32/unsigned-integer, H:32/unsigned-integer,
-		%~ I:32/unsigned-integer, J:32/unsigned-integer, K:32/unsigned-integer, L:32/unsigned-integer,
-		%~ M:32/unsigned-integer, N:32/unsigned-integer, O:32/unsigned-integer, P:32/unsigned-integer,
-		%~ Q:32/unsigned-integer, R:32/unsigned-integer, S:32/unsigned-integer, T:32/unsigned-integer, _/bits >> = Data,
-	%~ log("hit!~n    ~8.16.0b ~8.16.0b ~8.16.0b ~8.16.0b~n    ~8.16.0b ~8.16.0b ~8.16.0b ~8.16.0b~n    ~8.16.0b ~8.16.0b ~8.16.0b ~8.16.0b~n    ~8.16.0b ~8.16.0b ~8.16.0b ~8.16.0b~n    ~8.16.0b ~8.16.0b ~8.16.0b ~8.16.0b", [A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T]).
-
-handle_hits(<< >>) ->
-	ok;
-handle_hits(Data) ->
-	%~ log_hits(Data),
-	% parse
-	<< A:224/bits, B:128/bits, _:288, Rest/bits >> = Data,
-	<< _:96, SourceID:32/little-unsigned-integer, TargetID:32/little-unsigned-integer, _/bits >> = A,
-	% retrieve
-	GID = get(gid),
-	{ok, User} = egs_user_model:read(GID),
-	% hit!
-	#hit_response{type=Type, user=NewUser, exp=HasEXP, damage=Damage, targethp=TargetHP, targetse=TargetSE, events=Events} = psu_instance:hit(User, SourceID, TargetID),
-	case Type of
-		box ->
-			% TODO: also has a hit sent, we should send it too
-			handle_events(Events);
-		_ ->
-			PlayerHP = (NewUser#egs_user_model.character)#characters.currenthp,
-			case lists:member(death, TargetSE) of
-				true -> SE = 16#01000200;
-				false -> SE = 16#01000000
-			end,
-			send(<< 16#0e070300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
-				1:32/little-unsigned-integer, 16#01050000:32, Damage:32/little-unsigned-integer,
-				A/binary, 0:64, PlayerHP:32/little-unsigned-integer, 0:32, SE:32,
-				0:32, TargetHP:32/little-unsigned-integer, 0:32, B/binary, 16#04320000:32, 16#80000000:32, 16#26030000:32, 16#89068d00:32, 16#0c1c0105:32, 0:64 >>)
-				% after TargetHP is SE-related too?
-	end,
-	% exp
-	if	HasEXP =:= true ->
-			Character = NewUser#egs_user_model.character,
-			Level = Character#characters.mainlevel,
-			send_0115(GID, TargetID, Level#level.number, Level#level.exp, Character#characters.money);
-		true -> ignore
-	end,
-	% save
-	egs_user_model:write(NewUser),
-	% next
-	handle_hits(Rest).
 
 %% @doc Handle a list of events.
 handle_events([]) ->

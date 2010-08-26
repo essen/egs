@@ -382,6 +382,13 @@ parse(Size, 16#0c0f, Channel, Data) ->
 	?ASSERT_EQ(VarI, 0),
 	{counter_quest_options_request, CounterID};
 
+%% @todo Many unknown vars in the command header.
+parse(Size, 16#0e00, Channel, Data) ->
+	<< _UnknownVars:288/bits, NbHits:32/little, _PartyPosOrLID:32/little, _HitCommandNb:32/little, Hits/bits >> = Data,
+	?ASSERT_EQ(Channel, 2),
+	?ASSERT_EQ(Size, 56 + NbHits * 80),
+	{hits, parse_hits(Hits, [])};
+
 parse(Size, 16#0f0a, Channel, Data) ->
 	<<	_LID:16/little, VarA:16/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little,
 		VarF:32/little, VarG:32/little, VarH:32/little, VarI:32/little, BlockID:16/little, ListNb:16/little,
@@ -659,7 +666,16 @@ parse(_Size, Command, Channel, Data) ->
 	<< _:288, Rest/bits >> = Data,
 	{command, Command, Channel, Rest}.
 
-
+%% @todo Many unknown vars in the hit values.
+parse_hits(<< >>, Acc) ->
+	lists:reverse(Acc);
+parse_hits(Hits, Acc) ->
+	<< A:224/bits, B:128/bits, _C:128/bits, _D:160/bits, Rest/bits >> = Hits,
+	<< _PosX1:32/little-float, _PosY1:32/little-float, _PosZ1:32/little-float, FromTargetID:32/little, ToTargetID:32/little, _AEnd1:32, _AEnd2:32 >> = A,
+	%~ << Stuff2:32, PosX2:32/little-float, PosY2:32/little-float, PosZ2:32/little-float >> = B, %% player
+	%~ << Stuff3:32, PosX3:32/little-float, PosY3:32/little-float, PosZ3:32/little-float >> = C, %% target
+	%~ << D1:32, D2:32, D3:32, D4:32, D5:32 >> = D,
+	parse_hits(Rest, [{hit, FromTargetID, ToTargetID, A, B}|Acc]).
 
 %% @doc Prepare a packet. Return the real size and padding at the end.
 
