@@ -124,8 +124,29 @@ handle(Command, CSocket, SessionID, Orig) when Command =:= 16#0226; Command =:= 
 	Packet = << 16#0225:16, 0:304, NbPages:8, Page:8, 16#8200:16/unsigned-integer, MOTD/binary, 0:16 >>,
 	psu_proto:packet_send(CSocket, Packet);
 
-%% Silently ignore packets 0227 and 080e.
-handle(Command, _, _, _) when Command =:= 16#0227; Command =:= 16#080e ->
+%% @doc Platform information handler. Reject versions < 2.0009.2.
+handle(16#080e, CSocket, SessionID, << _:352, _:64, Revision:8, Minor:4, _:12, Major:4, _:4, _/bits >>) ->
+	Version = Major * 1000000 + Minor * 1000 + Revision,
+	if	Version < 2009002 ->
+			log(SessionID, "reject outdated version ~b.~b.~b", [Major, Minor, Revision]),
+			Website = << "http://psumods.co.uk/forums/comments.php?DiscussionID=40#Item_1" >>,
+			Size = byte_size(Website),
+			WebsiteLen = Size + 1,
+			PaddingSize = 8 * (512 - Size),
+			WebsitePacket = << 16#02310300:32, 16#ffff0000:32, 16#00000f00:32, SessionID:32/little, 0:64, 16#00000f00:32, SessionID:32/little, 0:64,
+				WebsiteLen:32/little, Website/binary, 0:PaddingSize >>,
+			psu_proto:packet_send(CSocket, WebsitePacket),
+			{ok, File} = file:read_file("priv/psu_login/error_version.txt"),
+			ErrorLen = byte_size(File) div 2 + 2,
+			ErrorPacket = << 16#02230300:32, 0:160, 16#00000f00:32, SessionID:32/little, 0:96, 16#f9dbce73:32, 3:32/little, 0:48, ErrorLen:16/little, File/binary, 0:16 >>,
+			psu_proto:packet_send(CSocket, ErrorPacket),
+			closed;
+		true ->
+			ignore
+	end;
+
+%% Silently ignore command 0227.
+handle(16#0227, _, _, _) ->
 	ignore;
 
 %% Unknown command handler. Print a log message about it.
