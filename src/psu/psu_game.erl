@@ -519,6 +519,11 @@ broadcast(Command, Orig)
 			lists:foreach(fun(User) -> User#egs_user_model.pid ! {psu_broadcast, Packet} end, SpawnList)
 	end.
 
+%% @doc Trigger many events.
+events(Events) ->
+	[event(Event) || Event <- Events],
+	ok.
+
 %% @todo When changing lobby to the room, 0230 must also be sent. Same when going from room to lobby.
 %% @todo Probably move area_load inside the event and make other events call this one when needed.
 event({area_change, QuestID, ZoneID, MapID, EntryID}) ->
@@ -635,7 +640,7 @@ event({hit, FromTargetID, ToTargetID, A, B}) ->
 	case Type of
 		box ->
 			%% @todo also has a hit sent, we should send it too
-			handle_events(Events);
+			events(Events);
 		_ ->
 			PlayerHP = (NewUser#egs_user_model.character)#characters.currenthp,
 			case lists:member(death, TargetSE) of
@@ -826,6 +831,10 @@ event({object_boss_gate_enter, ObjectID}) ->
 event({object_boss_gate_leave, _ObjectID}) ->
 	ignore;
 
+%% @doc Server-side event.
+event({object_box_destroy, ObjectID}) ->
+	send_1213(ObjectID, 3);
+
 %% @todo Second send_1211 argument should be User#egs_user_model.lid. Fix when it's correctly handled.
 event({object_chair_sit, ObjectTargetID}) ->
 	%~ {ok, User} = egs_user_model:read(get(gid)),
@@ -838,6 +847,10 @@ event({object_chair_stand, ObjectTargetID}) ->
 
 event({object_crystal_activate, ObjectID}) ->
 	send_1213(ObjectID, 1);
+
+%% @doc Server-side event.
+event({object_event_trigger, BlockID, EventID}) ->
+	send_1205(EventID, BlockID, 0);
 
 event({object_key_console_enable, ObjectID}) ->
 	{ok, User} = egs_user_model:read(get(gid)),
@@ -1063,16 +1076,6 @@ handle(16#170b, _) ->
 %% @doc Unknown command handler. Do nothing.
 handle(Command, _) ->
 	log("dismissed packet ~4.16.0b", [Command]).
-
-%% @doc Handle a list of events.
-handle_events([]) ->
-	ok;
-handle_events([{explode, ObjectID}|Tail]) ->
-	send_1213(ObjectID, 3),
-	handle_events(Tail);
-handle_events([{event, [BlockID, EventID]}|Tail]) ->
-	send_1205(EventID, BlockID, 0),
-	handle_events(Tail).
 
 %% @doc Build the packet header.
 header(Command) ->

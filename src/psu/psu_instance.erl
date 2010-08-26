@@ -215,8 +215,8 @@ object_select(ID) ->
 
 box_hit(#psu_object{args={BlockID, ObjectID, TrigEventID}}) ->
 	Events =
-		if	TrigEventID =:= false -> [{explode, ObjectID}];
-			true -> [{explode, ObjectID}, {event, [BlockID, TrigEventID]}]
+		if	TrigEventID =:= false -> [{object_box_destroy, ObjectID}];
+			true -> [{object_box_destroy, ObjectID}, {object_event_trigger, BlockID, TrigEventID}]
 		end,
 	#hit_response{type=box, events=Events}.
 
