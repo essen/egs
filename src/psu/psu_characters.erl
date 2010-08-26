@@ -20,7 +20,7 @@
 -export([
 	character_tuple_to_binary/1, character_user_to_binary/1, class_atom_to_binary/1, class_binary_to_atom/1,
 	gender_atom_to_binary/1, gender_binary_to_atom/1, options_binary_to_tuple/1, options_tuple_to_binary/1,
-	race_atom_to_binary/1, race_binary_to_atom/1, se_list_to_binary/1, stats_tuple_to_binary/1, validate_name/1, validate_options/1
+	race_atom_to_binary/1, race_binary_to_atom/1, se_list_to_binary/1, stats_tuple_to_binary/1, validate_name/1
 ]).
 
 -include("include/records.hrl").
@@ -199,29 +199,3 @@ stats_tuple_to_binary(Tuple) ->
 validate_name(_Name) ->
 	%~ Something like that probably: << true = X =/= 16#00F7 andalso X =/= 16#03F7 || X:16 <- Name>>.
 	ok.
-
-%% @doc Validate the options data.
-%%      Trigger an exception rather than handling errors.
-
-validate_options(Tuple) ->
-	{options, TextDisplaySpeed, Sound, MusicVolume, SoundEffectVolume, Vibration, RadarMapDisplay,
-		CutInDisplay, MainMenuCursorPosition, Camera3rdY, Camera3rdX, Camera1stY, Camera1stX,
-		Controller, WeaponSwap, LockOn, Brightness, FunctionKeySetting, ButtonDetailDisplay} = Tuple,
-	true = TextDisplaySpeed =< 1,
-	true = Sound =< 1,
-	true = MusicVolume =< 9,
-	true = SoundEffectVolume =< 9,
-	true = Vibration =< 1,
-	true = RadarMapDisplay =< 1,
-	true = CutInDisplay =< 1,
-	true = MainMenuCursorPosition =< 1,
-	true = Camera3rdY =< 1,
-	true = Camera3rdX =< 1,
-	true = Camera1stY =< 1,
-	true = Camera1stX =< 1,
-	true = Controller =< 1,
-	true = WeaponSwap =< 1,
-	true = LockOn =< 1,
-	true = Brightness =< 4,
-	true = FunctionKeySetting =< 1,
-	true = ButtonDetailDisplay =< 2.

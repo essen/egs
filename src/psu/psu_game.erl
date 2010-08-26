@@ -902,8 +902,9 @@ event({object_warp_take, BlockID, ListNb, ObjectNb}) ->
 	send_0503(User#egs_user_model.pos),
 	send_1211(16#ffffffff, 0, 14, 0);
 
-event(player_type_availability_request) ->
-	send_1a07();
+event({player_options_change, Options}) ->
+	{ok, User} = egs_user_model:read(get(gid)),
+	file:write_file(io_lib:format("save/~s/~b-character.options", [User#egs_user_model.folder, (User#egs_user_model.character)#characters.slot]), Options);
 
 %% @todo If the player has a scape, use it! Otherwise red screen.
 %% @todo Right now we force revive and don't update the player's HP.
@@ -921,6 +922,9 @@ event(player_death_return_to_lobby) ->
 	{ok, User} = egs_user_model:read(get(gid)),
 	Area = User#egs_user_model.prev_area,
 	area_load(Area#psu_area.questid, Area#psu_area.zoneid, Area#psu_area.mapid, User#egs_user_model.prev_entryid);
+
+event(player_type_availability_request) ->
+	send_1a07();
 
 event(player_type_capabilities_request) ->
 	send_0113();
@@ -1006,16 +1010,6 @@ handle(16#0d04, Data) ->
 	log("flag handler for ~s", [re:replace(Flag, "\\0+", "", [global, {return, binary}])]),
 	GID = get(gid),
 	send(<< 16#0d040300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Flag/binary, A/binary, 1, B/binary >>);
-
-%% @doc Options changes handler.
-handle(16#0d07, Data) ->
-	log("options changes"),
-	% Translate options into a tuple, validate them and do nothing with it for now
-	Options = psu_characters:options_binary_to_tuple(Data),
-	psu_characters:validate_options(Options),
-	% End of validation
-	{ok, User} = egs_user_model:read(get(gid)),
-	file:write_file(io_lib:format("save/~s/~b-character.options", [User#egs_user_model.folder, (User#egs_user_model.character)#characters.slot]), Data);
 
 %% @doc Initialize a vehicle object.
 %% @todo Find what are the many values, including the odd Whut value (and whether it's used in the reply).

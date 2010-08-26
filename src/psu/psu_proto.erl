@@ -520,6 +520,50 @@ parse(Size, 16#0c0f, Channel, Data) ->
 	?ASSERT_EQ(VarI, 0),
 	{counter_quest_options_request, CounterID};
 
+%% @todo Return a tuple rather than a binary!
+parse(Size, 16#0d07, Channel, Data) ->
+	<<	VarA:32/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little, VarF:32/little, VarG:32/little, VarH:32/little, VarI:32/little,
+		TextDisplaySpeed:8, Sound:8, MusicVolume:8, SoundEffectVolume:8, Vibration:8, RadarMapDisplay:8,
+		CutInDisplay:8, MainMenuCursorPosition:8, VarJ:8, Camera3rdY:8, Camera3rdX:8, Camera1stY:8, Camera1stX:8,
+		Controller:8, WeaponSwap:8, LockOn:8, Brightness:8, FunctionKeySetting:8, _VarK:8, ButtonDetailDisplay:8, VarL:32/little >> = Data,
+	?ASSERT_EQ(Size, 68),
+	?ASSERT_EQ(Channel, 2),
+	?ASSERT_EQ(VarA, 0),
+	?ASSERT_EQ(VarB, 0),
+	?ASSERT_EQ(VarC, 0),
+	?ASSERT_EQ(VarD, 0),
+	?ASSERT_EQ(VarE, 0),
+	?ASSERT_EQ(VarF, 0),
+	?ASSERT_EQ(VarG, 0),
+	?ASSERT_EQ(VarH, 0),
+	?ASSERT_EQ(VarI, 0),
+	?ASSERT_EQ(VarJ, 0),
+	?ASSERT_EQ(VarL, 0),
+	%% Make sure the options are valid.
+	true = TextDisplaySpeed =< 1,
+	true = Sound =< 1,
+	true = MusicVolume =< 9,
+	true = SoundEffectVolume =< 9,
+	true = Vibration =< 1,
+	true = RadarMapDisplay =< 1,
+	true = CutInDisplay =< 1,
+	true = MainMenuCursorPosition =< 1,
+	true = Camera3rdY =< 1,
+	true = Camera3rdX =< 1,
+	true = Camera1stY =< 1,
+	true = Camera1stX =< 1,
+	true = Controller =< 1,
+	true = WeaponSwap =< 1,
+	true = LockOn =< 1,
+	true = Brightness =< 4,
+	true = FunctionKeySetting =< 1,
+	true = ButtonDetailDisplay =< 2,
+	%% Options are considered safe past this point.
+	Options = {options, TextDisplaySpeed, Sound, MusicVolume, SoundEffectVolume, Vibration, RadarMapDisplay,
+						CutInDisplay, MainMenuCursorPosition, Camera3rdY, Camera3rdX, Camera1stY, Camera1stX,
+						Controller, WeaponSwap, LockOn, Brightness, FunctionKeySetting, ButtonDetailDisplay},
+	{player_options_change, psu_characters:options_tuple_to_binary(Options)}; %% @todo {player_options_change, Options};
+
 %% @todo Many unknown vars in the command header.
 parse(Size, 16#0e00, Channel, Data) ->
 	<< _UnknownVars:288/bits, NbHits:32/little, _PartyPosOrLID:32/little, _HitCommandNb:32/little, Hits/bits >> = Data,
