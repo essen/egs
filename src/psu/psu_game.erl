@@ -1059,11 +1059,6 @@ handle(16#1216, Data) ->
 	log("command 1216 with value ~b", [Value]),
 	send_1216(Value);
 
-%% @doc Mission selected handler. Send the currently selected mission.
-%% @todo Probably need to dispatch that info to other party members in the same counter.
-handle(16#1707, _) ->
-	ignore;
-
 %% @doc Counter-related handler.
 handle(16#170b, _) ->
 	send_170c();
