@@ -555,6 +555,10 @@ event({chat, _FromTypeID, FromGID, _FromName, Modifiers, ChatMsg}) ->
 	{ok, List} = egs_user_model:select(all),
 	lists:foreach(fun(X) -> X#egs_user_model.pid ! {psu_chat, BcastTypeID, BcastGID, BcastName, Modifiers, ChatMsg} end, List);
 
+%% @todo There's at least 9 different sets of locations. Handle all of them correctly.
+event(counter_background_locations_request) ->
+	send_170c();
+
 %% @todo Make sure non-mission counters follow the same loading process.
 %% @todo Probably validate the From* values, to not send the player back inside a mission.
 event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}) ->
@@ -1058,10 +1062,6 @@ handle(16#1216, Data) ->
 	<< Value:32/little-unsigned-integer >> = Data,
 	log("command 1216 with value ~b", [Value]),
 	send_1216(Value);
-
-%% @doc Counter-related handler.
-handle(16#170b, _) ->
-	send_170c();
 
 %% @doc Unknown command handler. Do nothing.
 handle(Command, _) ->
