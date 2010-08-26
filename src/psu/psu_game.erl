@@ -758,7 +758,6 @@ event(mission_abort) ->
 %% @todo Forward the mission start to other players of the same party, whatever their location is.
 event({mission_start, QuestID}) ->
 	log("mission start ~b", [QuestID]),
-	send_170c(),
 	send_1020(),
 	send_1015(QuestID),
 	send_0c02();
