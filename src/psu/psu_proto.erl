@@ -451,6 +451,22 @@ parse(Size, 16#0c07, Channel, Data) ->
 	?ASSERT_EQ(VarI, 0),
 	lobby_transport_request;
 
+%% @doc This command should be safely ignored. Probably indicates that a mission area change was successful.
+parse(Size, 16#0c0d, Channel, Data) ->
+	<< _LID:16/little, VarA:16/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little, VarF:32/little, VarG:32/little, VarH:32/little, VarI:32/little >> = Data,
+	?ASSERT_EQ(Size, 44),
+	?ASSERT_EQ(Channel, 2),
+	?ASSERT_EQ(VarA, 0),
+	?ASSERT_EQ(VarB, 0),
+	?ASSERT_EQ(VarC, 0),
+	?ASSERT_EQ(VarD, 0),
+	?ASSERT_EQ(VarE, 0),
+	?ASSERT_EQ(VarF, 0),
+	?ASSERT_EQ(VarG, 0),
+	?ASSERT_EQ(VarH, 0),
+	?ASSERT_EQ(VarI, 0),
+	ignore;
+
 parse(Size, 16#0c0e, Channel, Data) ->
 	<< _LID:16/little, VarA:16/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little, VarF:32/little, VarG:32/little, VarH:32/little, VarI:32/little >> = Data,
 	?ASSERT_EQ(Size, 44),
