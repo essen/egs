@@ -953,6 +953,7 @@ event(unicube_request) ->
 %% @doc Uni selection handler.
 %% @todo When selecting 'Your room', load a default room.
 %% @todo When selecting 'Reload', reload the character in the current lobby.
+%% @todo Delete NPC characters and stop the party on entering myroom too.
 event({unicube_select, Selection, EntryID}) ->
 	case Selection of
 		cancel -> ignore;
@@ -967,12 +968,15 @@ event({unicube_select, Selection, EntryID}) ->
 			% 0220
 			%% force reloading the character and data files (@todo hack, uses myroom questid to do it)
 			{ok, User} = egs_user_model:read(get(gid)),
-			if	User#egs_user_model.partypid =:= undefined ->
+			case User#egs_user_model.partypid of
+				undefined ->
 					ignore;
-				true ->
+				PartyPid ->
 					%% @todo Replace stop by leave when leaving stops the party correctly when nobody's there anymore.
 					%~ psu_party:leave(User#egs_user_model.partypid, User#egs_user_model.id)
-					psu_party:stop(User#egs_user_model.partypid)
+					{ok, NPCList} = psu_party:get_npc(PartyPid),
+					[egs_user_model:delete(NPCGID) || {_Spot, NPCGID} <- NPCList],
+					psu_party:stop(PartyPid)
 			end,
 			Area = User#egs_user_model.area,
 			NewRow = User#egs_user_model{partypid=undefined, area=Area#psu_area{questid=1120000, zoneid=undefined}, entryid=EntryID},
