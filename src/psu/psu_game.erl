@@ -382,7 +382,7 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 			end;
 		true -> ignore
 	end,
-	if	ZoneChange, AreaType /= spaceport ->
+	if	ZoneChange =:= true, AreaType /= spaceport ->
 			send_1212();
 		true -> ignore
 	end,
