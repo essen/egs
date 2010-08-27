@@ -200,7 +200,7 @@ char_select_load(Number) ->
 	egs_user_model:write(User),
 	char_load(User),
 	send_021b(),
-	area_load(1100000, 0, 4, 5),
+	event({area_change, 1100000, 0, 4, 5}),
 	ssl:setopts(get(socket), [{active, true}]),
 	?MODULE:loop(<< >>).
 
@@ -449,7 +449,7 @@ loop(SoFar) ->
 			send_0204(Spawn#egs_user_model.id, Spawn#egs_user_model.lid, 5),
 			?MODULE:loop(SoFar);
 		{psu_warp, QuestID, ZoneID, MapID, EntryID} ->
-			area_load(QuestID, ZoneID, MapID, EntryID),
+			event({area_change, QuestID, ZoneID, MapID, EntryID}),
 			?MODULE:loop(SoFar);
 		{ssl, _, Data} ->
 			{Packets, Rest} = psu_proto:packet_split(<< SoFar/bits, Data/bits >>),
@@ -612,7 +612,7 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}) ->
 event(counter_leave) ->
 	{ok, User} = egs_user_model:read(get(gid)),
 	PrevArea = User#egs_user_model.prev_area,
-	area_load(PrevArea#psu_area.questid, PrevArea#psu_area.zoneid, PrevArea#psu_area.mapid, User#egs_user_model.prev_entryid);
+	event({area_change, PrevArea#psu_area.questid, PrevArea#psu_area.zoneid, PrevArea#psu_area.mapid, User#egs_user_model.prev_entryid});
 
 %% @doc Send the code for the background image to use. But there's more that should be sent though.
 %% @todo Apparently background values 1 2 3 are never used on official servers. Find out why.
@@ -762,8 +762,8 @@ event(mission_abort) ->
 	egs_user_model:write(NewUser),
 	%% map change
 	if	User#egs_user_model.areatype =:= mission ->
-			Area = User#egs_user_model.prev_area,
-			area_load(Area#psu_area.questid, Area#psu_area.zoneid, Area#psu_area.mapid, User#egs_user_model.prev_entryid);
+			PrevArea = User#egs_user_model.prev_area,
+			event({area_change, PrevArea#psu_area.questid, PrevArea#psu_area.zoneid, PrevArea#psu_area.mapid, User#egs_user_model.prev_entryid});
 		true -> ignore
 	end;
 
@@ -937,8 +937,8 @@ event(player_death) ->
 %% @todo Refill the player's HP to maximum, remove SEs etc.
 event(player_death_return_to_lobby) ->
 	{ok, User} = egs_user_model:read(get(gid)),
-	Area = User#egs_user_model.prev_area,
-	area_load(Area#psu_area.questid, Area#psu_area.zoneid, Area#psu_area.mapid, User#egs_user_model.prev_entryid);
+	PrevArea = User#egs_user_model.prev_area,
+	event({area_change, PrevArea#psu_area.questid, PrevArea#psu_area.zoneid, PrevArea#psu_area.mapid, User#egs_user_model.prev_entryid});
 
 event(player_type_availability_request) ->
 	send_1a07();
@@ -964,7 +964,7 @@ event({unicube_select, Selection, EntryID}) ->
 			log("uni selection (my room)"),
 			send_0230(),
 			% 0220
-			area_load(1120000, 0, 100, 0);
+			event({area_change, 1120000, 0, 100, 0});
 		_UniID ->
 			log("uni selection (reload)"),
 			send_0230(),
@@ -984,7 +984,7 @@ event({unicube_select, Selection, EntryID}) ->
 			Area = User#egs_user_model.area,
 			NewRow = User#egs_user_model{partypid=undefined, area=Area#psu_area{questid=1120000, zoneid=undefined}, entryid=EntryID},
 			egs_user_model:write(NewRow),
-			area_load(Area#psu_area.questid, Area#psu_area.zoneid, Area#psu_area.mapid, EntryID)
+			event({area_change, Area#psu_area.questid, Area#psu_area.zoneid, Area#psu_area.mapid, EntryID})
 	end.
 
 
