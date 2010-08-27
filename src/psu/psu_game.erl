@@ -366,20 +366,23 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 		true ->
 			send_020c()
 	end,
-	case AreaType of
-		myroom ->
-			send_1332(),
-			send_1202(),
-			send_1204(),
-			send_1206();
-		mission ->
-			send_1202(),
-			send_1204(),
-			send_1206(),
-			send_1207();
-		_ -> ignore
+	if	ZoneChange =:= true ->
+			case AreaType of
+				myroom ->
+					send_1332(),
+					send_1202(),
+					send_1204(),
+					send_1206();
+				mission ->
+					send_1202(),
+					send_1204(),
+					send_1206(),
+					send_1207();
+				_ -> ignore
+			end;
+		true -> ignore
 	end,
-	if	AreaType /= spaceport ->
+	if	ZoneChange, AreaType /= spaceport ->
 			send_1212();
 		true -> ignore
 	end,
