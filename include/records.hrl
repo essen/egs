@@ -93,7 +93,7 @@
 	gid,
 	type=white,
 	slot,
-	npcid=0,
+	npcid=16#ffff,
 	name,
 	race,
 	gender,
