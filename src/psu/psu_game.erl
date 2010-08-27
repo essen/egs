@@ -38,9 +38,18 @@ start_link(Port) ->
 %% @spec cleanup(Pid) -> ok
 %% @doc Cleanup the data associated with the failing process.
 %% @todo Cleanup the instance process if there's nobody in it anymore.
+%% @todo Leave party instead of stopping it.
 cleanup(Pid) ->
 	case egs_user_model:read({pid, Pid}) of
 		{ok, User} ->
+			case User#egs_user_model.partypid of
+				undefined ->
+					ignore;
+				PartyPid ->
+					{ok, NPCList} = psu_party:get_npc(PartyPid),
+					[egs_user_model:delete(NPCGID) || {_Spot, NPCGID} <- NPCList],
+					psu_party:stop(PartyPid)
+			end,
 			egs_user_model:delete(User#egs_user_model.id),
 			{ok, List} = egs_user_model:select({neighbors, User}),
 			lists:foreach(fun(Other) -> Other#egs_user_model.pid ! {psu_player_unspawn, User} end, List),
