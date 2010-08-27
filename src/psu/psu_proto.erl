@@ -51,6 +51,26 @@ log(Msg, FmtVars) ->
 parse(<< Size:32/little, Command:16, Channel:8, _Unknown:8, Data/bits >>) ->
 	parse(Size, Command, Channel, Data).
 
+%% @todo Maybe we shouldn't ignore it?
+%% @todo VarI is probably animation state related and defines what the player is doing.
+parse(Size, 16#0102, 2, Data) ->
+	<<	_LID:16/little, VarA:16/little, VarB:32/little, _FromGID:32/little, VarC:32/little, VarD:32/little,
+		VarE:32/little, VarF:32/little, VarG:32/little, VarH:32/little, _TargetGID:32/little, _TargetLID:32/little,
+		_VarI:8, _IntDir:24/little, VarJ:32/little, _X:32/little-float, _Y:32/little-float, _Z:32/little-float,
+		_QuestID:32/little, _ZoneID:32/little, _MapID:32/little, _EntryID:32/little, VarK:32/little >> = Data,
+	?ASSERT_EQ(Size, 92),
+	?ASSERT_EQ(VarA, 0),
+	?ASSERT_EQ(VarB, 0),
+	?ASSERT_EQ(VarC, 0),
+	?ASSERT_EQ(VarD, 0),
+	?ASSERT_EQ(VarE, 0),
+	?ASSERT_EQ(VarF, 0),
+	?ASSERT_EQ(VarG, 0),
+	?ASSERT_EQ(VarH, 0),
+	?ASSERT_EQ(VarJ, 0),
+	?ASSERT_EQ(VarK, 0),
+	ignore;
+
 %% @todo One of the missing events is probably learning a new PA.
 parse(Size, 16#0105, Channel, Data) ->
 	<<	_LID:16/little, _VarB:16/little, VarC:32/little, _FromGID:32/little, VarD:32/little, VarE:32/little, TypeID:32/little, GID:32/little,

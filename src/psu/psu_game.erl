@@ -987,9 +987,6 @@ event({unicube_select, Selection, EntryID}) ->
 
 
 
-%% @doc Movement (non-broadcast) handler. Do nothing.
-handle(16#0102, _) ->
-	ignore;
 
 %% @todo Handle this packet properly.
 %% @todo Spawn cleared response event shouldn't be handled following this packet but when we see the spawn actually dead HP-wise.
