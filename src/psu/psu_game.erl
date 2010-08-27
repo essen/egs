@@ -772,7 +772,12 @@ event({npc_invite, NPCid}) ->
 	TmpNPCUser = psu_npc:user_init(NPCid, ((User#egs_user_model.character)#characters.mainlevel)#level.number),
 	%% Create and join party.
 	%% @todo Check if party already exists.
-	{ok, PartyPid} = psu_party:start_link(GID),
+	case User#egs_user_model.partypid of
+		undefined ->
+			{ok, PartyPid} = psu_party:start_link(GID);
+		PartyPid ->
+			ignore
+	end,
 	{ok, PartyPos} = psu_party:join(PartyPid, npc, TmpNPCUser#egs_user_model.id),
 	NPCUser = TmpNPCUser#egs_user_model{lid=PartyPos, partypid=PartyPid},
 	egs_user_model:write(NPCUser),
