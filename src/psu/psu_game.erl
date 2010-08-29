@@ -344,7 +344,7 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 	end,
 	if	ZoneChange =:= true ->
 			% load new zone
-			send_0a05(),
+			psu_proto:send_0a05(User),
 			if AreaType =:= lobby ->
 					send_0111(6, 0);
 				true -> ignore
@@ -589,7 +589,7 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}) ->
 	%% load counter
 	psu_proto:send_0c00(User),
 	send_020e(QuestFile),
-	send_0a05(),
+	psu_proto:send_0a05(User),
 	send_010d(User#egs_user_model{lid=0}),
 	send_0200(mission),
 	send_020f(ZoneFile, 0, 16#ff),
@@ -1302,10 +1302,6 @@ send_0a04(NPCGID) ->
 	GID = get(gid),
 	{ok, Bin} = file:read_file("p/packet0a04.bin"),
 	send(<< 16#0a040300:32, 0:32, 16#00001d00:32, NPCGID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Bin/binary >>).
-
-%% @todo Inventory related. No idea what it does.
-send_0a05() ->
-	send(header(16#0a05)).
 
 %% @todo Inventory related. Figure out everything in this packet and handle it correctly.
 %% @todo It sends 60 values so it's probably some kind of options for all 60 items in the inventory?

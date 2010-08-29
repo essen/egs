@@ -946,6 +946,10 @@ send_0c00(DestUser) ->
 		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
 		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32 >>).
 
+%% @todo Inventory related. Doesn't seem to do anything.
+send_0a05(DestUser) ->
+	#egs_user_model{socket=CSocket, id=GID, lid=LID} = DestUser,
+	packet_send(CSocket, << 16#0a050300:32, LID:16/little, 0:144, 16#00011300:32, GID:32/little, 0:64 >>).
 
 
 
