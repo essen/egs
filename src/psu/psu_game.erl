@@ -334,7 +334,7 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 				true -> ignore
 			end,
 			% load new quest
-			send_0c00(QuestID),
+			psu_proto:send_0c00(User),
 			send_020e(QuestFile);
 		true -> ignore
 	end,
@@ -587,7 +587,7 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}) ->
 	{ok, UnspawnList} = egs_user_model:select({neighbors, OldUser}),
 	lists:foreach(fun(Other) -> Other#egs_user_model.pid ! {psu_player_unspawn, User} end, UnspawnList),
 	%% load counter
-	send_0c00(16#7fffffff),
+	psu_proto:send_0c00(User),
 	send_020e(QuestFile),
 	send_0a05(),
 	send_010d(User#egs_user_model{lid=0}),
@@ -1325,14 +1325,6 @@ send_0a11(ItemID, ItemDesc) ->
 	Size = 1 + length(ItemDesc),
 	UCS2Desc = << << X:8, 0:8 >> || X <- ItemDesc >>,
 	send(<< (header(16#0a11))/binary, ItemID:32/unsigned-integer, Size:32/little-unsigned-integer, UCS2Desc/binary, 0:16 >>).
-
-%% @doc Init quest.
-send_0c00(QuestID) ->
-	send(<< (header(16#0c00))/binary, QuestID:32/little-unsigned-integer,
-		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
-		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
-		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
-		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32 >>).
 
 %% @todo Figure out last 4 bytes!
 send_0c02() ->

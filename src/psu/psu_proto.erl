@@ -20,6 +20,8 @@
 -module(psu_proto).
 -compile(export_all).
 
+-include("include/records.hrl").
+
 %~ %% @todo We probably want to use active connections everywhere instead of doing this.
 %~ recv %% remove later?
 
@@ -932,6 +934,23 @@ parse_hits(Hits, Acc) ->
 	%~ << Stuff3:32, PosX3:32/little-float, PosY3:32/little-float, PosZ3:32/little-float >> = C, %% target
 	%~ << D1:32, D2:32, D3:32, D4:32, D5:32 >> = D,
 	parse_hits(Rest, [{hit, FromTargetID, ToTargetID, A, B}|Acc]).
+
+%% @doc Quest init.
+%% @todo When first entering a zone it seems LID should be set to ffff apparently.
+send_0c00(DestUser) ->
+	#egs_user_model{socket=CSocket, id=GID, lid=LID, area=Area} = DestUser,
+	QuestID = Area#psu_area.questid,
+	packet_send(CSocket, << 16#0c000300:32, LID:16/little, 0:144, 16#00011300:32, GID:32/little, 0:64, QuestID:32/little,
+		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
+		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
+		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
+		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32 >>).
+
+
+
+
+
+
 
 %% @doc Prepare a packet. Return the real size and padding at the end.
 
