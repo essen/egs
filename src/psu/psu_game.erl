@@ -1019,6 +1019,12 @@ handle(16#0a09, Data) ->
 	GID = get(gid),
 	send(<< 16#0a090300:32, 0:32, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#00003300:32, 0:32 >>);
 
+%% @todo Figure out this command.
+handle(16#0c11, << A:32/little, B:32/little >>) ->
+	log("0c11 ~p ~p", [A, B]),
+	GID = get(gid),
+	send(<< 16#0c120300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, A:32/little, 1:32/little >>);
+
 %% @doc Set flag handler. Associate a new flag with the character.
 %%      Just reply with a success value for now.
 %% @todo God save the flags.
