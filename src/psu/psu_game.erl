@@ -420,7 +420,7 @@ npc_load(Leader, [{PartyPos, NPCGID}|NPCList]) ->
 	send_0a04(NPCUser#egs_user_model.id),
 	send_1004(npc_mission, NPCUser, PartyPos),
 	send_100f((NPCUser#egs_user_model.character)#characters.npcid, PartyPos),
-	send_1601(),
+	send_1601(PartyPos),
 	send_1016(PartyPos),
 	npc_load(Leader, NPCList).
 
@@ -774,7 +774,6 @@ event({mission_start, QuestID}) ->
 	send_1015(QuestID),
 	send_0c02();
 
-%% @todo Also happening a 1506 -> 1507? Only on first selection from menu.
 %% @todo Also at the end send a 101a (NPC:16, PartyPos:16, ffffffff). Not sure about PartyPos.
 event({npc_invite, NPCid}) ->
 	GID = get(gid),
@@ -1016,7 +1015,7 @@ handle(16#0404, Data) ->
 
 %% @todo Used in the tutorial. Not sure what it does. Give an item (the PA) maybe?
 handle(16#0a09, Data) ->
-	log("~p", [Data]),
+	log("0a09 ~p", [Data]),
 	GID = get(gid),
 	send(<< 16#0a090300:32, 0:32, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#00003300:32, 0:32 >>);
 
@@ -1555,9 +1554,9 @@ send_1512() ->
 	send(<< (header(16#1512))/binary, 0:46080 >>).
 
 %% @todo NPC related packet, sent when there's an NPC in the area.
-send_1601() ->
-	{ok, Bin} = file:read_file("p/packet1601.bin"),
-	send(<< (header(16#1601))/binary, Bin/binary >>).
+send_1601(PartyPos) ->
+	{ok, << _:32, Bin/bits >>} = file:read_file("p/packet1601.bin"),
+	send(<< (header(16#1601))/binary, PartyPos:32/little, Bin/binary >>).
 
 %% @doc Send the player's NPC and PM information.
 %% @todo The value 4 is the card priority. Find what 3 is. When sending, the first 0 is an unknown value.
