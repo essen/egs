@@ -774,6 +774,11 @@ event({mission_start, QuestID}) ->
 	send_1015(QuestID),
 	send_0c02();
 
+%% @doc Force the invite of an NPC character while inside a mission. Mostly used by story missions.
+%%      Note that the NPC is reinvited each block/cutscene. It is not a real invite like npc_invite.
+event({npc_force_invite, NPCid}) ->
+	log("npc force invite ~p", [NPCid]);
+
 %% @todo Also at the end send a 101a (NPC:16, PartyPos:16, ffffffff). Not sure about PartyPos.
 event({npc_invite, NPCid}) ->
 	GID = get(gid),

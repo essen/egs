@@ -326,6 +326,28 @@ parse(Size, 16#0808, Channel, Data) ->
 	?ASSERT_EQ(VarJ, 2),
 	ignore;
 
+%% @todo Check that _Rest is full of 0s.
+parse(Size, 16#080c, Channel, Data) ->
+	<<	_LID:16/little, VarA:16/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little,
+		VarF:32/little, VarG:32/little, VarH:32/little, VarI:32/little, VarJ:32/little, NPCid:16/little,
+		_VarK:16/little, VarL:32/little, VarM:32/little, VarN:16/little, _Var0:16/little, _Rest/bits >> = Data,
+	?ASSERT_EQ(Size, 648),
+	?ASSERT_EQ(Channel, 2),
+	?ASSERT_EQ(VarA, 0),
+	?ASSERT_EQ(VarB, 0),
+	?ASSERT_EQ(VarC, 0),
+	?ASSERT_EQ(VarD, 0),
+	?ASSERT_EQ(VarE, 0),
+	?ASSERT_EQ(VarF, 0),
+	?ASSERT_EQ(VarG, 0),
+	?ASSERT_EQ(VarH, 0),
+	?ASSERT_EQ(VarI, 0),
+	?ASSERT_EQ(VarJ, 16#ffffffff),
+	?ASSERT_EQ(VarL, 16#ffffffff),
+	?ASSERT_EQ(VarM, 16#ffffffff),
+	?ASSERT_EQ(VarN, 0),
+	{npc_force_invite, NPCid};
+
 %% @doc This command should be safely ignored. Probably indicates that a non-mission area change was successful.
 parse(Size, 16#080d, Channel, Data) ->
 	<< _LID:16/little, VarA:16/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little, VarF:32/little, VarG:32/little, VarH:32/little, VarI:32/little >> = Data,
