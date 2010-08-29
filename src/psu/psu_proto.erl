@@ -76,7 +76,7 @@ parse(Size, 16#0102, 2, Data) ->
 %% @todo One of the missing events is probably learning a new PA.
 parse(Size, 16#0105, Channel, Data) ->
 	<<	_LID:16/little, _VarB:16/little, VarC:32/little, _FromGID:32/little, VarD:32/little, VarE:32/little, TypeID:32/little, GID:32/little,
-		VarF:32/little, VarG:32/little, TargetGID:32/little, TargetLID:32/little, ItemID:8, EventID:8, _PAID:8, VarH:8, VarI:32/little, Rest/bits >> = Data,
+		VarF:32/little, VarG:32/little, TargetGID:32/little, TargetLID:32/little, ItemIndex:8, EventID:8, _PAIndex:8, VarH:8, VarI:32/little, Rest/bits >> = Data,
 	?ASSERT_EQ(Channel, 2),
 	?ASSERT_EQ(VarC, 0),
 	?ASSERT_EQ(VarD, 0),
@@ -101,14 +101,14 @@ parse(Size, 16#0105, Channel, Data) ->
 		item_drop ->
 			?ASSERT_EQ(Size, 76),
 			<< _Quantity:32/little, _PosX:32/little-float, _PosY:32/little-float, _PosZ:32/little-float >> = Rest,
-			%~ {Event, ItemID, Quantity, ...};
+			%~ {Event, ItemIndex, Quantity, ...};
 			ignore;
 		ignore ->
 			?ASSERT_EQ(Size, 60),
 			ignore;
 		_ ->
 			?ASSERT_EQ(Size, 60),
-			{Event, ItemID, TargetGID, TargetLID, VarH, VarI}
+			{Event, ItemIndex, TargetGID, TargetLID, VarH, VarI}
 	end;
 
 parse(Size, 16#010a, Channel, Data) ->

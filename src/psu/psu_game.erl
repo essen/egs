@@ -691,15 +691,15 @@ event({item_description_request, ItemID}) ->
 %% @todo Apparently B is always ItemID+1. Not sure why.
 %% @todo Currently use a separate file for the data sent for the weapons.
 %% @todo TargetGID and TargetLID must be validated, they're either the player's or his NPC characters.
-event({item_equip, ItemID, TargetGID, TargetLID, A, B}) ->
+event({item_equip, ItemIndex, TargetGID, TargetLID, A, B}) ->
 	GID = get(gid),
-	Category = case ItemID of
+	Category = case ItemIndex of
 		% units would be 8, traps would be 12
 		19 -> 2; % armor
 		Y when Y =:= 5; Y =:= 6; Y =:= 7 -> 0; % clothes
 		_ -> 1 % weapons
 	end,
-	Filename = case ItemID of
+	Filename = case ItemIndex of
 		% weapons
 		16 -> "p/packet0105_sword.bin";
 		13 -> "p/packet0105_twindaggers.bin";
@@ -722,21 +722,21 @@ event({item_equip, ItemID, TargetGID, TargetLID, A, B}) ->
 		_ -> {ok, File} = file:read_file(Filename)
 	end,
 	send(<< 16#01050300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer,
-		0:64, TargetGID:32/little-unsigned-integer, TargetLID:32/little-unsigned-integer, ItemID, 1, Category, A, B:32/little-unsigned-integer,
+		0:64, TargetGID:32/little-unsigned-integer, TargetLID:32/little-unsigned-integer, ItemIndex, 1, Category, A, B:32/little-unsigned-integer,
 		File/binary >>);
 
 %% @todo A and B are unknown.
 %% @see item_equip
-event({item_unequip, ItemID, TargetGID, TargetLID, A, B}) ->
+event({item_unequip, ItemIndex, TargetGID, TargetLID, A, B}) ->
 	GID = get(gid),
-	Category = case ItemID of
+	Category = case ItemIndex of
 		% units would be 8, traps would be 12
 		19 -> 2; % armor
 		Y when Y =:= 5; Y =:= 6; Y =:= 7 -> 0; % clothes
 		_ -> 1 % weapons
 	end,
 	send(<< 16#01050300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer,
-		0:64, TargetGID:32/little-unsigned-integer, TargetLID:32/little-unsigned-integer, ItemID, 2, Category, A, B:32/little-unsigned-integer >>);
+		0:64, TargetGID:32/little-unsigned-integer, TargetLID:32/little-unsigned-integer, ItemIndex, 2, Category, A, B:32/little-unsigned-integer >>);
 
 %% @todo Just ignore the meseta price for now and send the player where he wanna be!
 event(lobby_transport_request) ->
