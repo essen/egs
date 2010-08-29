@@ -943,6 +943,10 @@ send_0205(DestUser, IsSeasonal) ->
 	packet_send(CSocket, << 16#02050300:32, LID:16/little, 0:144, 16#00011300:32, GID:32/little, 0:64,
 		16#ffffffff:32, ZoneID:32/little, MapID:32/little, EntryID:32/little, 1:32/little, 0:24, IsSeasonal:8 >>).
 
+%% @todo No idea what this one does. For unknown reasons it uses channel 2.
+send_020c(DestUser) ->
+	packet_send(DestUser#egs_user_model.socket, << 16#020c0200:32, 16#ffff0000:32, 0:256 >>).
+
 %% @doc Send the quest file to be loaded by the client.
 send_020e(DestUser, Filename) ->
 	{ok, File} = file:read_file(Filename),

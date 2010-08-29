@@ -364,7 +364,7 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 				true -> ignore
 			end;
 		true ->
-			send_020c()
+			psu_proto:send_020c(User)
 	end,
 	if	ZoneChange =:= true ->
 			case AreaType of
@@ -597,7 +597,7 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}) ->
 	send_100e(16#7fffffff, 0, 0, AreaName, CounterID),
 	psu_proto:send_0215(User, 0),
 	psu_proto:send_0215(User, 0),
-	send_020c(),
+	psu_proto:send_020c(User),
 	send_1202(),
 	send_1204(),
 	send_1206(),
@@ -1175,10 +1175,6 @@ send_0204(PlayerGID, PlayerLID, Action) ->
 %% @todo Last value seems to be 2 most of the time. Never 0 though. Apparently counters have it at 4.
 send_0208() ->
 	send(<< (header(16#0208))/binary, 2:32/little-unsigned-integer >>).
-
-%% @todo No idea what this one does. For unknown reasons it uses channel 2.
-send_020c() ->
-	send(<< 16#020c020c:32, 16#fffff20c:32, 0:256 >>).
 
 %% @doc Send the zone file to be loaded.
 send_020f(Filename, SetID, SeasonID) ->
