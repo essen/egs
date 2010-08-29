@@ -943,6 +943,12 @@ send_0205(DestUser, IsSeasonal) ->
 	packet_send(CSocket, << 16#02050300:32, LID:16/little, 0:144, 16#00011300:32, GID:32/little, 0:64,
 		16#ffffffff:32, ZoneID:32/little, MapID:32/little, EntryID:32/little, 1:32/little, 0:24, IsSeasonal:8 >>).
 
+%% @doc Send the quest file to be loaded by the client.
+send_020e(DestUser, Filename) ->
+	{ok, File} = file:read_file(Filename),
+	Size = byte_size(File),
+	packet_send(DestUser#egs_user_model.socket, << 16#020e0300:32, 16#ffff:16, 0:272, Size:32/little, 0:32, File/binary, 0:32 >>).
+
 %% @todo Inventory related. Doesn't seem to do anything.
 send_0a05(DestUser) ->
 	#egs_user_model{socket=CSocket, id=GID, lid=LID} = DestUser,

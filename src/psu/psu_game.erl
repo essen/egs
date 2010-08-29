@@ -335,7 +335,7 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 			end,
 			% load new quest
 			psu_proto:send_0c00(User),
-			send_020e(QuestFile);
+			psu_proto:send_020e(User, QuestFile);
 		true -> ignore
 	end,
 	if	IsStart =:= true ->
@@ -588,7 +588,7 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}) ->
 	lists:foreach(fun(Other) -> Other#egs_user_model.pid ! {psu_player_unspawn, User} end, UnspawnList),
 	%% load counter
 	psu_proto:send_0c00(User),
-	send_020e(QuestFile),
+	psu_proto:send_020e(User, QuestFile),
 	psu_proto:send_0a05(User),
 	send_010d(User#egs_user_model{lid=0}),
 	send_0200(mission),
@@ -1179,13 +1179,6 @@ send_0208() ->
 %% @todo No idea what this one does. For unknown reasons it uses channel 2.
 send_020c() ->
 	send(<< 16#020c020c:32, 16#fffff20c:32, 0:256 >>).
-
-%% @doc Send the quest file to be loaded.
-%% @todo Probably should try sending the checksum like value (right before the file) and see if it magically fixes anything.
-send_020e(Filename) ->
-	{ok, File} = file:read_file(Filename),
-	Size = byte_size(File),
-	send(<< 16#020e0300:32, 0:288, Size:32/little-unsigned-integer, 0:32, File/binary, 0:32 >>).
 
 %% @doc Send the zone file to be loaded.
 send_020f(Filename, SetID, SeasonID) ->
