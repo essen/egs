@@ -339,7 +339,7 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 		true -> ignore
 	end,
 	if	IsStart =:= true ->
-			send_0215(16#ffffffff);
+			psu_proto:send_0215(User, 16#ffffffff);
 		true -> ignore
 	end,
 	if	ZoneChange =:= true ->
@@ -357,9 +357,9 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 	psu_proto:send_0205(User, IsSeasonal),
 	send_100e(QuestID, ZoneID, (User#egs_user_model.area)#psu_area.mapid, AreaName, 16#ffffffff),
 	if	AreaType =:= mission ->
-			send_0215(0),
+			psu_proto:send_0215(User, 0),
 			if	IsStart =:= true ->
-					send_0215(0),
+					psu_proto:send_0215(User, 0),
 					send_0c09();
 				true -> ignore
 			end;
@@ -416,7 +416,7 @@ npc_load(Leader, [{PartyPos, NPCGID}|NPCList]) ->
 	egs_user_model:write(NPCUser),
 	send_010d(NPCUser),
 	send_0201(NPCUser),
-	send_0215(0),
+	psu_proto:send_0215(Leader, 0),
 	send_0a04(NPCUser#egs_user_model.id),
 	send_1004(npc_mission, NPCUser, PartyPos),
 	send_100f((NPCUser#egs_user_model.character)#characters.npcid, PartyPos),
@@ -595,8 +595,8 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}) ->
 	send_020f(ZoneFile, 0, 16#ff),
 	psu_proto:send_0205(User, 0),
 	send_100e(16#7fffffff, 0, 0, AreaName, CounterID),
-	send_0215(0),
-	send_0215(0),
+	psu_proto:send_0215(User, 0),
+	psu_proto:send_0215(User, 0),
 	send_020c(),
 	send_1202(),
 	send_1204(),
@@ -1191,10 +1191,6 @@ send_0210() ->
 	CurrentTime = calendar:datetime_to_gregorian_seconds(calendar:now_to_universal_time(now()))
 		- calendar:datetime_to_gregorian_seconds({{1970, 1, 1}, {0, 0, 0}}),
 	send(<< (header(16#0210))/binary, 0:32, CurrentTime:32/little-unsigned-integer >>).
-
-%% @todo No idea what this do. Nor why it's sent twice when loading a counter.
-send_0215(N) ->
-	send(<< (header(16#0215))/binary, N:32/little-unsigned-integer >>).
 
 %% @todo End of character loading. Just send it.
 send_021b() ->

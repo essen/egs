@@ -949,6 +949,11 @@ send_020e(DestUser, Filename) ->
 	Size = byte_size(File),
 	packet_send(DestUser#egs_user_model.socket, << 16#020e0300:32, 16#ffff:16, 0:272, Size:32/little, 0:32, File/binary, 0:32 >>).
 
+%% @todo No idea what this is doing.
+send_0215(DestUser, UnknownValue) ->
+	#egs_user_model{socket=CSocket, id=GID, lid=LID} = DestUser,
+	packet_send(CSocket, << 16#02150300:32, LID:16/little, 0:144, 16#00011300:32, GID:32/little, 0:64, UnknownValue:32/little >>).
+
 %% @todo Inventory related. Doesn't seem to do anything.
 send_0a05(DestUser) ->
 	#egs_user_model{socket=CSocket, id=GID, lid=LID} = DestUser,
