@@ -354,7 +354,7 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 			send_020f(ZoneFile, SetID, SeasonID);
 		true -> ignore
 	end,
-	send_0205(ZoneID, (User#egs_user_model.area)#psu_area.mapid, User#egs_user_model.entryid, IsSeasonal),
+	psu_proto:send_0205(User, IsSeasonal),
 	send_100e(QuestID, ZoneID, (User#egs_user_model.area)#psu_area.mapid, AreaName, 16#ffffffff),
 	if	AreaType =:= mission ->
 			send_0215(0),
@@ -593,7 +593,7 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}) ->
 	send_010d(User#egs_user_model{lid=0}),
 	send_0200(mission),
 	send_020f(ZoneFile, 0, 16#ff),
-	send_0205(0, 0, 0, 0),
+	psu_proto:send_0205(User, 0),
 	send_100e(16#7fffffff, 0, 0, AreaName, CounterID),
 	send_0215(0),
 	send_0215(0),
@@ -1170,12 +1170,6 @@ send_0204(PlayerGID, PlayerLID, Action) ->
 	send(<< 16#02040300:32, 0:32, 16#00001200:32, PlayerGID:32/little-unsigned-integer, 0:64,
 		16#00011300:32, GID:32/little-unsigned-integer, 0:64, PlayerGID:32/little-unsigned-integer,
 		PlayerLID:32/little-unsigned-integer, Action:32/little-unsigned-integer >>).
-
-%% @doc Send the map ID to be loaded by the client.
-%% @todo Last two values are unknown.
-send_0205(MapType, MapNumber, MapEntry, IsSeasonal) ->
-	send(<< 16#02050300:32, 0:288, 16#ffffffff:32, MapType:32/little-unsigned-integer,
-		MapNumber:32/little-unsigned-integer, MapEntry:32/little-unsigned-integer, 0:56, IsSeasonal >>).
 
 %% @doc Indicate to the client that loading should finish.
 %% @todo Last value seems to be 2 most of the time. Never 0 though. Apparently counters have it at 4.

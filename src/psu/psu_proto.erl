@@ -275,7 +275,7 @@ parse(_Size, 16#0304, Channel, Data) ->
 	Modifiers = {chat_modifiers, ChatType, ChatCutIn, ChatCutInAngle, ChatMsgLength, ChatChannel, ChatCharacterType},
 	{chat, FromTypeID, FromGID, FromName, Modifiers, ChatMsg};
 
-%% @todo Probably safely ignored. Still, figure out VarJ. It's never 0 on official!
+%% @todo Probably safely ignored. VarJ is apparently replied with the same value as sent by 0205, the one after EntryID.
 parse(Size, 16#0806, Channel, Data) ->
 	<<	_LID:16/little, VarA:16/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little,
 		VarF:32/little, VarG:32/little, VarH:32/little, VarI:32/little, VarJ:32/little >> = Data,
@@ -290,7 +290,7 @@ parse(Size, 16#0806, Channel, Data) ->
 	?ASSERT_EQ(VarG, 0),
 	?ASSERT_EQ(VarH, 0),
 	?ASSERT_EQ(VarI, 0),
-	?ASSERT_EQ(VarJ, 0),
+	?ASSERT_EQ(VarJ, 1),
 	ignore;
 
 parse(Size, 16#0807, Channel, Data) ->
@@ -935,6 +935,19 @@ parse_hits(Hits, Acc) ->
 	%~ << D1:32, D2:32, D3:32, D4:32, D5:32 >> = D,
 	parse_hits(Rest, [{hit, FromTargetID, ToTargetID, A, B}|Acc]).
 
+%% @doc Make the client load a new map.
+%% @todo We set a value of 1 and not 0 after EntryID because this value is never found to be 0.
+send_0205(DestUser, IsSeasonal) ->
+	#egs_user_model{socket=CSocket, id=GID, lid=LID, area=Area, entryid=EntryID} = DestUser,
+	#psu_area{zoneid=ZoneID, mapid=MapID} = Area,
+	packet_send(CSocket, << 16#02050300:32, LID:16/little, 0:144, 16#00011300:32, GID:32/little, 0:64,
+		16#ffffffff:32, ZoneID:32/little, MapID:32/little, EntryID:32/little, 1:32/little, 0:24, IsSeasonal:8 >>).
+
+%% @todo Inventory related. Doesn't seem to do anything.
+send_0a05(DestUser) ->
+	#egs_user_model{socket=CSocket, id=GID, lid=LID} = DestUser,
+	packet_send(CSocket, << 16#0a050300:32, LID:16/little, 0:144, 16#00011300:32, GID:32/little, 0:64 >>).
+
 %% @doc Quest init.
 %% @todo When first entering a zone it seems LID should be set to ffff apparently.
 send_0c00(DestUser) ->
@@ -945,11 +958,6 @@ send_0c00(DestUser) ->
 		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
 		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
 		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32 >>).
-
-%% @todo Inventory related. Doesn't seem to do anything.
-send_0a05(DestUser) ->
-	#egs_user_model{socket=CSocket, id=GID, lid=LID} = DestUser,
-	packet_send(CSocket, << 16#0a050300:32, LID:16/little, 0:144, 16#00011300:32, GID:32/little, 0:64 >>).
 
 
 
