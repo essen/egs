@@ -802,7 +802,7 @@ event({npc_invite, NPCid}) ->
 	Character = NPCUser#egs_user_model.character,
 	SentNPCCharacter = Character#characters{gid=NPCid},
 	SentNPCUser = NPCUser#egs_user_model{id=NPCid, character=SentNPCCharacter},
-	%% @todo send_022c(0, 2),
+	send_022c(0, 16#12),
 	send_1004(npc_invite, SentNPCUser, PartyPos),
 	send_101a(NPCid, PartyPos);
 
