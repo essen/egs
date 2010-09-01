@@ -543,12 +543,12 @@ event({area_change, QuestID, ZoneID, MapID, EntryID}) ->
 %% @todo In the case of NPC characters, when FromTypeID is 00001d00, check that the NPC is in the party and broadcast only to the party (probably).
 %% @todo When the game doesn't find an NPC (probably) and forces it to talk like in the tutorial mission it seems FromTypeID, FromGID and Name are all 0.
 %% @todo Make sure modifiers have correct values.
-event({chat, _FromTypeID, FromGID, _FromName, Modifiers, ChatMsg}) ->
+event({chat, FromTypeID, FromGID, FromName, Modifiers, ChatMsg}) ->
 	UserGID = get(gid),
 	[BcastTypeID, BcastGID, BcastName] = case FromGID of
-		0 -> %% @todo unknown; just fail for now.
-			log("event chat FromGID=0"),
-			ignore; %% @todo This will trigger an error.
+		0 -> %% @todo This isn't safe. This probably shouldn't happen either.
+			log("chat FromGID=0"),
+			[FromTypeID, FromGID, FromName];
 		UserGID -> %% player chat: disregard whatever was sent except modifiers and message.
 			{ok, User} = egs_user_model:read(UserGID),
 			[16#00001200, User#egs_user_model.id, (User#egs_user_model.character)#characters.name];
