@@ -1436,7 +1436,8 @@ send_1015(QuestID) ->
 
 %% @todo No idea.
 send_1016(PartyPos) ->
-	send(<< (header(16#1016))/binary, PartyPos:32/little-unsigned-integer >>).
+	GID = get(gid),
+	send(<< 16#10160300:32, 16#ffff0000:32, 0:128, 16#00011300:32, GID:32/little, 0:64, PartyPos:32/little >>).
 
 %% @todo No idea.
 send_101a(NPCid, PartyPos) ->
