@@ -64,15 +64,15 @@ character_user_to_binary(User) ->
 	StatsBin = psu_characters:stats_tuple_to_binary(Stats),
 	SEBin = psu_characters:se_list_to_binary(SE),
 	EXPNextLevel = 100,
-	EXPPreviousLevel = 0,
+	EXPCurrentLevel = 0,
 	IntDir = trunc(Dir * 182.0416),
 	TypeID = case Type of npc -> 16#00001d00; _ -> 16#00001200 end,
 	NPCStuff = case Type of npc -> 16#01ff; _ -> 16#0000 end,
-	<<	TypeID:32, CharGID:32/little-unsigned-integer, 0:64, CharLID:32/little-unsigned-integer, NPCStuff:16, NPCid:16/little, QuestID:32/little-unsigned-integer,
-		ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer,
+	<<	TypeID:32, CharGID:32/little-unsigned-integer, 0:64, CharLID:16/little-unsigned-integer, 0:16, NPCStuff:16, NPCid:16/little, QuestID:32/little-unsigned-integer,
+		ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:16/little-unsigned-integer, 0:16,
 		16#0100:16, IntDir:16/little-unsigned-integer, X:32/little-float, Y:32/little-float, Z:32/little-float, 0:64,
 		PrevQuestID:32/little-unsigned-integer, PrevZoneID:32/little-unsigned-integer, PrevMapID:32/little-unsigned-integer, PrevEntryID:32/little-unsigned-integer,
-		CharBin/binary, EXPNextLevel:32/little-unsigned-integer, EXPPreviousLevel:32/little-unsigned-integer, MaxHP:32/little-unsigned-integer, % not sure if this one is current or max
+		CharBin/binary, EXPNextLevel:32/little-unsigned-integer, EXPCurrentLevel:32/little-unsigned-integer, MaxHP:32/little-unsigned-integer,
 		StatsBin/binary, 0:32, SEBin/binary, 0:32, LV:32/little-unsigned-integer, StatsBin/binary, CurrentHP:32/little-unsigned-integer, MaxHP:32/little-unsigned-integer,
 		0:1344, 16#0000803f:32, 0:64, 16#0000803f:32, 0:64, 16#0000803f:32, 0:64, 16#0000803f:32, 0:64, 16#0000803f:32, 0:160, 16#0000803f:32, 0:352 >>.
 
