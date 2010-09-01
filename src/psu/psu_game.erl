@@ -396,6 +396,10 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 		true -> ignore
 	end,
 	send_0233(SpawnList),
+	case User#egs_user_model.partypid of
+		undefined -> ignore;
+		_ -> send_022c(0, 16#12)
+	end,
 	send_0208(),
 	send_0236(),
 	if	User#egs_user_model.partypid =/= undefined, AreaType =:= mission ->
@@ -605,6 +609,10 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}) ->
 	send_1212(),
 	send_0201(User#egs_user_model{lid=0}),
 	send_0a06(),
+	case User#egs_user_model.partypid of
+		undefined -> ignore;
+		_ -> send_022c(0, 16#12)
+	end,
 	send_0208(),
 	send_0236();
 
@@ -790,7 +798,8 @@ event({npc_invite, NPCid}) ->
 	%% @todo Check if party already exists.
 	case User#egs_user_model.partypid of
 		undefined ->
-			{ok, PartyPid} = psu_party:start_link(GID);
+			{ok, PartyPid} = psu_party:start_link(GID),
+			send_022c(0, 16#12);
 		PartyPid ->
 			ignore
 	end,
@@ -802,7 +811,6 @@ event({npc_invite, NPCid}) ->
 	Character = NPCUser#egs_user_model.character,
 	SentNPCCharacter = Character#characters{gid=NPCid},
 	SentNPCUser = NPCUser#egs_user_model{id=NPCid, character=SentNPCCharacter},
-	send_022c(0, 16#12),
 	send_1004(npc_invite, SentNPCUser, PartyPos),
 	send_101a(NPCid, PartyPos);
 
