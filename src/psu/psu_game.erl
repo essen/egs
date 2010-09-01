@@ -1372,22 +1372,24 @@ send_1004(Type, User, PartyPos) ->
 		_ -> 1 %% seems to be for players
 	end,
 
+	UserGID = get(gid),
 	#egs_user_model{id=GID, character=Character, area={psu_area, QuestID, ZoneID, MapID}, entryid=EntryID} = User,
 	#characters{npcid=NPCid, name=Name, mainlevel=MainLevel} = Character,
 	Level = MainLevel#level.number,
-	send(<< (header(16#1004))/binary, TypeID:32,
-		GID:32/little-unsigned-integer, 0:64, Name/binary,
+	send(<< 16#10040300:32, 16#ffff0000:32, 0:128, 16#00011300:32, UserGID:32/little-unsigned-integer, 0:64,
+		TypeID:32, GID:32/little-unsigned-integer, 0:64, Name/binary,
 		Level:16/little-unsigned-integer, 16#ffff:16,
 		SomeFlag, 1, PartyPos:8, 1,
 		NPCid:16/little-unsigned-integer, 0:16,
 
 		%% Odd unknown values. PA related? No idea. Values on invite, 0 in-mission.
-		16#00001f08:32, 0:32, 16#07000000:32,
-		16#04e41f08:32, 0:32, 16#01000000:32,
-		16#64e41f08:32, 0:32, 16#02000000:32,
-		16#64e41f08:32, 0:32, 16#03000000:32,
-		16#64e41f08:32, 0:32, 16#12000000:32,
-		16#24e41f08:32,
+		%~ 16#00001f08:32, 0:32, 16#07000000:32,
+		%~ 16#04e41f08:32, 0:32, 16#01000000:32,
+		%~ 16#64e41f08:32, 0:32, 16#02000000:32,
+		%~ 16#64e41f08:32, 0:32, 16#03000000:32,
+		%~ 16#64e41f08:32, 0:32, 16#12000000:32,
+		%~ 16#24e41f08:32,
+		0:512,
 
 		QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer,
 		LID:32,
