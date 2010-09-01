@@ -258,7 +258,7 @@ parse(_Size, 16#0304, Channel, Data) ->
 	<<	_LID:16/little, VarB:16/little, VarC:32/little, VarD:32/little, VarE:32/little, VarF:32/little,
 		VarG:32/little, VarH:32/little, VarI:32/little, VarJ:32/little, FromTypeID:32, FromGID:32/little,
 		VarK:32/little, VarL:32/little, ChatType:8, ChatCutIn:8, ChatCutInAngle:8, ChatMsgLength:8,
-		ChatChannel:8, ChatCharacterType:8, VarN:8, _VarO:8, FromName:512, ChatMsg/bits >> = Data,
+		ChatChannel:8, ChatCharacterType:8, VarN:8, _VarO:8, FromName:512/bits, ChatMsg/bits >> = Data,
 	?ASSERT_EQ(Channel, 2),
 	?ASSERT_EQ(VarB, 0),
 	?ASSERT_EQ(VarC, 0),
