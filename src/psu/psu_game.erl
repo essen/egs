@@ -220,9 +220,9 @@ char_load(User) ->
 	send_0d01(User),
 	% 0246
 	send_0a0a(),
-	send_1006(5),
+	send_1006(5, 0),
 	send_1005((User#egs_user_model.character)#characters.name),
-	send_1006(12),
+	send_1006(12, 0),
 	send_0210(),
 	send_0222(),
 	send_1500(User),
@@ -450,7 +450,8 @@ loop(SoFar) ->
 			send_0233(SpawnList),
 			?MODULE:loop(SoFar);
 		{psu_player_unspawn, Spawn} ->
-			send_0204(Spawn#egs_user_model.id, Spawn#egs_user_model.lid, 5),
+			{ok, User} = egs_user_model:read(get(gid)),
+			send_0204(User, Spawn, 5),
 			?MODULE:loop(SoFar);
 		{psu_warp, QuestID, ZoneID, MapID, EntryID} ->
 			event({area_change, QuestID, ZoneID, MapID, EntryID}),
@@ -754,7 +755,7 @@ event(lumilass_options_request) ->
 
 %% @todo Probably replenish the player HP when entering a non-mission area rather than when aborting the mission?
 event(mission_abort) ->
-	send_1006(11),
+	send_1006(11, 0),
 	{ok, User} = egs_user_model:read(get(gid)),
 	%% delete the mission
 	if	User#egs_user_model.instancepid =:= undefined -> ignore;
@@ -955,6 +956,20 @@ event({object_warp_take, BlockID, ListNb, ObjectNb}) ->
 	egs_user_model:write(NewUser),
 	send_0503(User#egs_user_model.pos),
 	send_1211(16#ffffffff, 0, 14, 0);
+
+event({party_remove_member, PartyPos}) ->
+	log("party remove member ~b", [PartyPos]),
+	{ok, DestUser} = egs_user_model:read(get(gid)),
+	{ok, RemovedGID} = psu_party:get_member(DestUser#egs_user_model.partypid, PartyPos),
+	psu_party:remove_member(DestUser#egs_user_model.partypid, PartyPos),
+	{ok, RemovedUser} = egs_user_model:read(RemovedGID),
+	case (RemovedUser#egs_user_model.character)#characters.type of
+		npc -> egs_user_model:delete(RemovedGID);
+		_ -> ignore
+	end,
+	send_1006(8, PartyPos),
+	send_0204(DestUser, RemovedUser, 1),
+	psu_proto:send_0215(DestUser, 0);
 
 event({player_options_change, Options}) ->
 	{ok, User} = egs_user_model:read(get(gid)),
@@ -1174,11 +1189,16 @@ send_0202() ->
 	send(<< 16#02020300:32, 0:352 >>).
 
 %% @todo Not sure. Used for unspawning, and more.
-send_0204(PlayerGID, PlayerLID, Action) ->
-	GID = get(gid),
-	send(<< 16#02040300:32, 0:32, 16#00001200:32, PlayerGID:32/little-unsigned-integer, 0:64,
-		16#00011300:32, GID:32/little-unsigned-integer, 0:64, PlayerGID:32/little-unsigned-integer,
-		PlayerLID:32/little-unsigned-integer, Action:32/little-unsigned-integer >>).
+send_0204(DestUser, TargetUser, Action) ->
+	DestGID = DestUser#egs_user_model.id,
+	TargetTypeID = case (TargetUser#egs_user_model.character)#characters.type of
+		npc -> 16#00001d00;
+		_ -> 16#00001200
+	end,
+	#egs_user_model{id=TargetGID, lid=TargetLID} = TargetUser,
+	send(<< 16#02040300:32, 0:32, TargetTypeID:32, TargetGID:32/little-unsigned-integer, 0:64,
+		16#00011300:32, DestGID:32/little-unsigned-integer, 0:64, TargetGID:32/little-unsigned-integer,
+		TargetLID:32/little-unsigned-integer, Action:32/little-unsigned-integer >>).
 
 %% @doc Indicate to the client that loading should finish.
 %% @todo Last value seems to be 2 most of the time. Never 0 though. Apparently counters have it at 4.
@@ -1414,10 +1434,9 @@ send_1005(Name) ->
 	send(<< (header(16#1005))/binary, Before/binary, GID:32/little-unsigned-integer, 0:64, Name/binary, After/binary >>).
 
 %% @doc Party-related command probably controlling the party state.
-%%      Value 11 aborts the mission.
-%% @todo Figure out what the packet is.
-send_1006(N) ->
-	send(<< (header(16#1006))/binary, N:32/little-unsigned-integer >>).
+%%      EventID 11 aborts the mission.
+send_1006(EventID, PartyPos) ->
+	send(<< (header(16#1006))/binary, EventID:8, PartyPos:8, 0:16 >>).
 
 %% @doc Send the player's current location.
 send_100e(QuestID, ZoneID, MapID, Location, CounterID) ->

@@ -19,7 +19,7 @@
 
 -module(psu_party).
 -behavior(gen_server).
--export([start_link/1, stop/1, join/3, leave/2, get_instance/1, set_instance/2, remove_instance/1, get_npc/1]). %% API.
+-export([start_link/1, stop/1, join/3, leave/2, get_instance/1, set_instance/2, remove_instance/1, get_member/2, remove_member/2, get_npc/1]). %% API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
 
 -record(state, {free_spots, users, instancepid}).
@@ -49,6 +49,14 @@ set_instance(PartyPid, InstancePid) ->
 
 remove_instance(PartyPid) ->
 	gen_server:cast(PartyPid, remove_instance).
+
+%% @doc Return the user at the given position.
+get_member(PartyPid, Spot) ->
+	gen_server:call(PartyPid, {get_member, Spot}).
+
+%% @doc Remove a member from the party.
+remove_member(PartyPid, Spot) ->
+	gen_server:cast(PartyPid, {remove_member, Spot}).
 
 %% @doc Returns a list of NPC UserID.
 get_npc(PartyPid) ->
@@ -82,6 +90,10 @@ handle_call({join, PlayerType, UserID}, _From, State) ->
 handle_call(get_instance, _From, State) ->
 	{reply, {ok, State#state.instancepid}, State};
 
+handle_call({get_member, Spot}, _From, State) ->
+	[UserID] = [FoundUserID || {PlayerSpot, _PlayerType, FoundUserID} <- State#state.users, PlayerSpot =:= Spot],
+	{reply, {ok, UserID}, State};
+
 handle_call(get_npc, _From, State) ->
 	List = [{Spot, UserID} || {Spot, PlayerType, UserID} <- State#state.users, PlayerType =:= npc],
 	{reply, {ok, List}, State};
@@ -108,6 +120,11 @@ handle_cast({set_instance, InstancePid}, State) ->
 %% @todo Probably want to broadcast to other players that an instance stopped.
 handle_cast(remove_instance, State) ->
 	{noreply, State#state{instancepid=undefined}};
+
+handle_cast({remove_member, Spot}, State) ->
+	Users = [{PlayerSpot, PlayerType, UserID} || {PlayerSpot, PlayerType, UserID} <- State#state.users, PlayerSpot =/= Spot],
+	FreeSpots = State#state.free_spots,
+	{noreply, State#state{free_spots=[Spot|FreeSpots], users=Users}};
 
 handle_cast(_Msg, State) ->
 	{noreply, State}.

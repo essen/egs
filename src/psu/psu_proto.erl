@@ -366,6 +366,23 @@ parse(Size, 16#080d, Channel, Data) ->
 	?ASSERT_EQ(VarI, 0),
 	ignore;
 
+%% @todo Find out what it's really doing!
+parse(Size, 16#080f, Channel, Data) ->
+	<< _LID:16/little, VarA:16/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little,
+		VarF:32/little, VarG:32/little, VarH:32/little, VarI:32/little, _PartyPos:32/little >> = Data,
+	?ASSERT_EQ(Size, 48),
+	?ASSERT_EQ(Channel, 2),
+	?ASSERT_EQ(VarA, 0),
+	?ASSERT_EQ(VarB, 0),
+	?ASSERT_EQ(VarC, 0),
+	?ASSERT_EQ(VarD, 0),
+	?ASSERT_EQ(VarE, 0),
+	?ASSERT_EQ(VarF, 0),
+	?ASSERT_EQ(VarG, 0),
+	?ASSERT_EQ(VarH, 0),
+	?ASSERT_EQ(VarI, 0),
+	ignore;
+
 parse(Size, 16#0811, Channel, Data) ->
 	<<	_LID:16/little, VarA:16/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little, VarF:32/little, VarG:32/little, VarH:32/little, VarI:32/little,
 		_CounterType:8, VarJ:8, FromZoneID:16/little, FromMapID:16/little, FromEntryID:16/little, CounterID:32/little, VarK:32/little >> = Data,
@@ -797,6 +814,22 @@ parse(Size, 16#0f0a, Channel, Data) ->
 			log("unknown 0f0a ObjectType ~p EventID ~p", [ObjectType, EventID]),
 			ignore
 	end;
+
+parse(Size, 16#1007, Channel, Data) ->
+	<< VarA:32/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little, VarF:32/little,
+		VarG:32/little, VarH:32/little, VarI:32/little, PartyPos:32/little, _Name:512/bits >> = Data,
+	?ASSERT_EQ(Size, 112),
+	?ASSERT_EQ(Channel, 2),
+	?ASSERT_EQ(VarA, 0),
+	?ASSERT_EQ(VarB, 0),
+	?ASSERT_EQ(VarC, 0),
+	?ASSERT_EQ(VarD, 0),
+	?ASSERT_EQ(VarE, 0),
+	?ASSERT_EQ(VarF, 0),
+	?ASSERT_EQ(VarG, 0),
+	?ASSERT_EQ(VarH, 0),
+	?ASSERT_EQ(VarI, 0),
+	{party_remove_member, PartyPos};
 
 parse(Size, 16#1705, Channel, Data) ->
 	<< _LID:16/little, VarA:16/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little, VarF:32/little, VarG:32/little, VarH:32/little, VarI:32/little >> = Data,
