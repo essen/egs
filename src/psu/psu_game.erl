@@ -390,7 +390,7 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 			send_1309();
 		true -> ignore
 	end,
-	send_0201(User#egs_user_model{lid=0}),
+	psu_proto:send_0201(User, User#egs_user_model{lid=0}),
 	if	ZoneChange =:= true ->
 			send_0a06();
 		true -> ignore
@@ -419,7 +419,7 @@ npc_load(Leader, [{PartyPos, NPCGID}|NPCList]) ->
 	%~ OldNPCUser#egs_user_model{lid=PartyPos, instancepid=undefined, areatype=AreaType, area={psu_area, 0, 0, 0}, entryid=0, pos={pos, 0.0, 0.0, 0.0, 0}}
 	egs_user_model:write(NPCUser),
 	send_010d(NPCUser),
-	send_0201(NPCUser),
+	psu_proto:send_0201(Leader, NPCUser),
 	psu_proto:send_0215(Leader, 0),
 	send_0a04(NPCUser#egs_user_model.id),
 	send_1004(npc_mission, NPCUser, PartyPos),
@@ -605,7 +605,7 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}) ->
 	send_1206(),
 	send_1207(),
 	send_1212(),
-	send_0201(User#egs_user_model{lid=0}),
+	psu_proto:send_0201(User, User#egs_user_model{lid=0}),
 	send_0a06(),
 	case User#egs_user_model.partypid of
 		undefined -> ignore;
@@ -1153,25 +1153,6 @@ send_0200(ZoneType) ->
 			Var = << 16#00040000:32, 0:160, 16#00140000:32 >>
 	end,
 	send(<< (header(16#0200))/binary, 0:32, 16#01000000:32, 16#ffffffff:32, Var/binary, 16#ffffffff:32, 16#ffffffff:32 >>).
-
-%% @todo Figure out what the other things are.
-%% @todo Handle LID correctly (should be ffffffff for self? yet LID should be 16 bits).
-send_0201(User) ->
-	GID = get(gid),
-	CharTypeID = case (User#egs_user_model.character)#characters.type of
-		npc -> 16#00001d00;
-		_ -> 16#00001200
-	end,
-	CharGID = User#egs_user_model.id,
-	CharBin = psu_characters:character_user_to_binary(User),
-	IsGM = 0,
-	OnlineStatus = 0,
-	GameVersion = case (User#egs_user_model.character)#characters.type of
-		npc -> 255;
-		_ -> 0
-	end,
-	send(<< 16#02010300:32, 0:32, CharTypeID:32, CharGID:32/little-unsigned-integer, 0:64, 16#00011300:32,
-		GID:32/little-unsigned-integer, 0:64, CharBin/binary, IsGM:8, 0:8, OnlineStatus:8, GameVersion:8, 0:608 >>).
 
 %% @doc Hello packet, always sent on client connection.
 send_0202() ->

@@ -935,6 +935,20 @@ parse_hits(Hits, Acc) ->
 	%~ << D1:32, D2:32, D3:32, D4:32, D5:32 >> = D,
 	parse_hits(Rest, [{hit, FromTargetID, ToTargetID, A, B}|Acc]).
 
+%% @doc Send character location, appearance and other information.
+send_0201(DestUser, CharUser) ->
+	DestGID = DestUser#egs_user_model.id,
+	[CharTypeID, GameVersion] = case (CharUser#egs_user_model.character)#characters.type of
+		npc -> [16#00001d00, 255];
+		_ -> [16#00001200, 0]
+	end,
+	CharGID = CharUser#egs_user_model.id,
+	CharBin = psu_characters:character_user_to_binary(CharUser),
+	IsGM = 0,
+	OnlineStatus = 0,
+	packet_send(DestUser#egs_user_model.socket, << 16#02010300:32, 0:32, CharTypeID:32, CharGID:32/little-unsigned-integer,
+		0:64, 16#00011300:32, DestGID:32/little-unsigned-integer, 0:64, CharBin/binary, IsGM:8, 0:8, OnlineStatus:8, GameVersion:8, 0:608 >>).
+
 %% @doc Make the client load a new map.
 %% @todo We set a value of 1 and not 0 after EntryID because this value is never found to be 0.
 send_0205(DestUser, IsSeasonal) ->
