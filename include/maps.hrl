@@ -218,7 +218,11 @@
 
 	% My room
 
-	{1120000, [{type, myroom}, {file, "data/rooms/test.quest.nbl"}]}
+	{1120000, [{type, myroom}, {file, "data/rooms/test.quest.nbl"}]},
+
+	% Story Episode 2
+
+	{1131010, [{type, mission}, {file, "data/missions/ep2ch1.c.quest.nbl"}, {start, [0, 0, 0]}, {sets, 1}]}
 ]).
 
 -define(ZONES, [
@@ -545,7 +549,14 @@
 
 	% Tutorial (my room)
 
-	{[1120000,10], [{file, "data/tutorial/myroom.zone.nbl"}]}
+	{[1120000,10], [{file, "data/tutorial/myroom.zone.nbl"}]},
+
+	% Story Episode 2
+
+	{[1131010,0], [{file, "data/missions/ep2ch1.c.zone-0.nbl"}]},
+	{[1131010,1], [{file, "data/missions/ep2ch1.c.zone-1.nbl"}]},
+	{[1131010,2], [{file, "data/missions/ep2ch1.c.zone-2.nbl"}]},
+	{[1131010,3], [{file, "data/missions/ep2ch1.c.zone-3.nbl"}]}
 ]).
 
 -define(MAPS, [
