@@ -1431,7 +1431,7 @@ send_1005(Name) ->
 	{ok, File} = file:read_file("p/packet1005.bin"),
 	<< _:352, Before:160/bits, _:608, After/bits >> = File,
 	GID = get(gid),
-	send(<< (header(16#1005))/binary, Before/binary, GID:32/little-unsigned-integer, 0:64, Name/binary, After/binary >>).
+	send(<< 16#10050300:32, 16#ffff:16, 0:144, 16#00011300:32, GID:32/little, 0:64, Before/binary, GID:32/little, 0:64, Name/binary, After/binary >>).
 
 %% @doc Party-related command probably controlling the party state.
 %%      EventID 11 aborts the mission.
