@@ -1004,7 +1004,7 @@ event({unicube_select, Selection, EntryID}) ->
 %% @todo Handle this packet properly.
 %% @todo Spawn cleared response event shouldn't be handled following this packet but when we see the spawn actually dead HP-wise.
 handle(16#0402, Data) ->
-	<< SpawnID:32/little-unsigned-integer, _:64, Type:32/little-unsigned-integer, _:64 >> = Data,
+	<< SpawnID:32/little-unsigned-integer, _:64, Type:16/little-unsigned-integer, _:80 >> = Data,
 	case Type of
 		7 -> % spawn cleared @todo 1201 sent back with same values apparently, but not always
 			log("cleared spawn ~b", [SpawnID]),
