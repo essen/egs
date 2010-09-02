@@ -793,7 +793,6 @@ event({npc_invite, NPCid}) ->
 	log("invited npcid ~b", [NPCid]),
 	TmpNPCUser = psu_npc:user_init(NPCid, ((User#egs_user_model.character)#characters.mainlevel)#level.number),
 	%% Create and join party.
-	%% @todo Check if party already exists.
 	case User#egs_user_model.partypid of
 		undefined ->
 			{ok, PartyPid} = psu_party:start_link(GID),
@@ -807,8 +806,8 @@ event({npc_invite, NPCid}) ->
 	egs_user_model:write(User#egs_user_model{partypid=PartyPid}),
 	%% Send stuff.
 	Character = NPCUser#egs_user_model.character,
-	SentNPCCharacter = Character#characters{gid=NPCid},
-	SentNPCUser = NPCUser#egs_user_model{id=NPCid, character=SentNPCCharacter},
+	SentNPCCharacter = Character#characters{gid=NPCid, npcid=NPCid},
+	SentNPCUser = NPCUser#egs_user_model{character=SentNPCCharacter},
 	send_1004(npc_invite, SentNPCUser, PartyPos),
 	send_101a(NPCid, PartyPos);
 
