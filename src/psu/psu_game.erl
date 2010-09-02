@@ -781,9 +781,37 @@ event({mission_start, QuestID}) ->
 	send_0c02();
 
 %% @doc Force the invite of an NPC character while inside a mission. Mostly used by story missions.
-%%      Note that the NPC is reinvited each block/cutscene. It is not a real invite like npc_invite.
+%%      Note that the NPC is often removed and reinvited between block/cutscenes.
 event({npc_force_invite, NPCid}) ->
-	log("npc force invite ~p", [NPCid]);
+	GID = get(gid),
+	{ok, User} = egs_user_model:read(GID),
+	%% Create NPC.
+	log("npc force invite ~p", [NPCid]),
+	TmpNPCUser = psu_npc:user_init(NPCid, ((User#egs_user_model.character)#characters.mainlevel)#level.number),
+	%% Create and join party.
+	case User#egs_user_model.partypid of
+		undefined ->
+			{ok, PartyPid} = psu_party:start_link(GID);
+		PartyPid ->
+			ignore
+	end,
+	{ok, PartyPos} = psu_party:join(PartyPid, npc, TmpNPCUser#egs_user_model.id),
+	#egs_user_model{instancepid=InstancePid, area=Area, entryid=EntryID, pos=Pos} = User,
+	NPCUser = TmpNPCUser#egs_user_model{lid=PartyPos, partypid=PartyPid, instancepid=InstancePid, areatype=mission, area=Area, entryid=EntryID, pos=Pos},
+	egs_user_model:write(NPCUser),
+	egs_user_model:write(User#egs_user_model{partypid=PartyPid}),
+	%% Send stuff.
+	Character = NPCUser#egs_user_model.character,
+	SentNPCCharacter = Character#characters{gid=NPCid, npcid=NPCid},
+	SentNPCUser = NPCUser#egs_user_model{character=SentNPCCharacter},
+	psu_proto:send_010d(User, SentNPCUser),
+	psu_proto:send_0201(User, SentNPCUser),
+	psu_proto:send_0215(User, 0),
+	send_0a04(SentNPCUser#egs_user_model.id),
+	send_022c(0, 16#12),
+	send_1004(npc_mission, SentNPCUser, PartyPos),
+	send_100f((SentNPCUser#egs_user_model.character)#characters.npcid, PartyPos),
+	send_1601(PartyPos);
 
 %% @todo Also at the end send a 101a (NPC:16, PartyPos:16, ffffffff). Not sure about PartyPos.
 event({npc_invite, NPCid}) ->
