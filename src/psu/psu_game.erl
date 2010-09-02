@@ -1407,7 +1407,7 @@ send_1004(Type, User, PartyPos) ->
 		0:512,
 
 		QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer,
-		LID:32,
+		LID:32/little,
 		0:64,
 		16#01000000:32, 16#01000000:32, %% @todo first is current hp, second is max hp
 		0:608 >>).
