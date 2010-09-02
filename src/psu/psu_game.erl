@@ -727,7 +727,7 @@ event({item_equip, ItemIndex, TargetGID, TargetLID, A, B}) ->
 		none -> File = << >>;
 		_ -> {ok, File} = file:read_file(Filename)
 	end,
-	send(<< 16#01050300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer,
+	send(<< 16#01050300:32, 0:64, TargetGID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer,
 		0:64, TargetGID:32/little-unsigned-integer, TargetLID:32/little-unsigned-integer, ItemIndex, 1, Category, A, B:32/little-unsigned-integer,
 		File/binary >>);
 
