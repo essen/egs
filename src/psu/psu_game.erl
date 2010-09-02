@@ -349,7 +349,7 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 					send_0111(6, 0);
 				true -> ignore
 			end,
-			send_010d(User#egs_user_model{lid=0}),
+			psu_proto:send_010d(User, User#egs_user_model{lid=0}),
 			send_0200(AreaType),
 			send_020f(ZoneFile, SetID, SeasonID);
 		true -> ignore
@@ -418,7 +418,7 @@ npc_load(Leader, [{PartyPos, NPCGID}|NPCList]) ->
 	%% @todo This one on mission end/abort?
 	%~ OldNPCUser#egs_user_model{lid=PartyPos, instancepid=undefined, areatype=AreaType, area={psu_area, 0, 0, 0}, entryid=0, pos={pos, 0.0, 0.0, 0.0, 0}}
 	egs_user_model:write(NPCUser),
-	send_010d(NPCUser),
+	psu_proto:send_010d(Leader, NPCUser),
 	psu_proto:send_0201(Leader, NPCUser),
 	psu_proto:send_0215(Leader, 0),
 	send_0a04(NPCUser#egs_user_model.id),
@@ -592,7 +592,7 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}) ->
 	psu_proto:send_0c00(User),
 	psu_proto:send_020e(User, QuestFile),
 	psu_proto:send_0a05(User),
-	send_010d(User#egs_user_model{lid=0}),
+	psu_proto:send_010d(User, User#egs_user_model{lid=0}),
 	send_0200(mission),
 	send_020f(ZoneFile, 0, 16#ff),
 	psu_proto:send_0205(User, 0),
@@ -1104,19 +1104,7 @@ header(Command) ->
 send(Packet) ->
 	psu_proto:packet_send(get(socket), Packet).
 
-%% @todo Figure out what this does compared to 0201(self).
-%% @todo Figure out the unknown values.
-%% @todo Probably don't pattern match the data like this...
-send_010d(User) ->
-	GID = get(gid),
-	CharGID = User#egs_user_model.id,
-	CharLID = User#egs_user_model.lid,
-	<< _:640, CharBin/bits >> = psu_characters:character_user_to_binary(User),
-	send(<< 16#010d0300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
-		1:32/little-unsigned-integer, 0:32, 16#00000300:32, 16#ffff0000:32, 0:32, CharGID:32/little-unsigned-integer,
-		0:192, CharGID:32/little-unsigned-integer, CharLID:32/little-unsigned-integer, 16#ffffffff:32, CharBin/binary >>).
-
-%% @todo Possibly related to 010d. Just send seemingly safe values.
+%% @doc Trigger a character-related event.
 send_0111(A, B) ->
 	GID = get(gid),
 	send(<< 16#01110300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
