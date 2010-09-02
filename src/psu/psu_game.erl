@@ -547,12 +547,12 @@ event({area_change, QuestID, ZoneID, MapID, EntryID}) ->
 %% @todo In the case of NPC characters, when FromTypeID is 00001d00, check that the NPC is in the party and broadcast only to the party (probably).
 %% @todo When the game doesn't find an NPC (probably) and forces it to talk like in the tutorial mission it seems FromTypeID, FromGID and Name are all 0.
 %% @todo Make sure modifiers have correct values.
-event({chat, FromTypeID, FromGID, FromName, Modifiers, ChatMsg}) ->
+event({chat, _FromTypeID, FromGID, _FromName, Modifiers, ChatMsg}) ->
 	UserGID = get(gid),
 	[BcastTypeID, BcastGID, BcastName] = case FromGID of
-		0 -> %% @todo This isn't safe. This probably shouldn't happen either.
+		0 -> %% This probably shouldn't happen. Just make it crash on purpose.
 			log("chat FromGID=0"),
-			[FromTypeID, FromGID, FromName];
+			ignore;
 		UserGID -> %% player chat: disregard whatever was sent except modifiers and message.
 			{ok, User} = egs_user_model:read(UserGID),
 			[16#00001200, User#egs_user_model.id, (User#egs_user_model.character)#characters.name];
@@ -561,12 +561,10 @@ event({chat, FromTypeID, FromGID, FromName, Modifiers, ChatMsg}) ->
 			[16#00001d00, FromGID, (User#egs_user_model.character)#characters.name]
 	end,
 	%% log the message as ascii to the console
-	if	FromGID =:= 0 -> ignore; true ->
-		[LogName|_] = re:split(BcastName, "\\0\\0", [{return, binary}]),
-		[TmpMessage|_] = re:split(ChatMsg, "\\0\\0", [{return, binary}]),
-		LogMessage = re:replace(TmpMessage, "\\n", " ", [global, {return, binary}]),
-		log("chat from ~s: ~s", [[re:replace(LogName, "\\0", "", [global, {return, binary}])], [re:replace(LogMessage, "\\0", "", [global, {return, binary}])]])
-	end,
+	[LogName|_] = re:split(BcastName, "\\0\\0", [{return, binary}]),
+	[TmpMessage|_] = re:split(ChatMsg, "\\0\\0", [{return, binary}]),
+	LogMessage = re:replace(TmpMessage, "\\n", " ", [global, {return, binary}]),
+	log("chat from ~s: ~s", [[re:replace(LogName, "\\0", "", [global, {return, binary}])], [re:replace(LogMessage, "\\0", "", [global, {return, binary}])]]),
 	%% broadcast
 	{ok, List} = egs_user_model:select(all),
 	lists:foreach(fun(X) -> X#egs_user_model.pid ! {psu_chat, BcastTypeID, BcastGID, BcastName, Modifiers, ChatMsg} end, List);
