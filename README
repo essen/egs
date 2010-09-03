@@ -1,4 +1,4 @@
-EGS is a GPLv3 Erlang Game Server for the game Phantasy Star Universe: AOTI.
+EGS is a GNU AGPL Erlang Game Server for the game Phantasy Star Universe: AOTI.
 
 This is a community effort toward reviving the now dead western PC servers.
 Ultimately the goal is to provide common components for instanced action
