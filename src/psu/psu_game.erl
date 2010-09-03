@@ -1437,7 +1437,8 @@ send_1005(Name) ->
 %% @doc Party-related command probably controlling the party state.
 %%      EventID 11 aborts the mission.
 send_1006(EventID, PartyPos) ->
-	send(<< (header(16#1006))/binary, EventID:8, PartyPos:8, 0:16 >>).
+	GID = get(gid),
+	send(<< 16#10060300:32, 16#ffff:16, 0:144, 16#00011300:32, GID:32/little, 0:64, EventID:8, PartyPos:8, 0:16 >>).
 
 %% @doc Send the player's current location.
 send_100e(QuestID, ZoneID, MapID, Location, CounterID) ->
