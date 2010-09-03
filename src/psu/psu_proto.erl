@@ -1056,6 +1056,14 @@ send_0c00(DestUser) ->
 		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
 		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32 >>).
 
+%% @doc Send the character flags list. This is the whole list of available values, not the character's.
+%%      Sent without fragmentation on official for unknown reasons. Do the same here.
+send_0d05(DestUser) ->
+	#egs_user_model{id=DestGID, socket=DestSocket} = DestUser,
+	{ok, Flags} = file:read_file("p/flags.bin"),
+	Packet = << 16#0d050300:32, 0:32, 16#00011300:32, DestGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64, Flags/binary >>,
+	Size = 4 + byte_size(Packet),
+	ssl:send(DestSocket, << Size:32/little, Packet/binary >>).
 
 
 

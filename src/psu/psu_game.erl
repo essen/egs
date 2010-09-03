@@ -123,8 +123,9 @@ process_event({system_key_auth_request, AuthGID, AuthKey}) ->
 					log("auth success"),
 					LID = 1 + mnesia:dirty_update_counter(counters, lobby, 1) rem 1023,
 					Time = calendar:datetime_to_gregorian_seconds(calendar:universal_time()),
-					egs_user_model:write(#egs_user_model{id=AuthGID, pid=self(), socket=CSocket, state=authenticated, time=Time, folder=User#egs_user_model.folder, lid=LID}),
-					send_0d05(),
+					NewUser = #egs_user_model{id=AuthGID, pid=self(), socket=CSocket, state=authenticated, time=Time, folder=User#egs_user_model.folder, lid=LID},
+					egs_user_model:write(NewUser),
+					psu_proto:send_0d05(NewUser),
 					?MODULE:char_select();
 				_ ->
 					log("quit, auth failed"),
@@ -1378,15 +1379,6 @@ send_0d03(Data0, Data1, Data2, Data3) ->
 		Status1:8/unsigned-integer, 0:48, Char1/binary, 0:520,
 		Status2:8/unsigned-integer, 0:48, Char2/binary, 0:520,
 		Status3:8/unsigned-integer, 0:48, Char3/binary, 0:512 >>).
-
-%% @doc Send the character flags list. This is the whole list of available values, not the character's.
-%%      Sent without fragmentation on official for unknown reasons. Do the same here.
-send_0d05() ->
-	{ok, Flags} = file:read_file("p/flags.bin"),
-	GID = get(gid),
-	Packet = << 16#0d050300:32, 0:32, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Flags/binary >>,
-	Size = 4 + byte_size(Packet),
-	ssl:send(get(socket), << Size:32/little-unsigned-integer, Packet/binary >>).
 
 %% @todo Add a character (NPC or real) to the party members on the right of the screen.
 %% @todo NPCid is 65535 for normal characters.
