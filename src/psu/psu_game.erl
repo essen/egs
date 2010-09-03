@@ -1549,11 +1549,13 @@ send_1332() ->
 %% @doc Send the player's partner card.
 %% @todo Find out the remaining values.
 send_1500(User) ->
+	GID = User#egs_user_model.id,
 	#characters{slot=Slot, name=Name, race=Race, gender=Gender, class=Class} = User#egs_user_model.character,
 	RaceBin = psu_characters:race_atom_to_binary(Race),
 	GenderBin = psu_characters:gender_atom_to_binary(Gender),
 	ClassBin = psu_characters:class_atom_to_binary(Class),
-	send(<< (header(16#1500))/binary, Name/binary, RaceBin:8, GenderBin:8, ClassBin:8, 0:3112, 16#010401:24, Slot:8, 0:64 >>).
+	send(<< 16#15000300:32, 16#ffff:16, 0:144, 16#00011300:32, GID:32/little, 0:64,
+		Name/binary, RaceBin:8, GenderBin:8, ClassBin:8, 0:40, GID:32/little, 0:3040, 16#010401:24, Slot:8, 0:64 >>).
 
 %% @todo Send an empty partner card list.
 send_1501() ->
