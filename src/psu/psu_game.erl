@@ -128,7 +128,6 @@ process_event({system_key_auth_request, AuthGID, AuthKey}) ->
 					?MODULE:char_select();
 				_ ->
 					log("quit, auth failed"),
-					egs_user_model:delete(AuthGID),
 					ssl:close(CSocket)
 			end
 	end.
