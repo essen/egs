@@ -93,8 +93,16 @@ process_init(CSocket, MPid) ->
 process() ->
 	case psu_proto:packet_recv(get(socket), 5000) of
 		{ok, Orig} ->
-			{command, Command, _, Data} = psu_proto:packet_parse(Orig),
-			process_handle(Command, Data);
+			case psu_proto:parse(Orig) of
+				{command, Command, Channel, _Data} ->
+					log("(process) dismissed command ~4.16.0b channel ~b", [Command, Channel]),
+					?MODULE:process();
+				ignore ->
+					ignore,
+					?MODULE:process();
+				Event ->
+					process_event(Event)
+			end;
 		{error, timeout} ->
 			reload,
 			?MODULE:process();
@@ -102,34 +110,28 @@ process() ->
 			closed
 	end.
 
-%% @doc Game server auth request handler. Save the GID in the process dictionary after checking it.
-process_handle(16#020d, << GID:32/little-unsigned-integer, Auth:32/bits, _/bits >>) ->
+process_event({system_key_auth_request, AuthGID, AuthKey}) ->
 	CSocket = get(socket),
-	case egs_user_model:read(GID) of
+	case egs_user_model:read(AuthGID) of
 		{error, badarg} ->
 			log("can't find user, closing"),
 			ssl:close(CSocket);
 		{ok, User} ->
 			case User#egs_user_model.state of
-				{wait_for_authentication, Auth} ->
-					put(gid, GID),
+				{wait_for_authentication, AuthKey} ->
+					put(gid, AuthGID),
 					log("auth success"),
 					LID = 1 + mnesia:dirty_update_counter(counters, lobby, 1) rem 1023,
 					Time = calendar:datetime_to_gregorian_seconds(calendar:universal_time()),
-					egs_user_model:write(#egs_user_model{id=GID, pid=self(), socket=CSocket, state=authenticated, time=Time, folder=User#egs_user_model.folder, lid=LID}),
+					egs_user_model:write(#egs_user_model{id=AuthGID, pid=self(), socket=CSocket, state=authenticated, time=Time, folder=User#egs_user_model.folder, lid=LID}),
 					send_0d05(),
 					?MODULE:char_select();
 				_ ->
 					log("quit, auth failed"),
-					egs_user_model:delete(GID),
+					egs_user_model:delete(AuthGID),
 					ssl:close(CSocket)
 			end
-	end;
-
-%% @doc Unknown command handler. Do nothing.
-process_handle(Command, _) ->
-	log("(process) dismissed packet ~4.16.0b", [Command]),
-	?MODULE:process().
+	end.
 
 %% @doc Character selection screen loop.
 char_select() ->

@@ -202,6 +202,25 @@ parse(Size, 16#0110, Channel, Data) ->
 		_ -> log("unknown 0110 EventID ~p", [EventID])
 	end;
 
+parse(Size, 16#020d, Channel, Data) ->
+	<<	LID:16/little, VarA:16/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little, VarF:32/little,
+		VarG:32/little, VarH:32/little, VarI:32/little, AuthGID:32/little, AuthKey:32/bits, VarJ:32/little, VarK:32/little >> = Data,
+	?ASSERT_EQ(Size, 60),
+	?ASSERT_EQ(Channel, 2),
+	?ASSERT_EQ(LID, 16#ffff),
+	?ASSERT_EQ(VarA, 0),
+	?ASSERT_EQ(VarB, 0),
+	?ASSERT_EQ(VarC, 0),
+	?ASSERT_EQ(VarD, 0),
+	?ASSERT_EQ(VarE, 0),
+	?ASSERT_EQ(VarF, 0),
+	?ASSERT_EQ(VarG, 0),
+	?ASSERT_EQ(VarH, 0),
+	?ASSERT_EQ(VarI, 0),
+	?ASSERT_EQ(VarJ, 0),
+	?ASSERT_EQ(VarK, 0),
+	{system_key_auth_request, AuthGID, AuthKey};
+
 %% @doc This command should be safely ignored. Probably indicates that character loading was successful.
 parse(Size, 16#021c, Channel, Data) ->
 	<< _LID:16/little, VarA:16/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little, VarF:32/little, VarG:32/little, VarH:32/little, VarI:32/little >> = Data,
