@@ -94,14 +94,8 @@ process() ->
 	case psu_proto:packet_recv(get(socket), 5000) of
 		{ok, Orig} ->
 			case psu_proto:parse(Orig) of
-				{command, Command, Channel, _Data} ->
-					log("(process) dismissed command ~4.16.0b channel ~b", [Command, Channel]),
-					?MODULE:process();
-				ignore ->
-					ignore,
-					?MODULE:process();
-				Event ->
-					process_event(Event)
+				ignore -> ?MODULE:process();
+				Event -> process_event(Event)
 			end;
 		{error, timeout} ->
 			reload,
@@ -109,6 +103,10 @@ process() ->
 		{error, closed} ->
 			closed
 	end.
+
+%% @todo Check the client version info here too. Not just in psu_login.
+process_event({system_client_version_info, _Language, _Platform, _Version}) ->
+	?MODULE:process();
 
 process_event({system_key_auth_request, AuthGID, AuthKey}) ->
 	CSocket = get(socket),
@@ -131,7 +129,11 @@ process_event({system_key_auth_request, AuthGID, AuthKey}) ->
 					log("quit, auth failed"),
 					ssl:close(CSocket)
 			end
-	end.
+	end;
+
+process_event({command, Command, Channel, _Data}) ->
+	log("process_event: dismissed command ~4.16.0b channel ~b", [Command, Channel]),
+	?MODULE:process().
 
 %% @doc Character selection screen loop.
 char_select() ->
