@@ -993,6 +993,11 @@ send_0201(DestUser, CharUser) ->
 	packet_send(DestUser#egs_user_model.socket, << 16#02010300:32, 0:32, CharTypeID:32, CharGID:32/little-unsigned-integer,
 		0:64, 16#00011300:32, DestGID:32/little-unsigned-integer, 0:64, CharBin/binary, IsGM:8, 0:8, OnlineStatus:8, GameVersion:8, 0:608 >>).
 
+%% @doc Hello command. Sent when a client connects to the game or login server.
+%% @todo Can contain an error message if 0:1024 is setup similar to this: 0:32, 3:32/little, 0:48, Len:16/little, Error/binary, 0:Padding.
+send_0202(DestSocket, SessionID) ->
+	packet_send(DestSocket, << 16#020203bf:32, 16#ffff:16, 0:272, SessionID:32/little, 0:1024 >>).
+
 %% @doc Make the client load a new map.
 %% @todo We set a value of 1 and not 0 after EntryID because this value is never found to be 0.
 send_0205(DestUser, IsSeasonal) ->

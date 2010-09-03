@@ -59,7 +59,7 @@ accept(LSocket, SessionID) ->
 %% @doc Process the new connections. Send an hello packet and start the loop.
 process(CSocket, SessionID) ->
 	log(SessionID, "hello"),
-	psu_proto:packet_send(CSocket, << 16#02020300:32, 0:288, SessionID:32/little-unsigned-integer >>),
+	psu_proto:send_0202(CSocket, SessionID),
 	?MODULE:loop(CSocket, SessionID).
 
 %% @spec loop(CSocket, SessionID) -> ok

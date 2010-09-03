@@ -84,7 +84,7 @@ accept(LSocket, MPid) ->
 process_init(CSocket, MPid) ->
 	link(MPid),
 	put(socket, CSocket),
-	send_0202(),
+	psu_proto:send_0202(CSocket, 0),
 	timer:send_interval(5000, {psu_keepalive}),
 	process().
 
@@ -1183,10 +1183,6 @@ send_0200(ZoneType) ->
 			Var = << 16#00040000:32, 0:160, 16#00140000:32 >>
 	end,
 	send(<< (header(16#0200))/binary, 0:32, 16#01000000:32, 16#ffffffff:32, Var/binary, 16#ffffffff:32, 16#ffffffff:32 >>).
-
-%% @doc Hello packet, always sent on client connection.
-send_0202() ->
-	send(<< 16#02020300:32, 0:352 >>).
 
 %% @todo Not sure. Used for unspawning, and more.
 send_0204(DestUser, TargetUser, Action) ->
