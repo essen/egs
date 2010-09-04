@@ -198,7 +198,6 @@ char_select_load(Number) ->
 		prev_area={psu_area, 0, 0, 0}, prev_entryid=0, pos=#pos{x=0.0, y=0.0, z=0.0, dir=0.0}, setid=0},
 	egs_user_model:write(User),
 	char_load(User),
-	send_021b(),
 	event({area_change, 1100000, 0, 4, 5}),
 	ssl:setopts(get(socket), [{active, true}]),
 	?MODULE:loop(<< >>).
@@ -215,6 +214,7 @@ data_load(Folder, Number) ->
 	end.
 
 %% @doc Load and send the character information to the client.
+%% @todo Should wait for the 021c reply before doing area_change.
 char_load(User) ->
 	send_0d01(User),
 	% 0246
@@ -228,7 +228,8 @@ char_load(User) ->
 	send_1501(),
 	send_1512(),
 	% 0303
-	send_1602().
+	send_1602(),
+	send_021b().
 
 %% @doc Return the current season information.
 area_get_season(QuestID) ->
