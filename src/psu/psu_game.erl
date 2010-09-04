@@ -693,7 +693,10 @@ event({hits, Hits}) ->
 
 %% @todo Send something other than just "dammy".
 event({item_description_request, ItemID}) ->
-	send_0a11(ItemID, "dammy");
+	case proplists:get_value(ItemID, ?ITEMS) of
+		undefined -> send_0a11(ItemID, "Always bet on Dammy.");
+		#psu_item{description=Desc} -> send_0a11(ItemID, Desc)
+	end;
 
 %% @todo A and B are unknown.
 %%      Melee uses a format similar to: AAAA--BBCCCC----DDDDDDDDEE----FF with
