@@ -996,10 +996,10 @@ parse(Size, 16#1a01, Channel, Data) ->
 		6 ->
 			?ASSERT_EQ(ShopID, 0),
 			?ASSERT_EQ(VarJ, 0),
-			?ASSERT(), ignore;
+			?ASSERT(), ignore; %% @todo put_on_outfit
 		7 ->
 			?ASSERT_EQ(ShopID, 0),
-			?ASSERT(), ignore;
+			?ASSERT(), ignore; %% @todo remove_outfit
 		9 ->
 			?ASSERT_EQ(ShopID, 0),
 			?ASSERT_EQ(VarJ, 0),
