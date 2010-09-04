@@ -542,6 +542,25 @@ parse(Size, 16#0815, Channel, Data) ->
 	?ASSERT_EQ(VarI, 0),
 	ignore;
 
+parse(Size, 16#0818, Channel, Data) ->
+	<< LID:16/little, VarA:16/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little, VarF:32/little, VarG:32/little,
+		VarH:32/little, VarI:32/little, BinGPU:512/bits, BinCPU:384/bits, _VarJ:32/little >> = Data,
+	?ASSERT_EQ(Size, 160),
+	?ASSERT_EQ(Channel, 2),
+	?ASSERT_EQ(LID, 16#ffff),
+	?ASSERT_EQ(VarA, 0),
+	?ASSERT_EQ(VarB, 0),
+	?ASSERT_EQ(VarC, 0),
+	?ASSERT_EQ(VarD, 0),
+	?ASSERT_EQ(VarE, 0),
+	?ASSERT_EQ(VarF, 0),
+	?ASSERT_EQ(VarG, 0),
+	?ASSERT_EQ(VarH, 0),
+	?ASSERT_EQ(VarI, 0),
+	[_StringCPU|_] = re:split(BinCPU, "\\0", [{return, binary}]),
+	[_StringGPU|_] = re:split(BinGPU, "\\0", [{return, binary}]),
+	ignore; %% @todo {system_client_hardware_info, StringGPU, StringCPU}; worth logging?
+
 parse(Size, 16#0a10, Channel, Data) ->
 	<<	_LID:16/little, VarA:16/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little,
 		VarF:32/little, VarG:32/little, VarH:32/little, VarI:32/little, ItemID:32 >> = Data,
