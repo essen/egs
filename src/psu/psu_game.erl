@@ -140,8 +140,10 @@ process_event({command, Command, Channel, _Data}) ->
 char_select() ->
 	case psu_proto:packet_recv(get(socket), 5000) of
 		{ok, Orig} ->
-			{command, Command, _, Data} = psu_proto:packet_parse(Orig),
-			char_select_handle(Command, Data);
+			case psu_proto:parse(Orig) of
+				ignore -> ?MODULE:char_select();
+				Event -> char_select_event(Event)
+			end;
 		{error, timeout} ->
 			psu_proto:send_keepalive(get(socket)),
 			reload,
@@ -150,17 +152,11 @@ char_select() ->
 			closed %% exit
 	end.
 
-%% @doc Character selection handler.
-char_select_handle(16#020b, << Number:32/little-unsigned-integer, _/bits >>) ->
-	log("selected character ~b", [Number]),
-	char_select_load(Number);
-
-%% @doc Character creation handler.
 %% @todo Reenable appearance validation whenever things go live.
-char_select_handle(16#0d02, << Number:32/little-unsigned-integer, Char/bits >>) ->
-	log("character creation"),
+char_select_event({char_select_create, Slot, CharBin}) ->
+	log("character creation ~b", [Slot]),
 	%% check for valid character appearance
-	%~ << _Name:512, RaceID:8, GenderID:8, _TypeID:8, AppearanceBin:776/bits, _/bits >> = Char,
+	%~ << _Name:512, RaceID:8, GenderID:8, _TypeID:8, AppearanceBin:776/bits, _/bits >> = CharBin,
 	%~ Race = proplists:get_value(RaceID, [{0, human}, {1, newman}, {2, cast}, {3, beast}]),
 	%~ Gender = proplists:get_value(GenderID, [{0, male}, {1, female}]),
 	%~ Appearance = psu_appearance:binary_to_tuple(Race, AppearanceBin),
@@ -168,23 +164,21 @@ char_select_handle(16#0d02, << Number:32/little-unsigned-integer, Char/bits >>) 
 	%% end of check, continue doing it wrong past that point for now
 	{ok, User} = egs_user_model:read(get(gid)),
 	_ = file:make_dir(io_lib:format("save/~s", [User#egs_user_model.folder])),
-	file:write_file(io_lib:format("save/~s/~b-character", [User#egs_user_model.folder, Number]), Char),
-	file:write_file(io_lib:format("save/~s/~b-character.options", [User#egs_user_model.folder, Number]), << 0:128, 4, 0:56 >>), % default 0 to everything except brightness 4
-	char_select_load(Number);
+	file:write_file(io_lib:format("save/~s/~b-character", [User#egs_user_model.folder, Slot]), CharBin),
+	file:write_file(io_lib:format("save/~s/~b-character.options", [User#egs_user_model.folder, Slot]), << 0:128, 4, 0:56 >>), % default 0 to everything except brightness 4
+	?MODULE:char_select();
 
-%% @doc Character selection screen request.
-char_select_handle(16#0d06, _) ->
+char_select_event({char_select_enter, Slot, _BackToPreviousField}) ->
+	log("selected character ~b", [Slot]),
+	char_select_load(Slot);
+
+char_select_event(char_select_request) ->
 	{ok, User} = egs_user_model:read(get(gid)),
 	send_0d03(data_load(User#egs_user_model.folder, 0), data_load(User#egs_user_model.folder, 1), data_load(User#egs_user_model.folder, 2), data_load(User#egs_user_model.folder, 3)),
 	?MODULE:char_select();
 
-%% @doc Silently ignore packet 0818. Gives CPU/GPU information.
-char_select_handle(16#0818, _) ->
-	?MODULE:char_select();
-
-%% @doc Unknown command handler. Do nothing.
-char_select_handle(Command, _) ->
-	log("(char_select) dismissed packet ~4.16.0b", [Command]),
+char_select_event({command, Command, Channel, _Data}) ->
+	log("char_select_event: dismissed command ~4.16.0b channel ~b", [Command, Channel]),
 	?MODULE:char_select().
 
 %% @doc Load the selected character in the start lobby and start the main game's loop.

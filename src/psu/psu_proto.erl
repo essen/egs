@@ -202,6 +202,26 @@ parse(Size, 16#0110, Channel, Data) ->
 		_ -> log("unknown 0110 EventID ~p", [EventID])
 	end;
 
+parse(Size, 16#020b, Channel, Data) ->
+	<<	LID:16/little, VarA:16/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little, VarF:32/little,
+		VarG:32/little, VarH:32/little, VarI:32/little, Slot:32/little, VarJ:8, BackToPreviousField:8, VarK:16/little >> = Data,
+	?ASSERT_EQ(Size, 52),
+	?ASSERT_EQ(Channel, 2),
+	?ASSERT_EQ(LID, 16#ffff),
+	?ASSERT_EQ(VarA, 0),
+	?ASSERT_EQ(VarB, 0),
+	?ASSERT_EQ(VarC, 0),
+	?ASSERT_EQ(VarD, 0),
+	?ASSERT_EQ(VarE, 0),
+	?ASSERT_EQ(VarF, 0),
+	?ASSERT_EQ(VarG, 0),
+	?ASSERT_EQ(VarH, 0),
+	?ASSERT_EQ(VarI, 0),
+	?ASSERT_EQ(VarJ, 0),
+	?ASSERT_EQ(VarK, 0),
+	AtomBackToPreviousField = if BackToPreviousField =:= 0 -> false; true -> true end,
+	{char_select_enter, Slot, AtomBackToPreviousField};
+
 parse(Size, 16#020d, Channel, Data) ->
 	<<	LID:16/little, VarA:16/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little, VarF:32/little,
 		VarG:32/little, VarH:32/little, VarI:32/little, AuthGID:32/little, AuthKey:32/bits, VarJ:32/little, VarK:32/little >> = Data,
@@ -637,6 +657,39 @@ parse(Size, 16#0c0f, Channel, Data) ->
 	?ASSERT_EQ(VarH, 0),
 	?ASSERT_EQ(VarI, 0),
 	{counter_quest_options_request, CounterID};
+
+%% @todo Return a tuple rather than a binary!
+%% @todo Parse and validate the data here rather than in psu_game.
+parse(Size, 16#0d02, Channel, Data) ->
+	<<	VarA:32/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little, VarF:32/little,
+		VarG:32/little, VarH:32/little, VarI:32/little, Slot:32/little, CharBin/bits >> = Data,
+	?ASSERT_EQ(Size, 324),
+	?ASSERT_EQ(Channel, 2),
+	?ASSERT_EQ(VarA, 0),
+	?ASSERT_EQ(VarB, 0),
+	?ASSERT_EQ(VarC, 0),
+	?ASSERT_EQ(VarD, 0),
+	?ASSERT_EQ(VarE, 0),
+	?ASSERT_EQ(VarF, 0),
+	?ASSERT_EQ(VarG, 0),
+	?ASSERT_EQ(VarH, 0),
+	?ASSERT_EQ(VarI, 0),
+	{char_select_create, Slot, CharBin};
+
+parse(Size, 16#0d06, Channel, Data) ->
+	<<	VarA:32/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little, VarF:32/little, VarG:32/little, VarH:32/little, VarI:32/little >> = Data,
+	?ASSERT_EQ(Size, 44),
+	?ASSERT_EQ(Channel, 2),
+	?ASSERT_EQ(VarA, 0),
+	?ASSERT_EQ(VarB, 0),
+	?ASSERT_EQ(VarC, 0),
+	?ASSERT_EQ(VarD, 0),
+	?ASSERT_EQ(VarE, 0),
+	?ASSERT_EQ(VarF, 0),
+	?ASSERT_EQ(VarG, 0),
+	?ASSERT_EQ(VarH, 0),
+	?ASSERT_EQ(VarI, 0),
+	char_select_request;
 
 %% @todo Return a tuple rather than a binary!
 parse(Size, 16#0d07, Channel, Data) ->
