@@ -113,7 +113,7 @@ parse(Size, 16#0105, Channel, Data) ->
 
 parse(Size, 16#010a, Channel, Data) ->
 	<<	HeaderLID:16/little, VarA:16/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little, VarF:32/little, VarG:32/little, VarH:32/little, VarI:32/little,
-		_GID:32/little, BodyLID:32/little, EventID:16/little, VarJ:8, VarK:8, Param:16/bits, VarL:16 >> = Data,
+		_GID:32/little, BodyLID:32/little, EventID:16/little, Quantity:8, VarK:8, Param:16/bits, VarL:16 >> = Data,
 	?ASSERT_EQ(Size, 60),
 	?ASSERT_EQ(Channel, 2),
 	?ASSERT_EQ(VarA, 0),
@@ -129,24 +129,24 @@ parse(Size, 16#010a, Channel, Data) ->
 	case EventID of
 		1 ->
 			<< ShopID:16/little >> = Param,
-			?ASSERT_EQ(VarJ, 0),
+			?ASSERT_EQ(Quantity, 0),
 			?ASSERT_EQ(VarK, 0),
 			?ASSERT_EQ(VarL, 0),
 			{npc_shop_enter, ShopID};
 		2 ->
-			<< _ShopItemIndex:16/little >> = Param,
-			?ASSERT_EQ(VarJ, VarK),
+			<< ShopItemIndex:16/little >> = Param,
+			?ASSERT_EQ(Quantity, VarK),
 			?ASSERT_EQ(VarL, 0),
-			ignore; %% @todo {npc_shop_buy, ShopItemIndex};
+			{npc_shop_buy, ShopItemIndex, Quantity};
 		3 ->
-			<< _InventoryItemIndex:8, _Unknown:8 >> = Param,
+			<< InventoryItemIndex:8, _Unknown:8 >> = Param,
 			?ASSERT_EQ(VarK, 0),
 			?ASSERT_EQ(VarL, 0),
-			ignore; %% @todo {npc_shop_sell, InventoryItemIndex};
+			{npc_shop_sell, InventoryItemIndex, Quantity};
 		4 -> ?ASSERT(), ignore;
 		5 ->
 			<< ShopID:16/little >> = Param,
-			?ASSERT_EQ(VarJ, 0),
+			?ASSERT_EQ(Quantity, 0),
 			?ASSERT_EQ(VarK, 0),
 			?ASSERT_EQ(VarL, 0),
 			{npc_shop_leave, ShopID};

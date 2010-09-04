@@ -848,6 +848,11 @@ event({npc_invite, NPCid}) ->
 	send_1004(npc_invite, SentNPCUser, PartyPos),
 	send_101a(NPCid, PartyPos);
 
+%% @todo Should be 0115(money) 010a03(confirm sale).
+%% @todo We probably need to save the ShopID somewhere since it isn't given back here.
+event({npc_shop_buy, ShopItemIndex, Quantity}) ->
+	log("npc shop buy itemindex ~p quantity ~p", [ShopItemIndex, Quantity]);
+
 %% @todo Currently send the normal items shop for all shops, differentiate.
 event({npc_shop_enter, ShopID}) ->
 	log("npc shop enter ~p", [ShopID]),
@@ -866,6 +871,10 @@ event({npc_shop_leave, ShopID}) ->
 	GID = get(gid),
 	send(<< 16#010a0300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32,
 		GID:32/little-unsigned-integer, 0:64, GID:32/little-unsigned-integer, 0:32 >>);
+
+%% @todo Should be 0115(money) 010a03(confirm sale).
+event({npc_shop_sell, InventoryItemIndex, Quantity}) ->
+	log("npc shop sell itemindex ~p quantity ~p", [InventoryItemIndex, Quantity]);
 
 %% @todo First 1a02 value should be non-0.
 %% @todo Could the 2nd 1a02 parameter simply be the shop type or something?
@@ -1197,7 +1206,7 @@ send_0113() ->
 	GID = get(gid),
 	send(<< 16#01130300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, GID:32/little-unsigned-integer, File/binary >>).
 
-%% @doc Update the character's EXP.
+%% @doc Update the character's EXP, level or money.
 send_0115(GID, TargetID, LV, EXP, Money) ->
 	send(<< 16#01150300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, GID:32/little-unsigned-integer,
 		0:32, TargetID:32/little-unsigned-integer, LV:32/little-unsigned-integer, 0:32, 0:32, EXP:32/little-unsigned-integer, 0:32, Money:32/little-unsigned-integer, 16#f5470500:32, 0:96, 0:64,
