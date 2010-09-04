@@ -24,6 +24,7 @@
 -include("include/records.hrl").
 -include("include/maps.hrl").
 -include("include/missions.hrl").
+-include("include/psu/items.hrl").
 -include("include/psu/npc.hrl").
 
 -define(OPTIONS, [binary, {active, false}, {reuseaddr, true}, {certfile, "priv/ssl/servercert.pem"}, {keyfile, "priv/ssl/serverkey.pem"}, {password, "alpha"}]).
@@ -847,10 +848,15 @@ event({npc_invite, NPCid}) ->
 %% @todo Currently send the normal items shop for all shops, differentiate.
 event({npc_shop_enter, ShopID}) ->
 	log("npc shop enter ~p", [ShopID]),
-	GID = get(gid),
-	{ok, File} = file:read_file("p/itemshop.bin"),
-	send(<< 16#010a0300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32,
-		GID:32/little-unsigned-integer, 0:64, GID:32/little-unsigned-integer, 0:32, File/binary >>);
+	case proplists:get_value(ShopID, ?SHOPS) of
+		undefined -> %% @todo Temporary; prevent players from getting stuck.
+			GID = get(gid),
+			{ok, File} = file:read_file("p/itemshop.bin"),
+			send(<< 16#010a0300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32,
+				GID:32/little-unsigned-integer, 0:64, GID:32/little-unsigned-integer, 0:32, File/binary >>);
+		ItemsList ->
+			send_010a(ItemsList)
+	end;
 
 event({npc_shop_leave, ShopID}) ->
 	log("npc shop leave ~p", [ShopID]),
@@ -1149,6 +1155,27 @@ header(Command) ->
 %% @todo Consolidate the receive and send functions better.
 send(Packet) ->
 	psu_proto:packet_send(get(socket), Packet).
+
+%% @doc Send a shop listing.
+send_010a(ItemsList) ->
+	GID = get(gid),
+	NbItems = length(ItemsList),
+	ItemsBin = build_010a_list(ItemsList, []),
+	send(<< 16#010a0300:32, 0:64, GID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
+		GID:32/little, 0:32, 1:16/little, NbItems:8, 2:8, 0:32, ItemsBin/binary >>).
+
+%% @todo The values set to 0 are unknown.
+build_010a_list([], Acc) ->
+	iolist_to_binary(lists:reverse(Acc));
+build_010a_list([ItemID|Tail], Acc) ->
+	#psu_item{name=Name, rarity=Rarity, sell_price=SellPrice, data=Data} = proplists:get_value(ItemID, ?ITEMS),
+	#psu_consumable_item{max_quantity=MaxQuantity, hp_diff=HPdiff, status_effect=StatusEffect, target=Target, use_condition=UseCondition, item_effect=ItemEffect} = Data,
+	UCS2Name = << << X:8, 0:8 >> || X <- Name >>,
+	NamePadding = 8 * (46 - byte_size(UCS2Name)),
+	RarityBin = Rarity - 1,
+	Bin = << UCS2Name/binary, 0:NamePadding, RarityBin:8, 0:8, ItemID:32, SellPrice:32/little, 0:8,
+		MaxQuantity:8, Target:8, UseCondition:8, HPdiff:16/little, StatusEffect:8, ItemEffect:8, 0:96 >>,
+	build_010a_list(Tail, [Bin|Acc]).
 
 %% @doc Trigger a character-related event.
 send_0111(A, B) ->
