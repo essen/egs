@@ -1168,14 +1168,19 @@ send_010a(ItemsList) ->
 build_010a_list([], Acc) ->
 	iolist_to_binary(lists:reverse(Acc));
 build_010a_list([ItemID|Tail], Acc) ->
-	#psu_item{name=Name, rarity=Rarity, sell_price=SellPrice, data=Data} = proplists:get_value(ItemID, ?ITEMS),
-	#psu_consumable_item{max_quantity=MaxQuantity, hp_diff=HPdiff, status_effect=StatusEffect, target=Target, use_condition=UseCondition, item_effect=ItemEffect} = Data,
+	#psu_item{name=Name, rarity=Rarity, buy_price=SellPrice, data=Data} = proplists:get_value(ItemID, ?ITEMS),
 	UCS2Name = << << X:8, 0:8 >> || X <- Name >>,
 	NamePadding = 8 * (46 - byte_size(UCS2Name)),
 	RarityBin = Rarity - 1,
-	Bin = << UCS2Name/binary, 0:NamePadding, RarityBin:8, 0:8, ItemID:32, SellPrice:32/little, 0:8,
-		MaxQuantity:8, Target:8, UseCondition:8, HPdiff:16/little, StatusEffect:8, ItemEffect:8, 0:96 >>,
+	DataBin = build_010a_item(Data),
+	Bin = << UCS2Name/binary, 0:NamePadding, RarityBin:8, 0:8, ItemID:32, SellPrice:32/little, DataBin/binary >>,
 	build_010a_list(Tail, [Bin|Acc]).
+
+build_010a_item(#psu_consumable_item{max_quantity=MaxQuantity, pt_diff=PointsDiff,
+	status_effect=StatusEffect, target=Target, use_condition=UseCondition, item_effect=ItemEffect}) ->
+	<< 0:8, MaxQuantity:8, Target:8, UseCondition:8, PointsDiff:16/little, StatusEffect:8, ItemEffect:8, 0:96 >>;
+build_010a_item(#psu_trap_item{max_quantity=MaxQuantity}) ->
+	<< 2:32/little, 16#ffffff:24, MaxQuantity:8, 0:96 >>.
 
 %% @doc Trigger a character-related event.
 send_0111(A, B) ->
