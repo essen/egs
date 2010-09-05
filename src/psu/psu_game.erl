@@ -339,12 +339,12 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 		true -> ignore
 	end,
 	if	IsStart =:= true ->
-			psu_proto:send_0215(User, 16#ffffffff);
+			psu_proto:send_0215(User#egs_user_model{lid=0}, 16#ffffffff);
 		true -> ignore
 	end,
 	if	ZoneChange =:= true ->
 			% load new zone
-			psu_proto:send_0a05(User),
+			psu_proto:send_0a05(User#egs_user_model{lid=0}),
 			if AreaType =:= lobby ->
 					send_0111(6, 0);
 				true -> ignore
@@ -354,12 +354,12 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 			send_020f(ZoneFile, SetID, SeasonID);
 		true -> ignore
 	end,
-	psu_proto:send_0205(User, IsSeasonal),
+	psu_proto:send_0205(User#egs_user_model{lid=0}, IsSeasonal),
 	send_100e(QuestID, ZoneID, (User#egs_user_model.area)#psu_area.mapid, AreaName, 16#ffffffff),
 	if	AreaType =:= mission ->
-			psu_proto:send_0215(User, 0),
+			psu_proto:send_0215(User#egs_user_model{lid=0}, 0),
 			if	IsStart =:= true ->
-					psu_proto:send_0215(User, 0),
+					psu_proto:send_0215(User#egs_user_model{lid=0}, 0),
 					send_0c09();
 				true -> ignore
 			end;
@@ -1248,17 +1248,19 @@ send_0208() ->
 send_020f(Filename, SetID, SeasonID) ->
 	{ok, File} = file:read_file(Filename),
 	Size = byte_size(File),
-	send(<< 16#020f0300:32, 0:288, SetID, SeasonID, 0:16, Size:32/little-unsigned-integer, File/binary >>).
+	send(<< 16#020f0300:32, 16#ffff:16, 0:272, SetID, SeasonID, 0:16, Size:32/little-unsigned-integer, File/binary >>).
 
 %% @doc Send the current UNIX time.
 send_0210() ->
+	GID = get(gid),
 	CurrentTime = calendar:datetime_to_gregorian_seconds(calendar:now_to_universal_time(now()))
 		- calendar:datetime_to_gregorian_seconds({{1970, 1, 1}, {0, 0, 0}}),
-	send(<< (header(16#0210))/binary, 0:32, CurrentTime:32/little-unsigned-integer >>).
+	send(<< 16#02100300:32, 16#ffff:16, 0:144, 16#00011300:32, GID:32/little, 0:96, CurrentTime:32/little-unsigned-integer >>).
 
 %% @todo End of character loading. Just send it.
 send_021b() ->
-	send(header(16#021b)).
+	GID = get(gid),
+	send(<< 16#021b0300:32, 16#ffff:16, 0:144, 16#00011300:32, GID:32/little, 0:64 >>).
 
 %% @doc Send the list of available universes.
 send_021e() ->
@@ -1284,8 +1286,8 @@ send_021e_build([{ID, Align, Name, Pop}|Tail], Acc) ->
 send_0222() ->
 	UCS2Name = << << X:8, 0:8 >> || X <- "EGS Test" >>,
 	GID = get(gid),
-	send(<< 16#02220300:32, 0:32, 16#00001200:32, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
-		2:32/little-unsigned-integer, 0:32, UCS2Name/binary, 0:16 >>).
+		send(<< 16#02220300:32, 0:32, 16#00001200:32, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
+			2:32/little-unsigned-integer, 0:32, UCS2Name/binary, 0:16 >>).
 
 %% @todo No idea!
 send_022c(A, B) ->
@@ -1472,9 +1474,10 @@ send_1006(EventID, PartyPos) ->
 
 %% @doc Send the player's current location.
 send_100e(QuestID, ZoneID, MapID, Location, CounterID) ->
+	GID = get(gid),
 	UCS2Location = << << X:8, 0:8 >> || X <- Location >>,
-	Packet = << (header(16#100e))/binary, 1:32/little-unsigned-integer, MapID:16/little-unsigned-integer,
-		ZoneID:16/little-unsigned-integer, QuestID:32/little-unsigned-integer, UCS2Location/binary >>,
+	Packet = << 16#100e0300:32, 16#ffffffbf:32, 0:128, 16#00011300:32, GID:32/little, 0:64,
+		1:32/little, MapID:16/little, ZoneID:16/little, QuestID:32/little, UCS2Location/binary >>,
 	PaddingSize = (128 - byte_size(Packet) - 8) * 8,
 	case CounterID of
 		16#ffffffff ->
@@ -1590,11 +1593,13 @@ send_1500(User) ->
 
 %% @todo Send an empty partner card list.
 send_1501() ->
-	send(<< (header(16#1501))/binary, 0:32 >>).
+	GID = get(gid),
+	send(<< 16#15010300:32, 16#ffff:16, 0:144, 16#00011300:32, GID:32/little, 0:96 >>).
 
 %% @todo Send an empty blacklist.
 send_1512() ->
-	send(<< (header(16#1512))/binary, 0:46080 >>).
+	GID = get(gid),
+	send(<< 16#15120300:32, 16#ffff:16, 0:144, 16#00011300:32, GID:32/little, 0:46144 >>).
 
 %% @todo NPC related packet, sent when there's an NPC in the area.
 send_1601(PartyPos) ->
@@ -1610,7 +1615,8 @@ send_1602() ->
 	PMName = "My PM",
 	UCS2PMName = << << X:8, 0:8 >> || X <- PMName >>,
 	EndPaddingSize = 8 * (64 - byte_size(UCS2PMName)),
-	send(<< (header(16#1602))/binary, 0:32, Bin/binary, 0:MiddlePaddingSize, NbNPC, 0:24, UCS2PMName/binary, 0:EndPaddingSize >>).
+	GID = get(gid),
+	send(<< 16#16020300:32, 16#ffff:16, 0:144, 16#00011300:32, GID:32/little, 0:96, Bin/binary, 0:MiddlePaddingSize, NbNPC, 0:24, UCS2PMName/binary, 0:EndPaddingSize, 0:32 >>).
 
 %% @doc Party information.
 %% @todo Handle existing parties.
