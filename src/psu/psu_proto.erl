@@ -91,7 +91,7 @@ parse(Size, 16#0105, Channel, Data) ->
 		3 -> ignore; %% @todo item_link_pa;
 		4 -> ignore; %% @todo item_unlink_pa;
 		5 -> item_drop;
-		7 -> ?ASSERT(), ignore; %% @todo
+		7 -> ignore; %% @todo item_learn_pa;
 		8 -> ignore; %% @todo item_use;
 		9 -> ?ASSERT(), ignore; %% @todo
 		18 -> ignore; %% @todo item_unlearn_pa;
@@ -143,7 +143,7 @@ parse(Size, 16#010a, Channel, Data) ->
 			?ASSERT_EQ(VarK, 0),
 			?ASSERT_EQ(VarL, 0),
 			{npc_shop_sell, InventoryItemIndex, Quantity};
-		4 -> ?ASSERT(), ignore;
+		4 -> ignore; %% @todo npc_shop_gift_wrap
 		5 ->
 			<< ShopID:16/little >> = Param,
 			?ASSERT_EQ(Quantity, 0),
