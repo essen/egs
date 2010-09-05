@@ -1283,11 +1283,14 @@ send_021e_build([{ID, Align, Name, Pop}|Tail], Acc) ->
 
 %% @doc Send the current universe name and number.
 %% @todo Currently only have universe number 2, named EGS Test.
+%% @todo We must have a parameter indicating whether this is a room or a normal universe.
 send_0222() ->
 	UCS2Name = << << X:8, 0:8 >> || X <- "EGS Test" >>,
+	Padding = 8 * (44 - byte_size(UCS2Name)),
+	UniID = 2,
 	GID = get(gid),
-		send(<< 16#02220300:32, 0:32, 16#00001200:32, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
-			2:32/little-unsigned-integer, 0:32, UCS2Name/binary, 0:16 >>).
+	send(<< 16#02220300:32, 16#ffff:16, 0:16, 16#00001200:32, GID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
+		UniID:32/little, 16#01009e02:32, UCS2Name/binary, 0:Padding, 16#aa000000:32 >>).
 
 %% @todo No idea!
 send_022c(A, B) ->
