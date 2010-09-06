@@ -1180,9 +1180,19 @@ build_010a_list([ItemID|Tail], Acc) ->
 	NamePadding = 8 * (46 - byte_size(UCS2Name)),
 	RarityBin = Rarity - 1,
 	DataBin = build_010a_item(Data),
-	Bin = << UCS2Name/binary, 0:NamePadding, RarityBin:8, 0:8, ItemID:32, SellPrice:32/little, DataBin/binary >>,
+	BinItemID = case element(1, Data) of
+		psu_clothing_item -> %% Change the ItemID to enable all colors.
+			<< A:8, _:4, B:12, _:8 >> = << ItemID:32 >>,
+			<< A:8, 3:4, B:12, 16#ff:8 >>;
+		_Any ->
+			<< ItemID:32 >>
+	end,
+	Bin = << UCS2Name/binary, 0:NamePadding, RarityBin:8, 0:8, BinItemID/binary, SellPrice:32/little, DataBin/binary >>,
 	build_010a_list(Tail, [Bin|Acc]).
 
+build_010a_item(#psu_clothing_item{appearance=Appearance, manufacturer=Manufacturer, type=Type, overlap=Overlap, gender=Gender, colors=Colors}) ->
+	GenderInt = case Gender of male -> 16#1b; female -> 16#2b end,
+	<< Appearance:16, Type:4, Manufacturer:4, Overlap:8, GenderInt:8, Colors/binary, 0:40 >>;
 build_010a_item(#psu_consumable_item{max_quantity=MaxQuantity, pt_diff=PointsDiff,
 	status_effect=StatusEffect, target=Target, use_condition=UseCondition, item_effect=ItemEffect}) ->
 	<< 0:8, MaxQuantity:8, Target:8, UseCondition:8, PointsDiff:16/little, StatusEffect:8, ItemEffect:8, 0:96 >>;
