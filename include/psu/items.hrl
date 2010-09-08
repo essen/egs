@@ -20,6 +20,7 @@
 -record(psu_item, {name, description, rarity, buy_price, sell_price, data}).
 -record(psu_clothing_item, {appearance, type, manufacturer, overlap, gender, colors}).
 -record(psu_consumable_item, {max_quantity, pt_diff, status_effect, target, use_condition, item_effect}).
+-record(psu_parts_item, {appearance, type, manufacturer, overlap, gender}).
 -record(psu_trap_item, {max_quantity}).
 
 %% Items.
@@ -965,6 +966,859 @@
 			appearance=16#2600, type=6, manufacturer=8, overlap=16#00, gender=female, colors= << 16#5dd782cf:32, 16#a478c7a2:32, 16#f52d:16 >>
 	}}},
 
+	%% Parts.
+
+	{16#0a010000, #psu_item{name="Revsys Torso",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#f501, type=1, manufacturer=1, overlap=16#01, gender=male
+	}}},
+	{16#0a010100, #psu_item{name="Boktos Torso",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#f601, type=1, manufacturer=1, overlap=16#01, gender=male
+	}}},
+	{16#0a010200, #psu_item{name="Raptus Torso",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#f701, type=1, manufacturer=1, overlap=16#01, gender=male
+	}}},
+	{16#0a010300, #psu_item{name="Vilogis Torso",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#f801, type=1, manufacturer=1, overlap=16#01, gender=male
+	}}},
+	{16#0a010400, #psu_item{name="Lobas Torso",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#f901, type=1, manufacturer=1, overlap=16#01, gender=male
+	}}},
+	{16#0a010500, #psu_item{name="Evors Torso",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#fa01, type=1, manufacturer=1, overlap=16#01, gender=male
+	}}},
+	{16#0a010600, #psu_item{name="Hounds Torso",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#fb01, type=1, manufacturer=1, overlap=16#01, gender=male
+	}}},
+	{16#0a010700, #psu_item{name="Gimnas Torso",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#fc01, type=1, manufacturer=1, overlap=16#01, gender=male
+	}}},
+	{16#0a010800, #psu_item{name="Elaciel Torso",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#f501, type=1, manufacturer=2, overlap=16#01, gender=female
+	}}},
+	{16#0a010900, #psu_item{name="Batrelle Torso",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#f601, type=1, manufacturer=2, overlap=16#01, gender=female
+	}}},
+	{16#0a010a00, #psu_item{name="Redmiel Torso",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#f701, type=1, manufacturer=2, overlap=16#01, gender=female
+	}}},
+	{16#0a010b00, #psu_item{name="Digiel Torso",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#f801, type=1, manufacturer=2, overlap=16#01, gender=female
+	}}},
+	{16#0a010c00, #psu_item{name="Agriel Torso",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#f901, type=1, manufacturer=2, overlap=16#01, gender=female
+	}}},
+	{16#0a010d00, #psu_item{name="Epicarel Torso",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#fa01, type=1, manufacturer=2, overlap=16#01, gender=female
+	}}},
+	{16#0a010e00, #psu_item{name="Gimnael Torso",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#fb01, type=1, manufacturer=2, overlap=16#01, gender=female
+	}}},
+	{16#0a010f00, #psu_item{name="Amorel Torso",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#fc01, type=1, manufacturer=2, overlap=16#01, gender=female
+	}}},
+	{16#0a011000, #psu_item{name="Granadas Torso",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#fd01, type=1, manufacturer=1, overlap=16#01, gender=male
+	}}},
+	{16#0a011100, #psu_item{name="Apollos Torso",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0202, type=1, manufacturer=1, overlap=16#01, gender=male
+	}}},
+	{16#0a011200, #psu_item{name="Musagante Torso",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0302, type=1, manufacturer=1, overlap=16#01, gender=male
+	}}},
+	{16#0a011300, #psu_item{name="Subarga Torso",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0402, type=1, manufacturer=1, overlap=16#01, gender=male
+	}}},
+	{16#0a011400, #psu_item{name="HUcas Torso",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0702, type=1, manufacturer=1, overlap=16#01, gender=male
+	}}},
+	{16#0a011500, #psu_item{name="RAcas Torso",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0602, type=1, manufacturer=1, overlap=16#01, gender=male
+	}}},
+	{16#0a011600, #psu_item{name="Valatines Torso",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#fd01, type=1, manufacturer=2, overlap=16#01, gender=female
+	}}},
+	{16#0a011700, #psu_item{name="Bacolone Torso",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0302, type=1, manufacturer=2, overlap=16#01, gender=female
+	}}},
+	{16#0a011800, #psu_item{name="Lucaral Torso",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0402, type=1, manufacturer=2, overlap=16#01, gender=female
+	}}},
+	{16#0a011900, #psu_item{name="Jenkel Torso",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0502, type=1, manufacturer=2, overlap=16#01, gender=female
+	}}},
+	{16#0a011a00, #psu_item{name="RAcase Torso",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0602, type=1, manufacturer=2, overlap=16#01, gender=female
+	}}},
+	{16#0a011b00, #psu_item{name="HUcase Torso",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0802, type=1, manufacturer=2, overlap=16#01, gender=female
+	}}},
+	{16#0a011c00, #psu_item{name="Revsys Torso CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5902, type=1, manufacturer=1, overlap=16#01, gender=male
+	}}},
+	{16#0a011d00, #psu_item{name="Boktos Torso CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5a02, type=1, manufacturer=1, overlap=16#01, gender=male
+	}}},
+	{16#0a011e00, #psu_item{name="Raptus Torso CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5b02, type=1, manufacturer=1, overlap=16#01, gender=male
+	}}},
+	{16#0a011f00, #psu_item{name="Vilogis Torso CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5c02, type=1, manufacturer=1, overlap=16#01, gender=male
+	}}},
+	{16#0a012000, #psu_item{name="Lobas Torso CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5d02, type=1, manufacturer=1, overlap=16#01, gender=male
+	}}},
+	{16#0a012100, #psu_item{name="Evors Torso CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5e02, type=1, manufacturer=1, overlap=16#01, gender=male
+	}}},
+	{16#0a012200, #psu_item{name="Hounds Torso CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5f02, type=1, manufacturer=1, overlap=16#01, gender=male
+	}}},
+	{16#0a012300, #psu_item{name="Gimnas Torso CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#6002, type=1, manufacturer=1, overlap=16#01, gender=male
+	}}},
+	{16#0a012400, #psu_item{name="Elaciel Torso CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5902, type=1, manufacturer=2, overlap=16#01, gender=female
+	}}},
+	{16#0a012500, #psu_item{name="Batrelle Torso CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5a02, type=1, manufacturer=2, overlap=16#01, gender=female
+	}}},
+	{16#0a012600, #psu_item{name="Redmiel Torso CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5b02, type=1, manufacturer=2, overlap=16#01, gender=female
+	}}},
+	{16#0a012700, #psu_item{name="Digiel Torso CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5c02, type=1, manufacturer=2, overlap=16#01, gender=female
+	}}},
+	{16#0a012800, #psu_item{name="Agriel Torso CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5d02, type=1, manufacturer=2, overlap=16#01, gender=female
+	}}},
+	{16#0a012900, #psu_item{name="Epicarel Torso CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5e02, type=1, manufacturer=2, overlap=16#01, gender=female
+	}}},
+	{16#0a012a00, #psu_item{name="Gimnael Torso CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5f02, type=1, manufacturer=2, overlap=16#01, gender=female
+	}}},
+	{16#0a012b00, #psu_item{name="Amorel Torso CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#6002, type=1, manufacturer=2, overlap=16#01, gender=female
+	}}},
+	{16#0a012c00, #psu_item{name="Granadas Torso CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#6102, type=1, manufacturer=1, overlap=16#01, gender=male
+	}}},
+	{16#0a012d00, #psu_item{name="Apollos Torso CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#6602, type=1, manufacturer=1, overlap=16#01, gender=male
+	}}},
+	{16#0a012e00, #psu_item{name="Musagante Torso CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#6702, type=1, manufacturer=1, overlap=16#01, gender=male
+	}}},
+	{16#0a012f00, #psu_item{name="Subarga Torso CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#6802, type=1, manufacturer=1, overlap=16#01, gender=male
+	}}},
+	{16#0a013000, #psu_item{name="Valatines Torso CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#6102, type=1, manufacturer=2, overlap=16#01, gender=female
+	}}},
+	{16#0a013100, #psu_item{name="Bacolone Torso CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#6702, type=1, manufacturer=2, overlap=16#01, gender=female
+	}}},
+	{16#0a013200, #psu_item{name="Lucaral Torso CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#6802, type=1, manufacturer=2, overlap=16#01, gender=female
+	}}},
+	{16#0a013300, #psu_item{name="Jenkel Torso CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#6902, type=1, manufacturer=2, overlap=16#01, gender=female
+	}}},
+	{16#0a020000, #psu_item{name="Revsys Legs",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#f501, type=2, manufacturer=1, overlap=16#11, gender=male
+	}}},
+	{16#0a020100, #psu_item{name="Boktos Legs",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#f601, type=2, manufacturer=1, overlap=16#11, gender=male
+	}}},
+	{16#0a020200, #psu_item{name="Raptus Legs",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#f701, type=2, manufacturer=1, overlap=16#11, gender=male
+	}}},
+	{16#0a020300, #psu_item{name="Vilogis Legs",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#f801, type=2, manufacturer=1, overlap=16#11, gender=male
+	}}},
+	{16#0a020400, #psu_item{name="Lobas Legs",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#f901, type=2, manufacturer=1, overlap=16#11, gender=male
+	}}},
+	{16#0a020500, #psu_item{name="Evors Legs",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#fa01, type=2, manufacturer=1, overlap=16#11, gender=male
+	}}},
+	{16#0a020600, #psu_item{name="Hounds Legs",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#fb01, type=2, manufacturer=1, overlap=16#11, gender=male
+	}}},
+	{16#0a020700, #psu_item{name="Gimnas Legs",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#fc01, type=2, manufacturer=1, overlap=16#11, gender=male
+	}}},
+	{16#0a020800, #psu_item{name="Elaciel Legs",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#f501, type=2, manufacturer=2, overlap=16#11, gender=female
+	}}},
+	{16#0a020900, #psu_item{name="Batrelle Legs",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#f601, type=2, manufacturer=2, overlap=16#11, gender=female
+	}}},
+	{16#0a020a00, #psu_item{name="Redmiel Legs",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#f701, type=2, manufacturer=2, overlap=16#11, gender=female
+	}}},
+	{16#0a020b00, #psu_item{name="Digiel Legs",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#f801, type=2, manufacturer=2, overlap=16#11, gender=female
+	}}},
+	{16#0a020c00, #psu_item{name="Agriel Legs",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#f901, type=2, manufacturer=2, overlap=16#11, gender=female
+	}}},
+	{16#0a020d00, #psu_item{name="Epicarel Legs",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#fa01, type=2, manufacturer=2, overlap=16#11, gender=female
+	}}},
+	{16#0a020e00, #psu_item{name="Gimnael Legs",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#fb01, type=2, manufacturer=2, overlap=16#11, gender=female
+	}}},
+	{16#0a020f00, #psu_item{name="Amorel Legs",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#fc01, type=2, manufacturer=2, overlap=16#11, gender=female
+	}}},
+	{16#0a021000, #psu_item{name="Granadas Legs",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#fd01, type=2, manufacturer=1, overlap=16#11, gender=male
+	}}},
+	{16#0a021100, #psu_item{name="Apollos Legs",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0202, type=2, manufacturer=1, overlap=16#11, gender=male
+	}}},
+	{16#0a021200, #psu_item{name="Musagante Legs",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0302, type=2, manufacturer=1, overlap=16#11, gender=male
+	}}},
+	{16#0a021300, #psu_item{name="Subarga Legs",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0402, type=2, manufacturer=1, overlap=16#11, gender=male
+	}}},
+	{16#0a021400, #psu_item{name="HUcas Legs",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0702, type=2, manufacturer=1, overlap=16#11, gender=male
+	}}},
+	{16#0a021500, #psu_item{name="RAcas Legs",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0602, type=2, manufacturer=1, overlap=16#11, gender=male
+	}}},
+	{16#0a021600, #psu_item{name="Valatines Legs",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#fd01, type=2, manufacturer=2, overlap=16#11, gender=female
+	}}},
+	{16#0a021700, #psu_item{name="Bacolone Legs",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0302, type=2, manufacturer=2, overlap=16#11, gender=female
+	}}},
+	{16#0a021800, #psu_item{name="Lucaral Legs",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0402, type=2, manufacturer=2, overlap=16#11, gender=female
+	}}},
+	{16#0a021900, #psu_item{name="Jenkel Legs",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0502, type=2, manufacturer=2, overlap=16#11, gender=female
+	}}},
+	{16#0a021a00, #psu_item{name="RAcase Legs",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0602, type=2, manufacturer=2, overlap=16#11, gender=female
+	}}},
+	{16#0a021b00, #psu_item{name="HUcase Legs",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0802, type=2, manufacturer=2, overlap=16#11, gender=female
+	}}},
+	{16#0a021c00, #psu_item{name="Revsys Legs CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5902, type=2, manufacturer=1, overlap=16#11, gender=male
+	}}},
+	{16#0a021d00, #psu_item{name="Boktos Legs CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5a02, type=2, manufacturer=1, overlap=16#11, gender=male
+	}}},
+	{16#0a021e00, #psu_item{name="Raptus Legs CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5b02, type=2, manufacturer=1, overlap=16#11, gender=male
+	}}},
+	{16#0a021f00, #psu_item{name="Vilogis Legs CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5c02, type=2, manufacturer=1, overlap=16#11, gender=male
+	}}},
+	{16#0a022000, #psu_item{name="Lobas Legs CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5d02, type=2, manufacturer=1, overlap=16#11, gender=male
+	}}},
+	{16#0a022100, #psu_item{name="Evors Legs CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5e02, type=2, manufacturer=1, overlap=16#11, gender=male
+	}}},
+	{16#0a022200, #psu_item{name="Hounds Legs CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5f02, type=2, manufacturer=1, overlap=16#11, gender=male
+	}}},
+	{16#0a022300, #psu_item{name="Gimnas Legs CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#6002, type=2, manufacturer=1, overlap=16#11, gender=male
+	}}},
+	{16#0a022400, #psu_item{name="Elaciel Legs CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5902, type=2, manufacturer=2, overlap=16#11, gender=female
+	}}},
+	{16#0a022500, #psu_item{name="Batrelle Legs CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5a02, type=2, manufacturer=2, overlap=16#11, gender=female
+	}}},
+	{16#0a022600, #psu_item{name="Redmiel Legs CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5b02, type=2, manufacturer=2, overlap=16#11, gender=female
+	}}},
+	{16#0a022700, #psu_item{name="Digiel Legs CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5c02, type=2, manufacturer=2, overlap=16#11, gender=female
+	}}},
+	{16#0a022800, #psu_item{name="Agriel Legs CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5d02, type=2, manufacturer=2, overlap=16#11, gender=female
+	}}},
+	{16#0a022900, #psu_item{name="Epicarel Legs CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5e02, type=2, manufacturer=2, overlap=16#11, gender=female
+	}}},
+	{16#0a022a00, #psu_item{name="Gimnael Legs CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5f02, type=2, manufacturer=2, overlap=16#11, gender=female
+	}}},
+	{16#0a022b00, #psu_item{name="Amorel Legs CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#6002, type=2, manufacturer=2, overlap=16#11, gender=female
+	}}},
+	{16#0a022c00, #psu_item{name="Granadas Legs CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#6102, type=2, manufacturer=1, overlap=16#11, gender=male
+	}}},
+	{16#0a022d00, #psu_item{name="Apollos Legs CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#6602, type=2, manufacturer=1, overlap=16#11, gender=male
+	}}},
+	{16#0a022e00, #psu_item{name="Musagante Legs CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#6702, type=2, manufacturer=1, overlap=16#11, gender=male
+	}}},
+	{16#0a022f00, #psu_item{name="Subarga Legs CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#6802, type=2, manufacturer=1, overlap=16#11, gender=male
+	}}},
+	{16#0a023000, #psu_item{name="Valatines Legs CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#6102, type=2, manufacturer=2, overlap=16#11, gender=female
+	}}},
+	{16#0a023100, #psu_item{name="Bacolone Legs CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#6702, type=2, manufacturer=2, overlap=16#11, gender=female
+	}}},
+	{16#0a023200, #psu_item{name="Lucaral Legs CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#6802, type=2, manufacturer=2, overlap=16#11, gender=female
+	}}},
+	{16#0a023300, #psu_item{name="Jenkel Legs CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#6902, type=2, manufacturer=2, overlap=16#11, gender=female
+	}}},
+	{16#0a030000, #psu_item{name="Revsys Arms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#f501, type=3, manufacturer=1, overlap=16#10, gender=male
+	}}},
+	{16#0a030100, #psu_item{name="Boktos Arms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#f601, type=3, manufacturer=1, overlap=16#10, gender=male
+	}}},
+	{16#0a030200, #psu_item{name="Raptus Arms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#f701, type=3, manufacturer=1, overlap=16#10, gender=male
+	}}},
+	{16#0a030300, #psu_item{name="Vilogis Arms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#f801, type=3, manufacturer=1, overlap=16#10, gender=male
+	}}},
+	{16#0a030400, #psu_item{name="Lobas Arms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#f901, type=3, manufacturer=1, overlap=16#10, gender=male
+	}}},
+	{16#0a030500, #psu_item{name="Evors Arms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#fa01, type=3, manufacturer=1, overlap=16#10, gender=male
+	}}},
+	{16#0a030600, #psu_item{name="Hounds Arms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#fb01, type=3, manufacturer=1, overlap=16#10, gender=male
+	}}},
+	{16#0a030700, #psu_item{name="Gimnas Arms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#fc01, type=3, manufacturer=1, overlap=16#10, gender=male
+	}}},
+	{16#0a030800, #psu_item{name="Elaciel Arms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#f501, type=3, manufacturer=2, overlap=16#10, gender=female
+	}}},
+	{16#0a030900, #psu_item{name="Batrelle Arms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#f601, type=3, manufacturer=2, overlap=16#10, gender=female
+	}}},
+	{16#0a030a00, #psu_item{name="Redmiel Arms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#f701, type=3, manufacturer=2, overlap=16#10, gender=female
+	}}},
+	{16#0a030b00, #psu_item{name="Digiel Arms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#f801, type=3, manufacturer=2, overlap=16#10, gender=female
+	}}},
+	{16#0a030c00, #psu_item{name="Agriel Arms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#f901, type=3, manufacturer=2, overlap=16#10, gender=female
+	}}},
+	{16#0a030d00, #psu_item{name="Epicarel Arms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#fa01, type=3, manufacturer=2, overlap=16#10, gender=female
+	}}},
+	{16#0a030e00, #psu_item{name="Gimnael Arms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#fb01, type=3, manufacturer=2, overlap=16#10, gender=female
+	}}},
+	{16#0a030f00, #psu_item{name="Amorel Arms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#fc01, type=3, manufacturer=2, overlap=16#10, gender=female
+	}}},
+	{16#0a031000, #psu_item{name="Granadas Arms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#fd01, type=3, manufacturer=1, overlap=16#10, gender=male
+	}}},
+	{16#0a031100, #psu_item{name="Apollos Arms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0202, type=3, manufacturer=1, overlap=16#10, gender=male
+	}}},
+	{16#0a031200, #psu_item{name="Musagante Arms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0302, type=3, manufacturer=1, overlap=16#10, gender=male
+	}}},
+	{16#0a031300, #psu_item{name="Subarga Arms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0402, type=3, manufacturer=1, overlap=16#10, gender=male
+	}}},
+	{16#0a031400, #psu_item{name="HUcas Arms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0702, type=3, manufacturer=1, overlap=16#10, gender=male
+	}}},
+	{16#0a031500, #psu_item{name="RAcas Arms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0602, type=3, manufacturer=1, overlap=16#10, gender=male
+	}}},
+	{16#0a031600, #psu_item{name="Valatines Arms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#fd01, type=3, manufacturer=2, overlap=16#10, gender=female
+	}}},
+	{16#0a031700, #psu_item{name="Bacolone Arms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0302, type=3, manufacturer=2, overlap=16#10, gender=female
+	}}},
+	{16#0a031800, #psu_item{name="Lucaral Arms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0402, type=3, manufacturer=2, overlap=16#10, gender=female
+	}}},
+	{16#0a031900, #psu_item{name="Jenkel Arms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0502, type=3, manufacturer=2, overlap=16#10, gender=female
+	}}},
+	{16#0a031a00, #psu_item{name="RAcase Arms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0602, type=3, manufacturer=2, overlap=16#10, gender=female
+	}}},
+	{16#0a031b00, #psu_item{name="HUcase Arms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0802, type=3, manufacturer=2, overlap=16#10, gender=female
+	}}},
+	{16#0a031c00, #psu_item{name="Revsys Arms CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5902, type=3, manufacturer=1, overlap=16#10, gender=male
+	}}},
+	{16#0a031d00, #psu_item{name="Boktos Arms CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5a02, type=3, manufacturer=1, overlap=16#10, gender=male
+	}}},
+	{16#0a031e00, #psu_item{name="Raptus Arms CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5b02, type=3, manufacturer=1, overlap=16#10, gender=male
+	}}},
+	{16#0a031f00, #psu_item{name="Vilogis Arms CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5c02, type=3, manufacturer=1, overlap=16#10, gender=male
+	}}},
+	{16#0a032000, #psu_item{name="Lobas Arms CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5d02, type=3, manufacturer=1, overlap=16#10, gender=male
+	}}},
+	{16#0a032100, #psu_item{name="Evors Arms CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5e02, type=3, manufacturer=1, overlap=16#10, gender=male
+	}}},
+	{16#0a032200, #psu_item{name="Hounds Arms CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5f02, type=3, manufacturer=1, overlap=16#10, gender=male
+	}}},
+	{16#0a032300, #psu_item{name="Gimnas Arms CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#6002, type=3, manufacturer=1, overlap=16#10, gender=male
+	}}},
+	{16#0a032400, #psu_item{name="Elaciel Arms CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5902, type=3, manufacturer=2, overlap=16#10, gender=female
+	}}},
+	{16#0a032500, #psu_item{name="Batrelle Arms CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5a02, type=3, manufacturer=2, overlap=16#10, gender=female
+	}}},
+	{16#0a032600, #psu_item{name="Redmiel Arms CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5b02, type=3, manufacturer=2, overlap=16#10, gender=female
+	}}},
+	{16#0a032700, #psu_item{name="Digiel Arms CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5c02, type=3, manufacturer=2, overlap=16#10, gender=female
+	}}},
+	{16#0a032800, #psu_item{name="Agriel Arms CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5d02, type=3, manufacturer=2, overlap=16#10, gender=female
+	}}},
+	{16#0a032900, #psu_item{name="Epicarel Arms CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5e02, type=3, manufacturer=2, overlap=16#10, gender=female
+	}}},
+	{16#0a032a00, #psu_item{name="Gimnael Arms CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#5f02, type=3, manufacturer=2, overlap=16#10, gender=female
+	}}},
+	{16#0a032b00, #psu_item{name="Amorel Arms CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#6002, type=3, manufacturer=2, overlap=16#10, gender=female
+	}}},
+	{16#0a032c00, #psu_item{name="Granadas Arms CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#6102, type=3, manufacturer=1, overlap=16#10, gender=male
+	}}},
+	{16#0a032d00, #psu_item{name="Apollos Arms CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#6602, type=3, manufacturer=1, overlap=16#10, gender=male
+	}}},
+	{16#0a032e00, #psu_item{name="Musagante Arms CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#6702, type=3, manufacturer=1, overlap=16#10, gender=male
+	}}},
+	{16#0a032f00, #psu_item{name="Subarga Arms CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#6802, type=3, manufacturer=1, overlap=16#10, gender=male
+	}}},
+	{16#0a033000, #psu_item{name="Valatines Arms CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#6102, type=3, manufacturer=2, overlap=16#10, gender=female
+	}}},
+	{16#0a033100, #psu_item{name="Bacolone Arms CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#6702, type=3, manufacturer=2, overlap=16#10, gender=female
+	}}},
+	{16#0a033200, #psu_item{name="Lucaral Arms CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#6802, type=3, manufacturer=2, overlap=16#10, gender=female
+	}}},
+	{16#0a033300, #psu_item{name="Jenkel Arms CV",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#6902, type=3, manufacturer=2, overlap=16#10, gender=female
+	}}},
+	{16#0a060000, #psu_item{name="Men's Swimwear",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#fe01, type=6, manufacturer=0, overlap=16#00, gender=male
+	}}},
+	{16#0a060100, #psu_item{name="Bikini Swimwear",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#ff01, type=6, manufacturer=0, overlap=16#00, gender=male
+	}}},
+	{16#0a060200, #psu_item{name="Rappy Suit",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0002, type=6, manufacturer=0, overlap=16#00, gender=male
+	}}},
+	{16#0a060300, #psu_item{name="Formalwear",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0102, type=6, manufacturer=0, overlap=16#00, gender=male
+	}}},
+	{16#0a060400, #psu_item{name="Bikini Swimwear",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#fe01, type=6, manufacturer=0, overlap=16#00, gender=female
+	}}},
+	{16#0a060500, #psu_item{name="Regular Swimwear",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#ff01, type=6, manufacturer=0, overlap=16#00, gender=female
+	}}},
+	{16#0a060600, #psu_item{name="One-piece Swimwear",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0002, type=6, manufacturer=0, overlap=16#00, gender=female
+	}}},
+	{16#0a060700, #psu_item{name="Rappy Suit",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0102, type=6, manufacturer=0, overlap=16#00, gender=female
+	}}},
+	{16#0a060800, #psu_item{name="Formal Dress",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0202, type=6, manufacturer=0, overlap=16#00, gender=female
+	}}},
+	{16#0a060900, #psu_item{name="CAS-yukata",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0502, type=6, manufacturer=1, overlap=16#00, gender=male
+	}}},
+	{16#0a060a00, #psu_item{name="CAS-yukata",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0702, type=6, manufacturer=2, overlap=16#00, gender=female
+	}}},
+	{16#0a060b00, #psu_item{name="Mikunas Set",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0b02, type=6, manufacturer=2, overlap=16#00, gender=female
+	}}},
+	{16#0a060c00, #psu_item{name="CAS-miko Set",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0902, type=6, manufacturer=2, overlap=16#00, gender=female
+	}}},
+	{16#0a060d00, #psu_item{name="CAS-oyal Set",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_parts_item{
+			appearance=16#0a02, type=6, manufacturer=2, overlap=16#00, gender=female
+	}}},
+
 	%% Traps.
 	%% @todo Handle type/race/gender restrictions.
 
@@ -1057,6 +1911,26 @@
 	16#09032500, 16#09032600, 16#09032700, 16#09032800, 16#09032900, 16#09032a00, 16#09032b00, 16#09032c00, 16#09040100,
 	16#09040200, 16#09050400, 16#09050500, 16#09050600, 16#09050900, 16#09050a00, 16#09060400, 16#09060500, 16#09060600,
 	16#09060700, 16#09060800, 16#09060d00, 16#09060e00, 16#09060f00, 16#09061000, 16#09061100, 16#09061200]).
+-define(MALE_PARTS, [16#0a010000, 16#0a010100, 16#0a010200, 16#0a010300, 16#0a010400, 16#0a010500, 16#0a010600, 16#0a010700,
+	16#0a011000, 16#0a011100, 16#0a011200, 16#0a011300, 16#0a011400, 16#0a011500, 16#0a011c00, 16#0a011d00, 16#0a011e00,
+	16#0a011f00, 16#0a012000, 16#0a012100, 16#0a012200, 16#0a012300, 16#0a012c00, 16#0a012d00, 16#0a012e00, 16#0a012f00,
+	16#0a020000, 16#0a020100, 16#0a020200, 16#0a020300, 16#0a020400, 16#0a020500, 16#0a020600, 16#0a020700, 16#0a021000,
+	16#0a021100, 16#0a021200, 16#0a021300, 16#0a021400, 16#0a021500, 16#0a021c00, 16#0a021d00, 16#0a021e00, 16#0a021f00,
+	16#0a022000, 16#0a022100, 16#0a022200, 16#0a022300, 16#0a022c00, 16#0a022d00, 16#0a022e00, 16#0a022f00, 16#0a030000,
+	16#0a030100, 16#0a030200, 16#0a030300, 16#0a030400, 16#0a030500, 16#0a030600, 16#0a030700, 16#0a031000, 16#0a031100,
+	16#0a031200, 16#0a031300, 16#0a031400, 16#0a031500, 16#0a031c00, 16#0a031d00, 16#0a031e00, 16#0a031f00, 16#0a032000,
+	16#0a032100, 16#0a032200, 16#0a032300, 16#0a032c00, 16#0a032d00, 16#0a032e00, 16#0a032f00, 16#0a060000, 16#0a060100,
+	16#0a060200, 16#0a060300, 16#0a060900]).
+-define(FEMALE_PARTS, [16#0a010800, 16#0a010900, 16#0a010a00, 16#0a010b00, 16#0a010c00, 16#0a010d00, 16#0a010e00, 16#0a010f00,
+	16#0a011600, 16#0a011700, 16#0a011800, 16#0a011900, 16#0a011a00, 16#0a011b00, 16#0a012400, 16#0a012500, 16#0a012600,
+	16#0a012700, 16#0a012800, 16#0a012900, 16#0a012a00, 16#0a012b00, 16#0a013000, 16#0a013100, 16#0a013200, 16#0a013300,
+	16#0a020800, 16#0a020900, 16#0a020a00, 16#0a020b00, 16#0a020c00, 16#0a020d00, 16#0a020e00, 16#0a020f00, 16#0a021600,
+	16#0a021700, 16#0a021800, 16#0a021900, 16#0a021a00, 16#0a021b00, 16#0a022400, 16#0a022500, 16#0a022600, 16#0a022700,
+	16#0a022800, 16#0a022900, 16#0a022a00, 16#0a022b00, 16#0a023000, 16#0a023100, 16#0a023200, 16#0a023300, 16#0a030800,
+	16#0a030900, 16#0a030a00, 16#0a030b00, 16#0a030c00, 16#0a030d00, 16#0a030e00, 16#0a030f00, 16#0a031600, 16#0a031700,
+	16#0a031800, 16#0a031900, 16#0a031a00, 16#0a031b00, 16#0a032400, 16#0a032500, 16#0a032600, 16#0a032700, 16#0a032800,
+	16#0a032900, 16#0a032a00, 16#0a032b00, 16#0a033000, 16#0a033100, 16#0a033200, 16#0a033300, 16#0a060400, 16#0a060500,
+	16#0a060600, 16#0a060700, 16#0a060800, 16#0a060a00, 16#0a060b00, 16#0a060c00, 16#0a060d00]).
 -define(STD_CONSUMABLES, [16#03010000, 16#03010100, 16#03010200, 16#03010300, 16#03010500, 16#03010600,
 	16#03010700, 16#03010900, 16#03010a00, 16#03010b00, 16#03010c00, 16#03010d00, 16#03010e00, 16#03020000,
 	16#0c010000, 16#0c010100, 16#0c010200, 16#0c010300, 16#0c010400, 16#0c010500, 16#0c010600, 16#0c010700, 16#0c010800,
@@ -1075,6 +1949,18 @@
 	{589, ?FEMALE_CLOTHES}, %% Neudaiz vendor.
 	{626, ?FEMALE_CLOTHES}, %% Colony right vendor.
 	{627, ?FEMALE_CLOTHES}, %% Colony left vendor.
+
+	{521, ?MALE_PARTS}, %% Parum vendor.
+	{558, ?MALE_PARTS}, %% Moatoob vendor.
+	{595, ?MALE_PARTS}, %% Neudaiz vendor.
+	{629, ?MALE_PARTS}, %% Colony left vendor.
+	{630, ?MALE_PARTS}, %% Colony right vendor.
+
+	{524, ?FEMALE_PARTS}, %% Parum vendor.
+	{561, ?FEMALE_PARTS}, %% Moatoob vendor.
+	{598, ?FEMALE_PARTS}, %% Neudaiz vendor.
+	{632, ?FEMALE_PARTS}, %% Colony right vendor.
+	{633, ?FEMALE_PARTS}, %% Colony left vendor.
 
 	{512, ?STD_CONSUMABLES}, %% Parum right vendor, Parum v1 field lobbies vendors. Parum GUARDIANS vendor.
 	{513, ?STD_CONSUMABLES}, %% Parum left vendor.

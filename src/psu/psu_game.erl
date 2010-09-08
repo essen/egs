@@ -1196,6 +1196,9 @@ build_010a_item(#psu_clothing_item{appearance=Appearance, manufacturer=Manufactu
 build_010a_item(#psu_consumable_item{max_quantity=MaxQuantity, pt_diff=PointsDiff,
 	status_effect=StatusEffect, target=Target, use_condition=UseCondition, item_effect=ItemEffect}) ->
 	<< 0:8, MaxQuantity:8, Target:8, UseCondition:8, PointsDiff:16/little, StatusEffect:8, ItemEffect:8, 0:96 >>;
+build_010a_item(#psu_parts_item{appearance=Appearance, manufacturer=Manufacturer, type=Type, overlap=Overlap, gender=Gender}) ->
+	GenderInt = case Gender of male -> 16#14; female -> 16#24 end,
+	<< Appearance:16, Type:4, Manufacturer:4, Overlap:8, GenderInt:8, 0:120 >>;
 build_010a_item(#psu_trap_item{max_quantity=MaxQuantity}) ->
 	<< 2:32/little, 16#ffffff:24, MaxQuantity:8, 0:96 >>.
 
