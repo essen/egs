@@ -189,25 +189,86 @@
 		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
 			appearance=16#1000, type=1, manufacturer=7, overlap=16#02, gender=male, colors= << 16#6cc9dc3c:32, 16#a32cfaec:32, 16#73ab:16 >>
 	}}},
-
-%% female
-%~ 09011000                    Braves Jacket 0100 12 02 2b cec4c7cd abfcc2c1 cb58
-%~ 09011100                     Seyagya Vest 0200 15 02 2b ffc93d54 abaec178 7df2
-%~ 09011200                     Gojgoj Tunic 0300 18 02 2b 283a8aba c7f27d1c ed74
-%~ 09011300                 Guardless Jacket 0400 12 01 2b a2b4a8a3 cdb13fc7 abc4
-%~ 09011400                     Phanis Tunic 0500 12 02 2b 5c27dc8c ffcfacea 1cf8
-%~ 09011500                   Classica Tunic 0600 15 02 2b f8adc82d 8cec5dbf 323c
-%~ 09011600                Karawai One-piece 0700 15 02 2b 2d1cc481 1bd4bfe8 5df1
-%~ 09011700                    Smartia Shirt 0800 12 02 2b c7afc4c8 a3ce1cfc ea7d
-%~ 09011800                 Pritia One-piece 0900 12 02 2b a427adf1 71edc81c 474f
-%~ 09011900                  AMF Army Jacket 0a00 10 02 2b af3da3b8 6efb9598 cb9e
-%~ 09011a00                     Flaxo Jacket 0b00 15 02 2b d35fc37c 2c1fcf97 e5f8
-%~ 09011b00                Yorokatabra Armor 0c00 15 01 2b be938a39 9af9329f b689
-%~ 09011c00                      Boaboa Vest 0d00 18 01 2b 8b53873a c91adef8 63c7
-%~ 09011d00                      Bunbun Vest 0e00 18 01 2b 9f7c2cdc 5287dea7 1f2d
-%~ 09011e00                     Bombom Smock 0f00 18 02 2b da13caf9 79532aee 46d3
-%~ 09011f00                     Phasnis Vest 1000 18 02 2b b6d2c158 3c361fae 82fc
-
+	{16#09011000, #psu_item{name="Braves Jacket",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0100, type=1, manufacturer=2, overlap=16#02, gender=female, colors= << 16#cec4c7cd:32, 16#abfcc2c1:32, 16#cb58:16 >>
+	}}},
+	{16#09011100, #psu_item{name="Seyagya Vest",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0200, type=1, manufacturer=5, overlap=16#02, gender=female, colors= << 16#ffc93d54:32, 16#abaec178:32, 16#7df2:16 >>
+	}}},
+	{16#09011200, #psu_item{name="Gojgoj Tunic",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0300, type=1, manufacturer=8, overlap=16#02, gender=female, colors= << 16#283a8aba:32, 16#c7f27d1c:32, 16#ed74:16 >>
+	}}},
+	{16#09011300, #psu_item{name="Guardless Jacket",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0400, type=1, manufacturer=2, overlap=16#01, gender=female, colors= << 16#a2b4a8a3:32, 16#cdb13fc7:32, 16#abc4:16 >>
+	}}},
+	{16#09011400, #psu_item{name="Phanis Tunic",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0500, type=1, manufacturer=2, overlap=16#02, gender=female, colors= << 16#5c27dc8c:32, 16#ffcfacea:32, 16#1cf8:16 >>
+	}}},
+	{16#09011500, #psu_item{name="Classica Tunic",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0600, type=1, manufacturer=5, overlap=16#02, gender=female, colors= << 16#f8adc82d:32, 16#8cec5dbf:32, 16#323c:16 >>
+	}}},
+	{16#09011600, #psu_item{name="Karawai One-piece",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0700, type=1, manufacturer=5, overlap=16#02, gender=female, colors= << 16#2d1cc481:32, 16#1bd4bfe8:32, 16#5df1:16 >>
+	}}},
+	{16#09011700, #psu_item{name="Smartia Shirt",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0800, type=1, manufacturer=2, overlap=16#02, gender=female, colors= << 16#c7afc4c8:32, 16#a3ce1cfc:32, 16#ea7d:16 >>
+	}}},
+	{16#09011800, #psu_item{name="Pritia One-piece",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0900, type=1, manufacturer=2, overlap=16#02, gender=female, colors= << 16#a427adf1:32, 16#71edc81c:32, 16#474f:16 >>
+	}}},
+	{16#09011900, #psu_item{name="AMF Army Jacket",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0a00, type=1, manufacturer=0, overlap=16#02, gender=female, colors= << 16#af3da3b8:32, 16#6efb9598:32, 16#cb9e:16 >>
+	}}},
+	{16#09011a00, #psu_item{name="Flaxo Jacket",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0b00, type=1, manufacturer=5, overlap=16#02, gender=female, colors= << 16#d35fc37c:32, 16#2c1fcf97:32, 16#e5f8:16 >>
+	}}},
+	{16#09011b00, #psu_item{name="Yorokatabra Armor",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0c00, type=1, manufacturer=5, overlap=16#01, gender=female, colors= << 16#be938a39:32, 16#9af9329f:32, 16#b689:16 >>
+	}}},
+	{16#09011c00, #psu_item{name="Boaboa Vest",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0d00, type=1, manufacturer=8, overlap=16#01, gender=female, colors= << 16#8b53873a:32, 16#c91adef8:32, 16#63c7:16 >>
+	}}},
+	{16#09011d00, #psu_item{name="Bunbun Vest",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0e00, type=1, manufacturer=8, overlap=16#01, gender=female, colors= << 16#9f7c2cdc:32, 16#5287dea7:32, 16#1f2d:16 >>
+	}}},
+	{16#09011e00, #psu_item{name="Bombom Smock",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0f00, type=1, manufacturer=8, overlap=16#02, gender=female, colors= << 16#da13caf9:32, 16#79532aee:32, 16#46d3:16 >>
+	}}},
+	{16#09011f00, #psu_item{name="Phasnis Vest",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1000, type=1, manufacturer=8, overlap=16#02, gender=female, colors= << 16#b6d2c158:32, 16#3c361fae:32, 16#82fc:16 >>
+	}}},
 	{16#09012000, #psu_item{name="Goshkaria Top",
 		description="",
 		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
@@ -258,18 +319,56 @@
 		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
 			appearance=16#2200, type=1, manufacturer=0, overlap=16#01, gender=male, colors= << 16#aaacda5c:32, 16#9288ad7a:32, 16#2de2:16 >>
 	}}},
-
-%% female
-%~ 09012a00                      Hanaura Top 1300 15 01 2b 1f72432c 91bde53d 71a2
-%~ 09012b00                   Hulauna Jacket 1400 15 02 2b 417dd1f7 14c2c1bd a191
-%~ 09012c00                     Fujifiji Top 1500 18 01 2b 177deaa1 8d31cde1 46f6
-%~ 09012d00                    Storia Jacket 1600 12 01 2b 7c1c5b8b d241ea39 71ab
-%~ 09012e00                    Vatavara Vest 1a00 18 01 2b 91c1318c 9fa114be 9d27
-%~ 09012f00                       HUnewe Top 1200 10 01 2b a32a8fde cf78cb5d 1c97
-%~ 09013000                       FOnewe Top 1100 10 01 2b fa2a8a5a a21cdac5 4cea
-%~ 09013100                    RAmarl Jacket 2500 10 01 2b 53befbb1 75d3cd23 a68a
-%~ 09013200                  Normal Swim Top 1b00 10 01 2b 8f5dacf1 7c4d1322 ffec
-
+	{16#09012a00, #psu_item{name="Hanaura Top",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1300, type=1, manufacturer=5, overlap=16#01, gender=female, colors= << 16#1f72432c:32, 16#91bde53d:32, 16#71a2:16 >>
+	}}},
+	{16#09012b00, #psu_item{name="Hulauna Jacket",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1400, type=1, manufacturer=5, overlap=16#02, gender=female, colors= << 16#417dd1f7:32, 16#14c2c1bd:32, 16#a191:16 >>
+	}}},
+	{16#09012c00, #psu_item{name="Fujifiji Top",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1500, type=1, manufacturer=8, overlap=16#01, gender=female, colors= << 16#177deaa1:32, 16#8d31cde1:32, 16#46f6:16 >>
+	}}},
+	{16#09012d00, #psu_item{name="Storia Jacket",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1600, type=1, manufacturer=2, overlap=16#01, gender=female, colors= << 16#7c1c5b8b:32, 16#d241ea39:32, 16#71ab:16 >>
+	}}},
+	{16#09012e00, #psu_item{name="Vatavara Vest",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1a00, type=1, manufacturer=8, overlap=16#01, gender=female, colors= << 16#91c1318c:32, 16#9fa114be:32, 16#9d27:16 >>
+	}}},
+	{16#09012f00, #psu_item{name="HUnewe Top",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1200, type=1, manufacturer=0, overlap=16#01, gender=female, colors= << 16#a32a8fde:32, 16#cf78cb5d:32, 16#1c97:16 >>
+	}}},
+	{16#09013000, #psu_item{name="FOnewe Top",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1100, type=1, manufacturer=0, overlap=16#01, gender=female, colors= << 16#fa2a8a5a:32, 16#a21cdac5:32, 16#4cea:16 >>
+	}}},
+	{16#09013100, #psu_item{name="RAmarl Jacket",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#2500, type=1, manufacturer=0, overlap=16#01, gender=female, colors= << 16#53befbb1:32, 16#75d3cd23:32, 16#a68a:16 >>
+	}}},
+	{16#09013200, #psu_item{name="Normal Swim Top",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1b00, type=1, manufacturer=0, overlap=16#01, gender=female, colors= << 16#8f5dacf1:32, 16#7c4d1322:32, 16#ffec:16 >>
+	}}},
+	{16#09013300, #psu_item{name="Bikini Swim Top",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1d00, type=1, manufacturer=0, overlap=16#01, gender=female, colors= << 16#d7fcab11:32, 16#7cf4c53b:32, 16#442c:16 >>
+	}}},
 	{16#09020000, #psu_item{name="Braves ST Pants",
 		description="",
 		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
@@ -330,22 +429,71 @@
 		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
 			appearance=16#1000, type=2, manufacturer=7, overlap=16#11, gender=male, colors= << 16#bab9ca56:32, 16#f31a6aa3:32, 16#4eda:16 >>
 	}}},
-
-%% female
-%~ 09020c00                    Braves Shorts 0100 22 11 2b e74d74d4 adf1cd17 bc85
-%~ 09020d00                   Seyagya Shorts 0200 25 11 2b f29b3d54 adebc1c9 7d3f
-%~ 09020e00                    Gojgoj Shorts 0300 28 11 2b 2c33caab 9cfcdc1c d35c
-%~ 09020f00                  Guardless Pants 0400 22 12 2b a264a8a3 adc13f97 ba94
-%~ 09021000                     Phanis Pants 0500 22 12 2b fcbc5487 ff8bccab c198
-%~ 09021100                  Classica Shorts 0600 25 11 2b faff372d cc3cd4af c2cb
-%~ 09021200                   Karawai Shorts 0700 25 11 2b d3c15c18 a24dbf8d d51f
-%~ 09021300                    Pritia Shorts 0900 22 11 2b a589aef1 c1ecc711 ae99
-%~ 09021400                      Flaxo Pants 0b00 25 11 2b 9c6cfc7c 8c63f2c7 56fb
-%~ 09021500               Yorokatabra Shorts 0c00 25 11 2b ae93abb9 aabb32fa 6aa9
-%~ 09021600                     Boaboa Pants 0d00 28 21 2b 8b539b3a b9a13df8 63c9
-%~ 09021700                   Bunbun Bottoms 0e00 28 11 2b 9f79e2ec 56f7d5a5 1fed
-%~ 09021800                    Bombom Shorts 0f00 28 11 2b c1d3ac9d 7d3d12ef c751
-
+	{16#09020c00, #psu_item{name="Braves Shorts",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0100, type=2, manufacturer=2, overlap=16#11, gender=female, colors= << 16#e74d74d4:32, 16#adf1cd17:32, 16#bc85:16 >>
+	}}},
+	{16#09020d00, #psu_item{name="Seyagya Shorts",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0200, type=2, manufacturer=5, overlap=16#11, gender=female, colors= << 16#f29b3d54:32, 16#adebc1c9:32, 16#7d3f:16 >>
+	}}},
+	{16#09020e00, #psu_item{name="Gojgoj Shorts",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0300, type=2, manufacturer=8, overlap=16#11, gender=female, colors= << 16#2c33caab:32, 16#9cfcdc1c:32, 16#d35c:16 >>
+	}}},
+	{16#09020f00, #psu_item{name="Guardless Pants",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0400, type=2, manufacturer=2, overlap=16#12, gender=female, colors= << 16#a264a8a3:32, 16#adc13f97:32, 16#ba94:16 >>
+	}}},
+	{16#09021000, #psu_item{name="Phanis Pants",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0500, type=2, manufacturer=2, overlap=16#12, gender=female, colors= << 16#fcbc5487:32, 16#ff8bccab:32, 16#c198:16 >>
+	}}},
+	{16#09021100, #psu_item{name="Classica Shorts",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0600, type=2, manufacturer=5, overlap=16#11, gender=female, colors= << 16#faff372d:32, 16#cc3cd4af:32, 16#c2cb:16 >>
+	}}},
+	{16#09021200, #psu_item{name="Karawai Shorts",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0700, type=2, manufacturer=5, overlap=16#11, gender=female, colors= << 16#d3c15c18:32, 16#a24dbf8d:32, 16#d51f:16 >>
+	}}},
+	{16#09021300, #psu_item{name="Pritia Shorts",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0900, type=2, manufacturer=2, overlap=16#11, gender=female, colors= << 16#a589aef1:32, 16#c1ecc711:32, 16#ae99:16 >>
+	}}},
+	{16#09021400, #psu_item{name="Flaxo Pants",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0b00, type=2, manufacturer=5, overlap=16#11, gender=female, colors= << 16#9c6cfc7c:32, 16#8c63f2c7:32, 16#56fb:16 >>
+	}}},
+	{16#09021500, #psu_item{name="Yorokatabra Shorts",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0c00, type=2, manufacturer=5, overlap=16#11, gender=female, colors= << 16#ae93abb9:32, 16#aabb32fa:32, 16#6aa9:16 >>
+	}}},
+	{16#09021600, #psu_item{name="Boaboa Pants",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0d00, type=2, manufacturer=8, overlap=16#21, gender=female, colors= << 16#8b539b3a:32, 16#b9a13df8:32, 16#63c9:16 >>
+	}}},
+	{16#09021700, #psu_item{name="Bunbun Bottoms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0e00, type=2, manufacturer=8, overlap=16#11, gender=female, colors= << 16#9f79e2ec:32, 16#56f7d5a5:32, 16#1fed:16 >>
+	}}},
+	{16#09021800, #psu_item{name="Bombom Shorts",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0f00, type=2, manufacturer=8, overlap=16#11, gender=female, colors= << 16#c1d3ac9d:32, 16#7d3d12ef:32, 16#c751:16 >>
+	}}},
 	{16#09021900, #psu_item{name="Goshkaria Pants",
 		description="",
 		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
@@ -391,16 +539,46 @@
 		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
 			appearance=16#2200, type=2, manufacturer=0, overlap=16#11, gender=male, colors= << 16#8b2cadab:32, 16#de54fa9a:32, 16#ce41:16 >>
 	}}},
-
-%% female
-%~ 09022200                  Hulauna Bottoms 1400 25 12 2b 919d61fd 642cf1db c3a9
-%~ 09022300                 Fujifiji Bottoms 1500 28 21 2b 165de3a1 7db2c492 4ef4
-%~ 09022400                   Storia Bottoms 1600 22 22 2b 7c1a56b8 c143dbe9 71ab
-%~ 09022500                 Vatavara Bottoms 1a00 28 21 2b 171fe8c8 fda141eb d47e
-%~ 09022600                   HUnewe Bottoms 1200 20 11 2b ab2a8fde cf78cb5d fc9b
-%~ 09022700                   FOnewe Bottoms 1100 20 21 2b fa2a8a5a a21cdac5 5def
-%~ 09022800              Normal Swim Bottoms 1b00 20 21 2b 8f5dacf1 7c4d1322 ffec
-
+	{16#09022200, #psu_item{name="Hulauna Bottoms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1400, type=2, manufacturer=5, overlap=16#12, gender=female, colors= << 16#919d61fd:32, 16#642cf1db:32, 16#c3a9:16 >>
+	}}},
+	{16#09022300, #psu_item{name="Fujifiji Bottoms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1500, type=2, manufacturer=8, overlap=16#21, gender=female, colors= << 16#165de3a1:32, 16#7db2c492:32, 16#4ef4:16 >>
+	}}},
+	{16#09022400, #psu_item{name="Storia Bottoms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1600, type=2, manufacturer=2, overlap=16#22, gender=female, colors= << 16#7c1a56b8:32, 16#c143dbe9:32, 16#71ab:16 >>
+	}}},
+	{16#09022500, #psu_item{name="Vatavara Bottoms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1a00, type=2, manufacturer=8, overlap=16#21, gender=female, colors= << 16#171fe8c8:32, 16#fda141eb:32, 16#d47e:16 >>
+	}}},
+	{16#09022600, #psu_item{name="HUnewe Bottoms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1200, type=2, manufacturer=0, overlap=16#11, gender=female, colors= << 16#ab2a8fde:32, 16#cf78cb5d:32, 16#fc9b:16 >>
+	}}},
+	{16#09022700, #psu_item{name="FOnewe Bottoms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1100, type=2, manufacturer=0, overlap=16#21, gender=female, colors= << 16#fa2a8a5a:32, 16#a21cdac5:32, 16#5def:16 >>
+	}}},
+	{16#09022800, #psu_item{name="Normal Swim Bottoms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1b00, type=2, manufacturer=0, overlap=16#21, gender=female, colors= << 16#8f5dacf1:32, 16#7c4d1322:32, 16#ffec:16 >>
+	}}},
+	{16#09022900, #psu_item{name="Bikini Swim Bottoms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1d00, type=2, manufacturer=0, overlap=16#21, gender=female, colors= << 16#d7fcab11:32, 16#7cf4c53b:32, 16#442c:16 >>
+	}}},
 	{16#09030000, #psu_item{name="Braves Sneakers",
 		description="",
 		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
@@ -461,22 +639,71 @@
 		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
 			appearance=16#1000, type=3, manufacturer=9, overlap=16#20, gender=male, colors= << 16#ec7cdcfc:32, 16#ac29fae3:32, 16#73ad:16 >>
 	}}},
-
-%% female
-%~ 09030c00               Braves Short Boots 0100 33 20 2b c7cdcec4 aefdbecf cb4d
-%~ 09030d00              Seyagya Short Boots 0200 36 10 2b ff9e3e64 aaaec1c8 7df3
-%~ 09030e00                     Gojgoj Boots 0300 39 20 2b cc22eeaa 33ff7711 dd88
-%~ 09030f00              GuardlessShortBoots 0400 33 10 2b fb6bda8a ecc7a7cf a44d
-%~ 09031000                     Phanis Shoes 0500 33 10 2b c17845cd fc7fc24b 1ff1
-%~ 09031100                   Classica Boots 0600 36 20 2b caaf1c32 7838defa cd8c
-%~ 09031200                    Karawai Shoes 0700 36 10 2b aeaca5a2 aa64b19c ada1
-%~ 09031300               Pritia Short Boots 0900 33 20 2b 2c8cda1c bc7ee8f1 45d4
-%~ 09031400                      Flaxo Shoes 0b00 36 10 2b a2aea3a8 abcbc3cf e3fb
-%~ 09031500                Yorokatabra Boots 0c00 36 20 2b 3e29ab93 9ebf2e98 a587
-%~ 09031600                     Boaboa Boots 0d00 39 20 2b 8353983b c31cd9fa 5cc7
-%~ 09031700                     Robrob Boots 0e00 39 20 2b c9c1c4a3 edc7b487 fb2e
-%~ 09031800                     Bombom Boots 0f00 39 20 2b c8dea79f 8f311dfe c75d
-
+	{16#09030c00, #psu_item{name="Braves Short Boots",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0100, type=3, manufacturer=3, overlap=16#20, gender=female, colors= << 16#c7cdcec4:32, 16#aefdbecf:32, 16#cb4d:16 >>
+	}}},
+	{16#09030d00, #psu_item{name="Seyagya Short Boots",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0200, type=3, manufacturer=6, overlap=16#10, gender=female, colors= << 16#ff9e3e64:32, 16#aaaec1c8:32, 16#7df3:16 >>
+	}}},
+	{16#09030e00, #psu_item{name="Gojgoj Boots",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0300, type=3, manufacturer=9, overlap=16#20, gender=female, colors= << 16#cc22eeaa:32, 16#33ff7711:32, 16#dd88:16 >>
+	}}},
+	{16#09030f00, #psu_item{name="GuardlessShortBoots",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0400, type=3, manufacturer=3, overlap=16#10, gender=female, colors= << 16#fb6bda8a:32, 16#ecc7a7cf:32, 16#a44d:16 >>
+	}}},
+	{16#09031000, #psu_item{name="Phanis Shoes",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0500, type=3, manufacturer=3, overlap=16#10, gender=female, colors= << 16#c17845cd:32, 16#fc7fc24b:32, 16#1ff1:16 >>
+	}}},
+	{16#09031100, #psu_item{name="Classica Boots",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0600, type=3, manufacturer=6, overlap=16#20, gender=female, colors= << 16#caaf1c32:32, 16#7838defa:32, 16#cd8c:16 >>
+	}}},
+	{16#09031200, #psu_item{name="Karawai Shoes",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0700, type=3, manufacturer=6, overlap=16#10, gender=female, colors= << 16#aeaca5a2:32, 16#aa64b19c:32, 16#ada1:16 >>
+	}}},
+	{16#09031300, #psu_item{name="Pritia Short Boots",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0900, type=3, manufacturer=3, overlap=16#20, gender=female, colors= << 16#2c8cda1c:32, 16#bc7ee8f1:32, 16#45d4:16 >>
+	}}},
+	{16#09031400, #psu_item{name="Flaxo Shoes",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0b00, type=3, manufacturer=6, overlap=16#10, gender=female, colors= << 16#a2aea3a8:32, 16#abcbc3cf:32, 16#e3fb:16 >>
+	}}},
+	{16#09031500, #psu_item{name="Yorokatabra Boots",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0c00, type=3, manufacturer=6, overlap=16#20, gender=female, colors= << 16#3e29ab93:32, 16#9ebf2e98:32, 16#a587:16 >>
+	}}},
+	{16#09031600, #psu_item{name="Boaboa Boots",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0d00, type=3, manufacturer=9, overlap=16#20, gender=female, colors= << 16#8353983b:32, 16#c31cd9fa:32, 16#5cc7:16 >>
+	}}},
+	{16#09031700, #psu_item{name="Robrob Boots",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0e00, type=3, manufacturer=9, overlap=16#20, gender=female, colors= << 16#c9c1c4a3:32, 16#edc7b487:32, 16#fb2e:16 >>
+	}}},
+	{16#09031800, #psu_item{name="Bombom Boots",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0f00, type=3, manufacturer=9, overlap=16#20, gender=female, colors= << 16#c8dea79f:32, 16#8f311dfe:32, 16#c75d:16 >>
+	}}},
 	{16#09031900, #psu_item{name="Goshkaria Shoes",
 		description="",
 		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
@@ -527,28 +754,71 @@
 		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
 			appearance=16#2200, type=3, manufacturer=0, overlap=16#20, gender=male, colors= << 16#8b2cadab:32, 16#de54fa9a:32, 16#ce41:16 >>
 	}}},
-
-%% female
-%~ 09032300                    Hulauna Shoes 1400 36 10 2b 93396dfd 26cf31ae 92fc
-%~ 09032400                   Fujifiji Shoes 1500 39 20 2b 316efbab b7a1eb39 e4f4
-%~ 09032500                     Storia Shoes 1600 33 10 2b 2a9ada8a 1c93eab3 71ab
-%~ 09032600                      Maydi Shoes 1700 33 10 2b ac8c2cec 5c7c4cfc bc9c
-%~ 09032700                   Amorosso Boots 1900 33 20 2b f1c8fd82 beac51e3 379e
-%~ 09032800                   Vatavara Boots 1a00 39 20 2b c11b378d 9da141ae 9562
-%~ 09032900                     HUnewe Boots 1200 30 20 2b a32a8f3d c178cb36 1c97
-%~ 09032a00                     FOnewe Shoes 1100 30 20 2b fa2a8a5a a21c4ac5 45ce
-%~ 09032b00              Normal Swim Sandals 1b00 30 10 2b 8f5dacf1 7c4d1322 ffec
-
+	{16#09032300, #psu_item{name="Hulauna Shoes",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1400, type=3, manufacturer=6, overlap=16#10, gender=female, colors= << 16#93396dfd:32, 16#26cf31ae:32, 16#92fc:16 >>
+	}}},
+	{16#09032400, #psu_item{name="Fujifiji Shoes",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1500, type=3, manufacturer=9, overlap=16#20, gender=female, colors= << 16#316efbab:32, 16#b7a1eb39:32, 16#e4f4:16 >>
+	}}},
+	{16#09032500, #psu_item{name="Storia Shoes",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1600, type=3, manufacturer=3, overlap=16#10, gender=female, colors= << 16#2a9ada8a:32, 16#1c93eab3:32, 16#71ab:16 >>
+	}}},
+	{16#09032600, #psu_item{name="Maydi Shoes",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1700, type=3, manufacturer=3, overlap=16#10, gender=female, colors= << 16#ac8c2cec:32, 16#5c7c4cfc:32, 16#bc9c:16 >>
+	}}},
+	{16#09032700, #psu_item{name="Amorosso Boots",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1900, type=3, manufacturer=3, overlap=16#20, gender=female, colors= << 16#f1c8fd82:32, 16#beac51e3:32, 16#379e:16 >>
+	}}},
+	{16#09032800, #psu_item{name="Vatavara Boots",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1a00, type=3, manufacturer=9, overlap=16#20, gender=female, colors= << 16#c11b378d:32, 16#9da141ae:32, 16#9562:16 >>
+	}}},
+	{16#09032900, #psu_item{name="HUnewe Boots",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1200, type=3, manufacturer=0, overlap=16#20, gender=female, colors= << 16#a32a8f3d:32, 16#c178cb36:32, 16#1c97:16 >>
+	}}},
+	{16#09032a00, #psu_item{name="FOnewe Shoes",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1100, type=3, manufacturer=0, overlap=16#20, gender=female, colors= << 16#fa2a8a5a:32, 16#a21c4ac5:32, 16#45ce:16 >>
+	}}},
+	{16#09032b00, #psu_item{name="Normal Swim Sandals",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1b00, type=3, manufacturer=0, overlap=16#10, gender=female, colors= << 16#8f5dacf1:32, 16#7c4d1322:32, 16#ffec:16 >>
+	}}},
+	{16#09032c00, #psu_item{name="Bikini Swim Sandals",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1d00, type=3, manufacturer=0, overlap=16#10, gender=female, colors= << 16#d7fcab11:32, 16#7cf4c53b:32, 16#442c:16 >>
+	}}},
 	{16#09040000, #psu_item{name="FOnewm Jacket",
 		description="",
 		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
 			appearance=16#1b00, type=4, manufacturer=0, overlap=16#01, gender=male, colors= << 16#fb8d6e23:32, 16#71daf41d:32, 16#a7e6:16 >>
 	}}},
-
-%% female
-%~ 09040100                       Maydi Suit 1700 43 01 2b ac8c2cec 5c7c4cfc bc9c
-%~ 09040200                     Amorosso Top 1900 42 01 2b f1e4df71 7ea251ce 8db7
-
+	{16#09040100, #psu_item{name="Maydi Suit",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1700, type=4, manufacturer=3, overlap=16#01, gender=female, colors= << 16#ac8c2cec:32, 16#5c7c4cfc:32, 16#bc9c:16 >>
+	}}},
+	{16#09040200, #psu_item{name="Amorosso Top",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1900, type=4, manufacturer=2, overlap=16#01, gender=female, colors= << 16#f1e4df71:32, 16#7ea251ce:32, 16#8db7:16 >>
+	}}},
 	{16#09050000, #psu_item{name="AMF ArmyBottomsSet",
 		description="",
 		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
@@ -569,12 +839,21 @@
 		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
 			appearance=16#0f00, type=5, manufacturer=7, overlap=16#10, gender=male, colors= << 16#2353d999:32, 16#7986fce6:32, 16#ce4f:16 >>
 	}}},
-
-%% female
-%~ 09050400                  Smartia Bottoms 0800 52 10 2b 7cfa4d89 2adec1c2 be75
-%~ 09050500               AMF ArmyBottomsSet 0a00 50 10 2b af3d9fb7 6efca598 ca9e
-%~ 09050600                Western Bottoms W 1000 58 10 2b 289dc1eb a39ef43e 82bf
-
+	{16#09050400, #psu_item{name="Smartia Bottoms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0800, type=5, manufacturer=2, overlap=16#10, gender=female, colors= << 16#7cfa4d89:32, 16#2adec1c2:32, 16#be75:16 >>
+	}}},
+	{16#09050500, #psu_item{name="AMF ArmyBottomsSet",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#0a00, type=5, manufacturer=0, overlap=16#10, gender=female, colors= << 16#af3d9fb7:32, 16#6efca598:32, 16#ca9e:16 >>
+	}}},
+	{16#09050600, #psu_item{name="Western Bottoms W",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1000, type=5, manufacturer=8, overlap=16#10, gender=female, colors= << 16#289dc1eb:32, 16#a39ef43e:32, 16#82bf:16 >>
+	}}},
 	{16#09050700, #psu_item{name="SPF Bottoms",
 		description="",
 		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
@@ -585,11 +864,16 @@
 		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
 			appearance=16#1c00, type=5, manufacturer=0, overlap=16#20, gender=male, colors= << 16#862ada5a:32, 16#fabaaaeb:32, 16#ea8a:16 >>
 	}}},
-
-%% female
-%~ 09050900                  Hanaura Bottoms 1300 55 20 2b f9824f2f 919d5e92 1cca
-%~ 09050a00               RAmarl Bottoms Set 2500 50 20 2b 5debbf1b 74debd23 658b
-
+	{16#09050900, #psu_item{name="Hanaura Bottoms",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1300, type=5, manufacturer=5, overlap=16#20, gender=female, colors= << 16#f9824f2f:32, 16#919d5e92:32, 16#1cca:16 >>
+	}}},
+	{16#09050a00, #psu_item{name="RAmarl Bottoms Set",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#2500, type=5, manufacturer=0, overlap=16#20, gender=female, colors= << 16#5debbf1b:32, 16#74debd23:32, 16#658b:16 >>
+	}}},
 	{16#09060000, #psu_item{name="Men's Swimwear",
 		description="",
 		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
@@ -610,14 +894,31 @@
 		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
 			appearance=16#2100, type=6, manufacturer=0, overlap=0, gender=male, colors= << 16#c7abc5ac:32, 16#cebdfb7b:32, 16#8c6b:16 >>
 	}}},
-
-%% female
-%~ 09060400                  Bikini Swimwear 1e00 60 00 2b d7fcab11 7cf4c53b 442c
-%~ 09060500                 Regular Swimwear 1f00 60 00 2b 8f5dacf1 7c4d1322 ffec
-%~ 09060600               One-piece Swimwear 2000 60 00 2b 8cc1744d 2c1f2df7 a2d1
-%~ 09060700                     Formal Dress 2100 60 00 2b f278dc14 cd1fdeec 89f3
-%~ 09060800                       Rappy Suit 2200 60 00 2b de7cfcd8 5d8cf84c 7f2e
-
+	{16#09060400, #psu_item{name="Bikini Swimwear",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1e00, type=6, manufacturer=0, overlap=16#00, gender=female, colors= << 16#d7fcab11:32, 16#7cf4c53b:32, 16#442c:16 >>
+	}}},
+	{16#09060500, #psu_item{name="Regular Swimwear",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1f00, type=6, manufacturer=0, overlap=16#00, gender=female, colors= << 16#8f5dacf1:32, 16#7c4d1322:32, 16#ffec:16 >>
+	}}},
+	{16#09060600, #psu_item{name="One-piece Swimwear",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#2000, type=6, manufacturer=0, overlap=16#00, gender=female, colors= << 16#8cc1744d:32, 16#2c1f2df7:32, 16#a2d1:16 >>
+	}}},
+	{16#09060700, #psu_item{name="Formal Dress",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#2100, type=6, manufacturer=0, overlap=16#00, gender=female, colors= << 16#f278dc14:32, 16#cd1fdeec:32, 16#89f3:16 >>
+	}}},
+	{16#09060800, #psu_item{name="Rappy Suit",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#2200, type=6, manufacturer=0, overlap=16#00, gender=female, colors= << 16#de7cfcd8:32, 16#5d8cf84c:32, 16#7f2e:16 >>
+	}}},
 	{16#09060a00, #psu_item{name="Illuminus Coat",
 		description="",
 		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
@@ -633,14 +934,36 @@
 		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
 			appearance=16#1d00, type=6, manufacturer=0, overlap=0, gender=male, colors= << 16#8c2c5cfa:32, 16#a7c3da39:32, 16#7ffc:16 >>
 	}}},
-
-%% female
-%~ 09060d00                 GUARDIANS Formal 1800 60 00 2b 38368d2a dfc1ba9d 1c5a
-%~ 09060e00                      Miyabi-kata 2300 65 00 2b c81ad378 f845aec3 4e18
-%~ 09060f00                      Mikunas Set 1c00 60 00 2b f77d4ee7 fa1af1ce 2eda
-%~ 09061000                       FOmarl Set 2400 60 00 2b dc2c8714 2afcc147 1137
-%~ 09061100                     Mikumiko Set 2700 65 00 2b 2a2e126e d5b6de58 c8c2
-%~ 09061200                      Voloyal Set 2600 68 00 2b 5dd782cf a478c7a2 f52d
+	{16#09060d00, #psu_item{name="GUARDIANS Formal",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1800, type=6, manufacturer=0, overlap=16#00, gender=female, colors= << 16#38368d2a:32, 16#dfc1ba9d:32, 16#1c5a:16 >>
+	}}},
+	{16#09060e00, #psu_item{name="Miyabi-kata",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#2300, type=6, manufacturer=5, overlap=16#00, gender=female, colors= << 16#c81ad378:32, 16#f845aec3:32, 16#4e18:16 >>
+	}}},
+	{16#09060f00, #psu_item{name="Mikunas Set",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#1c00, type=6, manufacturer=0, overlap=16#00, gender=female, colors= << 16#f77d4ee7:32, 16#fa1af1ce:32, 16#2eda:16 >>
+	}}},
+	{16#09061000, #psu_item{name="FOmarl Set",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#2400, type=6, manufacturer=0, overlap=16#00, gender=female, colors= << 16#dc2c8714:32, 16#2afcc147:32, 16#1137:16 >>
+	}}},
+	{16#09061100, #psu_item{name="Mikumiko Set",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#2700, type=6, manufacturer=5, overlap=16#00, gender=female, colors= << 16#2a2e126e:32, 16#d5b6de58:32, 16#c8c2:16 >>
+	}}},
+	{16#09061200, #psu_item{name="Voloyal Set",
+		description="",
+		rarity=5, buy_price=10, sell_price=1, data=#psu_clothing_item{
+			appearance=16#2600, type=6, manufacturer=8, overlap=16#00, gender=female, colors= << 16#5dd782cf:32, 16#a478c7a2:32, 16#f52d:16 >>
+	}}},
 
 	%% Traps.
 	%% @todo Handle type/race/gender restrictions.
@@ -724,6 +1047,16 @@
 	16#09031c00, 16#09031d00, 16#09031e00, 16#09031f00, 16#09032000, 16#09032100, 16#09032200, 16#09040000, 16#09050000,
 	16#09050100, 16#09050200, 16#09050300, 16#09050700, 16#09050800, 16#09060000, 16#09060100, 16#09060200, 16#09060300,
 	16#09060a00, 16#09060b00, 16#09060c00]).
+-define(FEMALE_CLOTHES, [16#09011000, 16#09011100, 16#09011200, 16#09011300, 16#09011400, 16#09011500, 16#09011600, 16#09011700,
+	16#09011800, 16#09011900, 16#09011a00, 16#09011b00, 16#09011c00, 16#09011d00, 16#09011e00, 16#09011f00, 16#09012a00,
+	16#09012b00, 16#09012c00, 16#09012d00, 16#09012e00, 16#09012f00, 16#09013000, 16#09013100, 16#09013200, 16#09013300,
+	16#09020c00, 16#09020d00, 16#09020e00, 16#09020f00, 16#09021000, 16#09021100, 16#09021200, 16#09021300, 16#09021400,
+	16#09021500, 16#09021600, 16#09021700, 16#09021800, 16#09022200, 16#09022300, 16#09022400, 16#09022500, 16#09022600,
+	16#09022700, 16#09022800, 16#09022900, 16#09030c00, 16#09030d00, 16#09030e00, 16#09030f00, 16#09031000, 16#09031100,
+	16#09031200, 16#09031300, 16#09031400, 16#09031500, 16#09031600, 16#09031700, 16#09031800, 16#09032300, 16#09032400,
+	16#09032500, 16#09032600, 16#09032700, 16#09032800, 16#09032900, 16#09032a00, 16#09032b00, 16#09032c00, 16#09040100,
+	16#09040200, 16#09050400, 16#09050500, 16#09050600, 16#09050900, 16#09050a00, 16#09060400, 16#09060500, 16#09060600,
+	16#09060700, 16#09060800, 16#09060d00, 16#09060e00, 16#09060f00, 16#09061000, 16#09061100, 16#09061200]).
 -define(STD_CONSUMABLES, [16#03010000, 16#03010100, 16#03010200, 16#03010300, 16#03010500, 16#03010600,
 	16#03010700, 16#03010900, 16#03010a00, 16#03010b00, 16#03010c00, 16#03010d00, 16#03010e00, 16#03020000,
 	16#0c010000, 16#0c010100, 16#0c010200, 16#0c010300, 16#0c010400, 16#0c010500, 16#0c010600, 16#0c010700, 16#0c010800,
@@ -736,6 +1069,12 @@
 	{589, ?MALE_CLOTHES}, %% Neudaiz vendor.
 	{623, ?MALE_CLOTHES}, %% Colony left vendor.
 	{624, ?MALE_CLOTHES}, %% Colony right vendor.
+
+	{518, ?FEMALE_CLOTHES}, %% Parum vendor.
+	{555, ?FEMALE_CLOTHES}, %% Moatoob vendor.
+	{589, ?FEMALE_CLOTHES}, %% Neudaiz vendor.
+	{626, ?FEMALE_CLOTHES}, %% Colony right vendor.
+	{627, ?FEMALE_CLOTHES}, %% Colony left vendor.
 
 	{512, ?STD_CONSUMABLES}, %% Parum right vendor, Parum v1 field lobbies vendors. Parum GUARDIANS vendor.
 	{513, ?STD_CONSUMABLES}, %% Parum left vendor.
