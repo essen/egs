@@ -1378,9 +1378,9 @@ send_0a06() ->
 
 %% @todo Inventory. Figure out everything in this packet and handle it correctly.
 send_0a0a() ->
-	{ok, << _:32, A:224/bits, _:32, B/bits >>} = file:read_file("p/packet0a0a.bin"),
+	{ok, << _:68608/bits, Rest/bits >>} = file:read_file("p/packet0a0a.bin"),
 	GID = get(gid),
-	send(<< A/binary, GID:32/little-unsigned-integer, B/binary >>).
+	send(<< 16#0a0a0300:32, 16#ffff:16, 0:144, 16#00011300:32, GID:32/little, 0:64, 0:8, 0:8, 6:8, 0:72, 0:192, 0:2304, 0:17280, 0:34560, 0:13824, Rest/binary >>).
 
 %% @doc Item description.
 send_0a11(ItemID, ItemDesc) ->
