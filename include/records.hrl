@@ -111,8 +111,9 @@
 	playtime=0,
 	appearance,
 	onlinestatus=0,
-	options={options, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0}
-}). % also: shortcuts partnercards blacklist npcs flags items...
+	options={options, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0},
+	inventory
+}). % also: shortcuts partnercards blacklist npcs flags...
 
 %% @doc Table containing all mission objects.
 

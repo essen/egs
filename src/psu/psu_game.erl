@@ -193,7 +193,11 @@ char_select_load(Number) ->
 	Class = psu_characters:class_binary_to_atom(ClassBin),
 	Appearance = psu_appearance:binary_to_tuple(Race, AppearanceBin),
 	Options = psu_characters:options_binary_to_tuple(OptionsBin),
-	Character = #characters{slot=Number, name=Name, race=Race, gender=Gender, class=Class, appearance=Appearance, options=Options}, % TODO: temporary set the slot here, won't be needed later
+	Character = #characters{slot=Number, name=Name, race=Race, gender=Gender, class=Class, appearance=Appearance, options=Options, % TODO: temporary set the slot here, won't be needed later
+		inventory= [{16#11010000, #psu_special_item_variables{}}, {16#11020000, #psu_special_item_variables{}}, {16#11020100, #psu_special_item_variables{}}, {16#11020200, #psu_special_item_variables{}},
+		{16#01010900, #psu_striking_weapon_item_variables{is_active=0, slot=0, current_pp=99, max_pp=100, element=#psu_element{type=1, percent=50}, pa=#psu_pa{type=0, level=0}}},
+		{16#01010a00, #psu_striking_weapon_item_variables{is_active=0, slot=0, current_pp=99, max_pp=100, element=#psu_element{type=2, percent=50}, pa=#psu_pa{type=0, level=0}}},
+		{16#01010b00, #psu_striking_weapon_item_variables{is_active=0, slot=0, current_pp=99, max_pp=100, element=#psu_element{type=3, percent=50}, pa=#psu_pa{type=0, level=0}}}]},
 	User = OldUser#egs_user_model{state=online, character=Character, area=#psu_area{questid=undefined, zoneid=undefined, mapid=undefined},
 		prev_area={psu_area, 0, 0, 0}, prev_entryid=0, pos=#pos{x=0.0, y=0.0, z=0.0, dir=0.0}, setid=0},
 	egs_user_model:write(User),
@@ -218,7 +222,7 @@ data_load(Folder, Number) ->
 char_load(User) ->
 	send_0d01(User),
 	% 0246
-	send_0a0a(),
+	send_0a0a((User#egs_user_model.character)#characters.inventory),
 	send_1006(5, 0),
 	send_1005((User#egs_user_model.character)#characters.name),
 	send_1006(12, 0),
@@ -701,39 +705,33 @@ event({item_description_request, ItemID}) ->
 %% @todo Apparently B is always ItemID+1. Not sure why.
 %% @todo Currently use a separate file for the data sent for the weapons.
 %% @todo TargetGID and TargetLID must be validated, they're either the player's or his NPC characters.
+%% @todo Handle NPC characters properly.
 event({item_equip, ItemIndex, TargetGID, TargetLID, A, B}) ->
 	GID = get(gid),
-	Category = case ItemIndex of
-		% units would be 8, traps would be 12
-		19 -> 2; % armor
-		Y when Y =:= 5; Y =:= 6; Y =:= 7 -> 0; % clothes
-		_ -> 1 % weapons
-	end,
-	Filename = case ItemIndex of
-		% weapons
-		16 -> "p/packet0105_sword.bin";
-		13 -> "p/packet0105_twindaggers.bin";
-		15 -> "p/packet0105_dagger.bin";
-		 9 -> "p/packet0105_rcsm.bin";
-		14 -> "p/packet0105_saber.bin";
-		 8 -> "p/packet0105_mgun.bin";
-		X when X =:= 17; X =:= 18 ->
-			"p/packet0105_twinguns.bin";
-		% armor
-		19 -> "p/packet0105_armor.bin";
-		% clothes
-		X when X =:= 5; X =:= 6; X =:= 7 ->
-			none;
-		_ -> % default, for lou
-			"p/packet0105_twindaggers.bin"
-	end,
-	case Filename of
-		none -> File = << >>;
-		_ -> {ok, File} = file:read_file(Filename)
-	end,
-	send(<< 16#01050300:32, 0:64, TargetGID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer,
-		0:64, TargetGID:32/little-unsigned-integer, TargetLID:32/little-unsigned-integer, ItemIndex, 1, Category, A, B:32/little-unsigned-integer,
-		File/binary >>);
+	{ok, User} = egs_user_model:read(GID),
+	Inventory = (User#egs_user_model.character)#characters.inventory,
+	case lists:nth(ItemIndex + 1, Inventory) of
+		{ItemID, Variables} when element(1, Variables) =:= psu_special_item_variables ->
+			<< Category:8, _:24 >> = << ItemID:32 >>,
+			send(<< 16#01050300:32, 0:64, TargetGID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
+				TargetGID:32/little, TargetLID:32/little, ItemIndex:8, 1:8, Category:8, A:8, B:32/little >>);
+		{ItemID, Variables} when element(1, Variables) =:= psu_striking_weapon_item_variables ->
+			ItemInfo = proplists:get_value(ItemID, ?ITEMS),
+			#psu_item{data=Constants} = ItemInfo,
+			#psu_striking_weapon_item{attack_sound=Sound, hitbox_a=HitboxA, hitbox_b=HitboxB,
+				hitbox_c=HitboxC, hitbox_d=HitboxD, nb_targets=NbTargets, effect=Effect, model=Model} = Constants,
+			<< Category:8, _:24 >> = << ItemID:32 >>,
+			{SoundInt, SoundType} = case Sound of
+				{default, Val} -> {Val, 0};
+				{custom, Val} -> {Val, 8}
+			end,
+			send(<< 16#01050300:32, 0:64, TargetGID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
+				TargetGID:32/little, TargetLID:32/little, ItemIndex:8, 1:8, Category:8, A:8, B:32/little,
+				SoundInt:32/little, HitboxA:16, HitboxB:16, HitboxC:16, HitboxD:16, SoundType:4, NbTargets:4, 0:8, Effect:8, Model:8 >>);
+		undefined ->
+			%% @todo Shouldn't be needed later when NPCs are handled correctly.
+			ignore
+	end;
 
 %% @todo A and B are unknown.
 %% @see item_equip
@@ -1180,7 +1178,7 @@ build_010a_list([ItemID|Tail], Acc) ->
 	UCS2Name = << << X:8, 0:8 >> || X <- Name >>,
 	NamePadding = 8 * (46 - byte_size(UCS2Name)),
 	RarityBin = Rarity - 1,
-	DataBin = build_010a_item(Data),
+	DataBin = build_item_constants(Data),
 	BinItemID = case element(1, Data) of
 		psu_clothing_item -> %% Change the ItemID to enable all colors.
 			<< A:8, _:4, B:12, _:8 >> = << ItemID:32 >>,
@@ -1190,18 +1188,6 @@ build_010a_list([ItemID|Tail], Acc) ->
 	end,
 	Bin = << UCS2Name/binary, 0:NamePadding, RarityBin:8, 0:8, BinItemID/binary, SellPrice:32/little, DataBin/binary >>,
 	build_010a_list(Tail, [Bin|Acc]).
-
-build_010a_item(#psu_clothing_item{appearance=Appearance, manufacturer=Manufacturer, type=Type, overlap=Overlap, gender=Gender, colors=Colors}) ->
-	GenderInt = case Gender of male -> 16#1b; female -> 16#2b end,
-	<< Appearance:16, Type:4, Manufacturer:4, Overlap:8, GenderInt:8, Colors/binary, 0:40 >>;
-build_010a_item(#psu_consumable_item{max_quantity=MaxQuantity, pt_diff=PointsDiff,
-	status_effect=StatusEffect, target=Target, use_condition=UseCondition, item_effect=ItemEffect}) ->
-	<< 0:8, MaxQuantity:8, Target:8, UseCondition:8, PointsDiff:16/little, StatusEffect:8, ItemEffect:8, 0:96 >>;
-build_010a_item(#psu_parts_item{appearance=Appearance, manufacturer=Manufacturer, type=Type, overlap=Overlap, gender=Gender}) ->
-	GenderInt = case Gender of male -> 16#14; female -> 16#24 end,
-	<< Appearance:16, Type:4, Manufacturer:4, Overlap:8, GenderInt:8, 0:120 >>;
-build_010a_item(#psu_trap_item{max_quantity=MaxQuantity}) ->
-	<< 2:32/little, 16#ffffff:24, MaxQuantity:8, 0:96 >>.
 
 %% @doc Trigger a character-related event.
 send_0111(A, B) ->
@@ -1377,10 +1363,9 @@ send_0a06() ->
 	send(<< A/binary, GID:32/little-unsigned-integer, B/binary, GID:32/little-unsigned-integer, C/binary, GID:32/little-unsigned-integer, D/binary >>).
 
 %% @todo Handle more than just goggles.
-send_0a0a() ->
+send_0a0a(Inventory) ->
 	{ok, << _:68608/bits, Rest/bits >>} = file:read_file("p/packet0a0a.bin"),
 	GID = get(gid),
-	Inventory = [{16#11010000, todo}, {16#11020000, todo}, {16#11020100, todo}, {16#11020200, todo}],
 	NbItems = length(Inventory),
 	ItemVariables = build_0a0a_item_variables(Inventory, []),
 	ItemConstants = build_0a0a_item_constants(Inventory, []),
@@ -1390,7 +1375,24 @@ build_0a0a_item_variables([], Acc) ->
 	Bin = iolist_to_binary(lists:reverse(Acc)),
 	Padding = 17280 - 8 * byte_size(Bin),
 	<< Bin/binary, 0:Padding >>;
-build_0a0a_item_variables([{ItemID, _Variables}|Tail], Acc) ->
+%% @todo Handle rank, rarity and hands properly.
+build_0a0a_item_variables([{ItemID, Variables}|Tail], Acc) when element(1, Variables) =:= psu_striking_weapon_item_variables ->
+	#psu_striking_weapon_item_variables{is_active=IsActive, slot=Slot, current_pp=CurrentPP, max_pp=MaxPP,
+		element=#psu_element{type=EleType, percent=ElePercent}, pa=#psu_pa{type=PAType, level=PALevel}} = Variables,
+	ItemIndex = 0,
+	Rank = 4,
+	Grind = 0,
+	Rarity = 14, %% Rarity - 1
+	Hand = both,
+	<< _:8, WeaponType:8, _:16 >> = << ItemID:32 >>,
+	HandBin = case Hand of
+		both -> << 16#0000:16 >>;
+		_ -> error
+	end,
+	Bin = << IsActive:8, Slot:8, 0:16, ItemIndex:32/little, ItemID:32, 0:32, CurrentPP:16/little, MaxPP:16/little, 0:16, %% @todo What's this 0:16?
+		Grind:4, Rank:4, Rarity:8, EleType:8, ElePercent:8, HandBin/binary, WeaponType:8, PAType:8, PALevel:8, 0:40 >>,
+	build_0a0a_item_variables(Tail, [Bin|Acc]);
+build_0a0a_item_variables([{ItemID, #psu_special_item_variables{}}|Tail], Acc) ->
 	ItemIndex = 0,
 	Action = case ItemID of
 		16#11010000 -> << 16#12020100:32 >>;
@@ -1406,15 +1408,37 @@ build_0a0a_item_constants([], Acc) ->
 	Padding = 34560 - 8 * byte_size(Bin),
 	<< Bin/binary, 0:Padding >>;
 build_0a0a_item_constants([{ItemID, _Variables}|Tail], Acc) ->
-	#psu_item{name=Name, sell_price=SellPrice, data=Data} = proplists:get_value(ItemID, ?ITEMS),
+	#psu_item{name=Name, rarity=Rarity, sell_price=SellPrice, data=Data} = proplists:get_value(ItemID, ?ITEMS),
 	UCS2Name = << << X:8, 0:8 >> || X <- Name >>,
 	NamePadding = 8 * (46 - byte_size(UCS2Name)),
 	<< Category:8, _:24 >> = << ItemID:32 >>,
-	DataBin = build_0a0a_item_constants_data(Data),
-	Bin = << UCS2Name/binary, 0:NamePadding, 0:8, Category:8, SellPrice:32/little, DataBin/binary >>,
+	DataBin = build_item_constants(Data),
+	RarityInt = Rarity - 1,
+	Bin = << UCS2Name/binary, 0:NamePadding, RarityInt:8, Category:8, SellPrice:32/little, DataBin/binary >>,
 	build_0a0a_item_constants(Tail, [Bin|Acc]).
 
-build_0a0a_item_constants_data(#psu_special_item{}) ->
+build_item_constants(#psu_clothing_item{appearance=Appearance, manufacturer=Manufacturer, type=Type, overlap=Overlap, gender=Gender, colors=Colors}) ->
+	GenderInt = case Gender of male -> 16#1b; female -> 16#2b end,
+	<< Appearance:16, Type:4, Manufacturer:4, Overlap:8, GenderInt:8, Colors/binary, 0:40 >>;
+build_item_constants(#psu_consumable_item{max_quantity=MaxQuantity, pt_diff=PointsDiff,
+	status_effect=StatusEffect, target=Target, use_condition=UseCondition, item_effect=ItemEffect}) ->
+	<< 0:8, MaxQuantity:8, Target:8, UseCondition:8, PointsDiff:16/little, StatusEffect:8, ItemEffect:8, 0:96 >>;
+build_item_constants(#psu_parts_item{appearance=Appearance, manufacturer=Manufacturer, type=Type, overlap=Overlap, gender=Gender}) ->
+	GenderInt = case Gender of male -> 16#14; female -> 16#24 end,
+	<< Appearance:16, Type:4, Manufacturer:4, Overlap:8, GenderInt:8, 0:120 >>;
+%% @todo Handle rank properly.
+build_item_constants(#psu_striking_weapon_item{pp=PP, atp=ATP, ata=ATA, atp_req=Req, shop_element=#psu_element{type=EleType, percent=ElePercent},
+	hand=Hand, max_upgrades=MaxUpgrades, attack_label=AttackLabel}) ->
+	Rank = 4,
+	HandInt = case Hand of
+		both -> 0;
+		_ -> error
+	end,
+	<< PP:16/little, ATP:16/little, ATA:16/little, Req:16/little, 16#ffffff:24,
+		EleType:8, ElePercent:8, HandInt:8, 0:8, Rank:8, 0:8, MaxUpgrades:8, AttackLabel:8, 0:8 >>;
+build_item_constants(#psu_trap_item{max_quantity=MaxQuantity}) ->
+	<< 2:32/little, 16#ffffff:24, MaxQuantity:8, 0:96 >>;
+build_item_constants(#psu_special_item{}) ->
 	<< 0:160 >>.
 
 %% @doc Item description.

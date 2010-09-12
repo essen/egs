@@ -17,16 +17,46 @@
 %%	You should have received a copy of the GNU Affero General Public License
 %%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
+-record(psu_element, {type, percent}).
+-record(psu_pa, {type, level}).
+
 -record(psu_item, {name, description, rarity, buy_price, sell_price, data}).
 -record(psu_clothing_item, {appearance, type, manufacturer, overlap, gender, colors}).
 -record(psu_consumable_item, {max_quantity, pt_diff, status_effect, target, use_condition, item_effect}).
 -record(psu_parts_item, {appearance, type, manufacturer, overlap, gender}).
 -record(psu_special_item, {}).
+-record(psu_striking_weapon_item, {pp, atp, ata, atp_req, shop_element, hand, max_upgrades, attack_label,
+	attack_sound, hitbox_a, hitbox_b, hitbox_c, hitbox_d, nb_targets, effect, model}).
 -record(psu_trap_item, {max_quantity}).
+
+-record(psu_special_item_variables, {}).
+-record(psu_striking_weapon_item_variables, {is_active, slot, current_pp, max_pp, element, pa}).
 
 %% Items.
 
 -define(ITEMS, [
+	%% Swords.
+	%% @todo Do the shop for these.
+
+	{16#01010900, #psu_item{name="Huge Cutter",
+		description="",
+		rarity=15, buy_price=10, sell_price=1, data=#psu_striking_weapon_item{
+			pp=100, atp=200, ata=300, atp_req=1, shop_element=#psu_element{type=0, percent=0}, hand=both, max_upgrades=50, attack_label=0,
+			attack_sound={default, 1961}, hitbox_a=16#9f01, hitbox_b=16#76fd, hitbox_c=16#3f29, hitbox_d=16#2222, nb_targets=5, effect=0, model=9
+	}}},
+	{16#01010a00, #psu_item{name="Kan Yu",
+		description="",
+		rarity=15, buy_price=10, sell_price=1, data=#psu_striking_weapon_item{
+			pp=100, atp=200, ata=300, atp_req=1, shop_element=#psu_element{type=0, percent=0}, hand=both, max_upgrades=50, attack_label=0,
+			attack_sound={default, 1961}, hitbox_a=16#9f01, hitbox_b=16#76fd, hitbox_c=16#3f29, hitbox_d=16#2222, nb_targets=5, effect=1, model=10
+	}}},
+	{16#01010b00, #psu_item{name="De Ragan Slayer",
+		description="",
+		rarity=15, buy_price=10, sell_price=1, data=#psu_striking_weapon_item{
+			pp=100, atp=200, ata=300, atp_req=1, shop_element=#psu_element{type=0, percent=0}, hand=both, max_upgrades=50, attack_label=0,
+			attack_sound={custom, 0}, hitbox_a=16#9f01, hitbox_b=16#76fd, hitbox_c=16#3f29, hitbox_d=16#2222, nb_targets=133, effect=0, model=11
+	}}},
+
 	%% Consumables.
 	%% item_effect: 0x20: give points! fixed pt_diff
 	%%              0x22: give SE! ignore pt_diff
