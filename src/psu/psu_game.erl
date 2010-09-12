@@ -543,8 +543,15 @@ events(Events) ->
 %% @todo When changing lobby to the room, 0230 must also be sent. Same when going from room to lobby.
 %% @todo Probably move area_load inside the event and make other events call this one when needed.
 event({area_change, QuestID, ZoneID, MapID, EntryID}) ->
-	log("area change (~b,~b,~b,~b)", [QuestID, ZoneID, MapID, EntryID]),
-	area_load(QuestID, ZoneID, MapID, EntryID);
+	event({area_change, QuestID, ZoneID, MapID, EntryID, 16#ffffffff});
+event({area_change, QuestID, ZoneID, MapID, EntryID, PartyPos}) ->
+	case PartyPos of
+		16#ffffffff ->
+			log("area change (~b,~b,~b,~b,~b)", [QuestID, ZoneID, MapID, EntryID, PartyPos]),
+			area_load(QuestID, ZoneID, MapID, EntryID);
+		_Any -> %% @todo Handle area_change event for NPCs in story missions.
+			ignore
+	end;
 
 %% @doc Chat broadcast handler. Dispatch the message to everyone (for now).
 %%      Disregard the name sent by the server. Use the name saved in memory instead, to prevent client-side editing.

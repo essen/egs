@@ -334,7 +334,7 @@ parse(Size, 16#0806, Channel, Data) ->
 
 parse(Size, 16#0807, Channel, Data) ->
 	<<	_LID:16/little, VarA:16/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little, VarF:32/little, VarG:32/little, VarH:32/little, VarI:32/little,
-		QuestID:32/little, ZoneID:16/little, MapID:16/little, EntryID:16/little, _AreaChangeNb:16/little, VarJ:32/little >> = Data,
+		QuestID:32/little, ZoneID:16/little, MapID:16/little, EntryID:16/little, _AreaChangeNb:16/little, PartyPos:32/little >> = Data,
 	?ASSERT_EQ(Size, 60),
 	?ASSERT_EQ(Channel, 2),
 	?ASSERT_EQ(VarA, 0),
@@ -346,8 +346,7 @@ parse(Size, 16#0807, Channel, Data) ->
 	?ASSERT_EQ(VarG, 0),
 	?ASSERT_EQ(VarH, 0),
 	?ASSERT_EQ(VarI, 0),
-	?ASSERT_EQ(VarJ, 16#ffffffff),
-	{area_change, QuestID, ZoneID, MapID, EntryID};
+	{area_change, QuestID, ZoneID, MapID, EntryID, PartyPos};
 
 %% @todo Probably safely ignored. Still, figure out VarJ. It can be different than 2.
 parse(Size, 16#0808, Channel, Data) ->
@@ -899,7 +898,7 @@ parse(Size, 16#0f0a, Channel, Data) ->
 			?ASSERT_EQ(VarV, 1),
 			?ASSERT_EQ(VarW, 0),
 			?ASSERT(),
-			ignore; %% @todo object_goggle_target_???
+			ignore; %% @todo object_goggle_target_activate
 		[56, 25] ->
 			?ASSERT_EQ(VarN, 16#ffffffff),
 			?ASSERT_EQ(VarO, 16#ffffffff),
