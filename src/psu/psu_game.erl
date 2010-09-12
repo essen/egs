@@ -1376,11 +1376,46 @@ send_0a06() ->
 	GID = get(gid),
 	send(<< A/binary, GID:32/little-unsigned-integer, B/binary, GID:32/little-unsigned-integer, C/binary, GID:32/little-unsigned-integer, D/binary >>).
 
-%% @todo Inventory. Figure out everything in this packet and handle it correctly.
+%% @todo Handle more than just goggles.
 send_0a0a() ->
 	{ok, << _:68608/bits, Rest/bits >>} = file:read_file("p/packet0a0a.bin"),
 	GID = get(gid),
-	send(<< 16#0a0a0300:32, 16#ffff:16, 0:144, 16#00011300:32, GID:32/little, 0:64, 0:8, 0:8, 6:8, 0:72, 0:192, 0:2304, 0:17280, 0:34560, 0:13824, Rest/binary >>).
+	Inventory = [{16#11010000, todo}, {16#11020000, todo}, {16#11020100, todo}, {16#11020200, todo}],
+	NbItems = length(Inventory),
+	ItemVariables = build_0a0a_item_variables(Inventory, []),
+	ItemConstants = build_0a0a_item_constants(Inventory, []),
+	send(<< 16#0a0a0300:32, 16#ffff:16, 0:144, 16#00011300:32, GID:32/little, 0:64, NbItems:8, 0:8, 6:8, 0:72, 0:192, 0:2304, ItemVariables/binary, ItemConstants/binary, 0:13824, Rest/binary >>).
+
+build_0a0a_item_variables([], Acc) ->
+	Bin = iolist_to_binary(lists:reverse(Acc)),
+	Padding = 17280 - 8 * byte_size(Bin),
+	<< Bin/binary, 0:Padding >>;
+build_0a0a_item_variables([{ItemID, _Variables}|Tail], Acc) ->
+	ItemIndex = 0,
+	Action = case ItemID of
+		16#11010000 -> << 16#12020100:32 >>;
+		16#11020000 -> << 16#15000000:32 >>;
+		16#11020100 -> << 0:32 >>;
+		16#11020200 -> << 0:32 >>
+	end,
+	Bin = << 0:32, ItemIndex:32/little, ItemID:32, 0:24, 16#80:8, 0:56, 16#80:8, 0:32, Action/binary, 0:32 >>,
+	build_0a0a_item_variables(Tail, [Bin|Acc]).
+
+build_0a0a_item_constants([], Acc) ->
+	Bin = iolist_to_binary(lists:reverse(Acc)),
+	Padding = 34560 - 8 * byte_size(Bin),
+	<< Bin/binary, 0:Padding >>;
+build_0a0a_item_constants([{ItemID, _Variables}|Tail], Acc) ->
+	#psu_item{name=Name, sell_price=SellPrice, data=Data} = proplists:get_value(ItemID, ?ITEMS),
+	UCS2Name = << << X:8, 0:8 >> || X <- Name >>,
+	NamePadding = 8 * (46 - byte_size(UCS2Name)),
+	<< Category:8, _:24 >> = << ItemID:32 >>,
+	DataBin = build_0a0a_item_constants_data(Data),
+	Bin = << UCS2Name/binary, 0:NamePadding, 0:8, Category:8, SellPrice:32/little, DataBin/binary >>,
+	build_0a0a_item_constants(Tail, [Bin|Acc]).
+
+build_0a0a_item_constants_data(#psu_special_item{}) ->
+	<< 0:160 >>.
 
 %% @doc Item description.
 send_0a11(ItemID, ItemDesc) ->

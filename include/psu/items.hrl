@@ -21,6 +21,7 @@
 -record(psu_clothing_item, {appearance, type, manufacturer, overlap, gender, colors}).
 -record(psu_consumable_item, {max_quantity, pt_diff, status_effect, target, use_condition, item_effect}).
 -record(psu_parts_item, {appearance, type, manufacturer, overlap, gender}).
+-record(psu_special_item, {}).
 -record(psu_trap_item, {max_quantity}).
 
 %% Items.
@@ -1886,7 +1887,22 @@
 		rarity=7, buy_price=650, sell_price=65, data=#psu_trap_item{max_quantity=10}}},
 	{16#0c020b00, #psu_item{name="Stun Trap EX",
 		description="A new trap model that activates for a set period of time. Adds stun effects.",
-		rarity=7, buy_price=650, sell_price=65, data=#psu_trap_item{max_quantity=10}}}
+		rarity=7, buy_price=650, sell_price=65, data=#psu_trap_item{max_quantity=10}}},
+
+	%% Special items.
+
+	{16#11010000, #psu_item{name="Goggles",
+		description="",
+		rarity=1, buy_price=none, sell_price=16#fa0a1f00, data=#psu_special_item{}}},
+	{16#11020000, #psu_item{name="Photon Eraser",
+		description="",
+		rarity=1, buy_price=none, sell_price=16#fa0a1f00, data=#psu_special_item{}}},
+	{16#11020100, #psu_item{name="Photon Reflector",
+		description="",
+		rarity=1, buy_price=none, sell_price=16#fa0a1f00, data=#psu_special_item{}}},
+	{16#11020200, #psu_item{name="Photon Breaker",
+		description="",
+		rarity=1, buy_price=none, sell_price=16#fa0a1f00, data=#psu_special_item{}}}
 ]).
 
 %% Shops.
