@@ -93,6 +93,11 @@ object_init([{floor_button, TrigEventID}|Tail], ZoneID, BlockID, ObjectID, Targe
 	object_insert(#psu_object{id={self(), ZoneID, ObjectID}, instancepid=self(), type=floor_button, args={BlockID, TrigEventID}}),
 	object_init(Tail, ZoneID, BlockID, ObjectID + 1, TargetID + 1, ListIndex, ObjectIndex + 1);
 
+object_init([{goggle_target, TrigEventID}|Tail], ZoneID, BlockID, ObjectID, TargetID, ListIndex, ObjectIndex) ->
+	io:format("~p~n", [ObjectID]),
+	object_insert(#psu_object{id={self(), ZoneID, ObjectID}, instancepid=self(), type=goggle_target, args={BlockID, TrigEventID}}),
+	object_init(Tail, ZoneID, BlockID, ObjectID + 1, TargetID + 1, ListIndex, ObjectIndex + 1);
+
 %% @doc key: {InstancePid, ZoneID, ObjectID}
 object_init([{key, _KeySet, TrigEventID, _ReqEventID}|Tail], ZoneID, BlockID, ObjectID, TargetID, ListIndex, ObjectIndex) ->
 	object_insert(#psu_object{id={self(), ZoneID, ObjectID}, instancepid=self(), type=key, args={BlockID, [TrigEventID]}}),
@@ -124,7 +129,6 @@ object_init([{warp, DestX, DestY, DestZ, DestDir}|Tail], ZoneID, BlockID, Object
 object_init([Object|Tail], ZoneID, BlockID, ObjectID, TargetID, ListIndex, ObjectIndex)
 	when	Object =:= boss_gate;
 			Object =:= shoot_button;
-			Object =:= goggle_target;
 			Object =:= trap;
 			Object =:= sensor ->
 	object_init(Tail, ZoneID, BlockID, ObjectID + 1, TargetID + 1, ListIndex, ObjectIndex + 1);
@@ -142,7 +146,8 @@ object_init([Object|Tail], ZoneID, BlockID, ObjectID, TargetID, ListIndex, Objec
 			Object =:= colored_minimap_section;
 			Object =:= fog;
 			Object =:= pp_cube;
-			Object =:= healing_pad ->
+			Object =:= healing_pad;
+			Object =:= unknown_object_28 ->
 	object_init(Tail, ZoneID, BlockID, ObjectID, TargetID, ListIndex, ObjectIndex + 1);
 
 %% @doc Ignore everything else for now: objects with an ObjectID but without a TargetID.

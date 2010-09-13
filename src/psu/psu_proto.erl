@@ -897,8 +897,7 @@ parse(Size, 16#0f0a, Channel, Data) ->
 			?ASSERT_EQ(VarO, 16#ffffffff),
 			?ASSERT_EQ(VarV, 1),
 			?ASSERT_EQ(VarW, 0),
-			?ASSERT(),
-			ignore; %% @todo object_goggle_target_activate
+			{object_goggle_target_activate, ObjectID};
 		[56, 25] ->
 			?ASSERT_EQ(VarN, 16#ffffffff),
 			?ASSERT_EQ(VarO, 16#ffffffff),

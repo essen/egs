@@ -290,8 +290,9 @@ parse_object_args(49, _Params, _Data) ->
 parse_object_args(50, _Params, _Data) ->
 	healing_pad;
 
-parse_object_args(51, _Params, _Data) ->
-	goggle_target;
+parse_object_args(51, _Params, Data) ->
+	<< _Unknown:224, TrigEvent:16/little, _Rest/bits >> = Data,
+	{goggle_target, TrigEvent};
 
 parse_object_args(53, _Params, _Data) ->
 	label;

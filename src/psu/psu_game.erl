@@ -927,6 +927,12 @@ event({object_crystal_activate, ObjectID}) ->
 event({object_event_trigger, BlockID, EventID}) ->
 	send_1205(EventID, BlockID, 0);
 
+event({object_goggle_target_activate, ObjectID}) ->
+	{ok, User} = egs_user_model:read(get(gid)),
+	{BlockID, EventID} = psu_instance:std_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
+	send_1205(EventID, BlockID, 0),
+	send_1213(ObjectID, 8);
+
 event({object_key_console_enable, ObjectID}) ->
 	{ok, User} = egs_user_model:read(get(gid)),
 	{BlockID, [EventID|_]} = psu_instance:std_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
