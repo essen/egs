@@ -241,7 +241,6 @@ parse(Size, 16#020d, Channel, Data) ->
 	?ASSERT_EQ(VarK, 0),
 	{system_key_auth_request, AuthGID, AuthKey};
 
-%% @doc This command should be safely ignored. Probably indicates that character loading was successful.
 parse(Size, 16#021c, Channel, Data) ->
 	<< _LID:16/little, VarA:16/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little, VarF:32/little, VarG:32/little, VarH:32/little, VarI:32/little >> = Data,
 	?ASSERT_EQ(Size, 44),
@@ -255,7 +254,7 @@ parse(Size, 16#021c, Channel, Data) ->
 	?ASSERT_EQ(VarG, 0),
 	?ASSERT_EQ(VarH, 0),
 	?ASSERT_EQ(VarI, 0),
-	ignore;
+	char_load_complete;
 
 parse(Size, 16#021d, Channel, Data) ->
 	<<	_LID:16/little, VarB:16/little, VarC:32/little, VarD:32/little, VarE:32/little, VarF:32/little,
@@ -1078,11 +1077,9 @@ parse(Size, 16#1a01, Channel, Data) ->
 		_ -> log("unknown 1a01 EventID ~p", [EventID])
 	end;
 
-parse(_Size, Command, Channel, Data) ->
-	%% @todo log unknown command?
-	%~ ignore.
-	<< _:288, Rest/bits >> = Data,
-	{command, Command, Channel, Rest}.
+%% @doc Unknown command,
+parse(_Size, Command, Channel, _Data) ->
+	{command, Command, Channel}.
 
 %% @todo Many unknown vars in the hit values.
 parse_hits(<< >>, Acc) ->
