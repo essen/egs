@@ -40,6 +40,8 @@ loop(CallbackFn = {Module, Function}) ->
 	receive
 		{'EXIT', Pid, _} ->
 			spawn(Module, Function, [Pid]);
+		{link, Pid} ->
+			link(Pid);
 		_ ->
 			reload
 	after 5000 ->

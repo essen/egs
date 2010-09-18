@@ -18,7 +18,7 @@
 %%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
 -module(egs_login).
--export([init/1, keepalive/1, info/2, cast/3, raw/3, event/2]).
+-export([keepalive/1, info/2, cast/3, raw/3, event/2]).
 
 %% @todo This header is only included because of egs_user_model. We don't want that here.
 -include("include/records.hrl").

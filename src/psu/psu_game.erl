@@ -18,7 +18,6 @@
 %%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
 -module(psu_game).
--export([start_link/1, cleanup/1]). %% External.
 -compile(export_all). %% @todo Temporarily export all until send_xxxx functions are moved to psu_proto.
 
 -include("include/records.hrl").
@@ -26,38 +25,6 @@
 -include("include/missions.hrl").
 -include("include/psu/items.hrl").
 -include("include/psu/npc.hrl").
-
--define(OPTIONS, [binary, {active, false}, {reuseaddr, true}, {certfile, "priv/ssl/servercert.pem"}, {keyfile, "priv/ssl/serverkey.pem"}, {password, "alpha"}]).
-
-%% @spec start_link(Port) -> {ok,Pid::pid()}
-%% @doc Start the game server.
-start_link(Port) ->
-	%~ {ok, MPid} = egs_exit_mon:start_link({?MODULE, cleanup}),
-	LPid = spawn(egs_network, listen, [Port, egs_login]),
-	{ok, LPid}.
-
-%% @spec cleanup(Pid) -> ok
-%% @doc Cleanup the data associated with the failing process.
-%% @todo Cleanup the instance process if there's nobody in it anymore.
-%% @todo Leave party instead of stopping it.
-cleanup(Pid) ->
-	case egs_user_model:read({pid, Pid}) of
-		{ok, User} ->
-			case User#egs_user_model.partypid of
-				undefined ->
-					ignore;
-				PartyPid ->
-					{ok, NPCList} = psu_party:get_npc(PartyPid),
-					[egs_user_model:delete(NPCGID) || {_Spot, NPCGID} <- NPCList],
-					psu_party:stop(PartyPid)
-			end,
-			egs_user_model:delete(User#egs_user_model.id),
-			{ok, List} = egs_user_model:select({neighbors, User}),
-			lists:foreach(fun(Other) -> Other#egs_user_model.pid ! {psu_player_unspawn, User} end, List),
-			io:format("game (~p): quit~n", [User#egs_user_model.id]);
-		{error, _Reason} ->
-			ignore
-	end.
 
 %% @doc Load and send the character information to the client.
 %% @todo Should wait for the 021c reply before doing area_change.
