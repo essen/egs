@@ -48,7 +48,7 @@ on_exit(Pid) ->
 			end,
 			egs_user_model:delete(User#egs_user_model.id),
 			{ok, List} = egs_user_model:select({neighbors, User}),
-			lists:foreach(fun(Other) -> Other#egs_user_model.pid ! {psu_player_unspawn, User} end, List),
+			lists:foreach(fun(Other) -> Other#egs_user_model.pid ! {egs, player_unspawn, User} end, List),
 			io:format("game (~p): quit~n", [User#egs_user_model.id]);
 		{error, _Reason} ->
 			ignore

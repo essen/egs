@@ -135,9 +135,9 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 	% broadcast spawn and unspawn to other people
 	{ok, UnspawnList} = egs_user_model:select({neighbors, OldUser}),
 	{ok, SpawnList} = egs_user_model:select({neighbors, User}),
-	lists:foreach(fun(Other) -> Other#egs_user_model.pid ! {psu_player_unspawn, User} end, UnspawnList),
+	lists:foreach(fun(Other) -> Other#egs_user_model.pid ! {egs, player_unspawn, User} end, UnspawnList),
 	if	AreaType =:= lobby ->
-			lists:foreach(fun(Other) -> Other#egs_user_model.pid ! {psu_player_spawn, User} end, SpawnList);
+			lists:foreach(fun(Other) -> Other#egs_user_model.pid ! {egs, player_spawn, User} end, SpawnList);
 		true -> ignore
 	end,
 	% load area

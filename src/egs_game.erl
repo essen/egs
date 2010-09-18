@@ -246,7 +246,7 @@ event({chat, _FromTypeID, FromGID, _FromName, Modifiers, ChatMsg}, #state{gid=Us
 	log("chat from ~s: ~s", [[re:replace(LogName, "\\0", "", [global, {return, binary}])], [re:replace(LogMessage, "\\0", "", [global, {return, binary}])]]),
 	%% broadcast
 	{ok, List} = egs_user_model:select(all),
-	lists:foreach(fun(X) -> X#egs_user_model.pid ! {psu_chat, BcastTypeID, BcastGID, BcastName, Modifiers, ChatMsg} end, List);
+	lists:foreach(fun(X) -> X#egs_user_model.pid ! {egs, chat, BcastTypeID, BcastGID, BcastName, Modifiers, ChatMsg} end, List);
 
 %% @todo There's at least 9 different sets of locations. Handle all of them correctly.
 event(counter_background_locations_request, _State) ->
@@ -266,7 +266,7 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}, #state{gid
 	ZoneFile = "data/lobby/counter.zone.nbl",
 	%% broadcast unspawn to other people
 	{ok, UnspawnList} = egs_user_model:select({neighbors, OldUser}),
-	lists:foreach(fun(Other) -> Other#egs_user_model.pid ! {psu_player_unspawn, User} end, UnspawnList),
+	lists:foreach(fun(Other) -> Other#egs_user_model.pid ! {egs, player_unspawn, User} end, UnspawnList),
 	%% load counter
 	psu_proto:send_0c00(User),
 	psu_proto:send_020e(User, QuestFile),
