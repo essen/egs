@@ -1187,38 +1187,6 @@ packet_prepare(Packet) ->
 			{error, badarg}
 	end.
 
-%% @doc Receive exactly one packet command. Handle errors properly. Return the full packet for the command.
-
-packet_recv(CSocket, Timeout) ->
-	case packet_safe_recv(CSocket, 4, Timeout) of
-		{error, A} ->
-			{error, A};
-		{ok, << Size:32/little-unsigned-integer >>} ->
-			case packet_safe_recv(CSocket, Size - 4, Timeout) of
-				{error, B} ->
-					{error, B};
-				{ok, Tail} ->
-					{ok, << Size:32/little-unsigned-integer, Tail/binary >>}
-			end
-	end.
-
-%% @doc Safely receive a packet. Close the connection if an error happens.
-
-packet_safe_recv(CSocket, Size, Timeout) ->
-	try ssl:recv(CSocket, Size, Timeout) of
-		{ok, Packet} ->
-			{ok, Packet};
-		{error, timeout} ->
-			{error, timeout};
-		{error, _} ->
-			ssl:close(CSocket),
-			{error, closed}
-	catch
-		_ ->
-			ssl:close(CSocket),
-			{error, closed}
-	end.
-
 %% @doc Send a packet. The packet argument must not contain the size field.
 
 packet_send(CSocket, Packet) ->
@@ -1252,37 +1220,6 @@ packet_fragment_send(CSocket, Packet, Size, Current) ->
 		Size:32/little-unsigned-integer, Current:32/little-unsigned-integer, Chunk/binary >>,
 	ssl:send(CSocket, Fragment),
 	packet_fragment_send(CSocket, Rest, Size, Current + 16#4000).
-
-%% @doc Split a packet received into commands. This is only needed when receiving packets in active mode.
-
-packet_split(Packet) ->
-	packet_split(Packet, []).
-
-packet_split(Packet, Result) ->
-	<< Size:32/little-unsigned-integer, _/bits >> = Packet,
-	case Size > byte_size(Packet) of
-		true ->
-			{Result, Packet};
-		false ->
-			BitSize = Size * 8,
-			<< Split:BitSize/bits, Rest/bits >> = Packet,
-			case Rest of
-				<< >> ->
-					{Result ++ [Split], << >>};
-				_ ->
-					packet_split(Rest, Result ++ [Split])
-			end
-	end.
-
-%% @doc Parse the packet header returns the header information along with the data chunk.
-%%      0b05 is handled differently because it's only 16 bytes long and use a different format.
-
-packet_parse(<< _:32, 16#0b05:16, _/bits >>) ->
-	{command, 16#0b05, ignore, ignore};
-
-packet_parse(Orig) ->
-	<< _:32, Command:16/unsigned-integer, Channel:8, _:296, Data/bits >> = Orig,
-	{command, Command, Channel, Data}.
 
 %% @doc Shortcut for send_global/4.
 
