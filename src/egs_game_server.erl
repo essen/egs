@@ -58,6 +58,7 @@ on_exit(Pid) ->
 %% @todo Handle keepalive messages globally?
 init(Socket) ->
 	egs_game_server_exit_mon ! {link, self()},
-	psu_proto:send_0202(Socket, 0),
 	timer:send_interval(5000, {egs, keepalive}),
-	egs_network:recv(<< >>, egs_login, {state, Socket}).
+	TmpGID = 16#ff000000 + mnesia:dirty_update_counter(counters, tmpgid, 1),
+	psu_proto:send_0202(Socket, TmpGID),
+	egs_network:recv(<< >>, egs_login, {state, Socket, TmpGID}).

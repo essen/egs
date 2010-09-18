@@ -25,7 +25,7 @@
 
 %% @doc Listen for connections.
 listen(Port, CallbackMod) ->
-	error_logger:info_report(io_lib:format("started a listener for ~p on port ~b", [CallbackMod, Port])),
+	error_logger:info_report(io_lib:format("listener started for ~p on port ~b", [CallbackMod, Port])),
 	{ok, LSocket} = ssl:listen(Port, ?OPTIONS),
 	?MODULE:accept(LSocket, CallbackMod).
 
@@ -50,8 +50,11 @@ recv(SoFar, CallbackMod, State) ->
 	receive
 		{ssl, _Any, Data} ->
 			{Commands, Rest} = split(<< SoFar/bits, Data/bits >>, []),
-			{ok, NextCallbackMod, NewState} = dispatch(Commands, CallbackMod, CallbackMod, State),
-			?MODULE:recv(Rest, NextCallbackMod, NewState);
+			case dispatch(Commands, CallbackMod, CallbackMod, State) of
+				{ok, NextCallbackMod, NewState} ->
+					?MODULE:recv(Rest, NextCallbackMod, NewState);
+				closed -> closed
+			end;
 		{ssl_closed, _} ->
 			ssl_closed; %% exit
 		{ssl_error, _, _} ->
@@ -88,6 +91,8 @@ dispatch([Data|Tail], CallbackMod, NextMod, State) ->
 			dispatch(Tail, CallbackMod, NewMod, NewState);
 		{ok, NewState} ->
 			dispatch(Tail, CallbackMod, NextMod, NewState);
+		closed ->
+			closed;
 		_Any ->
 			dispatch(Tail, CallbackMod, NextMod, State)
 	end.

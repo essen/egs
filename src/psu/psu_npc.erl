@@ -27,7 +27,7 @@
 %% @todo Handle stats, experience, based on level.
 %% @todo Level shouldn't go below 1 or above 200.
 user_init(NPCid, BaseLevel) ->
-	NPCGID = 16#ff000000 + mnesia:dirty_update_counter(counters, npcgid, 1),
+	NPCGID = 16#ff000000 + mnesia:dirty_update_counter(counters, tmpgid, 1),
 	Settings = proplists:get_value(NPCid, ?NPC),
 	TmpUCS2Name = << << X:8, 0:8 >> || X <- Settings#psu_npc.name >>,
 	PaddingSize = 8 * (64 - byte_size(TmpUCS2Name)),

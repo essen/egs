@@ -1,6 +1,6 @@
 %% @author Loïc Hoguin <essen@dev-extend.eu>
 %% @copyright 2010 Loïc Hoguin.
-%% @doc Game server's client authentication callback module.
+%% @doc Game callback module.
 %%
 %%	This file is part of EGS.
 %%
