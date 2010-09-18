@@ -690,23 +690,25 @@ event(ppcube_request, _State) ->
 event(unicube_request, _State) ->
 	psu_game:send_021e();
 
-%% @doc Uni selection handler.
+%% @doc Uni selection handler. Selecting anything reloads the character which will then be sent to its associated area.
 %% @todo When selecting 'Your room', load a default room.
 %% @todo When selecting 'Reload', reload the character in the current lobby.
 %% @todo Delete NPC characters and stop the party on entering myroom too.
-event({unicube_select, Selection, EntryID}, State=#state{gid=GID}) ->
+event({unicube_select, Selection, EntryID}, #state{gid=GID}) ->
 	case Selection of
 		cancel -> ignore;
 		16#ffffffff ->
 			log("uni selection (my room)"),
 			psu_game:send_0230(),
 			% 0220
-			event({area_change, 1120000, 0, 100, 0}, State);
+			{ok, User} = egs_user_model:read(GID),
+			User2 = User#egs_user_model{area=#psu_area{questid=1120000, zoneid=0, mapid=100}, entryid=0},
+			egs_user_model:write(User2),
+			psu_game:char_load(User2);
 		_UniID ->
 			log("uni selection (reload)"),
 			psu_game:send_0230(),
 			% 0220
-			%% force reloading the character and data files (@todo hack, uses myroom questid to do it)
 			{ok, User} = egs_user_model:read(GID),
 			case User#egs_user_model.partypid of
 				undefined ->
@@ -718,10 +720,9 @@ event({unicube_select, Selection, EntryID}, State=#state{gid=GID}) ->
 					[egs_user_model:delete(NPCGID) || {_Spot, NPCGID} <- NPCList],
 					psu_party:stop(PartyPid)
 			end,
-			Area = User#egs_user_model.area,
-			NewRow = User#egs_user_model{partypid=undefined, area=Area#psu_area{questid=1120000, zoneid=undefined}, entryid=EntryID},
-			egs_user_model:write(NewRow),
-			event({area_change, Area#psu_area.questid, Area#psu_area.zoneid, Area#psu_area.mapid, EntryID}, State)
+			User2 = User#egs_user_model{entryid=EntryID},
+			egs_user_model:write(User2),
+			psu_game:char_load(User2)
 	end.
 
 %% Internal.

@@ -142,11 +142,6 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 	end,
 	% load area
 	if	QuestChange =:= true ->
-			% reload the character if entering or leaving the room quest
-			if	OldQuestID =:= 1120000; QuestID =:= 1120000 ->
-					char_load(User);
-				true -> ignore
-			end,
 			% load new quest
 			psu_proto:send_0c00(User),
 			psu_proto:send_020e(User, QuestFile);

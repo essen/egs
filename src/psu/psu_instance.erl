@@ -94,7 +94,6 @@ object_init([{floor_button, TrigEventID}|Tail], ZoneID, BlockID, ObjectID, Targe
 	object_init(Tail, ZoneID, BlockID, ObjectID + 1, TargetID + 1, ListIndex, ObjectIndex + 1);
 
 object_init([{goggle_target, TrigEventID}|Tail], ZoneID, BlockID, ObjectID, TargetID, ListIndex, ObjectIndex) ->
-	io:format("~p~n", [ObjectID]),
 	object_insert(#psu_object{id={self(), ZoneID, ObjectID}, instancepid=self(), type=goggle_target, args={BlockID, TrigEventID}}),
 	object_init(Tail, ZoneID, BlockID, ObjectID + 1, TargetID + 1, ListIndex, ObjectIndex + 1);
 
