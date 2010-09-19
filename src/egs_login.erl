@@ -41,17 +41,6 @@ cast(_Command, _Data, _State) ->
 	ok.
 
 %% Raw commands.
-%% @todo Move all of them to events.
-
-%% @doc MOTD request handler. Handles both forms of MOTD requests, US and JP. Page number starts at 0.
-%% @todo Currently ignore the language and send the same MOTD file to everyone. Language is 8 bits next to Page.
-raw(Command, << _:352, Page:8, _/bits >>, #state{socket=Socket}) when Command =:= 16#0226; Command =:= 16#023f ->
-	{ok, File} = file:read_file("priv/psu_login/motd.txt"),
-	Tokens = re:split(File, "\n."),
-	MOTD = << << Line/binary, "\n", 0 >> || Line <- lists:sublist(Tokens, 1 + Page * 15, 15) >>,
-	NbPages = 1 + length(Tokens) div 15,
-	Packet = << 16#0225:16, 0:304, NbPages:8, Page:8, 16#8200:16/unsigned-integer, MOTD/binary, 0:16 >>,
-	psu_proto:packet_send(Socket, Packet);
 
 %% @doc Dismiss all raw commands with a log notice.
 %% @todo Have a log event handler instead.
@@ -117,4 +106,14 @@ event({system_login_auth_request, Username, Password}, #state{socket=Socket}) ->
 	Time = calendar:datetime_to_gregorian_seconds(calendar:universal_time()),
 	egs_user_model:write(#egs_user_model{id=RealGID, pid=self(), socket=Socket, state={wait_for_authentication, Auth}, time=Time, folder=Folder}),
 	Packet = << 16#02230300:32, 0:192, RealGID:32/little-unsigned-integer, 0:64, RealGID:32/little-unsigned-integer, Auth:32/bits >>,
+	psu_proto:packet_send(Socket, Packet);
+
+%% @doc MOTD request handler. Page number starts at 0.
+%% @todo Currently ignore the language and send the same MOTD file to everyone.
+event({system_motd_request, Page, _Language}, #state{socket=Socket}) ->
+	{ok, File} = file:read_file("priv/psu_login/motd.txt"),
+	Tokens = re:split(File, "\n."),
+	MOTD = << << Line/binary, "\n", 0 >> || Line <- lists:sublist(Tokens, 1 + Page * 15, 15) >>,
+	NbPages = 1 + length(Tokens) div 15,
+	Packet = << 16#0225:16, 0:304, NbPages:8, Page:8, 16#8200:16/unsigned-integer, MOTD/binary, 0:16 >>,
 	psu_proto:packet_send(Socket, Packet).

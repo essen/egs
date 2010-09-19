@@ -327,6 +327,44 @@ parse(Size, 16#021f, Channel, Data) ->
 	end,
 	{unicube_select, Selection, EntryID};
 
+%% @doc Seems to be exactly the same as 023f, except Channel, and that it's used for JP clients.
+parse(Size, 16#0226, Channel, Data) ->
+	<<	LID:16/little, VarA:16/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little, VarF:32/little,
+		VarG:32/little, VarH:32/little, VarI:32/little, Page:8, Language:8, VarJ:16/little >> = Data,
+	?ASSERT_EQ(Size, 48),
+	?ASSERT_EQ(Channel, 3),
+	?ASSERT_EQ(LID, 16#ffff),
+	?ASSERT_EQ(VarA, 0),
+	?ASSERT_EQ(VarB, 0),
+	?ASSERT_EQ(VarC, 0),
+	?ASSERT_EQ(VarD, 0),
+	?ASSERT_EQ(VarE, 0),
+	?ASSERT_EQ(VarF, 0),
+	?ASSERT_EQ(VarG, 0),
+	?ASSERT_EQ(VarH, 0),
+	?ASSERT_EQ(VarI, 0),
+	?ASSERT_EQ(VarJ, 0),
+	{system_motd_request, Page, language_integer_to_atom(Language)};
+
+%% @doc Seems to be exactly the same as 0226, except Channel, and that it's used for US clients.
+parse(Size, 16#023f, Channel, Data) ->
+	<<	LID:16/little, VarA:16/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little, VarF:32/little,
+		VarG:32/little, VarH:32/little, VarI:32/little, Page:8, Language:8, VarJ:16/little >> = Data,
+	?ASSERT_EQ(Size, 48),
+	?ASSERT_EQ(Channel, 2),
+	?ASSERT_EQ(LID, 16#ffff),
+	?ASSERT_EQ(VarA, 0),
+	?ASSERT_EQ(VarB, 0),
+	?ASSERT_EQ(VarC, 0),
+	?ASSERT_EQ(VarD, 0),
+	?ASSERT_EQ(VarE, 0),
+	?ASSERT_EQ(VarF, 0),
+	?ASSERT_EQ(VarG, 0),
+	?ASSERT_EQ(VarH, 0),
+	?ASSERT_EQ(VarI, 0),
+	?ASSERT_EQ(VarJ, 0),
+	{system_motd_request, Page, language_integer_to_atom(Language)};
+
 parse(_Size, 16#0304, Channel, Data) ->
 	<<	_LID:16/little, VarB:16/little, VarC:32/little, VarD:32/little, VarE:32/little, VarF:32/little,
 		VarG:32/little, VarH:32/little, VarI:32/little, VarJ:32/little, FromTypeID:32, FromGID:32/little,
@@ -461,20 +499,13 @@ parse(Size, 16#080e, Channel, Data) ->
 	?ASSERT_EQ(VarP, 0),
 	?ASSERT_EQ(VarQ, 0),
 	?ASSERT_EQ(VarR, 0),
-	AtomLanguage = case Language of
-		0 -> japanese;
-		1 -> english;
-		3 -> french;
-		4 -> german;
-		_ -> log("unknown 080e Language ~p", [Language]), unknown
-	end,
 	AtomPlatform = case Platform of
 		0 -> ps2;
 		1 -> pc;
 		_ -> log("unknown 080e Platform ~p", [Platform]), unknown
 	end,
 	Version = Major * 1000000 + Minor * 1000 + Revision,
-	{system_client_version_info, AtomLanguage, AtomPlatform, Version};
+	{system_client_version_info, language_integer_to_atom(Language), AtomPlatform, Version};
 
 %% @todo Find out what it's really doing!
 parse(Size, 16#080f, Channel, Data) ->
@@ -1205,9 +1236,14 @@ send_0d05(DestUser) ->
 	Size = 4 + byte_size(Packet),
 	ssl:send(DestSocket, << Size:32/little, Packet/binary >>).
 
+%% Utility functions.
 
-
-
+%% @doc Return the language as an atom from its integer value.
+language_integer_to_atom(0) -> japanese;
+language_integer_to_atom(1) -> english;
+language_integer_to_atom(3) -> french;
+language_integer_to_atom(4) -> german;
+language_integer_to_atom(Language) -> log("unknown 080e Language ~p", [Language]).
 
 %% @doc Prepare a packet. Return the real size and padding at the end.
 
