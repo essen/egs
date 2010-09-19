@@ -71,10 +71,7 @@ event({system_client_version_info, _Entrance, _Language, _Platform, Version}, #s
 %% Game server info request handler.
 %% @todo Remove the dependency on network.hrl through configuration files.
 event(system_game_server_request, #state{socket=Socket, gid=GID}) ->
-	IP = ?GAME_IP,
-	Port = ?GAME_PORT,
-	Packet = << 16#02160300:32, 0:192, GID:32/little-unsigned-integer, 0:64, IP/binary, Port:32/little-unsigned-integer >>,
-	psu_proto:packet_send(Socket, Packet),
+	psu_proto:send_0216(Socket, GID, ?GAME_IP, ?GAME_PORT),
 	ssl:close(Socket),
 	closed;
 

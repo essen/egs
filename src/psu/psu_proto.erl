@@ -1220,6 +1220,10 @@ send_0215(DestUser, UnknownValue) ->
 	#egs_user_model{socket=CSocket, id=GID, lid=LID} = DestUser,
 	packet_send(CSocket, << 16#02150300:32, LID:16/little, 0:144, 16#00011300:32, GID:32/little, 0:64, UnknownValue:32/little >>).
 
+%% @doc Send the game server's IP and port that the client requested.
+send_0216(DestSocket, SessionID, IP, Port) ->
+	packet_send(DestSocket, << 16#02160300:32, 16#ffff:16, 0:144, 16#00000f00:32, SessionID:32/little, 0:64, IP/binary, Port:16/little, 0:16 >>).
+
 %% @todo Inventory related. Doesn't seem to do anything.
 send_0a05(DestUser) ->
 	#egs_user_model{socket=CSocket, id=GID, lid=LID} = DestUser,
