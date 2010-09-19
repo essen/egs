@@ -22,14 +22,6 @@
 
 -include("include/records.hrl").
 
-%~ %% @todo We probably want to use active connections everywhere instead of doing this.
-%~ recv %% remove later?
-
-%~ %% @todo We probably want to remove this after all send functions are moved back in psu_proto.
-%~ send %% fragments automatically if needed
-
-%~ split
-
 %% @doc Log the message.
 log(Msg) ->
 	io:format("~p ~s~n", [get(gid), Msg]).
