@@ -43,23 +43,6 @@ cast(_Command, _Data, _State) ->
 %% Raw commands.
 %% @todo Move all of them to events.
 
-%% @doc Authentication request handler. Currently always succeed.
-%%      Use the temporary session ID as the GID for now.
-%%      Use username and password as a folder name for saving character data.
-%% @todo Handle real GIDs whenever there's real authentication. GID is the second SessionID in the reply.
-%% @todo Apparently it's possible to ask a question in the reply here. Used for free course on JP.
-raw(16#0219, << _:352, UsernameBlob:192/bits, PasswordBlob:192/bits, _/bits >>, #state{socket=Socket}) ->
-	Username = re:replace(UsernameBlob, "\\0", "", [global, {return, binary}]),
-	Password = re:replace(PasswordBlob, "\\0", "", [global, {return, binary}]),
-	io:format("auth success for ~s ~s~n", [Username, Password]),
-	RealGID = 10000000 + mnesia:dirty_update_counter(counters, gid, 1),
-	Auth = crypto:rand_bytes(4),
-	Folder = << Username/binary, "-", Password/binary >>,
-	Time = calendar:datetime_to_gregorian_seconds(calendar:universal_time()),
-	egs_user_model:write(#egs_user_model{id=RealGID, pid=self(), socket=Socket, state={wait_for_authentication, Auth}, time=Time, folder=Folder}),
-	Packet = << 16#02230300:32, 0:192, RealGID:32/little-unsigned-integer, 0:64, RealGID:32/little-unsigned-integer, Auth:32/bits >>,
-	psu_proto:packet_send(Socket, Packet);
-
 %% @doc MOTD request handler. Handles both forms of MOTD requests, US and JP. Page number starts at 0.
 %% @todo Currently ignore the language and send the same MOTD file to everyone. Language is 8 bits next to Page.
 raw(Command, << _:352, Page:8, _/bits >>, #state{socket=Socket}) when Command =:= 16#0226; Command =:= 16#023f ->
@@ -119,4 +102,19 @@ event({system_key_auth_request, AuthGID, AuthKey}, #state{socket=Socket}) ->
 	User2 = User#egs_user_model{id=AuthGID, pid=self(), socket=Socket, state=authenticated, time=Time, lid=LID},
 	egs_user_model:write(User2),
 	psu_proto:send_0d05(User2),
-	{ok, egs_char_select, {state, Socket, AuthGID}}.
+	{ok, egs_char_select, {state, Socket, AuthGID}};
+
+%% @doc Authentication request handler. Currently always succeed.
+%%      Use the temporary session ID as the GID for now.
+%%      Use username and password as a folder name for saving character data.
+%% @todo Handle real GIDs whenever there's real authentication. GID is the second SessionID in the reply.
+%% @todo Apparently it's possible to ask a question in the reply here. Used for free course on JP.
+event({system_login_auth_request, Username, Password}, #state{socket=Socket}) ->
+	io:format("auth success for ~s ~s~n", [Username, Password]),
+	RealGID = 10000000 + mnesia:dirty_update_counter(counters, gid, 1),
+	Auth = crypto:rand_bytes(4),
+	Folder = << Username/binary, "-", Password/binary >>,
+	Time = calendar:datetime_to_gregorian_seconds(calendar:universal_time()),
+	egs_user_model:write(#egs_user_model{id=RealGID, pid=self(), socket=Socket, state={wait_for_authentication, Auth}, time=Time, folder=Folder}),
+	Packet = << 16#02230300:32, 0:192, RealGID:32/little-unsigned-integer, 0:64, RealGID:32/little-unsigned-integer, Auth:32/bits >>,
+	psu_proto:packet_send(Socket, Packet).
