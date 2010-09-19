@@ -241,6 +241,22 @@ parse(Size, 16#020d, Channel, Data) ->
 	?ASSERT_EQ(VarK, 0),
 	{system_key_auth_request, AuthGID, AuthKey};
 
+parse(Size, 16#0217, Channel, Data) ->
+	<< LID:16/little, VarA:16/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little, VarF:32/little, VarG:32/little, VarH:32/little, VarI:32/little >> = Data,
+	?ASSERT_EQ(Size, 44),
+	?ASSERT_EQ(Channel, 2),
+	?ASSERT_EQ(LID, 16#ffff),
+	?ASSERT_EQ(VarA, 0),
+	?ASSERT_EQ(VarB, 0),
+	?ASSERT_EQ(VarC, 0),
+	?ASSERT_EQ(VarD, 0),
+	?ASSERT_EQ(VarE, 0),
+	?ASSERT_EQ(VarF, 0),
+	?ASSERT_EQ(VarG, 0),
+	?ASSERT_EQ(VarH, 0),
+	?ASSERT_EQ(VarI, 0),
+	system_game_server_request;
+
 parse(Size, 16#021c, Channel, Data) ->
 	<< _LID:16/little, VarA:16/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little, VarF:32/little, VarG:32/little, VarH:32/little, VarI:32/little >> = Data,
 	?ASSERT_EQ(Size, 44),

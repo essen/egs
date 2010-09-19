@@ -43,16 +43,6 @@ cast(_Command, _Data, _State) ->
 %% Raw commands.
 %% @todo Move all of them to events.
 
-%% Game server info request handler.
-%% @todo Remove the dependency on network.hrl through configuration files.
-raw(16#0217, _Data, #state{socket=Socket, gid=GID}) ->
-	IP = ?GAME_IP,
-	Port = ?GAME_PORT,
-	Packet = << 16#02160300:32, 0:192, GID:32/little-unsigned-integer, 0:64, IP/binary, Port:32/little-unsigned-integer >>,
-	psu_proto:packet_send(Socket, Packet),
-	ssl:close(Socket),
-	closed;
-
 %% @doc Authentication request handler. Currently always succeed.
 %%      Use the temporary session ID as the GID for now.
 %%      Use username and password as a folder name for saving character data.
@@ -105,6 +95,16 @@ event({system_client_version_info, _Language, _Platform, Version}, #state{socket
 		ssl:close(Socket),
 		closed
 	end;
+
+%% Game server info request handler.
+%% @todo Remove the dependency on network.hrl through configuration files.
+event(system_game_server_request, #state{socket=Socket, gid=GID}) ->
+	IP = ?GAME_IP,
+	Port = ?GAME_PORT,
+	Packet = << 16#02160300:32, 0:192, GID:32/little-unsigned-integer, 0:64, IP/binary, Port:32/little-unsigned-integer >>,
+	psu_proto:packet_send(Socket, Packet),
+	ssl:close(Socket),
+	closed;
 
 %% @doc Authenticate the user by pattern matching its saved state against the key received.
 %%      If the user is authenticated, send him the character flags list.
