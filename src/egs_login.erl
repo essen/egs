@@ -51,7 +51,7 @@ raw(Command, _Data, _State) ->
 
 %% @doc Reject version < 2.0009.2.
 %% @todo Reject wrong platforms too.
-event({system_client_version_info, _Language, _Platform, Version}, #state{socket=Socket, gid=GID}) ->
+event({system_client_version_info, _Entrance, _Language, _Platform, Version}, #state{socket=Socket, gid=GID}) ->
 	if Version >= 2009002 -> ignore; true ->
 		Website = << "http://psumods.co.uk/forums/comments.php?DiscussionID=40#Item_1" >>,
 		Size = byte_size(Website),

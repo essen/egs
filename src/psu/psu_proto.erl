@@ -479,7 +479,7 @@ parse(Size, 16#080d, Channel, Data) ->
 %% @todo Make sure the Language field is the right one.
 parse(Size, 16#080e, Channel, Data) ->
 	<<	LID:16/little, VarA:16/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little, VarF:32/little, VarG:32/little, VarH:32/little, VarI:32/little,
-		VarJ:8, Language:8, VarK:8, VarL:8, Platform:8, VarM:24/little, Revision:8, Minor:4, _VarN:12, Major:4, _VarO:4, VarP:32/little, VarQ:32/little, VarR:32/little >> = Data,
+		VarJ:8, Language:8, VarK:8, Entrance:8, Platform:8, VarM:24/little, Revision:8, Minor:4, _VarN:12, Major:4, _VarO:4, VarP:32/little, VarQ:32/little, VarR:32/little >> = Data,
 	?ASSERT_EQ(Size, 68),
 	?ASSERT_EQ(Channel, 2),
 	?ASSERT_EQ(LID, 16#ffff),
@@ -494,7 +494,6 @@ parse(Size, 16#080e, Channel, Data) ->
 	?ASSERT_EQ(VarI, 0),
 	?ASSERT_EQ(VarJ, 0),
 	?ASSERT_EQ(VarK, 1),
-	?ASSERT_EQ(VarL, 1),
 	?ASSERT_EQ(VarM, 0),
 	?ASSERT_EQ(VarP, 0),
 	?ASSERT_EQ(VarQ, 0),
@@ -505,7 +504,7 @@ parse(Size, 16#080e, Channel, Data) ->
 		_ -> log("unknown 080e Platform ~p", [Platform]), unknown
 	end,
 	Version = Major * 1000000 + Minor * 1000 + Revision,
-	{system_client_version_info, language_integer_to_atom(Language), AtomPlatform, Version};
+	{system_client_version_info, Entrance, language_integer_to_atom(Language), AtomPlatform, Version};
 
 %% @todo Find out what it's really doing!
 parse(Size, 16#080f, Channel, Data) ->
