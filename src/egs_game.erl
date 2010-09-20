@@ -20,12 +20,9 @@
 -module(egs_game).
 -export([keepalive/1, info/2, cast/3, raw/3, event/2]).
 
-%% @todo This header is probably only included because of egs_user_model. We don't want that here.
 -include("include/records.hrl").
 -include("include/maps.hrl").
 -include("include/psu/items.hrl").
-
--record(state, {socket, gid}).
 
 %% @doc Send a keepalive.
 keepalive(#state{socket=Socket}) ->

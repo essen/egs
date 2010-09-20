@@ -20,6 +20,8 @@
 -module(egs_login_server).
 -export([start_link/1, on_exit/1, init/1]).
 
+-include("include/records.hrl").
+
 %% @spec start_link(Port) -> {ok,Pid::pid()}
 %% @doc Start the login server.
 start_link(Port) ->
@@ -35,4 +37,4 @@ on_exit(_Pid) ->
 init(Socket) ->
 	TmpGID = 16#ff000000 + mnesia:dirty_update_counter(counters, tmpgid, 1),
 	psu_proto:send_0202(Socket, TmpGID),
-	egs_network:recv(<< >>, egs_login, {state, Socket, TmpGID}).
+	egs_network:recv(<< >>, egs_login, #state{socket=Socket, gid=TmpGID}).

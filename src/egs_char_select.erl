@@ -20,11 +20,8 @@
 -module(egs_char_select).
 -export([keepalive/1, info/2, cast/3, raw/3, event/2]).
 
-%% @todo These headers are only included because of egs_user_model and items. We don't want that here.
 -include("include/records.hrl").
 -include("include/psu/items.hrl").
-
--record(state, {socket, gid}).
 
 %% @doc Send a keepalive.
 keepalive(#state{socket=Socket}) ->
@@ -72,7 +69,7 @@ event({char_select_create, Slot, CharBin}, #state{gid=GID}) ->
 
 %% @doc Load the selected character into the game's universe.
 %% @todo The area_change should happen only after we received 021c back from the client.
-event({char_select_enter, Slot, _BackToPreviousField}, #state{socket=Socket, gid=GID}) ->
+event({char_select_enter, Slot, _BackToPreviousField}, State=#state{gid=GID}) ->
 	{ok, User} = egs_user_model:read(GID),
 	[{status, 1}, {char, CharBin}, {options, OptionsBin}] = data_load(User#egs_user_model.folder, Slot),
 	<< Name:512/bits, RaceBin:8, GenderBin:8, ClassBin:8, AppearanceBin:776/bits, _/bits >> = CharBin,
@@ -90,7 +87,7 @@ event({char_select_enter, Slot, _BackToPreviousField}, #state{socket=Socket, gid
 		prev_area={psu_area, 0, 0, 0}, prev_entryid=0, pos=#pos{x=0.0, y=0.0, z=0.0, dir=0.0}, setid=0},
 	egs_user_model:write(User2),
 	psu_game:char_load(User2),
-	{ok, egs_game, {state, Socket, GID}}.
+	{ok, egs_game, State}.
 
 %% Internal.
 

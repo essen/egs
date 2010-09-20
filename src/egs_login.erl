@@ -20,11 +20,8 @@
 -module(egs_login).
 -export([keepalive/1, info/2, cast/3, raw/3, event/2]).
 
-%% @todo This header is only included because of egs_user_model. We don't want that here.
 -include("include/records.hrl").
 -include("include/network.hrl").
-
--record(state, {socket, gid}).
 
 %% @doc Don't keep alive here, authentication should go fast.
 keepalive(_State) ->
@@ -51,6 +48,7 @@ raw(Command, _Data, _State) ->
 
 %% @doc Reject version < 2.0009.2.
 %% @todo Reject wrong platforms too.
+%% @todo f9dbce73 is an auth key too.
 event({system_client_version_info, _Entrance, _Language, _Platform, Version}, #state{socket=Socket, gid=GID}) ->
 	if Version >= 2009002 -> ignore; true ->
 		Website = << "http://psumods.co.uk/forums/comments.php?DiscussionID=40#Item_1" >>,
@@ -78,7 +76,7 @@ event(system_game_server_request, #state{socket=Socket, gid=GID}) ->
 %% @doc Authenticate the user by pattern matching its saved state against the key received.
 %%      If the user is authenticated, send him the character flags list.
 %% @todo Remove the put calls when all the send_xxxx are moved out of psu_game and into psu_proto.
-event({system_key_auth_request, AuthGID, AuthKey}, #state{socket=Socket}) ->
+event({system_key_auth_request, AuthGID, AuthKey}, State=#state{socket=Socket}) ->
 	{ok, User} = egs_user_model:read(AuthGID),
 	{wait_for_authentication, AuthKey} = User#egs_user_model.state,
 	put(socket, Socket),
@@ -88,7 +86,7 @@ event({system_key_auth_request, AuthGID, AuthKey}, #state{socket=Socket}) ->
 	User2 = User#egs_user_model{id=AuthGID, pid=self(), socket=Socket, state=authenticated, time=Time, lid=LID},
 	egs_user_model:write(User2),
 	psu_proto:send_0d05(User2),
-	{ok, egs_char_select, {state, Socket, AuthGID}};
+	{ok, egs_char_select, State#state{gid=AuthGID}};
 
 %% @doc Authentication request handler. Currently always succeed.
 %%      Use the temporary session ID as the GID for now.

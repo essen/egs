@@ -20,7 +20,6 @@
 -module(egs_game_server).
 -export([start_link/1, on_exit/1, init/1]).
 
-%% @todo This header is only included because of egs_user_model. We don't want that here.
 -include("include/records.hrl").
 
 %% @spec start_link(Port) -> {ok,Pid::pid()}
@@ -61,4 +60,4 @@ init(Socket) ->
 	timer:send_interval(5000, {egs, keepalive}),
 	TmpGID = 16#ff000000 + mnesia:dirty_update_counter(counters, tmpgid, 1),
 	psu_proto:send_0202(Socket, TmpGID),
-	egs_network:recv(<< >>, egs_login, {state, Socket, TmpGID}).
+	egs_network:recv(<< >>, egs_login, #state{socket=Socket, gid=TmpGID}).
