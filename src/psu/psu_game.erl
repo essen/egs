@@ -123,6 +123,7 @@ area_load(QuestID, ZoneID, MapID, EntryID) ->
 	area_load(AreaType, IsStart, RealSetID, OldUser, User, QuestFile, ZoneFile, AreaName).
 
 area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName) ->
+	State = #state{socket=User#egs_user_model.socket, gid=User#egs_user_model.id, lid=User#egs_user_model.lid},
 	#psu_area{questid=OldQuestID, zoneid=OldZoneID} = OldUser#egs_user_model.area,
 	#psu_area{questid=QuestID, zoneid=ZoneID, mapid=_MapID} = User#egs_user_model.area,
 	QuestChange = if OldQuestID /= QuestID, QuestFile /= undefined -> true; true -> false end,
@@ -158,7 +159,7 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 					send_0111(6, 0);
 				true -> ignore
 			end,
-			psu_proto:send_010d(User, User#egs_user_model{lid=0}),
+			psu_proto:send_010d(User#egs_user_model{lid=0}, State),
 			send_0200(AreaType),
 			send_020f(ZoneFile, SetID, SeasonID);
 		true -> ignore
@@ -221,13 +222,14 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 npc_load(_Leader, []) ->
 	ok;
 npc_load(Leader, [{PartyPos, NPCGID}|NPCList]) ->
+	State = #state{socket=Leader#egs_user_model.socket, gid=Leader#egs_user_model.id, lid=Leader#egs_user_model.lid},
 	{ok, OldNPCUser} = egs_user_model:read(NPCGID),
 	#egs_user_model{instancepid=InstancePid, area=Area, entryid=EntryID, pos=Pos} = Leader,
 	NPCUser = OldNPCUser#egs_user_model{lid=PartyPos, instancepid=InstancePid, areatype=mission, area=Area, entryid=EntryID, pos=Pos},
 	%% @todo This one on mission end/abort?
 	%~ OldNPCUser#egs_user_model{lid=PartyPos, instancepid=undefined, areatype=AreaType, area={psu_area, 0, 0, 0}, entryid=0, pos={pos, 0.0, 0.0, 0.0, 0}}
 	egs_user_model:write(NPCUser),
-	psu_proto:send_010d(Leader, NPCUser),
+	psu_proto:send_010d(NPCUser, State),
 	psu_proto:send_0201(Leader, NPCUser),
 	psu_proto:send_0215(Leader, 0),
 	send_0a04(NPCUser#egs_user_model.id),

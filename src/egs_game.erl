@@ -251,7 +251,7 @@ event(counter_background_locations_request, _State) ->
 
 %% @todo Make sure non-mission counters follow the same loading process.
 %% @todo Probably validate the From* values, to not send the player back inside a mission.
-event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}, #state{gid=GID}) ->
+event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}, State=#state{gid=GID}) ->
 	log("counter load ~b", [CounterID]),
 	{ok, OldUser} = egs_user_model:read(GID),
 	OldArea = OldUser#egs_user_model.area,
@@ -268,7 +268,7 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}, #state{gid
 	psu_proto:send_0c00(User),
 	psu_proto:send_020e(User, QuestFile),
 	psu_proto:send_0a05(User),
-	psu_proto:send_010d(User, User#egs_user_model{lid=0}),
+	psu_proto:send_010d(User#egs_user_model{lid=0}, State),
 	psu_game:send_0200(mission),
 	psu_game:send_020f(ZoneFile, 0, 16#ff),
 	psu_proto:send_0205(User, 0),
@@ -450,7 +450,7 @@ event({mission_start, QuestID}, _State) ->
 
 %% @doc Force the invite of an NPC character while inside a mission. Mostly used by story missions.
 %%      Note that the NPC is often removed and reinvited between block/cutscenes.
-event({npc_force_invite, NPCid}, #state{gid=GID}) ->
+event({npc_force_invite, NPCid}, State=#state{gid=GID}) ->
 	{ok, User} = egs_user_model:read(GID),
 	%% Create NPC.
 	log("npc force invite ~p", [NPCid]),
@@ -471,7 +471,7 @@ event({npc_force_invite, NPCid}, #state{gid=GID}) ->
 	Character = NPCUser#egs_user_model.character,
 	SentNPCCharacter = Character#characters{gid=NPCid, npcid=NPCid},
 	SentNPCUser = NPCUser#egs_user_model{character=SentNPCCharacter},
-	psu_proto:send_010d(User, SentNPCUser),
+	psu_proto:send_010d(SentNPCUser, State),
 	psu_proto:send_0201(User, SentNPCUser),
 	psu_proto:send_0215(User, 0),
 	psu_game:send_0a04(SentNPCUser#egs_user_model.id),
