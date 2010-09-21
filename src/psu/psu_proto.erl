@@ -1194,7 +1194,7 @@ send_0201(CharUser, State) ->
 
 %% @doc Hello command. Sent when a client connects to the game or login server.
 %% @todo Can contain an error message if 0:1024 is setup similar to this: 0:32, 3:32/little, 0:48, Len:16/little, Error/binary, 0:Padding.
-send_0202(DestSocket, SessionID) ->
+send_0202(#state{socket=DestSocket, gid=SessionID}) ->
 	packet_send(DestSocket, << 16#020203bf:32, 16#ffff:16, 0:272, SessionID:32/little, 0:1024 >>).
 
 %% @doc Make the client load a new map.

@@ -36,5 +36,6 @@ on_exit(_Pid) ->
 %% @doc Initialize the game state and start receiving messages.
 init(Socket) ->
 	TmpGID = 16#ff000000 + mnesia:dirty_update_counter(counters, tmpgid, 1),
-	psu_proto:send_0202(Socket, TmpGID),
-	egs_network:recv(<< >>, egs_login, #state{socket=Socket, gid=TmpGID}).
+	State = #state{socket=Socket, gid=TmpGID},
+	psu_proto:send_0202(State),
+	egs_network:recv(<< >>, egs_login, State).
