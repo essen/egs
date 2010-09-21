@@ -281,7 +281,7 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}, State=#sta
 	psu_game:send_1206(),
 	psu_game:send_1207(),
 	psu_game:send_1212(),
-	psu_proto:send_0201(User, User#egs_user_model{lid=0}),
+	psu_proto:send_0201(User#egs_user_model{lid=0}, State),
 	psu_game:send_0a06(),
 	case User#egs_user_model.partypid of
 		undefined -> ignore;
@@ -472,7 +472,7 @@ event({npc_force_invite, NPCid}, State=#state{gid=GID}) ->
 	SentNPCCharacter = Character#characters{gid=NPCid, npcid=NPCid},
 	SentNPCUser = NPCUser#egs_user_model{character=SentNPCCharacter},
 	psu_proto:send_010d(SentNPCUser, State),
-	psu_proto:send_0201(User, SentNPCUser),
+	psu_proto:send_0201(SentNPCUser, State),
 	psu_proto:send_0215(User, 0),
 	psu_game:send_0a04(SentNPCUser#egs_user_model.id),
 	psu_game:send_022c(0, 16#12),

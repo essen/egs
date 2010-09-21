@@ -200,7 +200,7 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 			send_1309();
 		true -> ignore
 	end,
-	psu_proto:send_0201(User, User#egs_user_model{lid=0}),
+	psu_proto:send_0201(User#egs_user_model{lid=0}, State),
 	if	ZoneChange =:= true ->
 			send_0a06();
 		true -> ignore
@@ -230,7 +230,7 @@ npc_load(Leader, [{PartyPos, NPCGID}|NPCList]) ->
 	%~ OldNPCUser#egs_user_model{lid=PartyPos, instancepid=undefined, areatype=AreaType, area={psu_area, 0, 0, 0}, entryid=0, pos={pos, 0.0, 0.0, 0.0, 0}}
 	egs_user_model:write(NPCUser),
 	psu_proto:send_010d(NPCUser, State),
-	psu_proto:send_0201(Leader, NPCUser),
+	psu_proto:send_0201(NPCUser, State),
 	psu_proto:send_0215(Leader, 0),
 	send_0a04(NPCUser#egs_user_model.id),
 	send_1004(npc_mission, NPCUser, PartyPos),
