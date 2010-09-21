@@ -1169,18 +1169,16 @@ parse_hits(Hits, Acc) ->
 
 %% @doc Send character appearance and other information.
 %% @todo Probably don't pattern match the data like this...
-send_010d(CharUser, State) ->
-	DestGID = State#state.gid,
+send_010d(CharUser, #state{socket=Socket, gid=DestGID}) ->
 	CharGID = CharUser#egs_user_model.id,
 	CharLID = CharUser#egs_user_model.lid,
 	<< _:640, CharBin/bits >> = psu_characters:character_user_to_binary(CharUser),
-	packet_send(State#state.socket, << 16#010d0300:32, 0:160, 16#00011300:32, DestGID:32/little-unsigned-integer,
+	packet_send(Socket, << 16#010d0300:32, 0:160, 16#00011300:32, DestGID:32/little-unsigned-integer,
 		0:64, 1:32/little-unsigned-integer, 0:32, 16#00000300:32, 16#ffff0000:32, 0:32, CharGID:32/little-unsigned-integer,
 		0:192, CharGID:32/little-unsigned-integer, CharLID:32/little-unsigned-integer, 16#ffffffff:32, CharBin/binary >>).
 
 %% @doc Send character location, appearance and other information.
-send_0201(CharUser, State) ->
-	DestGID = State#state.gid,
+send_0201(CharUser, #state{socket=Socket, gid=DestGID}) ->
 	[CharTypeID, GameVersion] = case (CharUser#egs_user_model.character)#characters.type of
 		npc -> [16#00001d00, 255];
 		_ -> [16#00001200, 0]
@@ -1189,13 +1187,13 @@ send_0201(CharUser, State) ->
 	CharBin = psu_characters:character_user_to_binary(CharUser),
 	IsGM = 0,
 	OnlineStatus = 0,
-	packet_send(State#state.socket, << 16#02010300:32, 0:32, CharTypeID:32, CharGID:32/little-unsigned-integer,
+	packet_send(Socket, << 16#02010300:32, 0:32, CharTypeID:32, CharGID:32/little-unsigned-integer,
 		0:64, 16#00011300:32, DestGID:32/little-unsigned-integer, 0:64, CharBin/binary, IsGM:8, 0:8, OnlineStatus:8, GameVersion:8, 0:608 >>).
 
 %% @doc Hello command. Sent when a client connects to the game or login server.
 %% @todo Can contain an error message if 0:1024 is setup similar to this: 0:32, 3:32/little, 0:48, Len:16/little, Error/binary, 0:Padding.
-send_0202(#state{socket=DestSocket, gid=SessionID}) ->
-	packet_send(DestSocket, << 16#020203bf:32, 16#ffff:16, 0:272, SessionID:32/little, 0:1024 >>).
+send_0202(#state{socket=Socket, gid=DestGID}) ->
+	packet_send(Socket, << 16#020203bf:32, 16#ffff:16, 0:272, DestGID:32/little, 0:1024 >>).
 
 %% @doc Make the client load a new map.
 %% @todo We set a value of 1 and not 0 after EntryID because this value is never found to be 0.
