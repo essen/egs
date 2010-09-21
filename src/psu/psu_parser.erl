@@ -60,12 +60,12 @@ parse_zone(NblFilename) ->
 	end.
 
 nbl_list_files(NblFilename) ->
-	Cmd = case os:type() of
-		{win32, nt} -> lists:flatten(io_lib:format("nbl -t ~s", [NblFilename]));
-		_ -> io_lib:format("./nbl -t ~s", [NblFilename])
+	{Cmd, NL} = case os:type() of
+		{win32, nt} -> {lists:flatten(io_lib:format("nbl -t ~s", [NblFilename])), "\r\n"};
+		_ -> {io_lib:format("./nbl -t ~s", [NblFilename]), "\n"}
 	end,
 	StdOut = os:cmd(Cmd),
-	re:split(StdOut, "\n", [{return, list}]).
+	re:split(StdOut, NL, [{return, list}]).
 
 nbl_extract_files(NblFilename) ->
 	filelib:ensure_dir("tmp/"),
