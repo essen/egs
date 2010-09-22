@@ -1197,10 +1197,9 @@ send_0202(#state{socket=Socket, gid=DestGID}) ->
 
 %% @doc Make the client load a new map.
 %% @todo We set a value of 1 and not 0 after EntryID because this value is never found to be 0.
-send_0205(DestUser, IsSeasonal) ->
-	#egs_user_model{socket=CSocket, id=GID, lid=LID, area=Area, entryid=EntryID} = DestUser,
-	#psu_area{zoneid=ZoneID, mapid=MapID} = Area,
-	packet_send(CSocket, << 16#02050300:32, LID:16/little, 0:144, 16#00011300:32, GID:32/little, 0:64,
+send_0205(CharUser, IsSeasonal, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+	#egs_user_model{area=#psu_area{zoneid=ZoneID, mapid=MapID}, entryid=EntryID} = CharUser,
+	packet_send(Socket, << 16#02050300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64,
 		16#ffffffff:32, ZoneID:32/little, MapID:32/little, EntryID:32/little, 1:32/little, 0:24, IsSeasonal:8 >>).
 
 %% @todo No idea what this one does. For unknown reasons it uses channel 2.

@@ -164,7 +164,7 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 			send_020f(ZoneFile, SetID, SeasonID);
 		true -> ignore
 	end,
-	psu_proto:send_0205(User#egs_user_model{lid=0}, IsSeasonal),
+	psu_proto:send_0205(User, IsSeasonal, State),
 	send_100e(QuestID, ZoneID, (User#egs_user_model.area)#psu_area.mapid, AreaName, 16#ffffffff),
 	if	AreaType =:= mission ->
 			psu_proto:send_0215(User#egs_user_model{lid=0}, 0),
