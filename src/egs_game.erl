@@ -275,7 +275,7 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}, State=#sta
 	psu_game:send_100e(16#7fffffff, 0, 0, AreaName, CounterID),
 	psu_proto:send_0215(User, 0),
 	psu_proto:send_0215(User, 0),
-	psu_proto:send_020c(User),
+	psu_proto:send_020c(State),
 	psu_game:send_1202(),
 	psu_game:send_1204(),
 	psu_game:send_1206(),

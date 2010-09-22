@@ -174,7 +174,7 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 				true -> ignore
 			end;
 		true ->
-			psu_proto:send_020c(User)
+			psu_proto:send_020c(State)
 	end,
 	if	ZoneChange =:= true ->
 			case AreaType of
