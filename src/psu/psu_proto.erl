@@ -1207,10 +1207,10 @@ send_020c(#state{socket=Socket}) ->
 	packet_send(Socket, << 16#020c0200:32, 16#ffff0000:32, 0:256 >>).
 
 %% @doc Send the quest file to be loaded by the client.
-send_020e(DestUser, Filename) ->
+send_020e(Filename, #state{socket=Socket}) ->
 	{ok, File} = file:read_file(Filename),
 	Size = byte_size(File),
-	packet_send(DestUser#egs_user_model.socket, << 16#020e0300:32, 16#ffff:16, 0:272, Size:32/little, 0:32, File/binary, 0:32 >>).
+	packet_send(Socket, << 16#020e0300:32, 16#ffff:16, 0:272, Size:32/little, 0:32, File/binary, 0:32 >>).
 
 %% @todo No idea what this is doing.
 send_0215(DestUser, UnknownValue) ->
