@@ -49,13 +49,11 @@ raw(Command, _Data, _State) ->
 %% @doc Reject version < 2.0009.2.
 %% @todo Reject wrong platforms too.
 %% @todo f9dbce73 is an auth key too.
-event({system_client_version_info, _Entrance, _Language, _Platform, Version}, State=#state{socket=Socket, gid=GID}) ->
+event({system_client_version_info, _Entrance, _Language, _Platform, Version}, State=#state{socket=Socket}) ->
 	if Version >= 2009002 -> ignore; true ->
 		psu_proto:send_0231("http://psumods.co.uk/forums/comments.php?DiscussionID=40#Item_1", State),
-		{ok, File} = file:read_file("priv/psu_login/error_version.txt"),
-		ErrorLen = byte_size(File) div 2 + 2,
-		ErrorPacket = << 16#02230300:32, 0:160, 16#00000f00:32, GID:32/little, 0:96, 16#f9dbce73:32, 3:32/little, 0:48, ErrorLen:16/little, File/binary, 0:16 >>,
-		psu_proto:packet_send(Socket, ErrorPacket),
+		{ok, ErrorMsg} = file:read_file("priv/psu_login/error_version.txt"),
+		psu_proto:send_0223(ErrorMsg, State),
 		ssl:close(Socket),
 		closed
 	end;
@@ -88,15 +86,14 @@ event({system_key_auth_request, AuthGID, AuthKey}, State=#state{socket=Socket}) 
 %%      Use username and password as a folder name for saving character data.
 %% @todo Handle real GIDs whenever there's real authentication. GID is the second SessionID in the reply.
 %% @todo Apparently it's possible to ask a question in the reply here. Used for free course on JP.
-event({system_login_auth_request, Username, Password}, #state{socket=Socket}) ->
+event({system_login_auth_request, Username, Password}, State=#state{socket=Socket}) ->
 	io:format("auth success for ~s ~s~n", [Username, Password]),
-	RealGID = 10000000 + mnesia:dirty_update_counter(counters, gid, 1),
-	Auth = crypto:rand_bytes(4),
+	AuthGID = 10000000 + mnesia:dirty_update_counter(counters, gid, 1),
+	AuthKey = crypto:rand_bytes(4),
 	Folder = << Username/binary, "-", Password/binary >>,
 	Time = calendar:datetime_to_gregorian_seconds(calendar:universal_time()),
-	egs_user_model:write(#egs_user_model{id=RealGID, pid=self(), socket=Socket, state={wait_for_authentication, Auth}, time=Time, folder=Folder}),
-	Packet = << 16#02230300:32, 0:192, RealGID:32/little-unsigned-integer, 0:64, RealGID:32/little-unsigned-integer, Auth:32/bits >>,
-	psu_proto:packet_send(Socket, Packet);
+	egs_user_model:write(#egs_user_model{id=AuthGID, pid=self(), socket=Socket, state={wait_for_authentication, AuthKey}, time=Time, folder=Folder}),
+	psu_proto:send_0223(AuthGID, AuthKey, State);
 
 %% @doc MOTD request handler. Page number starts at 0.
 %% @todo Currently ignore the language and send the same MOTD file to everyone.

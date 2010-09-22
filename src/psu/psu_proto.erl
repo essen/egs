@@ -1220,6 +1220,13 @@ send_0215(UnknownValue, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 send_0216(IP, Port, #state{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#02160300:32, 16#ffff:16, 0:144, 16#00000f00:32, DestGID:32/little, 0:64, IP/binary, Port:16/little, 0:16 >>).
 
+%% @doc Send the auth key, or, in case of failure, a related error message.
+send_0223(AuthGID, AuthKey, #state{socket=Socket, gid=DestGID}) ->
+	packet_send(Socket, << 16#02230300:32, 0:160, 16#00000f00:32, DestGID:32/little, 0:64, AuthGID:32/little, AuthKey:32/bits >>).
+send_0223(ErrorMsg, #state{socket=Socket, gid=DestGID}) ->
+	Length = byte_size(ErrorMsg) div 2 + 2,
+	packet_send(Socket, << 16#02230300:32, 0:160, 16#00000f00:32, DestGID:32/little, 0:128, 3:32/little, 0:48, Length:16/little, ErrorMsg/binary, 0:16 >>).
+
 %% @doc Forward the player to a website. The website will open when the player closes the game. Used for login issues mostly.
 send_0231(URL, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	URLBin = list_to_binary(URL),
