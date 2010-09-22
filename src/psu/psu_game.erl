@@ -149,7 +149,7 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 		true -> ignore
 	end,
 	if	IsStart =:= true ->
-			psu_proto:send_0215(User#egs_user_model{lid=0}, 16#ffffffff);
+			psu_proto:send_0215(16#ffffffff, State);
 		true -> ignore
 	end,
 	if	ZoneChange =:= true ->
@@ -167,9 +167,9 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 	psu_proto:send_0205(User, IsSeasonal, State),
 	send_100e(QuestID, ZoneID, (User#egs_user_model.area)#psu_area.mapid, AreaName, 16#ffffffff),
 	if	AreaType =:= mission ->
-			psu_proto:send_0215(User#egs_user_model{lid=0}, 0),
+			psu_proto:send_0215(0, State),
 			if	IsStart =:= true ->
-					psu_proto:send_0215(User#egs_user_model{lid=0}, 0),
+					psu_proto:send_0215(0, State),
 					send_0c09();
 				true -> ignore
 			end;
@@ -231,7 +231,7 @@ npc_load(Leader, [{PartyPos, NPCGID}|NPCList]) ->
 	egs_user_model:write(NPCUser),
 	psu_proto:send_010d(NPCUser, State),
 	psu_proto:send_0201(NPCUser, State),
-	psu_proto:send_0215(Leader, 0),
+	psu_proto:send_0215(0, State),
 	send_0a04(NPCUser#egs_user_model.id),
 	send_1004(npc_mission, NPCUser, PartyPos),
 	send_100f((NPCUser#egs_user_model.character)#characters.npcid, PartyPos),

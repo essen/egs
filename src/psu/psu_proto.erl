@@ -1213,9 +1213,8 @@ send_020e(Filename, #state{socket=Socket}) ->
 	packet_send(Socket, << 16#020e0300:32, 16#ffff:16, 0:272, Size:32/little, 0:32, File/binary, 0:32 >>).
 
 %% @todo No idea what this is doing.
-send_0215(DestUser, UnknownValue) ->
-	#egs_user_model{socket=CSocket, id=GID, lid=LID} = DestUser,
-	packet_send(CSocket, << 16#02150300:32, LID:16/little, 0:144, 16#00011300:32, GID:32/little, 0:64, UnknownValue:32/little >>).
+send_0215(UnknownValue, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+	packet_send(Socket, << 16#02150300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64, UnknownValue:32/little >>).
 
 %% @doc Send the game server's IP and port that the client requested.
 send_0216(DestSocket, SessionID, IP, Port) ->

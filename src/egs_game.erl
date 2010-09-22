@@ -273,8 +273,8 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}, State=#sta
 	psu_game:send_020f(ZoneFile, 0, 16#ff),
 	psu_proto:send_0205(User, 0, State),
 	psu_game:send_100e(16#7fffffff, 0, 0, AreaName, CounterID),
-	psu_proto:send_0215(User, 0),
-	psu_proto:send_0215(User, 0),
+	psu_proto:send_0215(0, State),
+	psu_proto:send_0215(0, State),
 	psu_proto:send_020c(State),
 	psu_game:send_1202(),
 	psu_game:send_1204(),
@@ -473,7 +473,7 @@ event({npc_force_invite, NPCid}, State=#state{gid=GID}) ->
 	SentNPCUser = NPCUser#egs_user_model{character=SentNPCCharacter},
 	psu_proto:send_010d(SentNPCUser, State),
 	psu_proto:send_0201(SentNPCUser, State),
-	psu_proto:send_0215(User, 0),
+	psu_proto:send_0215(0, State),
 	psu_game:send_0a04(SentNPCUser#egs_user_model.id),
 	psu_game:send_022c(0, 16#12),
 	psu_game:send_1004(npc_mission, SentNPCUser, PartyPos),
@@ -639,7 +639,7 @@ event({object_warp_take, BlockID, ListNb, ObjectNb}, #state{gid=GID}) ->
 	psu_game:send_0503(User#egs_user_model.pos),
 	psu_game:send_1211(16#ffffffff, 0, 14, 0);
 
-event({party_remove_member, PartyPos}, #state{gid=GID}) ->
+event({party_remove_member, PartyPos}, State=#state{gid=GID}) ->
 	log("party remove member ~b", [PartyPos]),
 	{ok, DestUser} = egs_user_model:read(GID),
 	{ok, RemovedGID} = psu_party:get_member(DestUser#egs_user_model.partypid, PartyPos),
@@ -651,7 +651,7 @@ event({party_remove_member, PartyPos}, #state{gid=GID}) ->
 	end,
 	psu_game:send_1006(8, PartyPos),
 	psu_game:send_0204(DestUser, RemovedUser, 1),
-	psu_proto:send_0215(DestUser, 0);
+	psu_proto:send_0215(0, State);
 
 event({player_options_change, Options}, #state{gid=GID}) ->
 	{ok, User} = egs_user_model:read(GID),
