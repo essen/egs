@@ -1217,8 +1217,8 @@ send_0215(UnknownValue, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#02150300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64, UnknownValue:32/little >>).
 
 %% @doc Send the game server's IP and port that the client requested.
-send_0216(DestSocket, SessionID, IP, Port) ->
-	packet_send(DestSocket, << 16#02160300:32, 16#ffff:16, 0:144, 16#00000f00:32, SessionID:32/little, 0:64, IP/binary, Port:16/little, 0:16 >>).
+send_0216(IP, Port, #state{socket=Socket, gid=DestGID}) ->
+	packet_send(Socket, << 16#02160300:32, 16#ffff:16, 0:144, 16#00000f00:32, DestGID:32/little, 0:64, IP/binary, Port:16/little, 0:16 >>).
 
 %% @todo Inventory related. Doesn't seem to do anything.
 send_0a05(DestUser) ->
