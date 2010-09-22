@@ -1221,9 +1221,8 @@ send_0216(IP, Port, #state{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#02160300:32, 16#ffff:16, 0:144, 16#00000f00:32, DestGID:32/little, 0:64, IP/binary, Port:16/little, 0:16 >>).
 
 %% @todo Inventory related. Doesn't seem to do anything.
-send_0a05(DestUser) ->
-	#egs_user_model{socket=CSocket, id=GID, lid=LID} = DestUser,
-	packet_send(CSocket, << 16#0a050300:32, LID:16/little, 0:144, 16#00011300:32, GID:32/little, 0:64 >>).
+send_0a05(#state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+	packet_send(Socket, << 16#0a050300:32, DestGID:16/little, 0:144, 16#00011300:32, DestLID:32/little, 0:64 >>).
 
 %% @doc Quest init.
 %% @todo When first entering a zone it seems LID should be set to ffff apparently.

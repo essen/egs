@@ -154,7 +154,7 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 	end,
 	if	ZoneChange =:= true ->
 			% load new zone
-			psu_proto:send_0a05(User#egs_user_model{lid=0}),
+			psu_proto:send_0a05(State),
 			if AreaType =:= lobby ->
 					send_0111(6, 0);
 				true -> ignore

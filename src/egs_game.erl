@@ -267,7 +267,7 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}, State=#sta
 	%% load counter
 	psu_proto:send_0c00(User),
 	psu_proto:send_020e(QuestFile, State),
-	psu_proto:send_0a05(User),
+	psu_proto:send_0a05(State),
 	psu_proto:send_010d(User#egs_user_model{lid=0}, State),
 	psu_game:send_0200(mission),
 	psu_game:send_020f(ZoneFile, 0, 16#ff),
