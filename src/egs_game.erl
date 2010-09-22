@@ -265,7 +265,7 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}, State=#sta
 	{ok, UnspawnList} = egs_user_model:select({neighbors, OldUser}),
 	lists:foreach(fun(Other) -> Other#egs_user_model.pid ! {egs, player_unspawn, User} end, UnspawnList),
 	%% load counter
-	psu_proto:send_0c00(User),
+	psu_proto:send_0c00(User, State),
 	psu_proto:send_020e(QuestFile, State),
 	psu_proto:send_0a05(State),
 	psu_proto:send_010d(User#egs_user_model{lid=0}, State),
