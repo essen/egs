@@ -85,8 +85,9 @@ event({system_key_auth_request, AuthGID, AuthKey}, State=#state{socket=Socket}) 
 	Time = calendar:datetime_to_gregorian_seconds(calendar:universal_time()),
 	User2 = User#egs_user_model{id=AuthGID, pid=self(), socket=Socket, state=authenticated, time=Time, lid=LID},
 	egs_user_model:write(User2),
-	psu_proto:send_0d05(User2),
-	{ok, egs_char_select, State#state{gid=AuthGID}};
+	State2 = State#state{gid=AuthGID},
+	psu_proto:send_0d05(State2),
+	{ok, egs_char_select, State2};
 
 %% @doc Authentication request handler. Currently always succeed.
 %%      Use the temporary session ID as the GID for now.
