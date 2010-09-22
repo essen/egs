@@ -49,15 +49,9 @@ raw(Command, _Data, _State) ->
 %% @doc Reject version < 2.0009.2.
 %% @todo Reject wrong platforms too.
 %% @todo f9dbce73 is an auth key too.
-event({system_client_version_info, _Entrance, _Language, _Platform, Version}, #state{socket=Socket, gid=GID}) ->
+event({system_client_version_info, _Entrance, _Language, _Platform, Version}, State=#state{socket=Socket, gid=GID}) ->
 	if Version >= 2009002 -> ignore; true ->
-		Website = << "http://psumods.co.uk/forums/comments.php?DiscussionID=40#Item_1" >>,
-		Size = byte_size(Website),
-		WebsiteLen = Size + 1,
-		PaddingSize = 8 * (512 - Size),
-		WebsitePacket = << 16#02310300:32, 16#ffff0000:32, 16#00000f00:32, GID:32/little, 0:64, 16#00000f00:32, GID:32/little, 0:64,
-			WebsiteLen:32/little, Website/binary, 0:PaddingSize >>,
-		psu_proto:packet_send(Socket, WebsitePacket),
+		psu_proto:send_0231("http://psumods.co.uk/forums/comments.php?DiscussionID=40#Item_1", State),
 		{ok, File} = file:read_file("priv/psu_login/error_version.txt"),
 		ErrorLen = byte_size(File) div 2 + 2,
 		ErrorPacket = << 16#02230300:32, 0:160, 16#00000f00:32, GID:32/little, 0:96, 16#f9dbce73:32, 3:32/little, 0:48, ErrorLen:16/little, File/binary, 0:16 >>,
