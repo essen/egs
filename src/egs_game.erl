@@ -668,7 +668,7 @@ event(player_death, State=#state{gid=GID}) ->
 	psu_proto:send_0117(User2#egs_user_model{lid=0}, State),
 	psu_game:send_1022(NewHP);
 	%% red screen with return to lobby choice:
-	%~ psu_game:send_0111(3, 1);
+	%~ psu_proto:send_0111(User2, 3, 1, State);
 
 %% @todo Refill the player's HP to maximum, remove SEs etc.
 event(player_death_return_to_lobby, State=#state{gid=GID}) ->

@@ -158,7 +158,7 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 			% load new zone
 			psu_proto:send_0a05(State),
 			if AreaType =:= lobby ->
-					send_0111(6, 0);
+					psu_proto:send_0111(User#egs_user_model{lid=0}, 6, State);
 				true -> ignore
 			end,
 			psu_proto:send_010d(User#egs_user_model{lid=0}, State),
@@ -277,12 +277,6 @@ build_010a_list([ItemID|Tail], Acc) ->
 	end,
 	Bin = << UCS2Name/binary, 0:NamePadding, RarityBin:8, 0:8, BinItemID/binary, SellPrice:32/little, DataBin/binary >>,
 	build_010a_list(Tail, [Bin|Acc]).
-
-%% @doc Trigger a character-related event.
-send_0111(A, B) ->
-	GID = get(gid),
-	send(<< 16#01110300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
-		GID:32/little-unsigned-integer, 0:32, A:32/little-unsigned-integer, B:32/little-unsigned-integer >>).
 
 %% @todo Types capability list.
 send_0113() ->

@@ -1178,6 +1178,13 @@ send_010d(CharUser, #state{socket=Socket, gid=DestGID}) ->
 		0:64, 1:32/little-unsigned-integer, 0:32, 16#00000300:32, 16#ffff0000:32, 0:32, CharGID:32/little-unsigned-integer,
 		0:192, CharGID:32/little-unsigned-integer, CharLID:32/little-unsigned-integer, 16#ffffffff:32, CharBin/binary >>).
 
+%% @doc Trigger a character-related event.
+send_0111(CharUser, EventID, State) ->
+	send_0111(CharUser, EventID, 0, State).
+send_0111(#egs_user_model{id=CharGID, lid=CharLID}, EventID, Param, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+	packet_send(Socket, << 16#01110300:32, DestLID:16/little, 0:48, CharGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64,
+		CharGID:32/little, CharLID:32/little, EventID:32/little, Param:32/little >>).
+
 %% @doc Update the character level, blastbar, luck and money information.
 send_0115(CharUser, State) ->
 	send_0115(CharUser, 16#ffffffff, State).
