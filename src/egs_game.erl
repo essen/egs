@@ -666,7 +666,7 @@ event(player_death, State=#state{gid=GID}) ->
 	User2 = User#egs_user_model{character=Char#characters{currenthp=NewHP}},
 	egs_user_model:write(User2),
 	psu_proto:send_0117(User2#egs_user_model{lid=0}, State),
-	psu_game:send_1022(NewHP);
+	psu_proto:send_1022(User2, State);
 	%% red screen with return to lobby choice:
 	%~ psu_proto:send_0111(User2, 3, 1, State);
 

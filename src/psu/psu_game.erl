@@ -639,12 +639,6 @@ send_101a(NPCid, PartyPos) ->
 send_1020() ->
 	send(header(16#1020)).
 
-%% @doc Update HP in the party members information on the left.
-%% @todo Figure out more of it.
-send_1022(HP) ->
-	GID = get(gid),
-	send(<< 16#10220300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, HP:32/little-unsigned-integer, 0:32 >>).
-
 %% @todo Boss related command.
 send_110e(Data) ->
 	send(<< (header(16#110e))/binary, Data/binary, 0:32, 5:16/little-unsigned-integer, 12:16/little-unsigned-integer, 0:32, 260:32/little-unsigned-integer >>).
