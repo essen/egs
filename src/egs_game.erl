@@ -420,7 +420,7 @@ event(lumilass_options_request, _State) ->
 
 %% @todo Probably replenish the player HP when entering a non-mission area rather than when aborting the mission?
 event(mission_abort, State=#state{gid=GID}) ->
-	psu_game:send_1006(11, 0),
+	psu_proto:send_1006(11, State),
 	{ok, User} = egs_user_model:read(GID),
 	%% delete the mission
 	if	User#egs_user_model.instancepid =:= undefined -> ignore;
@@ -647,7 +647,7 @@ event({party_remove_member, PartyPos}, State=#state{gid=GID}) ->
 		npc -> egs_user_model:delete(RemovedGID);
 		_ -> ignore
 	end,
-	psu_game:send_1006(8, PartyPos),
+	psu_proto:send_1006(8, PartyPos, State),
 	psu_game:send_0204(DestUser, RemovedUser, 1),
 	psu_proto:send_0215(0, State);
 

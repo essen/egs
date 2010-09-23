@@ -1307,6 +1307,12 @@ send_0d05(#state{socket=Socket, gid=DestGID}) ->
 	Size = 4 + byte_size(Packet),
 	ssl:send(Socket, << Size:32/little, Packet/binary >>).
 
+%% @doc Party-related events.
+send_1006(EventID, State) ->
+	send_1006(EventID, 0, State).
+send_1006(EventID, PartyPos, #state{socket=Socket, gid=DestGID}) ->
+	packet_send(Socket, << 16#10060300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64, EventID:8, PartyPos:8, 0:16 >>).
+
 %% Utility functions.
 
 %% @doc Return the language as an atom from its integer value.

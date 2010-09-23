@@ -34,9 +34,9 @@ char_load(User) ->
 	send_0d01(User),
 	% 0246
 	send_0a0a((User#egs_user_model.character)#characters.inventory),
-	send_1006(5, 0),
+	psu_proto:send_1006(5, 0, State), %% @todo The 0 here is PartyPos, save it in User.
 	send_1005((User#egs_user_model.character)#characters.name),
-	send_1006(12, 0),
+	psu_proto:send_1006(12, State),
 	psu_proto:send_0210(State),
 	send_0222(),
 	send_1500(User),
@@ -604,12 +604,6 @@ send_1005(Name) ->
 	<< _:352, Before:160/bits, _:608, After/bits >> = File,
 	GID = get(gid),
 	send(<< 16#10050300:32, 16#ffff:16, 0:144, 16#00011300:32, GID:32/little, 0:64, Before/binary, GID:32/little, 0:64, Name/binary, After/binary >>).
-
-%% @doc Party-related command probably controlling the party state.
-%%      EventID 11 aborts the mission.
-send_1006(EventID, PartyPos) ->
-	GID = get(gid),
-	send(<< 16#10060300:32, 16#ffff:16, 0:144, 16#00011300:32, GID:32/little, 0:64, EventID:8, PartyPos:8, 0:16 >>).
 
 %% @doc Send the player's current location.
 send_100e(QuestID, ZoneID, MapID, Location, CounterID) ->
