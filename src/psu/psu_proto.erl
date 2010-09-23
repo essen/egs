@@ -1169,6 +1169,7 @@ parse_hits(Hits, Acc) ->
 
 %% @doc Send character appearance and other information.
 %% @todo Probably don't pattern match the data like this...
+%% @todo Handle the DestLID properly.
 send_010d(CharUser, #state{socket=Socket, gid=DestGID}) ->
 	CharGID = CharUser#egs_user_model.id,
 	CharLID = CharUser#egs_user_model.lid,
@@ -1206,6 +1207,7 @@ send_0117(#egs_user_model{id=CharGID, lid=CharLID, character=#characters{current
 		CharGID:32/little, CharLID:32/little, SE/binary, HP:32/little, 0:32 >>).
 
 %% @doc Send character location, appearance and other information.
+%% @todo Handle the DestLID properly.
 send_0201(CharUser, #state{socket=Socket, gid=DestGID}) ->
 	[CharTypeID, GameVersion] = case (CharUser#egs_user_model.character)#characters.type of
 		npc -> [16#00001d00, 255];
@@ -1220,8 +1222,8 @@ send_0201(CharUser, #state{socket=Socket, gid=DestGID}) ->
 
 %% @doc Hello command. Sent when a client connects to the game or login server.
 %% @todo Can contain an error message if 0:1024 is setup similar to this: 0:32, 3:32/little, 0:48, Len:16/little, Error/binary, 0:Padding.
-send_0202(#state{socket=Socket, gid=DestGID}) ->
-	packet_send(Socket, << 16#020203bf:32, 16#ffff:16, 0:272, DestGID:32/little, 0:1024 >>).
+send_0202(#state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+	packet_send(Socket, << 16#020203bf:32, DestLID:16/little, 0:272, DestGID:32/little, 0:1024 >>).
 
 %% @doc Make the client load a new map.
 %% @todo We set a value of 1 and not 0 after EntryID because this value is never found to be 0.
@@ -1231,10 +1233,12 @@ send_0205(CharUser, IsSeasonal, #state{socket=Socket, gid=DestGID, lid=DestLID})
 		16#ffffffff:32, ZoneID:32/little, MapID:32/little, EntryID:32/little, 1:32/little, 0:24, IsSeasonal:8 >>).
 
 %% @todo No idea what this one does. For unknown reasons it uses channel 2.
+%% @todo Handle the DestLID properly?
 send_020c(#state{socket=Socket}) ->
 	packet_send(Socket, << 16#020c0200:32, 16#ffff0000:32, 0:256 >>).
 
 %% @doc Send the quest file to be loaded by the client.
+%% @todo Handle the DestLID properly?
 send_020e(Filename, #state{socket=Socket}) ->
 	{ok, File} = file:read_file(Filename),
 	Size = byte_size(File),
@@ -1251,10 +1255,10 @@ send_0215(UnknownValue, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#02150300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64, UnknownValue:32/little >>).
 
 %% @doc Send the game server's IP and port that the client requested.
-send_0216(IP, Port, #state{socket=Socket, gid=DestGID}) ->
-	packet_send(Socket, << 16#02160300:32, 16#ffff:16, 0:144, 16#00000f00:32, DestGID:32/little, 0:64, IP/binary, Port:16/little, 0:16 >>).
+send_0216(IP, Port, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+	packet_send(Socket, << 16#02160300:32, DestLID:16/little, 0:144, 16#00000f00:32, DestGID:32/little, 0:64, IP/binary, Port:16/little, 0:16 >>).
 
-%% @todo End of character loading.
+%% @doc End of character loading.
 send_021b(#state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#021b0300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64 >>).
 
@@ -1283,7 +1287,7 @@ send_0231(URL, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 
 %% @todo Inventory related. Doesn't seem to do anything.
 send_0a05(#state{socket=Socket, gid=DestGID, lid=DestLID}) ->
-	packet_send(Socket, << 16#0a050300:32, DestGID:16/little, 0:144, 16#00011300:32, DestLID:32/little, 0:64 >>).
+	packet_send(Socket, << 16#0a050300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64 >>).
 
 %% @doc Quest init.
 %% @todo When first entering a zone it seems LID should be set to ffff apparently.
