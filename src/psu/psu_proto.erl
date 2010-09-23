@@ -1240,6 +1240,12 @@ send_020e(Filename, #state{socket=Socket}) ->
 	Size = byte_size(File),
 	packet_send(Socket, << 16#020e0300:32, 16#ffff:16, 0:272, Size:32/little, 0:32, File/binary, 0:32 >>).
 
+%% @doc Send the current UNIX time.
+send_0210(#state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+	UnixTime = calendar:datetime_to_gregorian_seconds(calendar:now_to_universal_time(now()))
+		- calendar:datetime_to_gregorian_seconds({{1970, 1, 1}, {0, 0, 0}}),
+	packet_send(Socket, << 16#02100300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:96, UnixTime:32/little >>).
+
 %% @todo No idea what this is doing.
 send_0215(UnknownValue, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#02150300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64, UnknownValue:32/little >>).

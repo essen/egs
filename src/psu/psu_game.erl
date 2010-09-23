@@ -30,13 +30,14 @@
 %% @todo Should wait for the 021c reply before doing area_change.
 %% @todo Move this whole function directly to psu_proto, probably.
 char_load(User) ->
+	State = #state{socket=User#egs_user_model.socket, gid=User#egs_user_model.id, lid=User#egs_user_model.lid},
 	send_0d01(User),
 	% 0246
 	send_0a0a((User#egs_user_model.character)#characters.inventory),
 	send_1006(5, 0),
 	send_1005((User#egs_user_model.character)#characters.name),
 	send_1006(12, 0),
-	send_0210(),
+	psu_proto:send_0210(State),
 	send_0222(),
 	send_1500(User),
 	send_1501(),
@@ -323,13 +324,6 @@ send_020f(Filename, SetID, SeasonID) ->
 	{ok, File} = file:read_file(Filename),
 	Size = byte_size(File),
 	send(<< 16#020f0300:32, 16#ffff:16, 0:272, SetID, SeasonID, 0:16, Size:32/little-unsigned-integer, File/binary >>).
-
-%% @doc Send the current UNIX time.
-send_0210() ->
-	GID = get(gid),
-	CurrentTime = calendar:datetime_to_gregorian_seconds(calendar:now_to_universal_time(now()))
-		- calendar:datetime_to_gregorian_seconds({{1970, 1, 1}, {0, 0, 0}}),
-	send(<< 16#02100300:32, 16#ffff:16, 0:144, 16#00011300:32, GID:32/little, 0:96, CurrentTime:32/little-unsigned-integer >>).
 
 %% @todo End of character loading. Just send it.
 send_021b() ->
