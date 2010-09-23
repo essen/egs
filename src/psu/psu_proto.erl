@@ -1198,6 +1198,13 @@ build_char_level(#characters{type=Type, mainlevel=#level{number=Level, exp=EXP},
 	end,
 	<< Level:32/little, BlastBar:16/little, Luck:8, 0:40, EXP:32/little, 0:32, Money:32/little, PlayTime:32/little, ClassesBin/binary >>.
 
+%% @doc Revive player with optional SEs.
+%% @todo SEs.
+send_0117(#egs_user_model{id=CharGID, lid=CharLID, character=#characters{currenthp=HP}}, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+	SE = << 0:64 >>,
+	packet_send(Socket, << 16#01170300:32, DestLID:16/little, 0:48, CharGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64,
+		CharGID:32/little, CharLID:32/little, SE/binary, HP:32/little, 0:32 >>).
+
 %% @doc Send character location, appearance and other information.
 send_0201(CharUser, #state{socket=Socket, gid=DestGID}) ->
 	[CharTypeID, GameVersion] = case (CharUser#egs_user_model.character)#characters.type of

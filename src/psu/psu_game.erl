@@ -289,13 +289,6 @@ send_0113() ->
 	GID = get(gid),
 	send(<< 16#01130300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, GID:32/little-unsigned-integer, File/binary >>).
 
-%% @doc Revive player?
-%% @todo Figure out more of it.
-send_0117(HP) ->
-	GID = get(gid),
-	send(<< 16#01170300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
-		GID:32/little-unsigned-integer, 0:96, HP:32/little-unsigned-integer, 0:32 >>).
-
 %% @doc Send the zone initialization notification.
 send_0200(ZoneType) ->
 	case ZoneType of

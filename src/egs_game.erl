@@ -656,12 +656,16 @@ event({player_options_change, Options}, #state{gid=GID}) ->
 	file:write_file(io_lib:format("save/~s/~b-character.options", [User#egs_user_model.folder, (User#egs_user_model.character)#characters.slot]), Options);
 
 %% @todo If the player has a scape, use it! Otherwise red screen.
-%% @todo Right now we force revive and don't update the player's HP.
-event(player_death, _State) ->
+%% @todo Right now we force revive with a dummy HP value.
+event(player_death, State=#state{gid=GID}) ->
 	% @todo send_0115(get(gid), 16#ffffffff, LV=1, EXP=idk, Money=1000), % apparently sent everytime you die...
 	%% use scape:
 	NewHP = 10,
-	psu_game:send_0117(NewHP),
+	{ok, User} = egs_user_model:read(GID),
+	Char = User#egs_user_model.character,
+	User2 = User#egs_user_model{character=Char#characters{currenthp=NewHP}},
+	egs_user_model:write(User2),
+	psu_proto:send_0117(User2#egs_user_model{lid=0}, State),
 	psu_game:send_1022(NewHP);
 	%% red screen with return to lobby choice:
 	%~ psu_game:send_0111(3, 1);
