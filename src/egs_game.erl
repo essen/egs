@@ -676,8 +676,8 @@ event(player_death_return_to_lobby, State=#state{gid=GID}) ->
 	PrevArea = User#egs_user_model.prev_area,
 	event({area_change, PrevArea#psu_area.questid, PrevArea#psu_area.zoneid, PrevArea#psu_area.mapid, User#egs_user_model.prev_entryid}, State);
 
-event(player_type_availability_request, _State) ->
-	psu_game:send_1a07();
+event(player_type_availability_request, State) ->
+	psu_proto:send_1a07(State);
 
 event(player_type_capabilities_request, _State) ->
 	psu_game:send_0113();

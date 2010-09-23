@@ -1320,6 +1320,11 @@ send_1006(EventID, State) ->
 send_1006(EventID, PartyPos, #state{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#10060300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64, EventID:8, PartyPos:8, 0:16 >>).
 
+%% @doc Available types handler. Enable all 16 types.
+send_1a07(#state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+	packet_send(Socket, << 16#1a070300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:160,
+		16#01010101:32, 16#01010101:32, 16#01010101:32, 16#01010101:32 >>).
+
 %% Utility functions.
 
 %% @doc Return the language as an atom from its integer value.
@@ -1330,37 +1335,28 @@ language_integer_to_atom(4) -> german;
 language_integer_to_atom(Language) -> log("unknown 080e Language ~p", [Language]).
 
 %% @doc Prepare a packet. Return the real size and padding at the end.
-
 packet_prepare(Packet) ->
 	Size = 4 + byte_size(Packet),
 	case Size rem 4 of
-		0 ->
-			{ok, Size, <<>>};
-		2 ->
-			{ok, Size + 2, << 0:16 >>};
-		_ ->
-			{error, badarg}
+		0 -> {ok, Size, <<>>};
+		2 -> {ok, Size + 2, << 0:16 >>};
+		_ -> {error, badarg}
 	end.
 
 %% @doc Send a packet. The packet argument must not contain the size field.
-
 packet_send(CSocket, Packet) ->
 	{ok, Size, Padding} = packet_prepare(Packet),
 	packet_send(CSocket, << Size:32/little-unsigned-integer, Packet/binary, Padding/binary >>, Size).
 
 %% @doc Send a normal command.
-
 packet_send(CSocket, Packet, Size) when Size =< 16#4000 ->
 	ssl:send(CSocket, Packet);
 
 %% @doc Send a fragmented command when size is too big.
-%% @todo Wait for fragments reception confirmation?
-
 packet_send(CSocket, Packet, Size) ->
 	packet_fragment_send(CSocket, Packet, Size, 0).
 
 %% @doc Send the last chunk of a fragmented command.
-
 packet_fragment_send(CSocket, Packet, Size, Current) when Size - Current =< 16#4000 ->
 	FragmentSize = 16#10 + byte_size(Packet),
 	Fragment = << FragmentSize:32/little-unsigned-integer, 16#0b030000:32/unsigned-integer,
@@ -1368,7 +1364,6 @@ packet_fragment_send(CSocket, Packet, Size, Current) when Size - Current =< 16#4
 	ssl:send(CSocket, Fragment);
 
 %% @doc Send another chunk of a fragmented command.
-
 packet_fragment_send(CSocket, Packet, Size, Current) ->
 	<< Chunk:131072/bits, Rest/bits >> = Packet,
 	Fragment = << 16#10400000:32/unsigned-integer, 16#0b030000:32/unsigned-integer,
@@ -1377,7 +1372,6 @@ packet_fragment_send(CSocket, Packet, Size, Current) ->
 	packet_fragment_send(CSocket, Rest, Size, Current + 16#4000).
 
 %% @doc Shortcut for send_global/4.
-
 send_global(CSocket, Type, Message) ->
 	send_global(CSocket, Type, Message, 2).
 
@@ -1387,7 +1381,6 @@ send_global(CSocket, Type, Message) ->
 %%      * top: Horizontal scroll on top of the screen, traditionally used for server-wide messages.
 %%      * scroll: Vertical scroll on the right of the screen, traditionally used for Player X joined the party.
 %%      * timeout: A dialog in the center of the screen that disappears after Duration seconds.
-
 send_global(CSocket, Type, Message, Duration) ->
 	TypeID = case Type of
 		dialog -> 0;
@@ -1407,7 +1400,6 @@ send_global(CSocket, Type, Message, Duration) ->
 
 %% @doc Keepalive. Just send an empty packet, the game doesn't really care.
 %% @todo If there's an actual keepalive command, use it instead.
-
 send_keepalive(CSocket) ->
 	Packet = << 0:32 >>,
 	packet_send(CSocket, Packet).

@@ -791,9 +791,3 @@ send_1a03() ->
 send_1a04() ->
 	{ok, File} = file:read_file("p/ppcube.bin"),
 	send(<< (header(16#1a04))/binary, 0:32, File/binary >>).
-
-%% @doc Types menu handler.
-%% @todo Handle correctly.
-send_1a07() ->
-	send(<< (header(16#1a07))/binary, 16#085b5d0a:32, 16#3a200000:32, 0:32,
-		16#01010101:32, 16#01010101:32, 16#01010101:32, 16#01010101:32 >>).
