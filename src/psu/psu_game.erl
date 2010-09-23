@@ -44,7 +44,7 @@ char_load(User) ->
 	send_1512(),
 	% 0303
 	send_1602(),
-	send_021b().
+	psu_proto:send_021b(State).
 
 %% @doc Return the current season information.
 area_get_season(QuestID) ->
@@ -324,11 +324,6 @@ send_020f(Filename, SetID, SeasonID) ->
 	{ok, File} = file:read_file(Filename),
 	Size = byte_size(File),
 	send(<< 16#020f0300:32, 16#ffff:16, 0:272, SetID, SeasonID, 0:16, Size:32/little-unsigned-integer, File/binary >>).
-
-%% @todo End of character loading. Just send it.
-send_021b() ->
-	GID = get(gid),
-	send(<< 16#021b0300:32, 16#ffff:16, 0:144, 16#00011300:32, GID:32/little, 0:64 >>).
 
 %% @doc Send the list of available universes.
 send_021e() ->
