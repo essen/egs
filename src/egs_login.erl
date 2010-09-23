@@ -97,10 +97,6 @@ event({system_login_auth_request, Username, Password}, State=#state{socket=Socke
 
 %% @doc MOTD request handler. Page number starts at 0.
 %% @todo Currently ignore the language and send the same MOTD file to everyone.
-event({system_motd_request, Page, _Language}, #state{socket=Socket}) ->
-	{ok, File} = file:read_file("priv/psu_login/motd.txt"),
-	Tokens = re:split(File, "\n."),
-	MOTD = << << Line/binary, "\n", 0 >> || Line <- lists:sublist(Tokens, 1 + Page * 15, 15) >>,
-	NbPages = 1 + length(Tokens) div 15,
-	Packet = << 16#0225:16, 0:304, NbPages:8, Page:8, 16#8200:16/unsigned-integer, MOTD/binary, 0:16 >>,
-	psu_proto:packet_send(Socket, Packet).
+event({system_motd_request, Page, _Language}, State) ->
+	{ok, MOTD} = file:read_file("priv/psu_login/motd.txt"),
+	psu_proto:send_0225(MOTD, Page, State).

@@ -1227,6 +1227,14 @@ send_0223(ErrorMsg, #state{socket=Socket, gid=DestGID}) ->
 	Length = byte_size(ErrorMsg) div 2 + 2,
 	packet_send(Socket, << 16#02230300:32, 0:160, 16#00000f00:32, DestGID:32/little, 0:128, 3:32/little, 0:48, Length:16/little, ErrorMsg/binary, 0:16 >>).
 
+%% @doc Send a MOTD page.
+send_0225(MOTD, CurrentPage, #state{socket=Socket, lid=DestLID}) ->
+	Tokens = re:split(MOTD, "\n."),
+	Msg = << << Line/binary, "\n", 0 >> || Line <- lists:sublist(Tokens, 1 + CurrentPage * 15, 15) >>,
+	NbPages = 1 + length(Tokens) div 15,
+	Length = byte_size(Msg) div 2 + 2,
+	packet_send(Socket, << 16#02250300:32, DestLID:16/little, 0:272, NbPages:8, CurrentPage:8, Length:16/little, Msg/binary, 0:16 >>).
+
 %% @doc Forward the player to a website. The website will open when the player closes the game. Used for login issues mostly.
 send_0231(URL, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	URLBin = list_to_binary(URL),
