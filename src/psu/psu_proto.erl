@@ -1320,6 +1320,10 @@ send_1006(EventID, State) ->
 send_1006(EventID, PartyPos, #state{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#10060300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64, EventID:8, PartyPos:8, 0:16 >>).
 
+%% @doc Mission start related.
+send_1020(#state{socket=Socket, gid=DestGID}) ->
+	packet_send(Socket, << 16#10200300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64 >>).
+
 %% @doc Update HP in the party members information on the left.
 %% @todo Handle PartyPos. Probably only pass HP later.
 send_1022(#egs_user_model{character=#characters{currenthp=HP}}, #state{socket=Socket, gid=DestGID}) ->

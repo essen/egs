@@ -635,10 +635,6 @@ send_1016(PartyPos) ->
 send_101a(NPCid, PartyPos) ->
 	send(<< (header(16#101a))/binary, NPCid:16/little-unsigned-integer, PartyPos:16/little-unsigned-integer, 16#ffffffff:32 >>).
 
-%% @todo Totally unknown.
-send_1020() ->
-	send(header(16#1020)).
-
 %% @todo Boss related command.
 send_110e(Data) ->
 	send(<< (header(16#110e))/binary, Data/binary, 0:32, 5:16/little-unsigned-integer, 12:16/little-unsigned-integer, 0:32, 260:32/little-unsigned-integer >>).

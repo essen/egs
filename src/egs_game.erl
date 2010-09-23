@@ -440,9 +440,9 @@ event(mission_abort, State=#state{gid=GID}) ->
 	end;
 
 %% @todo Forward the mission start to other players of the same party, whatever their location is.
-event({mission_start, QuestID}, _State) ->
+event({mission_start, QuestID}, State) ->
 	log("mission start ~b", [QuestID]),
-	psu_game:send_1020(),
+	psu_proto:send_1020(State),
 	psu_game:send_1015(QuestID),
 	psu_game:send_0c02();
 
