@@ -348,9 +348,7 @@ event({hit, FromTargetID, ToTargetID, A, B}, State=#state{gid=GID}) ->
 	end,
 	%% exp
 	if	HasEXP =:= true ->
-			Character = NewUser#egs_user_model.character,
-			Level = Character#characters.mainlevel,
-			psu_game:send_0115(GID, ToTargetID, Level#level.number, Level#level.exp, Character#characters.money);
+			psu_proto:send_0115(NewUser#egs_user_model{lid=0}, ToTargetID, State);
 		true -> ignore
 	end,
 	%% save

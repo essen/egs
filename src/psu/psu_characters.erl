@@ -30,25 +30,13 @@
 %%      Only contains the actually saved data, not the stats and related information.
 
 character_tuple_to_binary(Tuple) ->
-	#characters{type=Type, name=Name, race=Race, gender=Gender, class=Class, appearance=Appearance,
-		mainlevel=Level, blastbar=BlastBar, luck=Luck, money=Money, playtime=PlayTime} = Tuple,
-	#level{number=LV, exp=EXP} = Level,
+	#characters{name=Name, race=Race, gender=Gender, class=Class, appearance=Appearance} = Tuple,
 	RaceBin = race_atom_to_binary(Race),
 	GenderBin = gender_atom_to_binary(Gender),
 	ClassBin = class_atom_to_binary(Class),
 	AppearanceBin = psu_appearance:tuple_to_binary(Race, Appearance),
-	FooterBin = case Type of
-		npc ->
-			<<	16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32,
-				16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32,
-				16#4e4f4630:32, 16#08000000:32, 0:32, 0:32, 16#4e454e44:32 >>;
-		_ -> %% @todo Handle classes.
-			<<	0:160,
-				16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32,
-				16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32 >>
-	end,
-	<<	Name/binary, RaceBin:8, GenderBin:8, ClassBin:8, AppearanceBin/binary, LV:32/little-unsigned-integer, BlastBar:16/little-unsigned-integer,
-		Luck:8, 0:40, EXP:32/little-unsigned-integer, 0:32, Money:32/little-unsigned-integer, PlayTime:32/little-unsigned-integer, FooterBin/binary >>.
+	LevelsBin = psu_proto:build_char_level(Tuple),
+	<< Name/binary, RaceBin:8, GenderBin:8, ClassBin:8, AppearanceBin/binary, LevelsBin/binary >>.
 
 %% @doc Convert a character tuple into a binary to be sent to clients.
 %%      Contains everything from character_tuple_to_binary/1 along with location, stats, SE and more.

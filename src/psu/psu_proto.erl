@@ -1177,6 +1177,27 @@ send_010d(CharUser, #state{socket=Socket, gid=DestGID}) ->
 		0:64, 1:32/little-unsigned-integer, 0:32, 16#00000300:32, 16#ffff0000:32, 0:32, CharGID:32/little-unsigned-integer,
 		0:192, CharGID:32/little-unsigned-integer, CharLID:32/little-unsigned-integer, 16#ffffffff:32, CharBin/binary >>).
 
+%% @doc Update the character level, blastbar, luck and money information.
+send_0115(CharUser, State) ->
+	send_0115(CharUser, 16#ffffffff, State).
+send_0115(#egs_user_model{id=CharGID, lid=CharLID, character=Character}, EnemyTargetID, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+	packet_send(Socket, << 16#01150300:32, DestLID:16/little, 0:48, CharGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64,
+		CharGID:32/little, CharLID:32/little, EnemyTargetID:32/little, (build_char_level(Character))/binary >>).
+
+%% @todo Handle class levels.
+build_char_level(#characters{type=Type, mainlevel=#level{number=Level, exp=EXP}, blastbar=BlastBar, luck=Luck, money=Money, playtime=PlayTime}) ->
+	ClassesBin = case Type of
+		npc ->
+			<<	16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32,
+				16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32,
+				16#4e4f4630:32, 16#08000000:32, 0:32, 0:32, 16#4e454e44:32 >>;
+		_ ->
+			<<	0:160,
+				16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32,
+				16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32 >>
+	end,
+	<< Level:32/little, BlastBar:16/little, Luck:8, 0:40, EXP:32/little, 0:32, Money:32/little, PlayTime:32/little, ClassesBin/binary >>.
+
 %% @doc Send character location, appearance and other information.
 send_0201(CharUser, #state{socket=Socket, gid=DestGID}) ->
 	[CharTypeID, GameVersion] = case (CharUser#egs_user_model.character)#characters.type of

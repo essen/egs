@@ -148,6 +148,7 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 			psu_proto:send_020e(QuestFile, State);
 		true -> ignore
 	end,
+	%% @todo The LID changes here.
 	if	IsStart =:= true ->
 			psu_proto:send_0215(16#ffffffff, State);
 		true -> ignore
@@ -287,13 +288,6 @@ send_0113() ->
 	{ok, File} = file:read_file("p/typesinfo.bin"),
 	GID = get(gid),
 	send(<< 16#01130300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, GID:32/little-unsigned-integer, File/binary >>).
-
-%% @doc Update the character's EXP, level or money.
-send_0115(GID, TargetID, LV, EXP, Money) ->
-	send(<< 16#01150300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, GID:32/little-unsigned-integer,
-		0:32, TargetID:32/little-unsigned-integer, LV:32/little-unsigned-integer, 0:32, 0:32, EXP:32/little-unsigned-integer, 0:32, Money:32/little-unsigned-integer, 16#f5470500:32, 0:96, 0:64,
-		16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32,
-		16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32 >>).
 
 %% @doc Revive player?
 %% @todo Figure out more of it.
