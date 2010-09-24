@@ -838,7 +838,7 @@ parse(Size, 16#0f0a, Channel, Data) ->
 	<<	_LID:16/little, VarA:16/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little,
 		VarF:32/little, VarG:32/little, VarH:32/little, VarI:32/little, BlockID:16/little, ListNb:16/little,
 		ObjectNb:16/little, _MapID:16/little, ObjectID:16/little, VarJ:16/little, ObjectTargetID:32/little,
-		ObjectType:16/little, VarK:16/little, ObjectBaseTargetID:16/little, VarL:16/little, _PartyPosOrLID:32/little,
+		ObjectType:16/little, VarK:16/little, ObjectBaseTargetID:16/little, VarL:16/little, PartyPosOrLID:32/little,
 		VarN:32/little, VarO:32/little, VarP:32/little, VarQ:32/little, VarR:32/little, VarS:32/little,
 		VarT:32/little, VarU:32/little, ObjectType2:16/little, EventID:8, VarV:8, VarW:32/little >> = Data,
 	?ASSERT_EQ(Size, 112),
@@ -965,6 +965,17 @@ parse(Size, 16#0f0a, Channel, Data) ->
 			?ASSERT_EQ(VarV, 1),
 			?ASSERT_EQ(VarW, 0),
 			{object_crystal_activate, ObjectID};
+		[50,  9] ->
+			%% @todo Make NPC characters be healed too. This would use VarN and VarO as PartyPosOrLID, and VarV would be > 1.
+			?ASSERT_EQ(VarJ, 134),
+			?ASSERT_EQ(ObjectTargetID, 16#ffffffff),
+			?ASSERT_EQ(ObjectBaseTargetID, 16#ffff),
+			?ASSERT_EQ(VarL, 116),
+			?ASSERT_EQ(VarN, 16#ffffffff),
+			?ASSERT_EQ(VarO, 16#ffffffff),
+			?ASSERT_EQ(VarV, 1),
+			?ASSERT_EQ(VarW, 0),
+			{object_healing_pad_tick, [PartyPosOrLID]};
 		[51,  1] ->
 			?ASSERT_EQ(VarL, 116),
 			?ASSERT_EQ(ObjectTargetID, VarN),

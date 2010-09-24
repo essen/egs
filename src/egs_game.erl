@@ -585,6 +585,20 @@ event({object_goggle_target_activate, ObjectID}, #state{gid=GID}) ->
 	psu_game:send_1205(EventID, BlockID, 0),
 	psu_game:send_1213(ObjectID, 8);
 
+%% @todo Make NPC characters heal too.
+event({object_healing_pad_tick, [_PartyPos]}, State=#state{gid=GID}) ->
+	{ok, User} = egs_user_model:read(GID),
+	Character = User#egs_user_model.character,
+	if	Character#characters.currenthp =:= Character#characters.maxhp -> ignore;
+		true ->
+			NewHP = Character#characters.currenthp + Character#characters.maxhp div 10,
+			NewHP2 = if NewHP > Character#characters.maxhp -> Character#characters.maxhp; true -> NewHP end,
+			User2 = User#egs_user_model{character=Character#characters{currenthp=NewHP2}},
+			egs_user_model:write(User2),
+			psu_proto:send_0117(User2#egs_user_model{lid=0}, State),
+			psu_proto:send_0111(User2#egs_user_model{lid=0}, 4, State)
+	end;
+
 event({object_key_console_enable, ObjectID}, #state{gid=GID}) ->
 	{ok, User} = egs_user_model:read(GID),
 	{BlockID, [EventID|_]} = psu_instance:std_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
