@@ -1222,6 +1222,18 @@ send_0117(#egs_user_model{id=CharGID, lid=CharLID, character=#characters{current
 	packet_send(Socket, << 16#01170300:32, DestLID:16/little, 0:48, CharGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64,
 		CharGID:32/little, CharLID:32/little, SE/binary, HP:32/little, 0:32 >>).
 
+%% @doc Send the zone initialization command.
+%% @todo Handle the LID properly in both places.
+%% @todo Handle NbPlayers properly. There's more than 1 player!
+send_0200(ZoneID, ZoneType, #state{socket=Socket, gid=DestGID}) ->
+	Var = case ZoneType of
+		mission -> << 16#06000500:32, 16#01000000:32, 0:64, 16#00040000:32, 16#00010000:32, 16#00140000:32 >>;
+		myroom -> << 16#06000000:32, 16#02000000:32, 0:64, 16#40000000:32, 16#00010000:32, 16#00010000:32 >>;
+		_ -> << 16#00040000:32, 0:160, 16#00140000:32 >>
+	end,
+	packet_send(Socket, << 16#02000300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:64,
+		0:16, ZoneID:16/little, 1:32/little, 16#ffffffff:32, Var/binary, 16#ffffffff:32, 16#ffffffff:32 >>).
+
 %% @doc Send character location, appearance and other information.
 %% @todo Handle the DestLID properly.
 send_0201(CharUser, #state{socket=Socket, gid=DestGID}) ->

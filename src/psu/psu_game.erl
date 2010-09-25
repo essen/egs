@@ -161,7 +161,7 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 				true -> ignore
 			end,
 			psu_proto:send_010d(User#egs_user_model{lid=0}, State),
-			send_0200(AreaType),
+			psu_proto:send_0200(ZoneID, AreaType, State),
 			psu_proto:send_020f(ZoneFile, SetID, SeasonID, State);
 		true -> ignore
 	end,
@@ -285,18 +285,6 @@ send_0113() ->
 	{ok, File} = file:read_file("p/typesinfo.bin"),
 	GID = get(gid),
 	send(<< 16#01130300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, GID:32/little-unsigned-integer, File/binary >>).
-
-%% @doc Send the zone initialization notification.
-send_0200(ZoneType) ->
-	case ZoneType of
-		mission ->
-			Var = << 16#06000500:32, 16#01000000:32, 0:64, 16#00040000:32, 16#00010000:32, 16#00140000:32 >>;
-		myroom ->
-			Var = << 16#06000000:32, 16#02000000:32, 0:64, 16#40000000:32, 16#00010000:32, 16#00010000:32 >>;
-		_ ->
-			Var = << 16#00040000:32, 0:160, 16#00140000:32 >>
-	end,
-	send(<< (header(16#0200))/binary, 0:32, 16#01000000:32, 16#ffffffff:32, Var/binary, 16#ffffffff:32, 16#ffffffff:32 >>).
 
 %% @todo Not sure. Used for unspawning, and more.
 send_0204(DestUser, TargetUser, Action) ->
