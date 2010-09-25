@@ -1307,6 +1307,12 @@ send_0231(URL, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 send_0a05(#state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#0a050300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64 >>).
 
+%% @doc Send an item's description.
+send_0a11(ItemID, ItemDesc, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+	Length = 1 + byte_size(ItemDesc) div 2,
+	packet_send(Socket, << 16#0a110300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64,
+		ItemID:32, Length:32/little, ItemDesc/binary, 0:16 >>).
+
 %% @doc Quest init.
 %% @todo When first entering a zone it seems LID should be set to ffff apparently.
 send_0c00(CharUser, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
