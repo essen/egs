@@ -290,7 +290,7 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}, State=#sta
 	end,
 	State3 = State2#state{areanb=State2#state.areanb + 1},
 	psu_proto:send_0208(State3),
-	psu_game:send_0236(),
+	psu_proto:send_0236(State3),
 	{ok, State3};
 
 %% @doc Leave mission counter handler.

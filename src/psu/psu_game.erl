@@ -214,7 +214,7 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 	end,
 	State3 = State2#state{areanb=State2#state.areanb + 1},
 	psu_proto:send_0208(State3),
-	send_0236(),
+	psu_proto:send_0236(State3),
 	if	User#egs_user_model.partypid =/= undefined, AreaType =:= mission ->
 			{ok, NPCList} = psu_party:get_npc(User#egs_user_model.partypid),
 			npc_load(User, NPCList);
@@ -363,11 +363,6 @@ build_0233_contents(Users) ->
 	Chunk = << CharBin/binary, IsGM:8, 0:8, GameVersion:8, 0:8 >>,
 	Next = build_0233_contents(Rest),
 	<< Chunk/binary, Next/binary >>.
-
-%% @doc Center the camera on the player, if possible.
-%% @todo Probably.
-send_0236() ->
-	send(header(16#0236)).
 
 %% @doc Send a chat command.
 send_0304(FromTypeID, FromGID, FromName, Modifiers, Message) ->

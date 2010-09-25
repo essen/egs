@@ -1324,6 +1324,11 @@ send_0231(URL, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#02310300:32, DestLID:16/little, 0:16, 16#00000f00:32, DestGID:32/little, 0:64,
 		16#00000f00:32, DestGID:32/little, 0:64, Length:32/little, URLBin/binary, 0:Padding >>).
 
+%% @doc Start the zone handling: load the zone file and the objects sent separately.
+%% @todo Handle the LID properly.
+send_0236(#state{socket=Socket, gid=DestGID}) ->
+	packet_send(Socket, << 16#02360300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:64 >>).
+
 %% @todo Inventory related. Doesn't seem to do anything.
 send_0a05(#state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#0a050300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64 >>).
