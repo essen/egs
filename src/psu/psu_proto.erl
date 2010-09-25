@@ -396,10 +396,10 @@ parse(_Size, 16#0304, Channel, Data) ->
 	Modifiers = {chat_modifiers, ChatType, ChatCutIn, ChatCutInAngle, ChatMsgLength, ChatChannel, ChatCharacterType},
 	{chat, FromTypeID, FromGID, FromName, Modifiers, ChatMsg};
 
-%% @doc Probably safely ignored. VarJ is apparently replied with the same value sent by 0205, the one after EntryID.
+%% @doc Probably safely ignored. _AreaNb is apparently replied with the same value sent by 0205, the one after EntryID.
 parse(Size, 16#0806, Channel, Data) ->
 	<<	_LID:16/little, VarA:16/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little,
-		VarF:32/little, VarG:32/little, VarH:32/little, VarI:32/little, VarJ:32/little >> = Data,
+		VarF:32/little, VarG:32/little, VarH:32/little, VarI:32/little, _AreaNb:32/little >> = Data,
 	?ASSERT_EQ(Size, 48),
 	?ASSERT_EQ(Channel, 2),
 	?ASSERT_EQ(VarA, 0),
@@ -411,7 +411,6 @@ parse(Size, 16#0806, Channel, Data) ->
 	?ASSERT_EQ(VarG, 0),
 	?ASSERT_EQ(VarH, 0),
 	?ASSERT_EQ(VarI, 0),
-	?ASSERT_EQ(VarJ, 1),
 	ignore;
 
 parse(Size, 16#0807, Channel, Data) ->
@@ -430,11 +429,10 @@ parse(Size, 16#0807, Channel, Data) ->
 	?ASSERT_EQ(VarI, 0),
 	{area_change, QuestID, ZoneID, MapID, EntryID, PartyPos};
 
-%% @doc Probably safely ignored. VarJ is apparently replied with the same value sent by 0208.
-%% @todo Find out why we don't receive this command anymore.
+%% @doc Probably safely ignored. _AreaNb is apparently replied with the same value sent by 0208.
 parse(Size, 16#0808, Channel, Data) ->
 	<<	_LID:16/little, VarA:16/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little,
-		VarF:32/little, VarG:32/little, VarH:32/little, VarI:32/little, VarJ:32/little >> = Data,
+		VarF:32/little, VarG:32/little, VarH:32/little, VarI:32/little, _AreaNb:32/little >> = Data,
 	?ASSERT_EQ(Size, 48),
 	?ASSERT_EQ(Channel, 2),
 	?ASSERT_EQ(VarA, 0),
@@ -446,7 +444,6 @@ parse(Size, 16#0808, Channel, Data) ->
 	?ASSERT_EQ(VarG, 0),
 	?ASSERT_EQ(VarH, 0),
 	?ASSERT_EQ(VarI, 0),
-	?ASSERT_EQ(VarJ, 2),
 	ignore;
 
 %% @todo Check that _Rest is full of 0s.
@@ -1252,8 +1249,9 @@ send_0205(CharUser, IsSeasonal, #state{socket=Socket, gid=DestGID, lid=DestLID, 
 		16#ffffffff:32, ZoneID:32/little, MapID:32/little, EntryID:32/little, AreaNb:32/little, 0:24, IsSeasonal:8 >>).
 
 %% @doc Indicate to the client that loading should finish.
-send_0208(#state{socket=Socket, gid=DestGID, lid=DestLID, areanb=AreaNb}) ->
-	packet_send(Socket, << 16#02080300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64, AreaNb:32/little >>).
+%% @todo Handle the DestLID properly.
+send_0208(#state{socket=Socket, gid=DestGID, areanb=AreaNb}) ->
+	packet_send(Socket, << 16#02080300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:64, AreaNb:32/little >>).
 
 %% @todo No idea what this one does. For unknown reasons it uses channel 2.
 %% @todo Handle the DestLID properly?
