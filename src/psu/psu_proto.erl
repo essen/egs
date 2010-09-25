@@ -1250,6 +1250,10 @@ send_0205(CharUser, IsSeasonal, #state{socket=Socket, gid=DestGID, lid=DestLID})
 	packet_send(Socket, << 16#02050300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64,
 		16#ffffffff:32, ZoneID:32/little, MapID:32/little, EntryID:32/little, 1:32/little, 0:24, IsSeasonal:8 >>).
 
+%% @doc Indicate to the client that loading should finish.
+send_0208(#state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+	packet_send(Socket, << 16#02080300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64, 2:32/little >>).
+
 %% @todo No idea what this one does. For unknown reasons it uses channel 2.
 %% @todo Handle the DestLID properly?
 send_020c(#state{socket=Socket}) ->

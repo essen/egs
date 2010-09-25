@@ -287,7 +287,7 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}, State=#sta
 		undefined -> ignore;
 		_ -> psu_game:send_022c(0, 16#12)
 	end,
-	psu_game:send_0208(),
+	psu_proto:send_0208(State),
 	psu_game:send_0236();
 
 %% @doc Leave mission counter handler.

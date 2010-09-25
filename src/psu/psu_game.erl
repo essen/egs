@@ -212,7 +212,7 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 		undefined -> ignore;
 		_ -> send_022c(0, 16#12)
 	end,
-	send_0208(),
+	psu_proto:send_0208(State),
 	send_0236(),
 	if	User#egs_user_model.partypid =/= undefined, AreaType =:= mission ->
 			{ok, NPCList} = psu_party:get_npc(User#egs_user_model.partypid),
@@ -307,11 +307,6 @@ send_0204(DestUser, TargetUser, Action) ->
 	send(<< 16#02040300:32, 0:32, TargetTypeID:32, TargetGID:32/little-unsigned-integer, 0:64,
 		16#00011300:32, DestGID:32/little-unsigned-integer, 0:64, TargetGID:32/little-unsigned-integer,
 		TargetLID:32/little-unsigned-integer, Action:32/little-unsigned-integer >>).
-
-%% @doc Indicate to the client that loading should finish.
-%% @todo Last value seems to be 2 most of the time. Never 0 though. Apparently counters have it at 4.
-send_0208() ->
-	send(<< (header(16#0208))/binary, 2:32/little-unsigned-integer >>).
 
 %% @doc Send the list of available universes.
 send_021e() ->
