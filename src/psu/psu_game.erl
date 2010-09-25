@@ -183,11 +183,11 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 				myroom ->
 					send_1332(),
 					send_1202(),
-					send_1204(),
+					psu_proto:send_1204(State2),
 					send_1206();
 				mission ->
 					send_1202(),
-					send_1204(),
+					psu_proto:send_1204(State2),
 					send_1206(),
 					send_1207();
 				_ -> ignore
@@ -599,10 +599,6 @@ send_1113(Data) ->
 %% @todo Figure out what this packet does. Sane values for counter and missions for now.
 send_1202() ->
 	send(<< (header(16#1202))/binary, 0:32, 16#10000000:32, 0:64, 16#14000000:32, 0:32 >>).
-
-%% @todo Figure out what this packet does. Seems it's the same values all the time.
-send_1204() ->
-	send(<< (header(16#1204))/binary, 0:32, 16#20000000:32, 0:256 >>).
 
 %% @doc Object events response?
 %% @todo Not sure what Value does exactly. It's either 0 or 1.

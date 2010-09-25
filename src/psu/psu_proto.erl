@@ -1392,6 +1392,11 @@ send_1022(#egs_user_model{character=#characters{currenthp=HP}}, #state{socket=So
 	PartyPos = 0,
 	packet_send(Socket, << 16#10220300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64, HP:32/little, PartyPos:32/little >>).
 
+%% @todo Always the same value, no idea what it's for.
+%% @todo Handle the LID properly.
+send_1204(#state{socket=Socket, gid=DestGID}) ->
+	packet_send(Socket, << 16#12040300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:96, 16#20000000:32, 0:256 >>).
+
 %% @doc Available types handler. Enable all 16 types.
 send_1a07(#state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#1a070300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:160,
