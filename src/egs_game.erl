@@ -359,10 +359,12 @@ event({hits, Hits}, State) ->
 
 %% @todo Send something other than just "dammy".
 event({item_description_request, ItemID}, _State) ->
-	case proplists:get_value(ItemID, ?ITEMS) of
-		undefined -> psu_game:send_0a11(ItemID, "Always bet on Dammy.");
-		#psu_item{description=Desc} -> psu_game:send_0a11(ItemID, Desc)
-	end;
+	Filename = io_lib:format("priv/items/~8.16.0b.txt", [ItemID]),
+	Desc = case filelib:is_regular(Filename) of
+		false -> << << X:8, 0:8 >> || X <- "Always bet on Dammy." >>;
+		true -> {ok, File} = file:read_file(Filename), File
+	end,
+	psu_game:send_0a11(ItemID, Desc);
 
 %% @todo A and B are unknown.
 %%      Melee uses a format similar to: AAAA--BBCCCC----DDDDDDDDEE----FF with

@@ -500,9 +500,8 @@ build_item_constants(#psu_special_item{}) ->
 
 %% @doc Item description.
 send_0a11(ItemID, ItemDesc) ->
-	Size = 1 + length(ItemDesc),
-	UCS2Desc = << << X:8, 0:8 >> || X <- ItemDesc >>,
-	send(<< (header(16#0a11))/binary, ItemID:32/unsigned-integer, Size:32/little-unsigned-integer, UCS2Desc/binary, 0:16 >>).
+	Size = 1 + byte_size(ItemDesc),
+	send(<< (header(16#0a11))/binary, ItemID:32/unsigned-integer, Size:32/little-unsigned-integer, ItemDesc/binary, 0:16 >>).
 
 %% @todo Figure out last 4 bytes!
 send_0c02() ->
