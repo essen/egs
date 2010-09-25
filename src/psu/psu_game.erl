@@ -86,7 +86,7 @@ area_get_season(QuestID) ->
 	end.
 
 %% @doc Load the given map as a standard lobby.
-area_load(QuestID, ZoneID, MapID, EntryID) ->
+area_load(QuestID, ZoneID, MapID, EntryID, State) ->
 	{ok, OldUser} = egs_user_model:read(get(gid)),
 	[{type, AreaType}, {file, QuestFile}|MissionInfo] = proplists:get_value(QuestID, ?QUESTS, [{type, undefined}, {file, undefined}]),
 	[IsStart, RealZoneID, RealMapID, RealEntryID, NbSetsInQuest] = case AreaType of
@@ -121,10 +121,9 @@ area_load(QuestID, ZoneID, MapID, EntryID) ->
 	User = OldUser#egs_user_model{instancepid=InstancePid, areatype=AreaType, area={psu_area, QuestID, RealZoneID, RealMapID}, entryid=RealEntryID},
 	egs_user_model:write(User),
 	RealSetID = if SetID > NbSetsInZone - 1 -> NbSetsInZone - 1; true -> SetID end,
-	area_load(AreaType, IsStart, RealSetID, OldUser, User, QuestFile, ZoneFile, AreaName).
+	area_load(AreaType, IsStart, RealSetID, OldUser, User, QuestFile, ZoneFile, AreaName, State).
 
-area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName) ->
-	State = #state{socket=User#egs_user_model.socket, gid=User#egs_user_model.id, lid=User#egs_user_model.lid},
+area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName, State) ->
 	#psu_area{questid=OldQuestID, zoneid=OldZoneID} = OldUser#egs_user_model.area,
 	#psu_area{questid=QuestID, zoneid=ZoneID, mapid=_MapID} = User#egs_user_model.area,
 	QuestChange = if OldQuestID /= QuestID, QuestFile /= undefined -> true; true -> false end,
@@ -166,17 +165,18 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 			psu_proto:send_020f(ZoneFile, SetID, SeasonID, State);
 		true -> ignore
 	end,
-	psu_proto:send_0205(User, IsSeasonal, State),
+	State2 = State#state{areanb=State#state.areanb + 1},
+	psu_proto:send_0205(User, IsSeasonal, State2),
 	send_100e(QuestID, ZoneID, (User#egs_user_model.area)#psu_area.mapid, AreaName, 16#ffffffff),
 	if	AreaType =:= mission ->
-			psu_proto:send_0215(0, State),
+			psu_proto:send_0215(0, State2),
 			if	IsStart =:= true ->
-					psu_proto:send_0215(0, State),
+					psu_proto:send_0215(0, State2),
 					send_0c09();
 				true -> ignore
 			end;
 		true ->
-			psu_proto:send_020c(State)
+			psu_proto:send_020c(State2)
 	end,
 	if	ZoneChange =:= true ->
 			case AreaType of
@@ -202,7 +202,7 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 			send_1309();
 		true -> ignore
 	end,
-	psu_proto:send_0201(User#egs_user_model{lid=0}, State),
+	psu_proto:send_0201(User#egs_user_model{lid=0}, State2),
 	if	ZoneChange =:= true ->
 			send_0a06();
 		true -> ignore
@@ -212,13 +212,15 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 		undefined -> ignore;
 		_ -> send_022c(0, 16#12)
 	end,
-	psu_proto:send_0208(State),
+	State3 = State2#state{areanb=State2#state.areanb + 1},
+	psu_proto:send_0208(State3),
 	send_0236(),
 	if	User#egs_user_model.partypid =/= undefined, AreaType =:= mission ->
 			{ok, NPCList} = psu_party:get_npc(User#egs_user_model.partypid),
 			npc_load(User, NPCList);
 		true -> ok
-	end.
+	end,
+	{ok, State3}.
 
 %% @todo Don't change the NPC info unless you are the leader!
 npc_load(_Leader, []) ->

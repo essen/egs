@@ -18,7 +18,7 @@
 %%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
 %% @doc Per-process state used by the various EGS modules.
--record(state, {socket, gid, lid=16#ffff}).
+-record(state, {socket, gid, lid=16#ffff, areanb=0}).
 
 %% @doc Table containing counters current values.
 -record(counters, {name, id}).

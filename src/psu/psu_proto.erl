@@ -396,7 +396,7 @@ parse(_Size, 16#0304, Channel, Data) ->
 	Modifiers = {chat_modifiers, ChatType, ChatCutIn, ChatCutInAngle, ChatMsgLength, ChatChannel, ChatCharacterType},
 	{chat, FromTypeID, FromGID, FromName, Modifiers, ChatMsg};
 
-%% @todo Probably safely ignored. VarJ is apparently replied with the same value as sent by 0205, the one after EntryID.
+%% @doc Probably safely ignored. VarJ is apparently replied with the same value sent by 0205, the one after EntryID.
 parse(Size, 16#0806, Channel, Data) ->
 	<<	_LID:16/little, VarA:16/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little,
 		VarF:32/little, VarG:32/little, VarH:32/little, VarI:32/little, VarJ:32/little >> = Data,
@@ -430,7 +430,8 @@ parse(Size, 16#0807, Channel, Data) ->
 	?ASSERT_EQ(VarI, 0),
 	{area_change, QuestID, ZoneID, MapID, EntryID, PartyPos};
 
-%% @todo Probably safely ignored. Still, figure out VarJ. It can be different than 2.
+%% @doc Probably safely ignored. VarJ is apparently replied with the same value sent by 0208.
+%% @todo Find out why we don't receive this command anymore.
 parse(Size, 16#0808, Channel, Data) ->
 	<<	_LID:16/little, VarA:16/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little,
 		VarF:32/little, VarG:32/little, VarH:32/little, VarI:32/little, VarJ:32/little >> = Data,
@@ -1245,14 +1246,14 @@ send_0202(#state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 
 %% @doc Make the client load a new map.
 %% @todo We set a value of 1 and not 0 after EntryID because this value is never found to be 0.
-send_0205(CharUser, IsSeasonal, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_0205(CharUser, IsSeasonal, #state{socket=Socket, gid=DestGID, lid=DestLID, areanb=AreaNb}) ->
 	#egs_user_model{area=#psu_area{zoneid=ZoneID, mapid=MapID}, entryid=EntryID} = CharUser,
 	packet_send(Socket, << 16#02050300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64,
-		16#ffffffff:32, ZoneID:32/little, MapID:32/little, EntryID:32/little, 1:32/little, 0:24, IsSeasonal:8 >>).
+		16#ffffffff:32, ZoneID:32/little, MapID:32/little, EntryID:32/little, AreaNb:32/little, 0:24, IsSeasonal:8 >>).
 
 %% @doc Indicate to the client that loading should finish.
-send_0208(#state{socket=Socket, gid=DestGID, lid=DestLID}) ->
-	packet_send(Socket, << 16#02080300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64, 2:32/little >>).
+send_0208(#state{socket=Socket, gid=DestGID, lid=DestLID, areanb=AreaNb}) ->
+	packet_send(Socket, << 16#02080300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64, AreaNb:32/little >>).
 
 %% @todo No idea what this one does. For unknown reasons it uses channel 2.
 %% @todo Handle the DestLID properly?

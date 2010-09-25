@@ -200,11 +200,11 @@ raw(Command, _Data, State) ->
 %% @todo Probably move area_load inside the event and make other events call this one when needed.
 event({area_change, QuestID, ZoneID, MapID, EntryID}, State) ->
 	event({area_change, QuestID, ZoneID, MapID, EntryID, 16#ffffffff}, State);
-event({area_change, QuestID, ZoneID, MapID, EntryID, PartyPos}, _State) ->
+event({area_change, QuestID, ZoneID, MapID, EntryID, PartyPos}, State) ->
 	case PartyPos of
 		16#ffffffff ->
 			log("area change (~b,~b,~b,~b,~b)", [QuestID, ZoneID, MapID, EntryID, PartyPos]),
-			psu_game:area_load(QuestID, ZoneID, MapID, EntryID);
+			psu_game:area_load(QuestID, ZoneID, MapID, EntryID, State);
 		_Any -> %% @todo Handle area_change event for NPCs in story missions.
 			ignore
 	end;
@@ -271,24 +271,27 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}, State=#sta
 	psu_proto:send_010d(User#egs_user_model{lid=0}, State),
 	psu_game:send_0200(mission),
 	psu_proto:send_020f(ZoneFile, 0, 255, State),
-	psu_proto:send_0205(User, 0, State),
+	State2 = State#state{areanb=State#state.areanb + 1},
+	psu_proto:send_0205(User, 0, State2),
 	psu_game:send_100e(16#7fffffff, 0, 0, AreaName, CounterID),
-	psu_proto:send_0215(0, State),
-	psu_proto:send_0215(0, State),
-	psu_proto:send_020c(State),
+	psu_proto:send_0215(0, State2),
+	psu_proto:send_0215(0, State2),
+	psu_proto:send_020c(State2),
 	psu_game:send_1202(),
 	psu_game:send_1204(),
 	psu_game:send_1206(),
 	psu_game:send_1207(),
 	psu_game:send_1212(),
-	psu_proto:send_0201(User#egs_user_model{lid=0}, State),
+	psu_proto:send_0201(User#egs_user_model{lid=0}, State2),
 	psu_game:send_0a06(),
 	case User#egs_user_model.partypid of
 		undefined -> ignore;
 		_ -> psu_game:send_022c(0, 16#12)
 	end,
-	psu_proto:send_0208(State),
-	psu_game:send_0236();
+	State3 = State2#state{areanb=State2#state.areanb + 1},
+	psu_proto:send_0208(State3),
+	psu_game:send_0236(),
+	{ok, State3};
 
 %% @doc Leave mission counter handler.
 event(counter_leave, State=#state{gid=GID}) ->
