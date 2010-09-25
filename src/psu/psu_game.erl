@@ -163,7 +163,7 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 			end,
 			psu_proto:send_010d(User#egs_user_model{lid=0}, State),
 			send_0200(AreaType),
-			send_020f(ZoneFile, SetID, SeasonID);
+			psu_proto:send_020f(ZoneFile, SetID, SeasonID, State);
 		true -> ignore
 	end,
 	psu_proto:send_0205(User, IsSeasonal, State),
@@ -312,12 +312,6 @@ send_0204(DestUser, TargetUser, Action) ->
 %% @todo Last value seems to be 2 most of the time. Never 0 though. Apparently counters have it at 4.
 send_0208() ->
 	send(<< (header(16#0208))/binary, 2:32/little-unsigned-integer >>).
-
-%% @doc Send the zone file to be loaded.
-send_020f(Filename, SetID, SeasonID) ->
-	{ok, File} = file:read_file(Filename),
-	Size = byte_size(File),
-	send(<< 16#020f0300:32, 16#ffff:16, 0:272, SetID, SeasonID, 0:16, Size:32/little-unsigned-integer, File/binary >>).
 
 %% @doc Send the list of available universes.
 send_021e() ->

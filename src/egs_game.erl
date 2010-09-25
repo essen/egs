@@ -270,7 +270,7 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}, State=#sta
 	psu_proto:send_0a05(State),
 	psu_proto:send_010d(User#egs_user_model{lid=0}, State),
 	psu_game:send_0200(mission),
-	psu_game:send_020f(ZoneFile, 0, 16#ff),
+	psu_proto:send_020f(ZoneFile, 0, 255, State),
 	psu_proto:send_0205(User, 0, State),
 	psu_game:send_100e(16#7fffffff, 0, 0, AreaName, CounterID),
 	psu_proto:send_0215(0, State),

@@ -1262,6 +1262,12 @@ send_020e(Filename, #state{socket=Socket}) ->
 	Size = byte_size(File),
 	packet_send(Socket, << 16#020e0300:32, 16#ffff:16, 0:272, Size:32/little, 0:32, File/binary, 0:32 >>).
 
+%% @doc Send the zone file to be loaded.
+send_020f(Filename, SetID, SeasonID, #state{socket=Socket}) ->
+	{ok, File} = file:read_file(Filename),
+	Size = byte_size(File),
+	packet_send(Socket, << 16#020f0300:32, 16#ffff:16, 0:272, SetID, SeasonID, 0:16, Size:32/little, File/binary >>).
+
 %% @doc Send the current UNIX time.
 send_0210(#state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	UnixTime = calendar:datetime_to_gregorian_seconds(calendar:now_to_universal_time(now()))
