@@ -1363,6 +1363,25 @@ send_1006(EventID, State) ->
 send_1006(EventID, PartyPos, #state{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#10060300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64, EventID:8, PartyPos:8, 0:16 >>).
 
+%% @doc Send the player's current location.
+%% @todo Handle PartyPos.
+%% @todo Receive the AreaName as UCS2 directly to allow for color codes and the like.
+%% @todo Handle TargetLID probably (right after the padding).
+send_100e(CounterID, AreaName, #state{socket=Socket, gid=DestGID}) ->
+	PartyPos = 0,
+	UCS2Name = << << X:8, 0:8 >> || X <- AreaName >>,
+	Padding = 8 * (64 - byte_size(UCS2Name)),
+	CounterType = if CounterID =:= 16#ffffffff -> 2; true -> 1 end,
+	packet_send(Socket, << 16#100e0300:32, 16#ffffffbf:32, 0:128, 16#00011300:32, DestGID:32, 0:64,
+		1, PartyPos, 0:48, 16#ffffff7f:32, UCS2Name/binary, 0:Padding, 0:32, CounterID:32/little, CounterType:32/little >>).
+send_100e(#psu_area{questid=QuestID, zoneid=ZoneID, mapid=MapID}, EntryID, AreaName, #state{socket=Socket, gid=DestGID}) ->
+	PartyPos = 0,
+	UCS2Name = << << X:8, 0:8 >> || X <- AreaName >>,
+	Padding = 8 * (64 - byte_size(UCS2Name)),
+	packet_send(Socket, << 16#100e0300:32, 16#ffffffbf:32, 0:128, 16#00011300:32, DestGID:32, 0:64,
+		1, PartyPos, ZoneID:16/little, MapID:16/little, EntryID:16/little, QuestID:32/little,
+		UCS2Name/binary, 0:Padding, 0:32, 16#ffffffff:32, 0:32 >>).
+
 %% @doc Mission start related.
 send_1020(#state{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#10200300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64 >>).

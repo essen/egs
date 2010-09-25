@@ -167,7 +167,7 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 	end,
 	State2 = State#state{areanb=State#state.areanb + 1},
 	psu_proto:send_0205(User, IsSeasonal, State2),
-	send_100e(QuestID, ZoneID, (User#egs_user_model.area)#psu_area.mapid, AreaName, 16#ffffffff),
+	psu_proto:send_100e(User#egs_user_model.area, User#egs_user_model.entryid, AreaName, State2),
 	if	AreaType =:= mission ->
 			psu_proto:send_0215(0, State2),
 			if	IsStart =:= true ->
@@ -566,21 +566,6 @@ send_1005(Name) ->
 	<< _:352, Before:160/bits, _:608, After/bits >> = File,
 	GID = get(gid),
 	send(<< 16#10050300:32, 16#ffff:16, 0:144, 16#00011300:32, GID:32/little, 0:64, Before/binary, GID:32/little, 0:64, Name/binary, After/binary >>).
-
-%% @doc Send the player's current location.
-send_100e(QuestID, ZoneID, MapID, Location, CounterID) ->
-	GID = get(gid),
-	UCS2Location = << << X:8, 0:8 >> || X <- Location >>,
-	Packet = << 16#100e0300:32, 16#ffffffbf:32, 0:128, 16#00011300:32, GID:32/little, 0:64,
-		1:32/little, MapID:16/little, ZoneID:16/little, QuestID:32/little, UCS2Location/binary >>,
-	PaddingSize = (128 - byte_size(Packet) - 8) * 8,
-	case CounterID of
-		16#ffffffff ->
-			Footer = << CounterID:32/little-unsigned-integer, 0:32 >>;
-		_ ->
-			Footer = << CounterID:32/little-unsigned-integer, 1:32/little-unsigned-integer >>
-	end,
-	send(<< Packet/binary, 0:PaddingSize, Footer/binary >>).
 
 %% @todo No idea. Also the 2 PartyPos in the built packet more often than not match, but sometimes don't? That's probably because one is PartyPos and the other is LID or something.
 send_100f(NPCid, PartyPos) ->

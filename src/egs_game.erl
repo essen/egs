@@ -258,7 +258,6 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}, State=#sta
 	FromArea = {psu_area, OldArea#psu_area.questid, FromZoneID, FromMapID},
 	User = OldUser#egs_user_model{areatype=counter, area={psu_area, 16#7fffffff, 0, 0}, entryid=0, prev_area=FromArea, prev_entryid=FromEntryID},
 	egs_user_model:write(User),
-	AreaName = "Counter",
 	QuestFile = "data/lobby/counter.quest.nbl",
 	ZoneFile = "data/lobby/counter.zone.nbl",
 	%% broadcast unspawn to other people
@@ -273,7 +272,7 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}, State=#sta
 	psu_proto:send_020f(ZoneFile, 0, 255, State),
 	State2 = State#state{areanb=State#state.areanb + 1},
 	psu_proto:send_0205(User, 0, State2),
-	psu_game:send_100e(16#7fffffff, 0, 0, AreaName, CounterID),
+	psu_proto:send_100e(CounterID, "Counter", State2),
 	psu_proto:send_0215(0, State2),
 	psu_proto:send_0215(0, State2),
 	psu_proto:send_020c(State2),
