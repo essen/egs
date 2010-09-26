@@ -1405,8 +1405,10 @@ send_1a07(#state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 %% Utility functions.
 
 %% @doc Return the language as an atom from its integer value.
+%% @todo Identify which of the english languages is american and which is uk.
 language_integer_to_atom(0) -> japanese;
 language_integer_to_atom(1) -> english;
+language_integer_to_atom(2) -> english;
 language_integer_to_atom(3) -> french;
 language_integer_to_atom(4) -> german;
 language_integer_to_atom(Language) -> log("unknown 080e Language ~p", [Language]).
