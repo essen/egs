@@ -434,7 +434,7 @@ event(mission_abort, State=#state{gid=GID}) ->
 	Character = User#egs_user_model.character,
 	MaxHP = Character#characters.maxhp,
 	NewCharacter = Character#characters{currenthp=MaxHP},
-	NewUser = User#egs_user_model{character=NewCharacter, setid=0},
+	NewUser = User#egs_user_model{character=NewCharacter, setid=0, instancepid=undefined},
 	egs_user_model:write(NewUser),
 	%% map change
 	if	User#egs_user_model.areatype =:= mission ->
