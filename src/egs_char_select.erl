@@ -68,7 +68,6 @@ event({char_select_create, Slot, CharBin}, #state{gid=GID}) ->
 	file:write_file(io_lib:format("~s.options", [File]), << 0:128, 4, 0:56 >>);
 
 %% @doc Load the selected character into the game's universe.
-%% @todo The area_change should happen only after we received 021c back from the client.
 event({char_select_enter, Slot, _BackToPreviousField}, State=#state{gid=GID}) ->
 	{ok, User} = egs_user_model:read(GID),
 	[{status, 1}, {char, CharBin}, {options, OptionsBin}] = data_load(User#egs_user_model.folder, Slot),
@@ -80,11 +79,10 @@ event({char_select_enter, Slot, _BackToPreviousField}, State=#state{gid=GID}) ->
 	Options = psu_characters:options_binary_to_tuple(OptionsBin),
 	Character = #characters{slot=Slot, name=Name, race=Race, gender=Gender, class=Class, appearance=Appearance, options=Options, % TODO: temporary set the slot here, won't be needed later
 		inventory= [{16#11010000, #psu_special_item_variables{}}, {16#11020000, #psu_special_item_variables{}}, {16#11020100, #psu_special_item_variables{}}, {16#11020200, #psu_special_item_variables{}},
-		{16#01010900, #psu_striking_weapon_item_variables{is_active=0, slot=0, current_pp=99, max_pp=100, element=#psu_element{type=1, percent=50}, pa=#psu_pa{type=0, level=0}}},
-		{16#01010a00, #psu_striking_weapon_item_variables{is_active=0, slot=0, current_pp=99, max_pp=100, element=#psu_element{type=2, percent=50}, pa=#psu_pa{type=0, level=0}}},
-		{16#01010b00, #psu_striking_weapon_item_variables{is_active=0, slot=0, current_pp=99, max_pp=100, element=#psu_element{type=3, percent=50}, pa=#psu_pa{type=0, level=0}}}]},
-	User2 = User#egs_user_model{state=online, character=Character, area=#psu_area{questid=1100000, zoneid=0, mapid=4}, entryid=5,
-		prev_area={psu_area, 0, 0, 0}, prev_entryid=0, pos=#pos{x=0.0, y=0.0, z=0.0, dir=0.0}, setid=0},
+		{16#01010900, #psu_striking_weapon_item_variables{current_pp=99, max_pp=100, element=#psu_element{type=1, percent=50}}},
+		{16#01010a00, #psu_striking_weapon_item_variables{current_pp=99, max_pp=100, element=#psu_element{type=2, percent=50}}},
+		{16#01010b00, #psu_striking_weapon_item_variables{current_pp=99, max_pp=100, element=#psu_element{type=3, percent=50}}}]},
+	User2 = User#egs_user_model{state=online, character=Character, area=#psu_area{questid=1100000, zoneid=0, mapid=4}, entryid=5},
 	egs_user_model:write(User2),
 	psu_game:char_load(User2),
 	{ok, egs_game, State}.

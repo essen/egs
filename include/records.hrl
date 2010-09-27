@@ -35,11 +35,13 @@
 %% @todo Probably can use a "param" or "extra" field to store the game-specific information (for things that don't need to be queried).
 
 -record(egs_user_model, {
-	id, pid, socket, state, time, character, instancepid, partypid, areatype, area, entryid, pos,
-	%% psu specific fields
-	lid, setid, prev_area, prev_entryid,
-	%% temporary fields
-	folder
+	%% General information.
+	id, lid, pid, socket, state, time, character,
+	%% Location/state related information.
+	instancepid, partypid, areatype, area, entryid, pos=#pos{x=0.0, y=0.0, z=0.0, dir=0.0}, prev_area=#psu_area{questid=0, zoneid=0, mapid=0}, prev_entryid=0, %% universeid, shopid
+	%% To be moved or deleted later on.
+	setid=0, %% @todo Current area's set number. Move that to psu_instance probably.
+	folder %% @todo Temporary save location.
 }).
 
 %% @doc Character main or class level data structure.
