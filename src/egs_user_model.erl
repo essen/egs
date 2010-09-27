@@ -19,7 +19,7 @@
 
 -module(egs_user_model).
 -behavior(gen_server).
--export([start_link/0, stop/0, count/0, read/1, select/1, write/1, delete/1, key_auth/3]). %% API.
+-export([start_link/0, stop/0, count/0, read/1, select/1, write/1, delete/1, key_auth/3, login_auth/2]). %% API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
 
 %% Use the module name for the server's name and for the table name.
@@ -70,6 +70,9 @@ delete(ID) ->
 
 key_auth(GID, AuthKey, Socket) ->
 	gen_server:call(?SERVER, {key_auth, GID, AuthKey, Socket}).
+
+login_auth(Username, Password) ->
+	gen_server:call(?SERVER, {login_auth, Username, Password}).
 
 %% gen_server
 
@@ -122,6 +125,14 @@ handle_call({key_auth, GID, AuthKey, Socket}, {Pid, _Tag}, State) ->
 	User2 = User#egs_user_model{pid=Pid, socket=Socket, state=authenticated, time=Time, lid=LID},
 	mnesia:transaction(fun() -> mnesia:write(User2) end),
 	{reply, ok, State};
+
+%% @todo Handle GIDs and accounts and login properly. We currently accept everyone and give a new GID each time.
+handle_call({login_auth, Username, Password}, _From, State) ->
+	AuthGID = 10000000 + mnesia:dirty_update_counter(counters, gid, 1),
+	AuthKey = crypto:rand_bytes(4),
+	Folder = << Username/binary, "-", Password/binary >>,
+	egs_user_model:write(#egs_user_model{id=AuthGID, state={wait_for_authentication, AuthKey}, folder=Folder}),
+	{reply, {ok, AuthGID, AuthKey}, State};
 
 handle_call(stop, _From, State) ->
 	{stop, normal, stopped, State};

@@ -81,13 +81,9 @@ event({system_key_auth_request, AuthGID, AuthKey}, State=#state{socket=Socket}) 
 %%      Use username and password as a folder name for saving character data.
 %% @todo Handle real GIDs whenever there's real authentication. GID is the second SessionID in the reply.
 %% @todo Apparently it's possible to ask a question in the reply here. Used for free course on JP.
-event({system_login_auth_request, Username, Password}, State=#state{socket=Socket}) ->
+event({system_login_auth_request, Username, Password}, State) ->
+	{ok, AuthGID, AuthKey} = egs_user_model:login_auth(Username, Password),
 	io:format("auth success for ~s ~s~n", [Username, Password]),
-	AuthGID = 10000000 + mnesia:dirty_update_counter(counters, gid, 1),
-	AuthKey = crypto:rand_bytes(4),
-	Folder = << Username/binary, "-", Password/binary >>,
-	Time = calendar:datetime_to_gregorian_seconds(calendar:universal_time()),
-	egs_user_model:write(#egs_user_model{id=AuthGID, pid=self(), socket=Socket, state={wait_for_authentication, AuthKey}, time=Time, folder=Folder}),
 	psu_proto:send_0223(AuthGID, AuthKey, State);
 
 %% @doc MOTD request handler. Page number starts at 0.
