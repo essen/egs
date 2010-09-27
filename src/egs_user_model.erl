@@ -19,7 +19,7 @@
 
 -module(egs_user_model).
 -behavior(gen_server).
--export([start_link/0, stop/0, count/0, read/1, select/1, write/1, delete/1]). %% API.
+-export([start_link/0, stop/0, count/0, read/1, select/1, write/1, delete/1, key_auth/3]). %% API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
 
 %% Use the module name for the server's name and for the table name.
@@ -68,6 +68,9 @@ write(User) ->
 delete(ID) ->
 	gen_server:cast(?SERVER, {delete, ID}).
 
+key_auth(GID, AuthKey, Socket) ->
+	gen_server:call(?SERVER, {key_auth, GID, AuthKey, Socket}).
+
 %% gen_server
 
 init([]) ->
@@ -109,6 +112,16 @@ handle_call({select, {neighbors, User}}, _From, State) ->
 		X#?TABLE.area =:= User#?TABLE.area
 	])),
 	{reply, {ok, List}, State};
+
+%% @todo Handle LIDs properly, so not here.
+handle_call({key_auth, GID, AuthKey, Socket}, {Pid, _Tag}, State) ->
+	{atomic, [User]} = mnesia:transaction(fun() -> mnesia:read({?TABLE, GID}) end),
+	{wait_for_authentication, AuthKey} = User#egs_user_model.state,
+	LID = 1 + mnesia:dirty_update_counter(counters, lobby, 1) rem 1023,
+	Time = calendar:datetime_to_gregorian_seconds(calendar:universal_time()),
+	User2 = User#egs_user_model{pid=Pid, socket=Socket, state=authenticated, time=Time, lid=LID},
+	mnesia:transaction(fun() -> mnesia:write(User2) end),
+	{reply, ok, State};
 
 handle_call(stop, _From, State) ->
 	{stop, normal, stopped, State};

@@ -69,14 +69,9 @@ event(system_game_server_request, State=#state{socket=Socket}) ->
 %%      If the user is authenticated, send him the character flags list.
 %% @todo Remove the put calls when all the send_xxxx are moved out of psu_game and into psu_proto.
 event({system_key_auth_request, AuthGID, AuthKey}, State=#state{socket=Socket}) ->
-	{ok, User} = egs_user_model:read(AuthGID),
-	{wait_for_authentication, AuthKey} = User#egs_user_model.state,
+	egs_user_model:key_auth(AuthGID, AuthKey, Socket),
 	put(socket, Socket),
 	put(gid, AuthGID),
-	LID = 1 + mnesia:dirty_update_counter(counters, lobby, 1) rem 1023,
-	Time = calendar:datetime_to_gregorian_seconds(calendar:universal_time()),
-	User2 = User#egs_user_model{id=AuthGID, pid=self(), socket=Socket, state=authenticated, time=Time, lid=LID},
-	egs_user_model:write(User2),
 	State2 = State#state{gid=AuthGID},
 	psu_proto:send_0d05(State2),
 	{ok, egs_char_select, State2};
