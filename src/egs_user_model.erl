@@ -19,7 +19,7 @@
 
 -module(egs_user_model).
 -behavior(gen_server).
--export([start_link/0, stop/0, count/0, read/1, select/1, write/1, delete/1, key_auth/3, login_auth/2]). %% API.
+-export([start_link/0, stop/0, count/0, read/1, select/1, write/1, delete/1, key_auth/3, login_auth/2, item_qty_add/3]). %% API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
 
 %% Use the module name for the server's name and for the table name.
@@ -27,6 +27,7 @@
 -define(TABLE, ?MODULE).
 
 -include("include/records.hrl").
+-include("include/psu/items.hrl").
 -include_lib("stdlib/include/qlc.hrl").
 
 %% @spec do(Q) -> Record
@@ -73,6 +74,9 @@ key_auth(GID, AuthKey, Socket) ->
 
 login_auth(Username, Password) ->
 	gen_server:call(?SERVER, {login_auth, Username, Password}).
+
+item_qty_add(GID, ItemIndex, QuantityDiff) ->
+	gen_server:cast(?SERVER, {item_qty_add, GID, ItemIndex, QuantityDiff}).
 
 %% gen_server
 
@@ -159,6 +163,27 @@ handle_cast(cleanup, State) ->
 	mnesia:transaction(fun() ->
 		lists:foreach(fun(ID) -> delete(ID) end, List)
 	end),
+	{noreply, State};
+
+%% @todo Consumable items.
+handle_cast({item_qty_add, GID, ItemIndex, QuantityDiff}, State) ->
+	{atomic, [User]} = mnesia:transaction(fun() -> mnesia:read({?TABLE, GID}) end),
+	Character = User#egs_user_model.character,
+	Inventory = Character#characters.inventory,
+	{ItemID, Variables} = lists:nth(ItemIndex + 1, Inventory),
+	case Variables of
+		#psu_trap_item_variables{quantity=Quantity} ->
+			#psu_item{data=#psu_trap_item{max_quantity=MaxQuantity}} = proplists:get_value(ItemID, ?ITEMS),
+			Quantity2 = Quantity + QuantityDiff,
+			if	Quantity2 =:= 0 ->
+					Inventory2 = string:substr(Inventory, 1, ItemIndex) ++ string:substr(Inventory, ItemIndex + 2);
+				Quantity2 > 0, Quantity2 =< MaxQuantity ->
+					Variables2 = Variables#psu_trap_item_variables{quantity=Quantity2},
+					Inventory2 = string:substr(Inventory, 1, ItemIndex) ++ [{ItemID, Variables2}] ++ string:substr(Inventory, ItemIndex + 2)
+			end
+	end,
+	Character2 = Character#characters{inventory=Inventory2},
+	mnesia:transaction(fun() -> mnesia:write(User#egs_user_model{character=Character2}) end),
 	{noreply, State};
 
 handle_cast(_Msg, State) ->

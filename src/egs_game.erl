@@ -415,11 +415,11 @@ event({item_equip, ItemIndex, TargetGID, TargetLID, A, B}, #state{gid=GID}) ->
 			ignore
 	end;
 
-%% @todo Remove the trap set from the inventory.
 event({item_set_trap, ItemIndex, TargetGID, TargetLID, A, B}, #state{gid=GID}) ->
 	{ok, User} = egs_user_model:read(GID),
 	Inventory = (User#egs_user_model.character)#characters.inventory,
 	{ItemID, _Variables} = lists:nth(ItemIndex + 1, Inventory),
+	egs_user_model:item_qty_add(GID, ItemIndex, -1),
 	<< Category:8, _:24 >> = << ItemID:32 >>,
 	psu_game:send(<< 16#01050300:32, 0:64, TargetGID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
 		TargetGID:32/little, TargetLID:32/little, ItemIndex:8, 9:8, Category:8, A:8, B:32/little >>);
