@@ -412,6 +412,12 @@ build_0a0a_item_variables([{ItemID, #psu_consumable_item_variables{quantity=Quan
 	RarityInt = Rarity - 1,
 	Bin = << 0:32, ItemIndex:32/little, ItemID:32, Quantity:32/little, MaxQuantity:32/little, 0:24, RarityInt:8, Action:8, 0:88 >>,
 	build_0a0a_item_variables(Tail, [Bin|Acc]);
+build_0a0a_item_variables([{ItemID, #psu_parts_item_variables{}}|Tail], Acc) ->
+	#psu_item{rarity=Rarity} = proplists:get_value(ItemID, ?ITEMS),
+	ItemIndex = 0,
+	RarityInt = Rarity - 1,
+	Bin = << 0:32, ItemIndex:32/little, ItemID:32, 0:88, RarityInt:8, 0:96 >>,
+	build_0a0a_item_variables(Tail, [Bin|Acc]);
 %% @todo Handle rank, rarity and hands properly.
 build_0a0a_item_variables([{ItemID, Variables}|Tail], Acc) when element(1, Variables) =:= psu_striking_weapon_item_variables ->
 	#psu_striking_weapon_item_variables{is_active=IsActive, slot=Slot, current_pp=CurrentPP, max_pp=MaxPP,
