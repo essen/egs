@@ -22,13 +22,14 @@
 
 -record(psu_item, {name, rarity, buy_price, sell_price, data}).
 -record(psu_clothing_item, {appearance, type, manufacturer, overlap, gender, colors}).
--record(psu_consumable_item, {max_quantity, pt_diff, status_effect, target, use_condition, item_effect}).
+-record(psu_consumable_item, {max_quantity, pt_diff, status_effect, action, target, use_condition, item_effect}).
 -record(psu_parts_item, {appearance, type, manufacturer, overlap, gender}).
 -record(psu_special_item, {}).
 -record(psu_striking_weapon_item, {pp, atp, ata, atp_req, shop_element, hand, max_upgrades, attack_label,
 	attack_sound, hitbox_a, hitbox_b, hitbox_c, hitbox_d, nb_targets, effect, model}).
 -record(psu_trap_item, {max_quantity}).
 
+-record(psu_consumable_item_variables, {quantity}).
 -record(psu_special_item_variables, {}).
 -record(psu_striking_weapon_item_variables, {is_active=0, slot=0, current_pp, max_pp, element, pa=#psu_pa{type=0, level=0}}).
 
@@ -64,61 +65,61 @@
 
 	{16#03010000, #psu_item{name="Monomate",
 		rarity=1, buy_price=50, sell_price=5, data=#psu_consumable_item{
-		max_quantity=20, pt_diff=+100, status_effect=0, target=0, use_condition=0, item_effect=16#20
+		max_quantity=20, pt_diff=+100, status_effect=0, action=0, target=0, use_condition=0, item_effect=16#20
 	}}},
 	{16#03010100, #psu_item{name="Dimate",
 		rarity=2, buy_price=150, sell_price=15, data=#psu_consumable_item{
-		max_quantity=15, pt_diff=+1000, status_effect=0, target=0, use_condition=0, item_effect=16#20
+		max_quantity=15, pt_diff=+1000, status_effect=0, action=0, target=0, use_condition=0, item_effect=16#20
 	}}},
 	{16#03010200, #psu_item{name="Trimate",
 		rarity=3, buy_price=500, sell_price=50, data=#psu_consumable_item{
-		max_quantity=10, pt_diff=+100, status_effect=0, target=0, use_condition=0, item_effect=16#30
+		max_quantity=10, pt_diff=+100, status_effect=0, action=0, target=0, use_condition=0, item_effect=16#30
 	}}},
 	{16#03010300, #psu_item{name="Star Atomizer",
 		rarity=6, buy_price=1500, sell_price=150, data=#psu_consumable_item{
-		max_quantity=5, pt_diff=+100, status_effect=0, target=1, use_condition=0, item_effect=16#30
+		max_quantity=5, pt_diff=+100, status_effect=0, action=0, target=1, use_condition=0, item_effect=16#30
 	}}},
 	%% @todo Missing 03010400.
 	{16#03010500, #psu_item{name="Antimate",
 		rarity=1, buy_price=100, sell_price=10, data=#psu_consumable_item{
-		max_quantity=10, pt_diff=0, status_effect=0, target=0, use_condition=0, item_effect=16#60
+		max_quantity=10, pt_diff=0, status_effect=0, action=4, target=0, use_condition=0, item_effect=16#60
 	}}},
 	{16#03010600, #psu_item{name="Sol Atomizer",
 		rarity=4, buy_price=300, sell_price=30, data=#psu_consumable_item{
-		max_quantity=5, pt_diff=0, status_effect=0, target=1, use_condition=0, item_effect=16#60
+		max_quantity=5, pt_diff=0, status_effect=0, action=4, target=1, use_condition=0, item_effect=16#60
 	}}},
 	{16#03010700, #psu_item{name="Moon Atomizer",
 		rarity=5, buy_price=500, sell_price=50, data=#psu_consumable_item{
-		max_quantity=5, pt_diff=+25, status_effect=0, target=1, use_condition=0, item_effect=16#B0
+		max_quantity=5, pt_diff=+25, status_effect=0, action=5, target=1, use_condition=0, item_effect=16#B0
 	}}},
 	%% @todo Missing 03010800. Cosmo Atomizer?
 	{16#03010900, #psu_item{name="Scape Doll",
 		rarity=8, buy_price=10000, sell_price=10, data=#psu_consumable_item{
-		max_quantity=1, pt_diff=+100, status_effect=0, target=0, use_condition=0, item_effect=16#D0
+		max_quantity=1, pt_diff=+100, status_effect=0, action=2, target=0, use_condition=0, item_effect=16#D0
 	}}},
 	{16#03010a00, #psu_item{name="Agtaride",
 		rarity=3, buy_price=150, sell_price=15, data=#psu_consumable_item{
-		max_quantity=10, pt_diff=0, status_effect=17, target=0, use_condition=0, item_effect=16#22
+		max_quantity=10, pt_diff=0, status_effect=17, action=3, target=0, use_condition=0, item_effect=16#22
 	}}},
 	{16#03010b00, #psu_item{name="Defbaride",
 		rarity=3, buy_price=150, sell_price=15, data=#psu_consumable_item{
-		max_quantity=10, pt_diff=0, status_effect=19, target=0, use_condition=0, item_effect=16#22
+		max_quantity=10, pt_diff=0, status_effect=19, action=3, target=0, use_condition=0, item_effect=16#22
 	}}},
 	{16#03010c00, #psu_item{name="Retaride",
 		rarity=3, buy_price=150, sell_price=15, data=#psu_consumable_item{
-		max_quantity=10, pt_diff=0, status_effect=21, target=0, use_condition=0, item_effect=16#22
+		max_quantity=10, pt_diff=0, status_effect=21, action=3, target=0, use_condition=0, item_effect=16#22
 	}}},
 	{16#03010d00, #psu_item{name="Zodiaride",
 		rarity=3, buy_price=150, sell_price=15, data=#psu_consumable_item{
-		max_quantity=10, pt_diff=0, status_effect=23, target=0, use_condition=0, item_effect=16#22
+		max_quantity=10, pt_diff=0, status_effect=23, action=3, target=0, use_condition=0, item_effect=16#22
 	}}},
 	{16#03010e00, #psu_item{name="Megistaride",
 		rarity=4, buy_price=300, sell_price=30, data=#psu_consumable_item{
-		max_quantity=10, pt_diff=0, status_effect=26, target=0, use_condition=0, item_effect=16#22
+		max_quantity=10, pt_diff=0, status_effect=26, action=3, target=0, use_condition=0, item_effect=16#22
 	}}},
 	{16#03020000, #psu_item{name="Photon Charge",
 		rarity=3, buy_price=500, sell_price=50, data=#psu_consumable_item{
-		max_quantity=10, pt_diff=+100, status_effect=0, target=4, use_condition=4, item_effect=16#30
+		max_quantity=10, pt_diff=+100, status_effect=0, action=1, target=4, use_condition=4, item_effect=16#30
 	}}},
 	%% @todo Missing 03020100. Cosmo Charge?
 

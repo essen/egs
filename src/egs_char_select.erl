@@ -79,6 +79,9 @@ event({char_select_enter, Slot, _BackToPreviousField}, State=#state{gid=GID}) ->
 	Options = psu_characters:options_binary_to_tuple(OptionsBin),
 	Character = #characters{slot=Slot, name=Name, race=Race, gender=Gender, class=Class, appearance=Appearance, options=Options, % TODO: temporary set the slot here, won't be needed later
 		inventory= [{16#11010000, #psu_special_item_variables{}}, {16#11020000, #psu_special_item_variables{}}, {16#11020100, #psu_special_item_variables{}}, {16#11020200, #psu_special_item_variables{}},
+		{16#03010000, #psu_consumable_item_variables{quantity=10}},
+		{16#03020000, #psu_consumable_item_variables{quantity=3}},
+		{16#03010900, #psu_consumable_item_variables{quantity=1}},
 		{16#01010900, #psu_striking_weapon_item_variables{current_pp=99, max_pp=100, element=#psu_element{type=1, percent=50}}},
 		{16#01010a00, #psu_striking_weapon_item_variables{current_pp=99, max_pp=100, element=#psu_element{type=2, percent=50}}},
 		{16#01010b00, #psu_striking_weapon_item_variables{current_pp=99, max_pp=100, element=#psu_element{type=3, percent=50}}}]},
