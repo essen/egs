@@ -27,7 +27,7 @@
 -record(psu_special_item, {}).
 -record(psu_striking_weapon_item, {pp, atp, ata, atp_req, shop_element, hand, max_upgrades, attack_label,
 	attack_sound, hitbox_a, hitbox_b, hitbox_c, hitbox_d, nb_targets, effect, model}).
--record(psu_trap_item, {max_quantity}).
+-record(psu_trap_item, {max_quantity, effect, type}).
 
 -record(psu_consumable_item_variables, {quantity}).
 -record(psu_parts_item_variables, {}).
@@ -1499,50 +1499,50 @@
 	%% @todo Handle type/race/gender restrictions.
 
 	{16#0c010000, #psu_item{name="Damage Trap",
-		rarity=1, buy_price=50, sell_price=5, data=#psu_trap_item{max_quantity=10}}},
+		rarity=1, buy_price=50, sell_price=5, data=#psu_trap_item{max_quantity=10, effect=0, type=damage}}},
 	{16#0c010100, #psu_item{name="Burn Trap",
-		rarity=1, buy_price=50, sell_price=5, data=#psu_trap_item{max_quantity=10}}},
+		rarity=1, buy_price=50, sell_price=5, data=#psu_trap_item{max_quantity=10, effect=2, type=trap}}},
 	{16#0c010200, #psu_item{name="Freeze Trap",
-		rarity=1, buy_price=50, sell_price=5, data=#psu_trap_item{max_quantity=10}}},
+		rarity=1, buy_price=50, sell_price=5, data=#psu_trap_item{max_quantity=10, effect=3, type=trap}}},
 	{16#0c010300, #psu_item{name="Poison Trap",
-		rarity=1, buy_price=50, sell_price=5, data=#psu_trap_item{max_quantity=10}}},
+		rarity=1, buy_price=50, sell_price=5, data=#psu_trap_item{max_quantity=10, effect=4, type=trap}}},
 	{16#0c010400, #psu_item{name="Confusion Trap",
-		rarity=1, buy_price=50, sell_price=5, data=#psu_trap_item{max_quantity=10}}},
+		rarity=1, buy_price=50, sell_price=5, data=#psu_trap_item{max_quantity=10, effect=5, type=trap}}},
 	{16#0c010500, #psu_item{name="Sleep Trap",
-		rarity=1, buy_price=50, sell_price=5, data=#psu_trap_item{max_quantity=10}}},
+		rarity=1, buy_price=50, sell_price=5, data=#psu_trap_item{max_quantity=10, effect=6, type=trap}}},
 	{16#0c010600, #psu_item{name="Virus Trap",
-		rarity=1, buy_price=50, sell_price=5, data=#psu_trap_item{max_quantity=10}}},
+		rarity=1, buy_price=50, sell_price=5, data=#psu_trap_item{max_quantity=10, effect=8, type=trap}}},
 	{16#0c010700, #psu_item{name="Shock Trap",
-		rarity=1, buy_price=50, sell_price=5, data=#psu_trap_item{max_quantity=10}}},
+		rarity=1, buy_price=50, sell_price=5, data=#psu_trap_item{max_quantity=10, effect=16, type=trap}}},
 	{16#0c010800, #psu_item{name="Silence Trap",
-		rarity=1, buy_price=50, sell_price=5, data=#psu_trap_item{max_quantity=10}}},
+		rarity=1, buy_price=50, sell_price=5, data=#psu_trap_item{max_quantity=10, effect=9, type=trap}}},
 	%% @todo Missing 0c010900 and 0c010a00.
 
 	{16#0c020000, #psu_item{name="Damage Trap G",
-		rarity=4, buy_price=350, sell_price=35, data=#psu_trap_item{max_quantity=10}}},
+		rarity=4, buy_price=350, sell_price=35, data=#psu_trap_item{max_quantity=10, effect=1, type=damage_g}}},
 	{16#0c020100, #psu_item{name="Burn Trap G",
-		rarity=4, buy_price=350, sell_price=35, data=#psu_trap_item{max_quantity=10}}},
+		rarity=4, buy_price=350, sell_price=35, data=#psu_trap_item{max_quantity=10, effect=2, type=trap_g}}},
 	{16#0c020200, #psu_item{name="Freeze Trap G",
-		rarity=4, buy_price=350, sell_price=35, data=#psu_trap_item{max_quantity=10}}},
+		rarity=4, buy_price=350, sell_price=35, data=#psu_trap_item{max_quantity=10, effect=3, type=trap_g}}},
 	{16#0c020300, #psu_item{name="Poison Trap G",
-		rarity=4, buy_price=350, sell_price=35, data=#psu_trap_item{max_quantity=10}}},
+		rarity=4, buy_price=350, sell_price=35, data=#psu_trap_item{max_quantity=10, effect=4, type=trap_g}}},
 	{16#0c020400, #psu_item{name="Confusion Trap G",
-		rarity=4, buy_price=350, sell_price=35, data=#psu_trap_item{max_quantity=10}}},
+		rarity=4, buy_price=350, sell_price=35, data=#psu_trap_item{max_quantity=10, effect=5, type=trap_g}}},
 	{16#0c020500, #psu_item{name="Sleep Trap G",
-		rarity=4, buy_price=350, sell_price=35, data=#psu_trap_item{max_quantity=10}}},
+		rarity=4, buy_price=350, sell_price=35, data=#psu_trap_item{max_quantity=10, effect=6, type=trap_g}}},
 	{16#0c020600, #psu_item{name="Virus Trap G",
-		rarity=4, buy_price=350, sell_price=35, data=#psu_trap_item{max_quantity=10}}},
+		rarity=4, buy_price=350, sell_price=35, data=#psu_trap_item{max_quantity=10, effect=8, type=trap_g}}},
 	{16#0c020700, #psu_item{name="Shock Trap G",
-		rarity=4, buy_price=350, sell_price=35, data=#psu_trap_item{max_quantity=10}}},
+		rarity=4, buy_price=350, sell_price=35, data=#psu_trap_item{max_quantity=10, effect=16, type=trap_g}}},
 	{16#0c020800, #psu_item{name="Silence Trap G",
-		rarity=4, buy_price=350, sell_price=35, data=#psu_trap_item{max_quantity=10}}},
+		rarity=4, buy_price=350, sell_price=35, data=#psu_trap_item{max_quantity=10, effect=9, type=trap_g}}},
 
 	{16#0c020900, #psu_item{name="Burn Trap EX",
-		rarity=7, buy_price=650, sell_price=65, data=#psu_trap_item{max_quantity=10}}},
+		rarity=7, buy_price=650, sell_price=65, data=#psu_trap_item{max_quantity=10, effect=10, type=trap_ex}}},
 	{16#0c020a00, #psu_item{name="Freeze Trap EX",
-		rarity=7, buy_price=650, sell_price=65, data=#psu_trap_item{max_quantity=10}}},
+		rarity=7, buy_price=650, sell_price=65, data=#psu_trap_item{max_quantity=10, effect=11, type=trap_ex}}},
 	{16#0c020b00, #psu_item{name="Stun Trap EX",
-		rarity=7, buy_price=650, sell_price=65, data=#psu_trap_item{max_quantity=10}}},
+		rarity=7, buy_price=650, sell_price=65, data=#psu_trap_item{max_quantity=10, effect=12, type=trap_ex}}},
 
 	%% Special items.
 

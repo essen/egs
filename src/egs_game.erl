@@ -128,6 +128,7 @@ raw(16#0404, << _:352, Data/bits >>, _State) ->
 	psu_game:send_1205(EventID, BlockID, Value);
 
 %% @todo Used in the tutorial. Not sure what it does. Give an item (the PA) maybe?
+%% @todo Probably should ignore that until more is known.
 raw(16#0a09, _Data, #state{gid=GID}) ->
 	psu_game:send(<< 16#0a090300:32, 0:32, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#00003300:32, 0:32 >>);
 
@@ -386,8 +387,7 @@ event({item_equip, ItemIndex, TargetGID, TargetLID, A, B}, #state{gid=GID}) ->
 			psu_game:send(<< 16#01050300:32, 0:64, TargetGID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
 				TargetGID:32/little, TargetLID:32/little, ItemIndex:8, 1:8, Category:8, A:8, B:32/little >>);
 		{ItemID, Variables} when element(1, Variables) =:= psu_striking_weapon_item_variables ->
-			ItemInfo = proplists:get_value(ItemID, ?ITEMS),
-			#psu_item{data=Constants} = ItemInfo,
+			#psu_item{data=Constants} = proplists:get_value(ItemID, ?ITEMS),
 			#psu_striking_weapon_item{attack_sound=Sound, hitbox_a=HitboxA, hitbox_b=HitboxB,
 				hitbox_c=HitboxC, hitbox_d=HitboxD, nb_targets=NbTargets, effect=Effect, model=Model} = Constants,
 			<< Category:8, _:24 >> = << ItemID:32 >>,
@@ -398,10 +398,31 @@ event({item_equip, ItemIndex, TargetGID, TargetLID, A, B}, #state{gid=GID}) ->
 			psu_game:send(<< 16#01050300:32, 0:64, TargetGID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
 				TargetGID:32/little, TargetLID:32/little, ItemIndex:8, 1:8, Category:8, A:8, B:32/little,
 				SoundInt:32/little, HitboxA:16, HitboxB:16, HitboxC:16, HitboxD:16, SoundType:4, NbTargets:4, 0:8, Effect:8, Model:8 >>);
+		{ItemID, Variables} when element(1, Variables) =:= psu_trap_item_variables ->
+			#psu_item{data=#psu_trap_item{effect=Effect, type=Type}} = proplists:get_value(ItemID, ?ITEMS),
+			<< Category:8, _:24 >> = << ItemID:32 >>,
+			Bin = case Type of
+				damage   -> << Effect:8, 16#0c0a05:24, 16#20140500:32, 16#0001c800:32, 16#10000000:32 >>;
+				damage_g -> << Effect:8, 16#2c0505:24, 16#0c000600:32, 16#00049001:32, 16#10000000:32 >>;
+				trap     -> << Effect:8, 16#0d0a05:24, 16#61140000:32, 16#0001c800:32, 16#10000000:32 >>;
+				trap_g   -> << Effect:8, 16#4d0505:24, 16#4d000000:32, 16#00049001:32, 16#10000000:32 >>;
+				trap_ex  -> << Effect:8, 16#490a05:24, 16#4500000f:32, 16#4b055802:32, 16#10000000:32 >>
+			end,
+			psu_game:send(<< 16#01050300:32, 0:64, TargetGID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
+				TargetGID:32/little, TargetLID:32/little, ItemIndex:8, 1:8, Category:8, A:8, B:32/little, Bin/binary >>);
 		undefined ->
 			%% @todo Shouldn't be needed later when NPCs are handled correctly.
 			ignore
 	end;
+
+%% @todo Remove the trap set from the inventory.
+event({item_set_trap, ItemIndex, TargetGID, TargetLID, A, B}, #state{gid=GID}) ->
+	{ok, User} = egs_user_model:read(GID),
+	Inventory = (User#egs_user_model.character)#characters.inventory,
+	{ItemID, _Variables} = lists:nth(ItemIndex + 1, Inventory),
+	<< Category:8, _:24 >> = << ItemID:32 >>,
+	psu_game:send(<< 16#01050300:32, 0:64, TargetGID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
+		TargetGID:32/little, TargetLID:32/little, ItemIndex:8, 9:8, Category:8, A:8, B:32/little >>);
 
 %% @todo A and B are unknown.
 %% @see item_equip

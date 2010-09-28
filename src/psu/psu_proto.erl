@@ -85,7 +85,7 @@ parse(Size, 16#0105, Channel, Data) ->
 		5 -> item_drop;
 		7 -> ignore; %% @todo item_learn_pa;
 		8 -> ignore; %% @todo item_use;
-		9 -> ?ASSERT(), ignore; %% @todo
+		9 -> item_set_trap;
 		18 -> ignore; %% @todo item_unlearn_pa;
 		_ -> log("unknown 0105 EventID ~p", [EventID])
 	end,
