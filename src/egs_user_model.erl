@@ -19,7 +19,7 @@
 
 -module(egs_user_model).
 -behavior(gen_server).
--export([start_link/0, stop/0, count/0, read/1, select/1, write/1, delete/1, key_auth/3, login_auth/2, item_qty_add/3]). %% API.
+-export([start_link/0, stop/0, count/0, read/1, select/1, write/1, delete/1, key_auth/3, login_auth/2, item_nth/2, item_qty_add/3]). %% API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
 
 %% Use the module name for the server's name and for the table name.
@@ -74,6 +74,9 @@ key_auth(GID, AuthKey, Socket) ->
 
 login_auth(Username, Password) ->
 	gen_server:call(?SERVER, {login_auth, Username, Password}).
+
+item_nth(GID, ItemIndex) ->
+	gen_server:call(?SERVER, {item_nth, GID, ItemIndex}).
 
 item_qty_add(GID, ItemIndex, QuantityDiff) ->
 	gen_server:cast(?SERVER, {item_qty_add, GID, ItemIndex, QuantityDiff}).
@@ -137,6 +140,10 @@ handle_call({login_auth, Username, Password}, _From, State) ->
 	Folder = << Username/binary, "-", Password/binary >>,
 	egs_user_model:write(#egs_user_model{id=AuthGID, state={wait_for_authentication, AuthKey}, folder=Folder}),
 	{reply, {ok, AuthGID, AuthKey}, State};
+
+handle_call({item_nth, GID, ItemIndex}, _From, State) ->
+	{atomic, [User]} = mnesia:transaction(fun() -> mnesia:read({?TABLE, GID}) end),
+	{reply, lists:nth(ItemIndex + 1, (User#egs_user_model.character)#characters.inventory), State};
 
 handle_call(stop, _From, State) ->
 	{stop, normal, stopped, State};

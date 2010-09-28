@@ -379,9 +379,7 @@ event({item_description_request, ItemID}, State) ->
 %% @todo TargetGID and TargetLID must be validated, they're either the player's or his NPC characters.
 %% @todo Handle NPC characters properly.
 event({item_equip, ItemIndex, TargetGID, TargetLID, A, B}, #state{gid=GID}) ->
-	{ok, User} = egs_user_model:read(GID),
-	Inventory = (User#egs_user_model.character)#characters.inventory,
-	case lists:nth(ItemIndex + 1, Inventory) of
+	case egs_user_model:item_nth(GID, ItemIndex) of
 		{ItemID, Variables} when element(1, Variables) =:= psu_special_item_variables ->
 			<< Category:8, _:24 >> = << ItemID:32 >>,
 			psu_game:send(<< 16#01050300:32, 0:64, TargetGID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
@@ -416,9 +414,7 @@ event({item_equip, ItemIndex, TargetGID, TargetLID, A, B}, #state{gid=GID}) ->
 	end;
 
 event({item_set_trap, ItemIndex, TargetGID, TargetLID, A, B}, #state{gid=GID}) ->
-	{ok, User} = egs_user_model:read(GID),
-	Inventory = (User#egs_user_model.character)#characters.inventory,
-	{ItemID, _Variables} = lists:nth(ItemIndex + 1, Inventory),
+	{ItemID, _Variables} = egs_user_model:item_nth(GID, ItemIndex),
 	egs_user_model:item_qty_add(GID, ItemIndex, -1),
 	<< Category:8, _:24 >> = << ItemID:32 >>,
 	psu_game:send(<< 16#01050300:32, 0:64, TargetGID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
