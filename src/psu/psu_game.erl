@@ -438,6 +438,12 @@ build_0a0a_item_variables([{ItemID, #psu_special_item_variables{}}|Tail], Acc) -
 		16#11020200 -> << 0:32 >>
 	end,
 	Bin = << 0:32, ItemIndex:32/little, ItemID:32, 0:24, 16#80:8, 0:56, 16#80:8, 0:32, Action/binary, 0:32 >>,
+	build_0a0a_item_variables(Tail, [Bin|Acc]);
+build_0a0a_item_variables([{ItemID, #psu_trap_item_variables{quantity=Quantity}}|Tail], Acc) ->
+	#psu_item{rarity=Rarity, data=#psu_trap_item{max_quantity=MaxQuantity}} = proplists:get_value(ItemID, ?ITEMS),
+	ItemIndex = 0,
+	RarityInt = Rarity - 1,
+	Bin = << 0:32, ItemIndex:32/little, ItemID:32, Quantity:32/little, MaxQuantity:32/little, 0:24, RarityInt:8, 0:96 >>,
 	build_0a0a_item_variables(Tail, [Bin|Acc]).
 
 build_0a0a_item_constants([], Acc) ->

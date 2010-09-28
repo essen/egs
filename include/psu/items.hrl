@@ -32,6 +32,7 @@
 -record(psu_consumable_item_variables, {quantity}).
 -record(psu_special_item_variables, {}).
 -record(psu_striking_weapon_item_variables, {is_active=0, slot=0, current_pp, max_pp, element, pa=#psu_pa{type=0, level=0}}).
+-record(psu_trap_item_variables, {quantity}).
 
 %% Items.
 
