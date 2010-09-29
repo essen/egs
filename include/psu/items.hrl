@@ -29,6 +29,7 @@
 	attack_sound, hitbox_a, hitbox_b, hitbox_c, hitbox_d, nb_targets, effect, model}).
 -record(psu_trap_item, {max_quantity, effect, type}).
 
+-record(psu_clothing_item_variables, {color}).
 -record(psu_consumable_item_variables, {quantity}).
 -record(psu_parts_item_variables, {}).
 -record(psu_special_item_variables, {}).

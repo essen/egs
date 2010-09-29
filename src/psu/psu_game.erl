@@ -406,6 +406,16 @@ build_0a0a_item_variables([], Acc) ->
 	Bin = iolist_to_binary(lists:reverse(Acc)),
 	Padding = 17280 - 8 * byte_size(Bin),
 	<< Bin/binary, 0:Padding >>;
+
+build_0a0a_item_variables([{ItemID, #psu_clothing_item_variables{color=ColorNb}}|Tail], Acc) ->
+	#psu_item{rarity=Rarity, data=#psu_clothing_item{colors=ColorsBin}} = proplists:get_value(ItemID, ?ITEMS),
+	ItemIndex = 0,
+	RarityInt = Rarity - 1,
+	ColorInt = if ColorNb < 5 -> ColorNb; true -> 16#10 + ColorNb - 5 end,
+	Bits = ColorNb * 8,
+	<< _Before:Bits, ColorA:4, ColorB:4, _After/bits >> = ColorsBin,
+	Bin = << 0:32, ItemIndex:32/little, ItemID:32, 0:88, RarityInt:8, ColorA:8, ColorB:8, ColorInt:8, 0:72 >>,
+	build_0a0a_item_variables(Tail, [Bin|Acc]);
 build_0a0a_item_variables([{ItemID, #psu_consumable_item_variables{quantity=Quantity}}|Tail], Acc) ->
 	#psu_item{rarity=Rarity, data=#psu_consumable_item{max_quantity=MaxQuantity, action=Action}} = proplists:get_value(ItemID, ?ITEMS),
 	ItemIndex = 0,
