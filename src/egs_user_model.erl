@@ -19,7 +19,7 @@
 
 -module(egs_user_model).
 -behavior(gen_server).
--export([start_link/0, stop/0, count/0, read/1, select/1, write/1, delete/1, key_auth/3, login_auth/2, item_nth/2, item_qty_add/3]). %% API.
+-export([start_link/0, stop/0, count/0, read/1, select/1, write/1, delete/1, key_auth/3, login_auth/2, item_nth/2, item_qty_add/3, shop_enter/2, shop_leave/1]). %% API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
 
 %% Use the module name for the server's name and for the table name.
@@ -80,6 +80,12 @@ item_nth(GID, ItemIndex) ->
 
 item_qty_add(GID, ItemIndex, QuantityDiff) ->
 	gen_server:cast(?SERVER, {item_qty_add, GID, ItemIndex, QuantityDiff}).
+
+shop_enter(GID, ShopID) ->
+	gen_server:cast(?SERVER, {shop_enter, GID, ShopID}).
+
+shop_leave(GID) ->
+	gen_server:cast(?SERVER, {shop_leave, GID}).
 
 %% gen_server
 
@@ -191,6 +197,20 @@ handle_cast({item_qty_add, GID, ItemIndex, QuantityDiff}, State) ->
 	end,
 	Character2 = Character#characters{inventory=Inventory2},
 	mnesia:transaction(fun() -> mnesia:write(User#egs_user_model{character=Character2}) end),
+	{noreply, State};
+
+handle_cast({shop_enter, GID, ShopID}, State) ->
+	mnesia:transaction(fun() ->
+		[User] = mnesia:wread({?TABLE, GID}),
+		mnesia:write(User#egs_user_model{shopid=ShopID})
+	end),
+	{noreply, State};
+
+handle_cast({shop_leave, GID}, State) ->
+	mnesia:transaction(fun() ->
+		[User] = mnesia:wread({?TABLE, GID}),
+		mnesia:write(User#egs_user_model{shopid=undefined})
+	end),
 	{noreply, State};
 
 handle_cast(_Msg, State) ->

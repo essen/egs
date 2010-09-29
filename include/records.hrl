@@ -38,7 +38,8 @@
 	%% General information.
 	id, lid, pid, socket, state, time, character,
 	%% Location/state related information.
-	instancepid, partypid, areatype, area, entryid, pos=#pos{x=0.0, y=0.0, z=0.0, dir=0.0}, prev_area=#psu_area{questid=0, zoneid=0, mapid=0}, prev_entryid=0, %% universeid, shopid
+	instancepid, partypid, areatype, area, entryid, pos=#pos{x=0.0, y=0.0, z=0.0, dir=0.0}, shopid,
+	prev_area=#psu_area{questid=0, zoneid=0, mapid=0}, prev_entryid=0, %% universeid
 	%% To be moved or deleted later on.
 	setid=0, %% @todo Current area's set number. Move that to psu_instance probably.
 	folder %% @todo Temporary save location.
