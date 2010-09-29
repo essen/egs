@@ -19,7 +19,7 @@
 
 -module(egs_user_model).
 -behavior(gen_server).
--export([start_link/0, stop/0, count/0, read/1, select/1, write/1, delete/1, key_auth/3, login_auth/2, item_nth/2, item_qty_add/3, shop_enter/2, shop_leave/1]). %% API.
+-export([start_link/0, stop/0, count/0, read/1, select/1, write/1, delete/1, key_auth/3, login_auth/2, item_nth/2, item_add/3, item_qty_add/3, shop_enter/2, shop_leave/1, shop_get/1, money_add/2]). %% API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
 
 %% Use the module name for the server's name and for the table name.
@@ -78,6 +78,9 @@ login_auth(Username, Password) ->
 item_nth(GID, ItemIndex) ->
 	gen_server:call(?SERVER, {item_nth, GID, ItemIndex}).
 
+item_add(GID, ItemID, Variables) ->
+	gen_server:call(?SERVER, {item_add, GID, ItemID, Variables}).
+
 item_qty_add(GID, ItemIndex, QuantityDiff) ->
 	gen_server:cast(?SERVER, {item_qty_add, GID, ItemIndex, QuantityDiff}).
 
@@ -86,6 +89,12 @@ shop_enter(GID, ShopID) ->
 
 shop_leave(GID) ->
 	gen_server:cast(?SERVER, {shop_leave, GID}).
+
+shop_get(GID) ->
+	gen_server:call(?SERVER, {shop_get, GID}).
+
+money_add(GID, MoneyDiff) ->
+	gen_server:cast(?SERVER, {money_add, GID, MoneyDiff}).
 
 %% gen_server
 
@@ -151,6 +160,47 @@ handle_call({item_nth, GID, ItemIndex}, _From, State) ->
 	{atomic, [User]} = mnesia:transaction(fun() -> mnesia:read({?TABLE, GID}) end),
 	{reply, lists:nth(ItemIndex + 1, (User#egs_user_model.character)#characters.inventory), State};
 
+handle_call({item_add, GID, ItemID, Variables}, _From, State) ->
+	{atomic, [User]} = mnesia:transaction(fun() -> mnesia:read({?TABLE, GID}) end),
+	Character = User#egs_user_model.character,
+	Inventory = Character#characters.inventory,
+	Inventory2 = case Variables of
+		#psu_consumable_item_variables{quantity=Quantity} ->
+			#psu_item{data=#psu_consumable_item{max_quantity=MaxQuantity}} = proplists:get_value(ItemID, ?ITEMS),
+			{ItemID, #psu_consumable_item_variables{quantity=Quantity2}} = case lists:keyfind(ItemID, 1, Inventory) of
+				false -> New = true, {ItemID, #psu_consumable_item_variables{quantity=0}};
+				Tuple -> New = false, Tuple
+			end,
+			Quantity3 = Quantity + Quantity2,
+			if	Quantity3 =< MaxQuantity ->
+				lists:keystore(ItemID, 1, Inventory, {ItemID, #psu_consumable_item_variables{quantity=Quantity3}})
+			end;
+		#psu_trap_item_variables{quantity=Quantity} ->
+			#psu_item{data=#psu_trap_item{max_quantity=MaxQuantity}} = proplists:get_value(ItemID, ?ITEMS),
+			{ItemID, #psu_trap_item_variables{quantity=Quantity2}} = case lists:keyfind(ItemID, 1, Inventory) of
+				false -> New = true, {ItemID, #psu_trap_item_variables{quantity=0}};
+				Tuple -> New = false, Tuple
+			end,
+			Quantity3 = Quantity + Quantity2,
+			if	Quantity3 =< MaxQuantity ->
+				lists:keystore(ItemID, 1, Inventory, {ItemID, #psu_trap_item_variables{quantity=Quantity3}})
+			end;
+		_ ->
+			New = true,
+			if	length(Inventory) < 60 ->
+				Inventory ++ [{ItemID, Variables}]
+			end
+	end,
+	Character2 = Character#characters{inventory=Inventory2},
+	mnesia:transaction(fun() -> mnesia:write(User#egs_user_model{character=Character2}) end),
+	if New =:= false -> {reply, 16#ffffffff, State};
+		true -> {reply, 1000 + mnesia:dirty_update_counter(counters, items, 1), State}
+	end;
+
+handle_call({shop_get, GID}, _From, State) ->
+	{atomic, [User]} = mnesia:transaction(fun() -> mnesia:read({?TABLE, GID}) end),
+	{reply, User#egs_user_model.shopid, State};
+
 handle_call(stop, _From, State) ->
 	{stop, normal, stopped, State};
 
@@ -210,6 +260,18 @@ handle_cast({shop_leave, GID}, State) ->
 	mnesia:transaction(fun() ->
 		[User] = mnesia:wread({?TABLE, GID}),
 		mnesia:write(User#egs_user_model{shopid=undefined})
+	end),
+	{noreply, State};
+
+handle_cast({money_add, GID, MoneyDiff}, State) ->
+	mnesia:transaction(fun() ->
+		[User] = mnesia:wread({?TABLE, GID}),
+		Character = User#egs_user_model.character,
+		Money = Character#characters.money + MoneyDiff,
+		if Money >= 0 ->
+			Character2 = Character#characters{money=Money},
+			mnesia:write(User#egs_user_model{character=Character2})
+		end
 	end),
 	{noreply, State};
 

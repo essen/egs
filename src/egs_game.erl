@@ -525,9 +525,40 @@ event({npc_invite, NPCid}, #state{gid=GID}) ->
 	psu_game:send_101a(NPCid, PartyPos);
 
 %% @todo Should be 0115(money) 010a03(confirm sale).
-%% @todo We probably need to save the ShopID somewhere since it isn't given back here.
-event({npc_shop_buy, ShopItemIndex, QuantityOrColor}, _State) ->
-	log("npc shop buy itemindex ~p quantity/color+1 ~p", [ShopItemIndex, QuantityOrColor]);
+event({npc_shop_buy, ShopItemIndex, QuantityOrColor}, State=#state{gid=GID}) ->
+	ShopID = egs_user_model:shop_get(GID),
+	ItemID = lists:nth(ShopItemIndex + 1, proplists:get_value(ShopID, ?SHOPS)),
+	log("npc shop ~p buy itemid ~8.16.0b quantity/color+1 ~p", [ShopID, ItemID, QuantityOrColor]),
+	#psu_item{name=Name, rarity=Rarity, buy_price=BuyPrice, sell_price=SellPrice, data=Constants} = proplists:get_value(ItemID, ?ITEMS),
+	Variables = case element(1, Constants) of
+		psu_clothing_item ->
+			if	QuantityOrColor >= 1, QuantityOrColor =< 10 ->
+				#psu_clothing_item_variables{color=QuantityOrColor - 1}
+			end;
+		psu_consumable_item ->
+			#psu_consumable_item_variables{quantity=QuantityOrColor};
+		psu_parts_item ->
+			#psu_parts_item_variables{};
+		psu_special_item ->
+			#psu_special_item_variables{};
+		psu_striking_weapon_item ->
+			#psu_striking_weapon_item{pp=PP, shop_element=Element} = Constants,
+			#psu_striking_weapon_item_variables{current_pp=PP, max_pp=PP, element=Element};
+		psu_trap_item ->
+			#psu_trap_item_variables{quantity=QuantityOrColor}
+	end,
+	egs_user_model:money_add(GID, -1 * BuyPrice),
+	ItemUUID = egs_user_model:item_add(GID, ItemID, Variables),
+	{ok, User} = egs_user_model:read(GID),
+	psu_proto:send_0115(User#egs_user_model{lid=0}, State), %% @todo This one is apparently broadcast to everyone in the same zone.
+	%% @todo Following command isn't done 100% properly.
+	UCS2Name = << << X:8, 0:8 >> || X <- Name >>,
+	NamePadding = 8 * (46 - byte_size(UCS2Name)),
+	<< Category:8, _:24 >> = << ItemID:32 >>,
+	RarityInt = Rarity - 1,
+	psu_game:send(<< 16#010a0300:32, 0:64, GID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
+		GID:32/little, 0:32, 2:16/little, 0:16, (psu_game:build_item_variables(ItemID, ItemUUID, Variables))/binary,
+		UCS2Name/binary, 0:NamePadding, RarityInt:8, Category:8, SellPrice:32/little, (psu_game:build_item_constants(Constants))/binary >>);
 
 %% @todo Currently send the normal items shop for all shops, differentiate.
 event({npc_shop_enter, ShopID}, #state{gid=GID}) ->

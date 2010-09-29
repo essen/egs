@@ -402,37 +402,33 @@ send_0a0a(Inventory) ->
 	ItemConstants = build_0a0a_item_constants(Inventory, []),
 	send(<< 16#0a0a0300:32, 16#ffff:16, 0:144, 16#00011300:32, GID:32/little, 0:64, NbItems:8, 0:8, 6:8, 0:72, 0:192, 0:2304, ItemVariables/binary, ItemConstants/binary, 0:13824, Rest/binary >>).
 
+%% @todo That ItemUUID have to be handled properly.
 build_0a0a_item_variables([], Acc) ->
 	Bin = iolist_to_binary(lists:reverse(Acc)),
 	Padding = 17280 - 8 * byte_size(Bin),
 	<< Bin/binary, 0:Padding >>;
+build_0a0a_item_variables([{ItemID, Variables}|Tail], Acc) ->
+	build_0a0a_item_variables(Tail, [build_item_variables(ItemID, 0, Variables)|Acc]).
 
-build_0a0a_item_variables([{ItemID, #psu_clothing_item_variables{color=ColorNb}}|Tail], Acc) ->
+build_item_variables(ItemID, ItemUUID, #psu_clothing_item_variables{color=ColorNb}) ->
 	#psu_item{rarity=Rarity, data=#psu_clothing_item{colors=ColorsBin}} = proplists:get_value(ItemID, ?ITEMS),
-	ItemIndex = 0,
 	RarityInt = Rarity - 1,
 	ColorInt = if ColorNb < 5 -> ColorNb; true -> 16#10 + ColorNb - 5 end,
 	Bits = ColorNb * 8,
 	<< _Before:Bits, ColorA:4, ColorB:4, _After/bits >> = ColorsBin,
-	Bin = << 0:32, ItemIndex:32/little, ItemID:32, 0:88, RarityInt:8, ColorA:8, ColorB:8, ColorInt:8, 0:72 >>,
-	build_0a0a_item_variables(Tail, [Bin|Acc]);
-build_0a0a_item_variables([{ItemID, #psu_consumable_item_variables{quantity=Quantity}}|Tail], Acc) ->
+	<< 0:32, ItemUUID:32/little, ItemID:32, 0:88, RarityInt:8, ColorA:8, ColorB:8, ColorInt:8, 0:72 >>;
+build_item_variables(ItemID, ItemUUID, #psu_consumable_item_variables{quantity=Quantity}) ->
 	#psu_item{rarity=Rarity, data=#psu_consumable_item{max_quantity=MaxQuantity, action=Action}} = proplists:get_value(ItemID, ?ITEMS),
-	ItemIndex = 0,
 	RarityInt = Rarity - 1,
-	Bin = << 0:32, ItemIndex:32/little, ItemID:32, Quantity:32/little, MaxQuantity:32/little, 0:24, RarityInt:8, Action:8, 0:88 >>,
-	build_0a0a_item_variables(Tail, [Bin|Acc]);
-build_0a0a_item_variables([{ItemID, #psu_parts_item_variables{}}|Tail], Acc) ->
+	<< 0:32, ItemUUID:32/little, ItemID:32, Quantity:32/little, MaxQuantity:32/little, 0:24, RarityInt:8, Action:8, 0:88 >>;
+build_item_variables(ItemID, ItemUUID, #psu_parts_item_variables{}) ->
 	#psu_item{rarity=Rarity} = proplists:get_value(ItemID, ?ITEMS),
-	ItemIndex = 0,
 	RarityInt = Rarity - 1,
-	Bin = << 0:32, ItemIndex:32/little, ItemID:32, 0:88, RarityInt:8, 0:96 >>,
-	build_0a0a_item_variables(Tail, [Bin|Acc]);
+	<< 0:32, ItemUUID:32/little, ItemID:32, 0:88, RarityInt:8, 0:96 >>;
 %% @todo Handle rank, rarity and hands properly.
-build_0a0a_item_variables([{ItemID, Variables}|Tail], Acc) when element(1, Variables) =:= psu_striking_weapon_item_variables ->
+build_item_variables(ItemID, ItemUUID, Variables) when element(1, Variables) =:= psu_striking_weapon_item_variables ->
 	#psu_striking_weapon_item_variables{is_active=IsActive, slot=Slot, current_pp=CurrentPP, max_pp=MaxPP,
 		element=#psu_element{type=EleType, percent=ElePercent}, pa=#psu_pa{type=PAType, level=PALevel}} = Variables,
-	ItemIndex = 0,
 	Rank = 4,
 	Grind = 0,
 	Rarity = 14, %% Rarity - 1
@@ -442,25 +438,20 @@ build_0a0a_item_variables([{ItemID, Variables}|Tail], Acc) when element(1, Varia
 		both -> << 16#0000:16 >>;
 		_ -> error
 	end,
-	Bin = << IsActive:8, Slot:8, 0:16, ItemIndex:32/little, ItemID:32, 0:32, CurrentPP:16/little, MaxPP:16/little, 0:16, %% @todo What's this 0:16?
-		Grind:4, Rank:4, Rarity:8, EleType:8, ElePercent:8, HandBin/binary, WeaponType:8, PAType:8, PALevel:8, 0:40 >>,
-	build_0a0a_item_variables(Tail, [Bin|Acc]);
-build_0a0a_item_variables([{ItemID, #psu_special_item_variables{}}|Tail], Acc) ->
-	ItemIndex = 0,
+	<< IsActive:8, Slot:8, 0:16, ItemUUID:32/little, ItemID:32, 0:32, CurrentPP:16/little, MaxPP:16/little, 0:16, %% @todo What's this 0:16?
+		Grind:4, Rank:4, Rarity:8, EleType:8, ElePercent:8, HandBin/binary, WeaponType:8, PAType:8, PALevel:8, 0:40 >>;
+build_item_variables(ItemID, ItemUUID, #psu_special_item_variables{}) ->
 	Action = case ItemID of
 		16#11010000 -> << 16#12020100:32 >>;
 		16#11020000 -> << 16#15000000:32 >>;
 		16#11020100 -> << 0:32 >>;
 		16#11020200 -> << 0:32 >>
 	end,
-	Bin = << 0:32, ItemIndex:32/little, ItemID:32, 0:24, 16#80:8, 0:56, 16#80:8, 0:32, Action/binary, 0:32 >>,
-	build_0a0a_item_variables(Tail, [Bin|Acc]);
-build_0a0a_item_variables([{ItemID, #psu_trap_item_variables{quantity=Quantity}}|Tail], Acc) ->
+	<< 0:32, ItemUUID:32/little, ItemID:32, 0:24, 16#80:8, 0:56, 16#80:8, 0:32, Action/binary, 0:32 >>;
+build_item_variables(ItemID, ItemUUID, #psu_trap_item_variables{quantity=Quantity}) ->
 	#psu_item{rarity=Rarity, data=#psu_trap_item{max_quantity=MaxQuantity}} = proplists:get_value(ItemID, ?ITEMS),
-	ItemIndex = 0,
 	RarityInt = Rarity - 1,
-	Bin = << 0:32, ItemIndex:32/little, ItemID:32, Quantity:32/little, MaxQuantity:32/little, 0:24, RarityInt:8, 0:96 >>,
-	build_0a0a_item_variables(Tail, [Bin|Acc]).
+	<< 0:32, ItemUUID:32/little, ItemID:32, Quantity:32/little, MaxQuantity:32/little, 0:24, RarityInt:8, 0:96 >>.
 
 build_0a0a_item_constants([], Acc) ->
 	Bin = iolist_to_binary(lists:reverse(Acc)),
