@@ -105,7 +105,7 @@ parse(Size, 16#0105, Channel, Data) ->
 
 parse(Size, 16#010a, Channel, Data) ->
 	<<	HeaderLID:16/little, VarA:16/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little, VarF:32/little, VarG:32/little, VarH:32/little, VarI:32/little,
-		_GID:32/little, BodyLID:32/little, EventID:16/little, Quantity:8, VarK:8, Param:16/bits, VarL:16 >> = Data,
+		_GID:32/little, BodyLID:32/little, EventID:16/little, QuantityOrColor:8, VarK:8, Param:16/bits, VarL:16 >> = Data,
 	?ASSERT_EQ(Size, 60),
 	?ASSERT_EQ(Channel, 2),
 	?ASSERT_EQ(VarA, 0),
@@ -121,24 +121,24 @@ parse(Size, 16#010a, Channel, Data) ->
 	case EventID of
 		1 ->
 			<< ShopID:16/little >> = Param,
-			?ASSERT_EQ(Quantity, 0),
+			?ASSERT_EQ(QuantityOrColor, 0),
 			?ASSERT_EQ(VarK, 0),
 			?ASSERT_EQ(VarL, 0),
 			{npc_shop_enter, ShopID};
 		2 ->
 			<< ShopItemIndex:16/little >> = Param,
-			?ASSERT_EQ(Quantity, VarK),
+			?ASSERT_EQ(QuantityOrColor, VarK),
 			?ASSERT_EQ(VarL, 0),
-			{npc_shop_buy, ShopItemIndex, Quantity};
+			{npc_shop_buy, ShopItemIndex, QuantityOrColor};
 		3 ->
 			<< InventoryItemIndex:8, _Unknown:8 >> = Param,
 			?ASSERT_EQ(VarK, 0),
 			?ASSERT_EQ(VarL, 0),
-			{npc_shop_sell, InventoryItemIndex, Quantity};
+			{npc_shop_sell, InventoryItemIndex, QuantityOrColor};
 		4 -> ignore; %% @todo npc_shop_gift_wrap
 		5 ->
 			<< ShopID:16/little >> = Param,
-			?ASSERT_EQ(Quantity, 0),
+			?ASSERT_EQ(QuantityOrColor, 0),
 			?ASSERT_EQ(VarK, 0),
 			?ASSERT_EQ(VarL, 0),
 			{npc_shop_leave, ShopID};

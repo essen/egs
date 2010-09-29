@@ -526,8 +526,8 @@ event({npc_invite, NPCid}, #state{gid=GID}) ->
 
 %% @todo Should be 0115(money) 010a03(confirm sale).
 %% @todo We probably need to save the ShopID somewhere since it isn't given back here.
-event({npc_shop_buy, ShopItemIndex, Quantity}, _State) ->
-	log("npc shop buy itemindex ~p quantity ~p", [ShopItemIndex, Quantity]);
+event({npc_shop_buy, ShopItemIndex, QuantityOrColor}, _State) ->
+	log("npc shop buy itemindex ~p quantity/color+1 ~p", [ShopItemIndex, QuantityOrColor]);
 
 %% @todo Currently send the normal items shop for all shops, differentiate.
 event({npc_shop_enter, ShopID}, #state{gid=GID}) ->
