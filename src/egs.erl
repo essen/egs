@@ -51,8 +51,12 @@ stop() ->
 %% @doc Send a global message.
 %% @todo Move that in a psu module.
 global(Type, Message) ->
-	{ok, List} = egs_user_model:select(all),
-	lists:foreach(fun(User) -> psu_proto:send_global(User#egs_user_model.socket, Type, Message) end, List).
+	if	length(Message) > 511 ->
+			io:format("global: message too long~n");
+		true ->
+			{ok, List} = egs_user_model:select(all),
+			lists:foreach(fun(User) -> psu_proto:send_global(User#egs_user_model.socket, Type, Message) end, List)
+	end.
 
 %% @doc Warp all players to a new map.
 %% @todo Move that in a psu module.
