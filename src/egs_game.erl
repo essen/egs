@@ -564,14 +564,7 @@ event({npc_shop_buy, ShopItemIndex, QuantityOrColor}, State=#state{gid=GID}) ->
 event({npc_shop_enter, ShopID}, #state{gid=GID}) ->
 	log("npc shop enter ~p", [ShopID]),
 	egs_user_model:shop_enter(GID, ShopID),
-	case proplists:get_value(ShopID, ?SHOPS) of
-		undefined -> %% @todo Temporary; prevent players from getting stuck.
-			{ok, File} = file:read_file("p/itemshop.bin"),
-			psu_game:send(<< 16#010a0300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32,
-				GID:32/little-unsigned-integer, 0:64, GID:32/little-unsigned-integer, 0:32, File/binary >>);
-		ItemsList ->
-			psu_game:send_010a(ItemsList)
-	end;
+	psu_game:send_010a(proplists:get_value(ShopID, ?SHOPS));
 
 event({npc_shop_leave, ShopID}, #state{gid=GID}) ->
 	log("npc shop leave ~p", [ShopID]),

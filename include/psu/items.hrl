@@ -1569,6 +1569,7 @@
 	16#09031c00, 16#09031d00, 16#09031e00, 16#09031f00, 16#09032000, 16#09032100, 16#09032200, 16#09040000, 16#09050000,
 	16#09050100, 16#09050200, 16#09050300, 16#09050700, 16#09050800, 16#09060000, 16#09060100, 16#09060200, 16#09060300,
 	16#09060a00, 16#09060b00, 16#09060c00]).
+
 -define(FEMALE_CLOTHES, [16#09011000, 16#09011100, 16#09011200, 16#09011300, 16#09011400, 16#09011500, 16#09011600, 16#09011700,
 	16#09011800, 16#09011900, 16#09011a00, 16#09011b00, 16#09011c00, 16#09011d00, 16#09011e00, 16#09011f00, 16#09012a00,
 	16#09012b00, 16#09012c00, 16#09012d00, 16#09012e00, 16#09012f00, 16#09013000, 16#09013100, 16#09013200, 16#09013300,
@@ -1579,6 +1580,7 @@
 	16#09032500, 16#09032600, 16#09032700, 16#09032800, 16#09032900, 16#09032a00, 16#09032b00, 16#09032c00, 16#09040100,
 	16#09040200, 16#09050400, 16#09050500, 16#09050600, 16#09050900, 16#09050a00, 16#09060400, 16#09060500, 16#09060600,
 	16#09060700, 16#09060800, 16#09060d00, 16#09060e00, 16#09060f00, 16#09061000, 16#09061100, 16#09061200]).
+
 -define(MALE_PARTS, [16#0a010000, 16#0a010100, 16#0a010200, 16#0a010300, 16#0a010400, 16#0a010500, 16#0a010600, 16#0a010700,
 	16#0a011000, 16#0a011100, 16#0a011200, 16#0a011300, 16#0a011400, 16#0a011500, 16#0a011c00, 16#0a011d00, 16#0a011e00,
 	16#0a011f00, 16#0a012000, 16#0a012100, 16#0a012200, 16#0a012300, 16#0a012c00, 16#0a012d00, 16#0a012e00, 16#0a012f00,
@@ -1589,6 +1591,7 @@
 	16#0a031200, 16#0a031300, 16#0a031400, 16#0a031500, 16#0a031c00, 16#0a031d00, 16#0a031e00, 16#0a031f00, 16#0a032000,
 	16#0a032100, 16#0a032200, 16#0a032300, 16#0a032c00, 16#0a032d00, 16#0a032e00, 16#0a032f00, 16#0a060000, 16#0a060100,
 	16#0a060200, 16#0a060300, 16#0a060900]).
+
 -define(FEMALE_PARTS, [16#0a010800, 16#0a010900, 16#0a010a00, 16#0a010b00, 16#0a010c00, 16#0a010d00, 16#0a010e00, 16#0a010f00,
 	16#0a011600, 16#0a011700, 16#0a011800, 16#0a011900, 16#0a011a00, 16#0a011b00, 16#0a012400, 16#0a012500, 16#0a012600,
 	16#0a012700, 16#0a012800, 16#0a012900, 16#0a012a00, 16#0a012b00, 16#0a013000, 16#0a013100, 16#0a013200, 16#0a013300,
@@ -1599,7 +1602,8 @@
 	16#0a031800, 16#0a031900, 16#0a031a00, 16#0a031b00, 16#0a032400, 16#0a032500, 16#0a032600, 16#0a032700, 16#0a032800,
 	16#0a032900, 16#0a032a00, 16#0a032b00, 16#0a033000, 16#0a033100, 16#0a033200, 16#0a033300, 16#0a060400, 16#0a060500,
 	16#0a060600, 16#0a060700, 16#0a060800, 16#0a060a00, 16#0a060b00, 16#0a060c00, 16#0a060d00]).
--define(STD_CONSUMABLES, [16#03010000, 16#03010100, 16#03010200, 16#03010300, 16#03010500, 16#03010600,
+
+-define(CONSUMABLES, [16#03010000, 16#03010100, 16#03010200, 16#03010300, 16#03010500, 16#03010600,
 	16#03010700, 16#03010900, 16#03010a00, 16#03010b00, 16#03010c00, 16#03010d00, 16#03010e00, 16#03020000,
 	16#0c010000, 16#0c010100, 16#0c010200, 16#0c010300, 16#0c010400, 16#0c010500, 16#0c010600, 16#0c010700, 16#0c010800,
 	16#0c020000, 16#0c020100, 16#0c020200, 16#0c020300, 16#0c020400, 16#0c020500, 16#0c020600, 16#0c020700, 16#0c020800,
@@ -1630,12 +1634,71 @@
 	{632, ?FEMALE_PARTS}, %% Colony right vendor.
 	{633, ?FEMALE_PARTS}, %% Colony left vendor.
 
-	{512, ?STD_CONSUMABLES}, %% Parum right vendor, Parum v1 field lobbies vendors. Parum GUARDIANS vendor.
-	{513, ?STD_CONSUMABLES}, %% Parum left vendor.
-	{549, ?STD_CONSUMABLES}, %% Moatoob right vendor, Moatoob v1 field lobbies vendors. Moatoob GUARDIANS vendor.
-	{550, ?STD_CONSUMABLES}, %% Moatoob left vendor.
-	{586, ?STD_CONSUMABLES}, %% Neudaiz only vendor, Neudaiz v1 field lobbies vendors. Neudaiz GUARDIANS vendor.
-	{620, ?STD_CONSUMABLES}, %% Colony right vendor, Colony v1 field lobbies vendors. Colony GUARDIANS vendor.
-	{621, ?STD_CONSUMABLES}, %% Colony left vendor.
-	{622, ?STD_CONSUMABLES}  %% v2 field lobbies vendors.
+	{512, ?CONSUMABLES}, %% Parum right vendor, Parum v1 field lobbies vendors. Parum GUARDIANS vendor.
+	{513, ?CONSUMABLES}, %% Parum left vendor.
+	{549, ?CONSUMABLES}, %% Moatoob right vendor, Moatoob v1 field lobbies vendors. Moatoob GUARDIANS vendor.
+	{550, ?CONSUMABLES}, %% Moatoob left vendor.
+	{586, ?CONSUMABLES}, %% Neudaiz only vendor, Neudaiz v1 field lobbies vendors. Neudaiz GUARDIANS vendor.
+	{620, ?CONSUMABLES}, %% Colony right vendor, Colony v1 field lobbies vendors. Colony GUARDIANS vendor.
+	{621, ?CONSUMABLES}, %% Colony left vendor.
+	{622, ?CONSUMABLES}, %% v2 field lobbies vendors.
+
+	%% @todo The following shops need items.
+
+	{500, [16#03010000]}, %% Parum weapons left vendor.
+	{501, [16#03010000]}, %% Parum weapons right vendor.
+	{503, [16#03010000]}, %% Parum armors only vendor.
+	{506, [16#03010000]}, %% Parum units only vendor.
+	{509, [16#03010000]}, %% Parum discs left vendor.
+	{510, [16#03010000]}, %% Parum discs center vendor.
+	{511, [16#03010000]}, %% Parum discs right vendor.
+	{527, [16#03010000]}, %% Parum materials center left vendor.
+	{528, [16#03010000]}, %% Parum materials left vendor.
+	{532, [16#03010000]}, %% Parum materials center vendor.
+	{533, [16#03010000]}, %% Parum materials center right vendor.
+	{534, [16#03010000]}, %% Parum materials right vendor.
+
+	{537, [16#03010000]}, %% Neudaiz weapons left vendor.
+	{538, [16#03010000]}, %% Neudaiz weapons right vendor.
+	{540, [16#03010000]}, %% Neudaiz armors only vendor.
+	{543, [16#03010000]}, %% Neudaiz units only vendor.
+	{546, [16#03010000]}, %% Neudaiz discs center vendor.
+	{547, [16#03010000]}, %% Neudaiz discs left vendor.
+	{548, [16#03010000]}, %% Neudaiz discs right vendor.
+	{564, [16#03010000]}, %% Neudaiz materials left vendor.
+	{565, [16#03010000]}, %% Neudaiz materials center left vendor.
+	{569, [16#03010000]}, %% Neudaiz materials right vendor.
+	{570, [16#03010000]}, %% Neudaiz materials center right vendor.
+	{571, [16#03010000]}, %% Neudaiz materials center vendor.
+
+	{574, [16#03010000]}, %% Neudaiz weapons left vendor.
+	{575, [16#03010000]}, %% Neudaiz weapons right vendor.
+	{577, [16#03010000]}, %% Neudaiz armors only vendor.
+	{580, [16#03010000]}, %% Neudaiz units only vendor.
+	{583, [16#03010000]}, %% Neudaiz discs left vendor.
+	{584, [16#03010000]}, %% Neudaiz discs center vendor.
+	{585, [16#03010000]}, %% Neudaiz discs right vendor.
+	{601, [16#03010000]}, %% Neudaiz materials left vendor.
+	{602, [16#03010000]}, %% Neudaiz materials center left vendor.
+	{606, [16#03010000]}, %% Neudaiz materials center vendor.
+	{607, [16#03010000]}, %% Neudaiz materials center right vendor.
+	{608, [16#03010000]}, %% Neudaiz materials right vendor.
+
+	{611, [16#03010000]}, %% Colony weapons left vendor.
+	{612, [16#03010000]}, %% Colony weapons center vendor.
+	{613, [16#03010000]}, %% Colony weapons right vendor.
+	{614, [16#03010000]}, %% Colony armors only vendor.
+	{617, [16#03010000]}, %% Colony discs right vendor.
+	{618, [16#03010000]}, %% Colony discs center vendor.
+	{619, [16#03010000]}, %% Colony discs left vendor.
+	{635, [16#03010000]}, %% Colony materials right vendor.
+	{636, [16#03010000]}, %% Colony materials center right vendor.
+	{640, [16#03010000]}, %% Colony materials center left vendor.
+	{641, [16#03010000]}, %% Colony materials left vendor.
+	{644, [16#03010000]}, %% KUBARA SPREAD.
+	{645, [16#03010000]}, %% Colony units left vendor.
+	{646, [16#03010000]}, %% Colony units right vendor.
+	{648, [16#03010000]}, %% Colony deco right vendor.
+	{649, [16#03010000]}, %% Colony deco center vendor.
+	{650, [16#03010000]}  %% Colony deco left vendor.
 ]).
