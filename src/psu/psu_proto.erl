@@ -1330,8 +1330,19 @@ send_0236(#state{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#02360300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:64 >>).
 
 %% @todo Inventory related. Doesn't seem to do anything.
-send_0a05(#state{socket=Socket, gid=DestGID, lid=DestLID}) ->
-	packet_send(Socket, << 16#0a050300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64 >>).
+%% @todo Handle the LID properly.
+send_0a05(#state{socket=Socket, gid=DestGID}) ->
+	packet_send(Socket, << 16#0a050300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:64 >>).
+
+%% @doc Send the list of ItemUUID for the items in the inventory.
+%% @todo Handle the LID properly.
+send_0a06(CharUser, #state{socket=Socket, gid=DestGID}) ->
+	Len = length((CharUser#egs_user_model.character)#characters.inventory),
+	UUIDs = lists:seq(1, Len),
+	Bin = iolist_to_binary([ << N:32/little >> || N <- UUIDs]),
+	Blanks = lists:seq(1, 60 - Len),
+	Bin2 = iolist_to_binary([ << 16#ffffffff:32 >> || _N <- Blanks]),
+	packet_send(Socket, << 16#0a060300:32, 0:64, DestGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64, Bin/binary, Bin2/binary >>).
 
 %% @doc Send an item's description.
 send_0a11(ItemID, ItemDesc, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->

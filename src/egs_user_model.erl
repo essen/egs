@@ -194,7 +194,7 @@ handle_call({item_add, GID, ItemID, Variables}, _From, State) ->
 	Character2 = Character#characters{inventory=Inventory2},
 	mnesia:transaction(fun() -> mnesia:write(User#egs_user_model{character=Character2}) end),
 	if New =:= false -> {reply, 16#ffffffff, State};
-		true -> {reply, 1000 + mnesia:dirty_update_counter(counters, items, 1), State}
+		true -> {reply, length(Inventory2), State}
 	end;
 
 handle_call({shop_get, GID}, _From, State) ->

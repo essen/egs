@@ -204,7 +204,7 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 	end,
 	psu_proto:send_0201(User#egs_user_model{lid=0}, State2),
 	if	ZoneChange =:= true ->
-			send_0a06();
+			psu_proto:send_0a06(User, State2);
 		true -> ignore
 	end,
 	send_0233(SpawnList),
@@ -386,29 +386,22 @@ send_0a04(NPCGID) ->
 	{ok, Bin} = file:read_file("p/packet0a04.bin"),
 	send(<< 16#0a040300:32, 0:32, 16#00001d00:32, NPCGID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Bin/binary >>).
 
-%% @todo Inventory related. Figure out everything in this packet and handle it correctly.
-%% @todo It sends 60 values so it's probably some kind of options for all 60 items in the inventory?
-send_0a06() ->
-	{ok, << _:32, A:96/bits, _:32, B:96/bits, _:32, C:1440/bits, _:32, D/bits >>} = file:read_file("p/packet0a06.bin"),
-	GID = get(gid),
-	send(<< A/binary, GID:32/little-unsigned-integer, B/binary, GID:32/little-unsigned-integer, C/binary, GID:32/little-unsigned-integer, D/binary >>).
-
 %% @todo Handle more than just goggles.
 send_0a0a(Inventory) ->
 	{ok, << _:68608/bits, Rest/bits >>} = file:read_file("p/packet0a0a.bin"),
 	GID = get(gid),
 	NbItems = length(Inventory),
-	ItemVariables = build_0a0a_item_variables(Inventory, []),
+	ItemVariables = build_0a0a_item_variables(Inventory, 1, []),
 	ItemConstants = build_0a0a_item_constants(Inventory, []),
 	send(<< 16#0a0a0300:32, 16#ffff:16, 0:144, 16#00011300:32, GID:32/little, 0:64, NbItems:8, 0:8, 6:8, 0:72, 0:192, 0:2304, ItemVariables/binary, ItemConstants/binary, 0:13824, Rest/binary >>).
 
-%% @todo That ItemUUID have to be handled properly.
-build_0a0a_item_variables([], Acc) ->
+build_0a0a_item_variables([], _N, Acc) ->
+	io:format("~p~n", [_N]),
 	Bin = iolist_to_binary(lists:reverse(Acc)),
 	Padding = 17280 - 8 * byte_size(Bin),
 	<< Bin/binary, 0:Padding >>;
-build_0a0a_item_variables([{ItemID, Variables}|Tail], Acc) ->
-	build_0a0a_item_variables(Tail, [build_item_variables(ItemID, 0, Variables)|Acc]).
+build_0a0a_item_variables([{ItemID, Variables}|Tail], N, Acc) ->
+	build_0a0a_item_variables(Tail, N + 1, [build_item_variables(ItemID, N, Variables)|Acc]).
 
 build_item_variables(ItemID, ItemUUID, #psu_clothing_item_variables{color=ColorNb}) ->
 	#psu_item{rarity=Rarity, data=#psu_clothing_item{colors=ColorsBin}} = proplists:get_value(ItemID, ?ITEMS),

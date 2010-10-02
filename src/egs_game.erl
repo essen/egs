@@ -283,7 +283,7 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}, State=#sta
 	psu_game:send_1207(),
 	psu_game:send_1212(),
 	psu_proto:send_0201(User#egs_user_model{lid=0}, State2),
-	psu_game:send_0a06(),
+	psu_proto:send_0a06(User, State2),
 	case User#egs_user_model.partypid of
 		undefined -> ignore;
 		_ -> psu_game:send_022c(0, 16#12)
