@@ -396,7 +396,6 @@ send_0a0a(Inventory) ->
 	send(<< 16#0a0a0300:32, 16#ffff:16, 0:144, 16#00011300:32, GID:32/little, 0:64, NbItems:8, 0:8, 6:8, 0:72, 0:192, 0:2304, ItemVariables/binary, ItemConstants/binary, 0:13824, Rest/binary >>).
 
 build_0a0a_item_variables([], _N, Acc) ->
-	io:format("~p~n", [_N]),
 	Bin = iolist_to_binary(lists:reverse(Acc)),
 	Padding = 17280 - 8 * byte_size(Bin),
 	<< Bin/binary, 0:Padding >>;
