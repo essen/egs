@@ -45,10 +45,16 @@ pack_files([], {AccH, AccD, AccP, _FilePos, _PtrIndex}) ->
 	BinD = iolist_to_binary(lists:reverse(AccD)),
 	PaddingD = 8 * (16#800 - (byte_size(BinD) rem 16#800)),
 	BinP = iolist_to_binary(lists:reverse(AccP)),
-	PaddingP = 8 * (16#800 - (byte_size(BinP) rem 16#800)),
+	PtrSize = byte_size(BinP),
+	PtrArray = case PtrSize of
+		0 -> << >>;
+		_ ->
+			PaddingP = 8 * (16#800 - (byte_size(BinP) rem 16#800)),
+			<< BinP/binary, 0:PaddingP >>
+	end,
 	{<< BinH/binary, 0:PaddingH2 >>,
 	 << BinD/binary, 0:PaddingD >>, byte_size(BinD),
-	 << BinP/binary, 0:PaddingP >>, byte_size(BinP)};
+	 PtrArray, PtrSize};
 pack_files([{data, Filename, Data, PtrList}|Tail], {AccH, AccD, AccP, FilePos, PtrIndex}) ->
 	ID = case filename:extension(Filename) of
 		".bin" -> << $S, $T, $D, 0 >>;
