@@ -28,12 +28,10 @@ keepalive(_State) ->
 	ok.
 
 %% @doc We don't expect any message here.
-%% @todo Throw an error instead?
 info(_Msg, _State) ->
 	ok.
 
 %% @doc Nothing to broadcast.
-%% @todo Throw an error instead?
 cast(_Command, _Data, _State) ->
 	ok.
 
@@ -48,7 +46,6 @@ raw(Command, _Data, _State) ->
 
 %% @doc Reject version < 2.0009.2.
 %% @todo Reject wrong platforms too.
-%% @todo f9dbce73 is an auth key too.
 event({system_client_version_info, _Entrance, _Language, _Platform, Version}, State=#state{socket=Socket}) ->
 	if Version >= 2009002 -> ignore; true ->
 		psu_proto:send_0231("http://psumods.co.uk/forums/comments.php?DiscussionID=40#Item_1", State),

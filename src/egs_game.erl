@@ -579,15 +579,15 @@ event({npc_shop_sell, InventoryItemIndex, Quantity}, _State) ->
 %% @todo First 1a02 value should be non-0.
 %% @todo Could the 2nd 1a02 parameter simply be the shop type or something?
 %% @todo Although the values replied should be right, they seem mostly ignored by the client.
-event({npc_shop_request, ShopID}, _State) ->
+event({npc_shop_request, ShopID}, State) ->
 	log("npc shop request ~p", [ShopID]),
 	case ShopID of
-		80 -> psu_game:send_1a02(0, 17, 17, 3, 9); %% lumilass
-		90 -> psu_game:send_1a02(0, 5, 1, 4, 5);   %% parum weapon grinding
-		91 -> psu_game:send_1a02(0, 5, 5, 4, 7);   %% tenora weapon grinding
-		92 -> psu_game:send_1a02(0, 5, 8, 4, 0);   %% yohmei weapon grinding
-		93 -> psu_game:send_1a02(0, 5, 18, 4, 0);  %% kubara weapon grinding
-		_  -> psu_game:send_1a02(0, 0, 1, 0, 0)
+		80 -> psu_proto:send_1a02(17, 17, 3, 9, State); %% lumilass
+		90 -> psu_proto:send_1a02(5, 1, 4, 5, State);   %% parum weapon grinding
+		91 -> psu_proto:send_1a02(5, 5, 4, 7, State);   %% tenora weapon grinding
+		92 -> psu_proto:send_1a02(5, 8, 4, 0, State);   %% yohmei weapon grinding
+		93 -> psu_proto:send_1a02(5, 18, 4, 0, State);  %% kubara weapon grinding
+		_  -> psu_proto:send_1a02(0, 1, 0, 0, State)
 	end;
 
 %% @todo Not sure what are those hardcoded values.

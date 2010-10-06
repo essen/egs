@@ -26,7 +26,6 @@
 %%      The lineshield color is ignored and set to 0 (neutral) by default instead.
 %%      The badge is always set to 0 (none). Only beasts can later change it.
 %%      The lips color and intensity is ignored and set to the default values {32767, 32767, 0} (flesh races only).
-
 binary_to_tuple(cast, Binary) ->
 	<<	VoiceType:8, VoicePitch:8, _:24, Torso:32/unsigned-integer, Legs:32/unsigned-integer, Arms:32/unsigned-integer,
 		Ears:32/unsigned-integer, Face:32/unsigned-integer, HeadType:32/unsigned-integer, MainColor:8, _:24,
@@ -50,8 +49,6 @@ binary_to_tuple(_, Binary) ->
 		HairstyleColorX, Proportion, ProportionBoxX, ProportionBoxY, FaceBoxX, FaceBoxY}.
 
 %% @doc Convert a tuple of appearance data into a binary to be sent to clients.
-%% @todo Write the function body!
-
 tuple_to_binary(cast, Tuple) ->
 	{metal_appearance, VoiceType, VoicePitch, Torso, Legs, Arms, Ears, Face, HeadType, MainColor, LineshieldColor,
 		Eyebrows, Eyelashes, EyesGroup, Eyes, EyesColorY, EyesColorX, BodyColor, SubColor, HairstyleColorY, HairstyleColorX,
@@ -77,7 +74,6 @@ tuple_to_binary(_, Tuple) ->
 
 %% @doc Validate the character creation appearance data.
 %%      Trigger an exception rather than handling errors.
-
 validate_char_create(cast, male, Tuple) ->
 	#metal_appearance{voicetype=VoiceType, torso=Torso, legs=Legs, arms=Arms, ears=Ears, face=Face, headtype=HeadType, eyelashes=Eyelashes, eyesgroup=EyesGroup, eyescolorx=EyesColorX} = Tuple,
 	validate_char_create_common_metal(Tuple),
@@ -186,7 +182,6 @@ validate_char_create(beast, female, Tuple) ->
 	true = Eyes =< 6.
 
 %% @doc Validate the common settings for all metal characters.
-
 validate_char_create_common_metal(Tuple) ->
 	#metal_appearance{maincolor=MainColor, eyebrows=Eyebrows, eyes=Eyes, eyescolory=EyesColorY, bodycolor=BodyColor, subcolor=SubColor,
 		hairstylecolory=HairstyleColorY, hairstylecolorx=HairstyleColorX, proportion=Proportion, proportionboxx=ProportionBoxX, proportionboxy=ProportionBoxY,
@@ -206,7 +201,6 @@ validate_char_create_common_metal(Tuple) ->
 	true = FaceBoxY =< 131071.
 
 %% @doc Validate the common settings for all flesh characters.
-
 validate_char_create_common_flesh(Tuple) ->
 	#flesh_appearance{jacketcolor=JacketColor, pantscolor=PantsColor, shoescolor=ShoesColor, eyebrows=Eyebrows, bodysuit=BodySuit,
 		eyescolory=EyesColorY, eyescolorx=EyesColorX, skincolor=SkinColor, hairstylecolory=HairstyleColorY, hairstylecolorx=HairstyleColorX,
@@ -228,7 +222,6 @@ validate_char_create_common_flesh(Tuple) ->
 	true = FaceBoxY =< 131071.
 
 %% @doc Validate the common settings for all male flesh characters.
-
 validate_char_create_common_male_flesh(Tuple) ->
 	#flesh_appearance{voicetype=VoiceType, jacket=Jacket, pants=Pants, shoes=Shoes, hairstyle=Hairstyle, eyelashes=Eyelashes} = Tuple,
 	true = (VoiceType >= 1 andalso VoiceType =< 14) orelse (VoiceType >= 76 andalso VoiceType =< 83),
@@ -239,7 +232,6 @@ validate_char_create_common_male_flesh(Tuple) ->
 	true = Eyelashes =< 2.
 
 %% @doc Validate the common settings for all female flesh characters.
-
 validate_char_create_common_female_flesh(Tuple) ->
 	#flesh_appearance{voicetype=VoiceType, jacket=Jacket, pants=Pants, shoes=Shoes, hairstyle=Hairstyle, eyelashes=Eyelashes} = Tuple,
 	true = (VoiceType >= 15 andalso VoiceType =< 26) orelse (VoiceType >= 84 andalso VoiceType =< 88),
@@ -250,14 +242,12 @@ validate_char_create_common_female_flesh(Tuple) ->
 	true = Eyelashes =< 12.
 
 %% @doc Validate the hairstyle for all male characters.
-
 validate_char_create_male_hairstyle(Hairstyle) ->
 	true = Hairstyle =:= 16#00000005 orelse Hairstyle =:= 16#000A0005 orelse Hairstyle =:= 16#00140005 orelse Hairstyle =:= 16#001E0005 orelse Hairstyle =:= 16#00280005 orelse Hairstyle =:= 16#00320005 orelse
 		   Hairstyle =:= 16#003C0005 orelse Hairstyle =:= 16#00460005 orelse Hairstyle =:= 16#00500005 orelse Hairstyle =:= 16#005A0005 orelse Hairstyle =:= 16#00640005 orelse Hairstyle =:= 16#006E0005 orelse
 		   Hairstyle =:= 16#00780005 orelse Hairstyle =:= 16#00820005 orelse Hairstyle =:= 16#008C0005 orelse Hairstyle =:= 16#00960005 orelse Hairstyle =:= 16#00A00005 orelse Hairstyle =:= 16#00AA0005.
 
 %% @doc Validate the hairstyle for all female characters.
-
 validate_char_create_female_hairstyle(Hairstyle) ->
 	true = Hairstyle =:= 16#00001005 orelse Hairstyle =:= 16#000A1005 orelse Hairstyle =:= 16#00141005 orelse Hairstyle =:= 16#001E1005 orelse Hairstyle =:= 16#00281005 orelse Hairstyle =:= 16#00321005 orelse
 		   Hairstyle =:= 16#003C1005 orelse Hairstyle =:= 16#00461005 orelse Hairstyle =:= 16#00501005 orelse Hairstyle =:= 16#005A1005 orelse Hairstyle =:= 16#00641005 orelse Hairstyle =:= 16#006E1005 orelse

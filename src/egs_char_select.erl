@@ -28,12 +28,10 @@ keepalive(#state{socket=Socket}) ->
 	psu_proto:send_keepalive(Socket).
 
 %% @doc We don't expect any message here.
-%% @todo Throw an error instead?
 info(_Msg, _State) ->
 	ok.
 
 %% @doc Nothing to broadcast.
-%% @todo Throw an error instead?
 cast(_Command, _Data, _State) ->
 	ok.
 
