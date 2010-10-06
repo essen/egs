@@ -585,7 +585,7 @@ event({npc_shop_request, ShopID}, _State) ->
 		80 -> psu_game:send_1a02(0, 17, 17, 3, 9); %% lumilass
 		90 -> psu_game:send_1a02(0, 5, 1, 4, 5);   %% parum weapon grinding
 		91 -> psu_game:send_1a02(0, 5, 5, 4, 7);   %% tenora weapon grinding
-		92 -> psu_game:send_1a02(0, 5, 0, 4, 0);   %% yohmei weapon grinding
+		92 -> psu_game:send_1a02(0, 5, 8, 4, 0);   %% yohmei weapon grinding
 		93 -> psu_game:send_1a02(0, 5, 18, 4, 0);  %% kubara weapon grinding
 		_  -> psu_game:send_1a02(0, 0, 1, 0, 0)
 	end;
