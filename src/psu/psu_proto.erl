@@ -149,7 +149,7 @@ parse(Size, 16#010a, Channel, Data) ->
 %% @todo We also probably should send the spawn to everyone in response to this command rather than on area_change.
 parse(Size, 16#010b, Channel, Data) ->
 	<<	_LID:16/little, VarA:16/little, VarB:32/little, HeaderGID:32/little, VarD:32/little, VarE:32/little, VarF:32/little, VarG:32/little, VarH:32/little, VarI:32/little,
-		BodyGID:32/little, _PartyPosOrLID:32/little, VarJ:16/little, _IntDir:16/little-unsigned-integer, _X:32/little-float, _Y:32/little-float, _Z:32/little-float,
+		BodyGID:32/little, _PartyPosOrLID:32/little, VarJ:16/little, _IntDir:16/little, _X:32/little-float, _Y:32/little-float, _Z:32/little-float,
 		VarK:32/little, VarL:32/little, _QuestID:32/little, _ZoneID:32/little, _MapID:32/little, _EntryID:32/little >> = Data,
 	?ASSERT_EQ(Size, 92),
 	?ASSERT_EQ(Channel, 2),
@@ -1183,9 +1183,9 @@ send_010d(CharUser, #state{socket=Socket, gid=DestGID}) ->
 	CharGID = CharUser#egs_user_model.id,
 	CharLID = CharUser#egs_user_model.lid,
 	<< _:640, CharBin/bits >> = psu_characters:character_user_to_binary(CharUser),
-	packet_send(Socket, << 16#010d0300:32, 0:160, 16#00011300:32, DestGID:32/little-unsigned-integer,
-		0:64, 1:32/little-unsigned-integer, 0:32, 16#00000300:32, 16#ffff0000:32, 0:32, CharGID:32/little-unsigned-integer,
-		0:192, CharGID:32/little-unsigned-integer, CharLID:32/little-unsigned-integer, 16#ffffffff:32, CharBin/binary >>).
+	packet_send(Socket, << 16#010d0300:32, 0:160, 16#00011300:32, DestGID:32/little,
+		0:64, 1:32/little, 0:32, 16#00000300:32, 16#ffff0000:32, 0:32, CharGID:32/little,
+		0:192, CharGID:32/little, CharLID:32/little, 16#ffffffff:32, CharBin/binary >>).
 
 %% @doc Trigger a character-related event.
 send_0111(CharUser, EventID, State) ->
@@ -1245,8 +1245,8 @@ send_0201(CharUser, #state{socket=Socket, gid=DestGID}) ->
 	CharBin = psu_characters:character_user_to_binary(CharUser),
 	IsGM = 0,
 	OnlineStatus = 0,
-	packet_send(Socket, << 16#02010300:32, 0:32, CharTypeID:32, CharGID:32/little-unsigned-integer,
-		0:64, 16#00011300:32, DestGID:32/little-unsigned-integer, 0:64, CharBin/binary, IsGM:8, 0:8, OnlineStatus:8, GameVersion:8, 0:608 >>).
+	packet_send(Socket, << 16#02010300:32, 0:32, CharTypeID:32, CharGID:32/little,
+		0:64, 16#00011300:32, DestGID:32/little, 0:64, CharBin/binary, IsGM:8, 0:8, OnlineStatus:8, GameVersion:8, 0:608 >>).
 
 %% @doc Hello command. Sent when a client connects to the game or login server.
 %% @todo Can contain an error message if 0:1024 is setup similar to this: 0:32, 3:32/little, 0:48, Len:16/little, Error/binary, 0:Padding.
@@ -1447,7 +1447,7 @@ packet_prepare(Packet) ->
 %% @doc Send a packet. The packet argument must not contain the size field.
 packet_send(CSocket, Packet) ->
 	{ok, Size, Padding} = packet_prepare(Packet),
-	packet_send(CSocket, << Size:32/little-unsigned-integer, Packet/binary, Padding/binary >>, Size).
+	packet_send(CSocket, << Size:32/little, Packet/binary, Padding/binary >>, Size).
 
 %% @doc Send a normal command.
 packet_send(CSocket, Packet, Size) when Size =< 16#4000 ->
@@ -1460,15 +1460,13 @@ packet_send(CSocket, Packet, Size) ->
 %% @doc Send the last chunk of a fragmented command.
 packet_fragment_send(CSocket, Packet, Size, Current) when Size - Current =< 16#4000 ->
 	FragmentSize = 16#10 + byte_size(Packet),
-	Fragment = << FragmentSize:32/little-unsigned-integer, 16#0b030000:32/unsigned-integer,
-		Size:32/little-unsigned-integer, Current:32/little-unsigned-integer, Packet/binary >>,
+	Fragment = << FragmentSize:32/little, 16#0b030000:32, Size:32/little, Current:32/little, Packet/binary >>,
 	ssl:send(CSocket, Fragment);
 
 %% @doc Send another chunk of a fragmented command.
 packet_fragment_send(CSocket, Packet, Size, Current) ->
 	<< Chunk:131072/bits, Rest/bits >> = Packet,
-	Fragment = << 16#10400000:32/unsigned-integer, 16#0b030000:32/unsigned-integer,
-		Size:32/little-unsigned-integer, Current:32/little-unsigned-integer, Chunk/binary >>,
+	Fragment = << 16#10400000:32, 16#0b030000:32, Size:32/little, Current:32/little, Chunk/binary >>,
 	ssl:send(CSocket, Fragment),
 	packet_fragment_send(CSocket, Rest, Size, Current + 16#4000).
 
@@ -1492,7 +1490,7 @@ send_global(CSocket, Type, Message, Duration) ->
 	end,
 	UCS2Message = << << X:8, 0:8 >> || X <- Message >>,
 	try
-		Packet = << 16#02280300:32, 0:288, TypeID:32/little-unsigned-integer, Duration:32/little-unsigned-integer, UCS2Message/binary, 0, 0 >>,
+		Packet = << 16#02280300:32, 0:288, TypeID:32/little, Duration:32/little, UCS2Message/binary, 0, 0 >>,
 		packet_send(CSocket, Packet)
 	catch
 		_:_ ->
