@@ -21,7 +21,6 @@
 -export([keepalive/1, info/2, cast/3, raw/3, event/2]).
 
 -include("include/records.hrl").
--include("include/network.hrl").
 
 %% @doc Don't keep alive here, authentication should go fast.
 keepalive(_State) ->
@@ -56,9 +55,9 @@ event({system_client_version_info, _Entrance, _Language, _Platform, Version}, St
 	end;
 
 %% Game server info request handler.
-%% @todo Remove the dependency on network.hrl through configuration files.
 event(system_game_server_request, State=#state{socket=Socket}) ->
-	psu_proto:send_0216(?GAME_IP, ?GAME_PORT, State),
+	{ServerIP, ServerPort} = egs_conf:read(game_server),
+	psu_proto:send_0216(ServerIP, ServerPort, State),
 	ssl:close(Socket),
 	closed;
 

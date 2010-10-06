@@ -6,6 +6,7 @@
 		egs,
 		egs_app,
 		egs_sup,
+		egs_conf,
 		egs_game_server,
 		egs_login_server,
 		egs_exit_mon,

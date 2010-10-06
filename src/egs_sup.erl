@@ -22,8 +22,6 @@
 -export([init/1]). %% Supervisor callbacks.
 -export([start_link/0, upgrade/0]). %% Other functions.
 
--include("include/network.hrl").
-
 %% @spec start_link() -> ServerRet
 %% @doc API for starting the supervisor.
 start_link() ->
@@ -47,13 +45,16 @@ upgrade() ->
 
 %% @spec init([]) -> SupervisorTree
 %% @doc supervisor callback.
+%% @todo Probably link egs_conf to a supervisor too.
 init([]) ->
-	%% Start egs_cron, egs_game, egs_login, egs_patch. To be replaced by configurable modules.
-	Processes = [{egs_user_model, {egs_user_model, start_link, []}, permanent, 5000, worker, dynamic},
-				 {egs_game_server, {egs_game_server, start_link, [?GAME_PORT]}, permanent, 5000, worker, dynamic},
-				 {egs_login_server_jp1, {egs_login_server, start_link, [?LOGIN_PORT_JP_ONE]}, permanent, 5000, worker, dynamic},
-				 {egs_login_server_jp2, {egs_login_server, start_link, [?LOGIN_PORT_JP_TWO]}, permanent, 5000, worker, dynamic},
-				 {egs_login_server_us, {egs_login_server, start_link, [?LOGIN_PORT_US]}, permanent, 5000, worker, dynamic},
-				 {psu_patch_jp, {psu_patch, start_link, [?PATCH_PORT_JP]}, permanent, 5000, worker, dynamic},
-				 {psu_patch_us, {psu_patch, start_link, [?PATCH_PORT_US]}, permanent, 5000, worker, dynamic}],
-	{ok, {{one_for_one, 10, 10}, Processes}}.
+	egs_conf:start_link(),
+	PatchPorts = egs_conf:read(patch_ports),
+	LoginPorts = egs_conf:read(login_ports),
+	{_ServerIP, GamePort} = egs_conf:read(game_server),
+	PatchProcs = [{{egs_patch_server, Port}, {psu_patch, start_link, [Port]}, permanent, 5000, worker, dynamic} || Port <- PatchPorts],
+	LoginProcs = [{{egs_login_server, Port}, {egs_login_server, start_link, [Port]}, permanent, 5000, worker, dynamic} || Port <- LoginPorts],
+	OtherProcs = [
+		{egs_user_model, {egs_user_model, start_link, []}, permanent, 5000, worker, dynamic},
+		{egs_game_server, {egs_game_server, start_link, [GamePort]}, permanent, 5000, worker, dynamic}
+	],
+	{ok, {{one_for_one, 10, 10}, PatchProcs ++ LoginProcs ++ OtherProcs}}.
