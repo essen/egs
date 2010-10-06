@@ -716,12 +716,6 @@ send_170c() ->
 send_1711(Background) ->
 	send(<< (header(16#1711))/binary, Background:32/little-unsigned-integer >>).
 
-%% @doc Unknown dialog-related handler.
-%% @todo Everything!
-send_1a02(A, B, C, D, E) ->
-	send(<< (header(16#1a02))/binary, A:32/little-unsigned-integer, B:16/little-unsigned-integer,
-		C:16/little-unsigned-integer, D:16/little-unsigned-integer, E:16/little-unsigned-integer >>).
-
 %% @doc Lumilass handler. Possibly more.
 %% @todo Figure out how Lumilass work exactly. The 4 bytes before the file may vary.
 send_1a03() ->
