@@ -362,7 +362,7 @@ event({hits, Hits}, State) ->
 
 %% @todo Send something other than just "dammy".
 event({item_description_request, ItemID}, State) ->
-	Filename = io_lib:format("priv/items/~8.16.0b.txt", [ItemID]),
+	Filename = io_lib:format("priv/item_descs/~8.16.0b.txt", [ItemID]),
 	Desc = case filelib:is_regular(Filename) of
 		false -> << << X:8, 0:8 >> || X <- "Always bet on Dammy." >>;
 		true -> {ok, File} = file:read_file(Filename), File

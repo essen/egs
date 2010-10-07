@@ -51,13 +51,13 @@ accept(LSocket) ->
 %% @doc Fake the patch server by sending what the game wants to hear: no updates available.
 process(CSocket) ->
 	io:format("faking patch server: no updates~n"),
-	send_packet(CSocket, "priv/psu_patch/patch-0.bin"),
+	send_packet(CSocket, "priv/patch/patch-0.bin"),
 	gen_tcp:recv(CSocket, 0, 5000),
-	send_packet(CSocket, "priv/psu_patch/patch-1.bin"),
-	send_packet(CSocket, "priv/psu_patch/patch-2.bin"),
+	send_packet(CSocket, "priv/patch/patch-1.bin"),
+	send_packet(CSocket, "priv/patch/patch-2.bin"),
 	gen_tcp:recv(CSocket, 0, 5000),
-	send_packet(CSocket, "priv/psu_patch/patch-3.bin"),
-	send_packet(CSocket, "priv/psu_patch/patch-4.bin"),
+	send_packet(CSocket, "priv/patch/patch-3.bin"),
+	send_packet(CSocket, "priv/patch/patch-4.bin"),
 	gen_tcp:close(CSocket).
 
 %% @spec send_packet(CSocket, PacketFilename) -> ok

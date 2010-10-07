@@ -48,7 +48,7 @@ raw(Command, _Data, _State) ->
 event({system_client_version_info, _Entrance, _Language, _Platform, Version}, State=#state{socket=Socket}) ->
 	if Version >= 2009002 -> ignore; true ->
 		psu_proto:send_0231("http://psumods.co.uk/forums/comments.php?DiscussionID=40#Item_1", State),
-		{ok, ErrorMsg} = file:read_file("priv/psu_login/error_version.txt"),
+		{ok, ErrorMsg} = file:read_file("priv/login/error_version.txt"),
 		psu_proto:send_0223(ErrorMsg, State),
 		ssl:close(Socket),
 		closed
@@ -85,5 +85,5 @@ event({system_login_auth_request, Username, Password}, State) ->
 %% @doc MOTD request handler. Page number starts at 0.
 %% @todo Currently ignore the language and send the same MOTD file to everyone.
 event({system_motd_request, Page, _Language}, State) ->
-	{ok, MOTD} = file:read_file("priv/psu_login/motd.txt"),
+	{ok, MOTD} = file:read_file("priv/login/motd.txt"),
 	psu_proto:send_0225(MOTD, Page, State).
