@@ -46,45 +46,6 @@ char_load(User) ->
 	send_1602(),
 	psu_proto:send_021b(State).
 
-%% @doc Return the current season information.
-area_get_season(QuestID) ->
-	{{_, Month, Day}, _} = calendar:universal_time(),
-	[IsSeasonal, SeasonID, SeasonQuestIDs] = if
-		Month =:=  1, Day =< 14            -> ?SEASON_NEWYEAR;
-		Month =:=  1, Day >= 25            -> ?SEASON_WINTER;
-		Month =:=  2, Day =< 7             -> ?SEASON_WINTER;
-		Month =:=  2, Day >= 14            -> ?SEASON_VALENTINE;
-		Month =:=  3, Day =< 6             -> ?SEASON_VALENTINE;
-		Month =:=  3, Day >= 14            -> ?SEASON_WHITEDAY;
-		Month =:=  4, Day =< 3             -> ?SEASON_WHITEDAY;
-		Month =:=  4, Day >= 4, Day =< 24  -> ?SEASON_EASTER;
-		Month =:=  4, Day >= 25            -> ?SEASON_SPRING;
-		Month =:=  5, Day =< 8             -> ?SEASON_SPRING;
-		Month =:=  5, Day >= 17, Day =< 30 -> ?SEASON_WEDDING;
-		Month =:=  6, Day >= 3, Day =< 16  -> ?SEASON_PARUMUNIF;
-		Month =:=  6, Day >= 23            -> ?SEASON_SONIC;
-		Month =:=  7, Day =< 13            -> ?SEASON_SONIC;
-		Month =:=  7, Day >= 18            -> ?SEASON_HOLYLIGHT;
-		Month =:=  8, Day =< 21            -> ?SEASON_FIREWORKS;
-		Month =:=  8, Day >= 28            -> ?SEASON_NATIVE;
-		Month =:=  9, Day =< 10            -> ?SEASON_NATIVE;
-		Month =:=  9, Day >= 24            -> ?SEASON_AUTUMN;
-		Month =:= 10, Day =< 7             -> ?SEASON_AUTUMN;
-		Month =:= 10, Day >= 15, Day =< 28 -> ?SEASON_PARTY;
-		Month =:= 10, Day >= 31            -> ?SEASON_HALLOWEEN;
-		Month =:= 11, Day =< 20            -> ?SEASON_HALLOWEEN;
-		Month =:= 12, Day >= 11            -> ?SEASON_CHRISTMAS;
-		true                               -> ?SEASON_NONE
-	end,
-	if	IsSeasonal =:= 1 ->
-			case lists:member(QuestID, SeasonQuestIDs) of
-				true  -> [{status, IsSeasonal}, {season, SeasonID}];
-				false -> [{status, 0}, {season, 255}]
-			end;
-		true ->
-			[{status, 0}, {season, 255}]
-	end.
-
 %% @doc Load the given map as a standard lobby.
 area_load(QuestID, ZoneID, MapID, EntryID, State) ->
 	{ok, OldUser} = egs_user_model:read(get(gid)),
@@ -132,7 +93,7 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 		true ->
 			ZoneChange = if OldQuestID =:= QuestID, OldZoneID =:= ZoneID -> false; true -> true end
 	end,
-	[{status, IsSeasonal}, {season, SeasonID}] = area_get_season(QuestID),
+	{IsSeasonal, SeasonID} = egs_seasons:read(QuestID),
 	% broadcast spawn and unspawn to other people
 	{ok, UnspawnList} = egs_user_model:select({neighbors, OldUser}),
 	{ok, SpawnList} = egs_user_model:select({neighbors, User}),
