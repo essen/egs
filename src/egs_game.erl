@@ -360,7 +360,6 @@ event({hit, FromTargetID, ToTargetID, A, B}, State=#state{gid=GID}) ->
 event({hits, Hits}, State) ->
 	events(Hits, State);
 
-%% @todo Send something other than just "dammy".
 event({item_description_request, ItemID}, State) ->
 	Filename = io_lib:format("priv/item_descs/~8.16.0b.txt", [ItemID]),
 	Desc = case filelib:is_regular(Filename) of
