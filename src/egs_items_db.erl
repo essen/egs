@@ -19,7 +19,7 @@
 
 -module(egs_items_db).
 -behavior(gen_server).
--export([start_link/0, stop/0, read/1, reload/0]). %% API.
+-export([start_link/0, stop/0, desc/1, read/1, reload/0]). %% API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
 
 %% Use the module name for the server's name.
@@ -38,6 +38,10 @@ start_link() ->
 stop() ->
 	gen_server:call(?SERVER, stop).
 
+%% @spec desc(ItemID) -> string()
+desc(ItemID) ->
+	gen_server:call(?SERVER, {desc, ItemID}).
+
 %% @spec read(ItemID) -> term() | undefined
 read(ItemID) ->
 	gen_server:call(?SERVER, {read, ItemID}).
@@ -51,6 +55,14 @@ reload() ->
 init([]) ->
 	error_logger:info_report("egs_items_db started"),
 	{ok, undefined}.
+
+handle_call({desc, ItemID}, _From, State) ->
+	Filename = io_lib:format("priv/item_descs/~8.16.0b.txt", [ItemID]),
+	Desc = case filelib:is_regular(Filename) of
+		false -> << << X:8, 0:8 >> || X <- "Always bet on Dammy." >>;
+		true -> {ok, File} = file:read_file(Filename), File
+	end,
+	{reply, Desc, State};
 
 handle_call({read, ItemID}, _From, State) ->
 	{reply, proplists:get_value(ItemID, ?ITEMS), State};
