@@ -86,7 +86,7 @@ event({char_select_enter, Slot, _BackToPreviousField}, State=#state{gid=GID}) ->
 	egs_user_model:item_add(GID, 16#01010b00, #psu_striking_weapon_item_variables{current_pp=99, max_pp=100, element=#psu_element{type=3, percent=50}}),
 	{ok, User3} = egs_user_model:read(GID),
 	psu_game:char_load(User3),
-	{ok, egs_game, State}.
+	{ok, egs_game, State#state{slot=Slot}}.
 
 %% Internal.
 
