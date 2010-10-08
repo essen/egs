@@ -55,6 +55,7 @@ init([]) ->
 	LoginProcs = [{{egs_login_server, Port}, {egs_login_server, start_link, [Port]}, permanent, 5000, worker, dynamic} || Port <- LoginPorts],
 	OtherProcs = [
 		{egs_seasons, {egs_seasons, start_link, []}, permanent, 5000, worker, dynamic},
+		{egs_items_db, {egs_items_db, start_link, []}, permanent, 5000, worker, dynamic},
 		{egs_user_model, {egs_user_model, start_link, []}, permanent, 5000, worker, dynamic},
 		{egs_game_server, {egs_game_server, start_link, [GamePort]}, permanent, 5000, worker, dynamic}
 	],

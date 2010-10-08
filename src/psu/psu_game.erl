@@ -23,7 +23,6 @@
 -include("include/records.hrl").
 -include("include/maps.hrl").
 -include("include/missions.hrl").
--include("include/psu/items.hrl").
 -include("include/psu/npc.hrl").
 
 %% @doc Load and send the character information to the client.
@@ -226,7 +225,7 @@ send_010a(ItemsList) ->
 build_010a_list([], Acc) ->
 	iolist_to_binary(lists:reverse(Acc));
 build_010a_list([ItemID|Tail], Acc) ->
-	#psu_item{name=Name, rarity=Rarity, buy_price=SellPrice, data=Data} = proplists:get_value(ItemID, ?ITEMS),
+	#psu_item{name=Name, rarity=Rarity, buy_price=SellPrice, data=Data} = egs_items_db:read(ItemID),
 	UCS2Name = << << X:8, 0:8 >> || X <- Name >>,
 	NamePadding = 8 * (46 - byte_size(UCS2Name)),
 	RarityBin = Rarity - 1,
@@ -364,18 +363,18 @@ build_0a0a_item_variables([{ItemID, Variables}|Tail], N, Acc) ->
 	build_0a0a_item_variables(Tail, N + 1, [build_item_variables(ItemID, N, Variables)|Acc]).
 
 build_item_variables(ItemID, ItemUUID, #psu_clothing_item_variables{color=ColorNb}) ->
-	#psu_item{rarity=Rarity, data=#psu_clothing_item{colors=ColorsBin}} = proplists:get_value(ItemID, ?ITEMS),
+	#psu_item{rarity=Rarity, data=#psu_clothing_item{colors=ColorsBin}} = egs_items_db:read(ItemID),
 	RarityInt = Rarity - 1,
 	ColorInt = if ColorNb < 5 -> ColorNb; true -> 16#10 + ColorNb - 5 end,
 	Bits = ColorNb * 8,
 	<< _Before:Bits, ColorA:4, ColorB:4, _After/bits >> = ColorsBin,
 	<< 0:32, ItemUUID:32/little, ItemID:32, 0:88, RarityInt:8, ColorA:8, ColorB:8, ColorInt:8, 0:72 >>;
 build_item_variables(ItemID, ItemUUID, #psu_consumable_item_variables{quantity=Quantity}) ->
-	#psu_item{rarity=Rarity, data=#psu_consumable_item{max_quantity=MaxQuantity, action=Action}} = proplists:get_value(ItemID, ?ITEMS),
+	#psu_item{rarity=Rarity, data=#psu_consumable_item{max_quantity=MaxQuantity, action=Action}} = egs_items_db:read(ItemID),
 	RarityInt = Rarity - 1,
 	<< 0:32, ItemUUID:32/little, ItemID:32, Quantity:32/little, MaxQuantity:32/little, 0:24, RarityInt:8, Action:8, 0:88 >>;
 build_item_variables(ItemID, ItemUUID, #psu_parts_item_variables{}) ->
-	#psu_item{rarity=Rarity} = proplists:get_value(ItemID, ?ITEMS),
+	#psu_item{rarity=Rarity} = egs_items_db:read(ItemID),
 	RarityInt = Rarity - 1,
 	<< 0:32, ItemUUID:32/little, ItemID:32, 0:88, RarityInt:8, 0:96 >>;
 %% @todo Handle rank, rarity and hands properly.
@@ -402,7 +401,7 @@ build_item_variables(ItemID, ItemUUID, #psu_special_item_variables{}) ->
 	end,
 	<< 0:32, ItemUUID:32/little, ItemID:32, 0:24, 16#80:8, 0:56, 16#80:8, 0:32, Action/binary, 0:32 >>;
 build_item_variables(ItemID, ItemUUID, #psu_trap_item_variables{quantity=Quantity}) ->
-	#psu_item{rarity=Rarity, data=#psu_trap_item{max_quantity=MaxQuantity}} = proplists:get_value(ItemID, ?ITEMS),
+	#psu_item{rarity=Rarity, data=#psu_trap_item{max_quantity=MaxQuantity}} = egs_items_db:read(ItemID),
 	RarityInt = Rarity - 1,
 	<< 0:32, ItemUUID:32/little, ItemID:32, Quantity:32/little, MaxQuantity:32/little, 0:24, RarityInt:8, 0:96 >>.
 
@@ -411,7 +410,7 @@ build_0a0a_item_constants([], Acc) ->
 	Padding = 34560 - 8 * byte_size(Bin),
 	<< Bin/binary, 0:Padding >>;
 build_0a0a_item_constants([{ItemID, _Variables}|Tail], Acc) ->
-	#psu_item{name=Name, rarity=Rarity, sell_price=SellPrice, data=Data} = proplists:get_value(ItemID, ?ITEMS),
+	#psu_item{name=Name, rarity=Rarity, sell_price=SellPrice, data=Data} = egs_items_db:read(ItemID),
 	UCS2Name = << << X:8, 0:8 >> || X <- Name >>,
 	NamePadding = 8 * (46 - byte_size(UCS2Name)),
 	<< Category:8, _:24 >> = << ItemID:32 >>,

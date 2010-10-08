@@ -128,3 +128,24 @@
 %% @doc Hit response data.
 
 -record(hit_response, {type, user, exp, damage, targethp, targetse, events}).
+
+%% @doc Items.
+
+-record(psu_element, {type, percent}).
+-record(psu_pa, {type, level}).
+
+-record(psu_item, {name, rarity, buy_price, sell_price, data}).
+-record(psu_clothing_item, {appearance, type, manufacturer, overlap, gender, colors}).
+-record(psu_consumable_item, {max_quantity, pt_diff, status_effect, action, target, use_condition, item_effect}).
+-record(psu_parts_item, {appearance, type, manufacturer, overlap, gender}).
+-record(psu_special_item, {}).
+-record(psu_striking_weapon_item, {pp, atp, ata, atp_req, shop_element, hand, max_upgrades, attack_label,
+	attack_sound, hitbox_a, hitbox_b, hitbox_c, hitbox_d, nb_targets, effect, model}).
+-record(psu_trap_item, {max_quantity, effect, type}).
+
+-record(psu_clothing_item_variables, {color}).
+-record(psu_consumable_item_variables, {quantity}).
+-record(psu_parts_item_variables, {}).
+-record(psu_special_item_variables, {}).
+-record(psu_striking_weapon_item_variables, {is_active=0, slot=0, current_pp, max_pp, element, pa=#psu_pa{type=0, level=0}}).
+-record(psu_trap_item_variables, {quantity}).

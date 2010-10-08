@@ -27,7 +27,6 @@
 -define(TABLE, ?MODULE).
 
 -include("include/records.hrl").
--include("include/psu/items.hrl").
 -include_lib("stdlib/include/qlc.hrl").
 
 %% @spec do(Q) -> Record
@@ -166,7 +165,7 @@ handle_call({item_add, GID, ItemID, Variables}, _From, State) ->
 	Inventory = Character#characters.inventory,
 	Inventory2 = case Variables of
 		#psu_consumable_item_variables{quantity=Quantity} ->
-			#psu_item{data=#psu_consumable_item{max_quantity=MaxQuantity}} = proplists:get_value(ItemID, ?ITEMS),
+			#psu_item{data=#psu_consumable_item{max_quantity=MaxQuantity}} = egs_items_db:read(ItemID),
 			{ItemID, #psu_consumable_item_variables{quantity=Quantity2}} = case lists:keyfind(ItemID, 1, Inventory) of
 				false -> New = true, {ItemID, #psu_consumable_item_variables{quantity=0}};
 				Tuple -> New = false, Tuple
@@ -176,7 +175,7 @@ handle_call({item_add, GID, ItemID, Variables}, _From, State) ->
 				lists:keystore(ItemID, 1, Inventory, {ItemID, #psu_consumable_item_variables{quantity=Quantity3}})
 			end;
 		#psu_trap_item_variables{quantity=Quantity} ->
-			#psu_item{data=#psu_trap_item{max_quantity=MaxQuantity}} = proplists:get_value(ItemID, ?ITEMS),
+			#psu_item{data=#psu_trap_item{max_quantity=MaxQuantity}} = egs_items_db:read(ItemID),
 			{ItemID, #psu_trap_item_variables{quantity=Quantity2}} = case lists:keyfind(ItemID, 1, Inventory) of
 				false -> New = true, {ItemID, #psu_trap_item_variables{quantity=0}};
 				Tuple -> New = false, Tuple
@@ -236,7 +235,7 @@ handle_cast({item_qty_add, GID, ItemIndex, QuantityDiff}, State) ->
 	{ItemID, Variables} = lists:nth(ItemIndex + 1, Inventory),
 	case Variables of
 		#psu_trap_item_variables{quantity=Quantity} ->
-			#psu_item{data=#psu_trap_item{max_quantity=MaxQuantity}} = proplists:get_value(ItemID, ?ITEMS),
+			#psu_item{data=#psu_trap_item{max_quantity=MaxQuantity}} = egs_items_db:read(ItemID),
 			Quantity2 = Quantity + QuantityDiff,
 			if	Quantity2 =:= 0 ->
 					Inventory2 = string:substr(Inventory, 1, ItemIndex) ++ string:substr(Inventory, ItemIndex + 2);

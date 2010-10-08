@@ -384,7 +384,7 @@ event({item_equip, ItemIndex, TargetGID, TargetLID, A, B}, #state{gid=GID}) ->
 			psu_game:send(<< 16#01050300:32, 0:64, TargetGID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
 				TargetGID:32/little, TargetLID:32/little, ItemIndex:8, 1:8, Category:8, A:8, B:32/little >>);
 		{ItemID, Variables} when element(1, Variables) =:= psu_striking_weapon_item_variables ->
-			#psu_item{data=Constants} = proplists:get_value(ItemID, ?ITEMS),
+			#psu_item{data=Constants} = egs_items_db:read(ItemID),
 			#psu_striking_weapon_item{attack_sound=Sound, hitbox_a=HitboxA, hitbox_b=HitboxB,
 				hitbox_c=HitboxC, hitbox_d=HitboxD, nb_targets=NbTargets, effect=Effect, model=Model} = Constants,
 			<< Category:8, _:24 >> = << ItemID:32 >>,
@@ -396,7 +396,7 @@ event({item_equip, ItemIndex, TargetGID, TargetLID, A, B}, #state{gid=GID}) ->
 				TargetGID:32/little, TargetLID:32/little, ItemIndex:8, 1:8, Category:8, A:8, B:32/little,
 				SoundInt:32/little, HitboxA:16, HitboxB:16, HitboxC:16, HitboxD:16, SoundType:4, NbTargets:4, 0:8, Effect:8, Model:8 >>);
 		{ItemID, Variables} when element(1, Variables) =:= psu_trap_item_variables ->
-			#psu_item{data=#psu_trap_item{effect=Effect, type=Type}} = proplists:get_value(ItemID, ?ITEMS),
+			#psu_item{data=#psu_trap_item{effect=Effect, type=Type}} = egs_items_db:read(ItemID),
 			<< Category:8, _:24 >> = << ItemID:32 >>,
 			Bin = case Type of
 				damage   -> << Effect:8, 16#0c0a05:24, 16#20140500:32, 16#0001c800:32, 16#10000000:32 >>;
@@ -529,7 +529,7 @@ event({npc_shop_buy, ShopItemIndex, QuantityOrColor}, State=#state{gid=GID}) ->
 	ShopID = egs_user_model:shop_get(GID),
 	ItemID = lists:nth(ShopItemIndex + 1, proplists:get_value(ShopID, ?SHOPS)),
 	log("npc shop ~p buy itemid ~8.16.0b quantity/color+1 ~p", [ShopID, ItemID, QuantityOrColor]),
-	#psu_item{name=Name, rarity=Rarity, buy_price=BuyPrice, sell_price=SellPrice, data=Constants} = proplists:get_value(ItemID, ?ITEMS),
+	#psu_item{name=Name, rarity=Rarity, buy_price=BuyPrice, sell_price=SellPrice, data=Constants} = egs_items_db:read(ItemID),
 	Variables = case element(1, Constants) of
 		psu_clothing_item ->
 			if	QuantityOrColor >= 1, QuantityOrColor =< 10 ->
