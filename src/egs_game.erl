@@ -524,24 +524,24 @@ event({npc_shop_buy, ShopItemIndex, QuantityOrColor}, State=#state{gid=GID}) ->
 	ItemID = egs_shops_db:nth(ShopID, ShopItemIndex + 1),
 	log("npc shop ~p buy itemid ~8.16.0b quantity/color+1 ~p", [ShopID, ItemID, QuantityOrColor]),
 	#psu_item{name=Name, rarity=Rarity, buy_price=BuyPrice, sell_price=SellPrice, data=Constants} = egs_items_db:read(ItemID),
-	Variables = case element(1, Constants) of
+	{Quantity, Variables} = case element(1, Constants) of
 		psu_clothing_item ->
 			if	QuantityOrColor >= 1, QuantityOrColor =< 10 ->
-				#psu_clothing_item_variables{color=QuantityOrColor - 1}
+				{1, #psu_clothing_item_variables{color=QuantityOrColor - 1}}
 			end;
 		psu_consumable_item ->
-			#psu_consumable_item_variables{quantity=QuantityOrColor};
+			{QuantityOrColor, #psu_consumable_item_variables{quantity=QuantityOrColor}};
 		psu_parts_item ->
-			#psu_parts_item_variables{};
+			{1, #psu_parts_item_variables{}};
 		psu_special_item ->
-			#psu_special_item_variables{};
+			{1, #psu_special_item_variables{}};
 		psu_striking_weapon_item ->
 			#psu_striking_weapon_item{pp=PP, shop_element=Element} = Constants,
-			#psu_striking_weapon_item_variables{current_pp=PP, max_pp=PP, element=Element};
+			{1, #psu_striking_weapon_item_variables{current_pp=PP, max_pp=PP, element=Element}};
 		psu_trap_item ->
-			#psu_trap_item_variables{quantity=QuantityOrColor}
+			{QuantityOrColor, #psu_trap_item_variables{quantity=QuantityOrColor}}
 	end,
-	egs_user_model:money_add(GID, -1 * BuyPrice),
+	egs_user_model:money_add(GID, -1 * BuyPrice * Quantity),
 	ItemUUID = egs_user_model:item_add(GID, ItemID, Variables),
 	{ok, User} = egs_user_model:read(GID),
 	psu_proto:send_0115(User#egs_user_model{lid=0}, State), %% @todo This one is apparently broadcast to everyone in the same zone.
