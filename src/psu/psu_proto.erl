@@ -1414,6 +1414,18 @@ send_1a02(A, B, C, D, #state{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#1a020300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:96,
 		A:16/little, B:16/little, C:16/little, D:16/little >>).
 
+%% @doc Lumilass available hairstyles/headtypes handler.
+%% @todo Handle the LID properly.
+send_1a03(CharUser, #state{socket=Socket, gid=DestGID}) ->
+	{ok, Conf} = file:consult("priv/lumilass.conf"),
+	Character = CharUser#egs_user_model.character,
+	NbHeadtypes = proplists:get_value({headtypes, Character#characters.gender, Character#characters.race}, Conf, 0),
+	HairstylesList = proplists:get_value({hairstyles, Character#characters.gender}, Conf),
+	NbHairstyles = length(HairstylesList),
+	HairstylesBin = iolist_to_binary([ << N:32 >> || N <- HairstylesList]),
+	packet_send(Socket, << 16#1a030300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:96,
+		NbHairstyles:32/little, NbHeadtypes:32/little, 0:416, HairstylesBin/binary, 0:32 >>).
+
 %% @doc Available types handler. Enable all 16 types.
 send_1a07(#state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#1a070300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:160,

@@ -435,8 +435,9 @@ event({item_unequip, ItemIndex, TargetGID, TargetLID, A, B}, #state{gid=GID}) ->
 event(lobby_transport_request, _State) ->
 	psu_game:send_0c08(true);
 
-event(lumilass_options_request, _State) ->
-	psu_game:send_1a03();
+event(lumilass_options_request, State=#state{gid=GID}) ->
+	{ok, User} = egs_user_model:read(GID),
+	psu_proto:send_1a03(User, State);
 
 %% @todo Probably replenish the player HP when entering a non-mission area rather than when aborting the mission?
 event(mission_abort, State=#state{gid=GID}) ->

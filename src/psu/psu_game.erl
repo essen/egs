@@ -677,20 +677,6 @@ send_170c() ->
 send_1711(Background) ->
 	send(<< (header(16#1711))/binary, Background:32/little-unsigned-integer >>).
 
-%% @doc Lumilass handler. Possibly more.
-%% @todo Figure out how Lumilass work exactly. The 4 bytes before the file may vary.
-send_1a03() ->
-	{ok, User} = egs_user_model:read(get(gid)),
-	Character = User#egs_user_model.character,
-	Filename = case {Character#characters.race, Character#characters.gender} of
-		{cast, male} -> "p/lumilass-metal-male.bin";
-		{cast, female} -> "p/lumilass-metal-female.bin";
-		{_, male} -> "p/lumilass-flesh-male.bin";
-		{_, female} -> "p/lumilass-flesh-female.bin"
-	end,
-	{ok, File} = file:read_file(Filename),
-	send(<< (header(16#1a03))/binary, 0:32, File/binary >>).
-
 %% @doc PP cube handler.
 %% @todo The 4 bytes before the file may vary. Everything past that is the same. Figure things out.
 send_1a04() ->
