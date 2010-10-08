@@ -22,7 +22,6 @@
 
 -include("include/records.hrl").
 -include("include/maps.hrl").
--include("include/psu/items.hrl").
 
 %% @doc Send a keepalive.
 keepalive(#state{socket=Socket}) ->
@@ -522,7 +521,7 @@ event({npc_invite, NPCid}, #state{gid=GID}) ->
 %% @todo Should be 0115(money) 010a03(confirm sale).
 event({npc_shop_buy, ShopItemIndex, QuantityOrColor}, State=#state{gid=GID}) ->
 	ShopID = egs_user_model:shop_get(GID),
-	ItemID = lists:nth(ShopItemIndex + 1, proplists:get_value(ShopID, ?SHOPS)),
+	ItemID = egs_shops_db:nth(ShopID, ShopItemIndex + 1),
 	log("npc shop ~p buy itemid ~8.16.0b quantity/color+1 ~p", [ShopID, ItemID, QuantityOrColor]),
 	#psu_item{name=Name, rarity=Rarity, buy_price=BuyPrice, sell_price=SellPrice, data=Constants} = egs_items_db:read(ItemID),
 	Variables = case element(1, Constants) of
@@ -559,7 +558,7 @@ event({npc_shop_buy, ShopItemIndex, QuantityOrColor}, State=#state{gid=GID}) ->
 event({npc_shop_enter, ShopID}, #state{gid=GID}) ->
 	log("npc shop enter ~p", [ShopID]),
 	egs_user_model:shop_enter(GID, ShopID),
-	psu_game:send_010a(proplists:get_value(ShopID, ?SHOPS));
+	psu_game:send_010a(egs_shops_db:read(ShopID));
 
 event({npc_shop_leave, ShopID}, #state{gid=GID}) ->
 	log("npc shop leave ~p", [ShopID]),
