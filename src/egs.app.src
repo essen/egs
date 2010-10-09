@@ -18,6 +18,7 @@
 		egs_login,
 		egs_char_select,
 		egs_game,
+		nbl,
 		reloader,
 		psu_game,
 		psu_patch,
