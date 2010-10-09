@@ -36,6 +36,9 @@ info({egs, cast, Command}, #state{gid=GID}) ->
 info({egs, chat, ChatTypeID, ChatGID, ChatName, ChatModifiers, ChatMessage}, _State) ->
 	psu_game:send_0304(ChatTypeID, ChatGID, ChatName, ChatModifiers, ChatMessage);
 
+info({egs, notice, Type, Message}, State) ->
+	psu_proto:send_0228(Type, 2, Message, State);
+
 %% @doc Inform the client that a player has spawn.
 %% @todo Should be something along the lines of 010d 0205 203 201.
 info({egs, player_spawn, _Player}, #state{gid=GID}) ->

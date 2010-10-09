@@ -1316,6 +1316,18 @@ send_0225(MOTD, CurrentPage, #state{socket=Socket, lid=DestLID}) ->
 	Length = byte_size(Msg) div 2 + 2,
 	packet_send(Socket, << 16#02250300:32, DestLID:16/little, 0:272, NbPages:8, CurrentPage:8, Length:16/little, Msg/binary, 0:16 >>).
 
+%% @doc Display a notice on the player's screen.
+%%      There are four types of notices: dialog, top, scroll and timeout.
+%% * dialog: A dialog in the center of the screen, which can be OK'd by players.
+%% * top: Horizontal scroll on top of the screen, traditionally used for server-wide messages.
+%% * scroll: Vertical scroll on the right of the screen, traditionally used for rare missions obtention messages.
+%% * timeout: A dialog in the center of the screen that disappears after Duration seconds.
+send_0228(Type, Duration, Message, #state{socket=Socket, gid=DestGID}) ->
+	TypeInt = case Type of dialog -> 0; top -> 1; scroll -> 2; timeout -> 3 end,
+	UCS2Message = << << X:8, 0:8 >> || X <- Message >>,
+	packet_send(Socket, << 16#02280300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64,
+		TypeInt:32/little, Duration:32/little, UCS2Message/binary, 0:16 >>).
+
 %% @doc Forward the player to a website. The website will open when the player closes the game. Used for login issues mostly.
 send_0231(URL, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	URLBin = list_to_binary(URL),
@@ -1481,33 +1493,6 @@ packet_fragment_send(CSocket, Packet, Size, Current) ->
 	Fragment = << 16#10400000:32, 16#0b030000:32, Size:32/little, Current:32/little, Chunk/binary >>,
 	ssl:send(CSocket, Fragment),
 	packet_fragment_send(CSocket, Rest, Size, Current + 16#4000).
-
-%% @doc Shortcut for send_global/4.
-send_global(CSocket, Type, Message) ->
-	send_global(CSocket, Type, Message, 2).
-
-%% @doc Send a global message.
-%%      There are four types of global messages: dialog, top, scroll and timeout.
-%%      * dialog: A dialog in the center of the screen, which can be OK'd by players.
-%%      * top: Horizontal scroll on top of the screen, traditionally used for server-wide messages.
-%%      * scroll: Vertical scroll on the right of the screen, traditionally used for Player X joined the party.
-%%      * timeout: A dialog in the center of the screen that disappears after Duration seconds.
-send_global(CSocket, Type, Message, Duration) ->
-	TypeID = case Type of
-		dialog -> 0;
-		top -> 1;
-		scroll -> 2;
-		timeout -> 3;
-		_ -> 1
-	end,
-	UCS2Message = << << X:8, 0:8 >> || X <- Message >>,
-	try
-		Packet = << 16#02280300:32, 0:288, TypeID:32/little, Duration:32/little, UCS2Message/binary, 0, 0 >>,
-		packet_send(CSocket, Packet)
-	catch
-		_:_ ->
-			ignore
-	end.
 
 %% @doc Keepalive. Just send an empty packet, the game doesn't really care.
 %% @todo If there's an actual keepalive command, use it instead.
