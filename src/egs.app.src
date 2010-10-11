@@ -1,7 +1,7 @@
 %%-*- mode: erlang -*-
 {application, egs, [
 	{description, "EGS online action-RPG game server"},
-	{vsn, "0.1"},
+	{vsn, "0.6"},
 	{modules, [
 		egs,
 		egs_app,
@@ -9,6 +9,7 @@
 		egs_conf,
 		egs_seasons,
 		egs_items_db,
+		egs_npc_db,
 		egs_shops_db,
 		egs_accounts,
 		egs_game_server,
@@ -28,7 +29,6 @@
 		psu_appearance,
 		psu_characters,
 		psu_party,
-		psu_npc,
 		psu_parser
 	]},
 	{registered, []},

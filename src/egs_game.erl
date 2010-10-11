@@ -470,7 +470,7 @@ event({npc_force_invite, NPCid}, State=#state{gid=GID}) ->
 	{ok, User} = egs_user_model:read(GID),
 	%% Create NPC.
 	log("npc force invite ~p", [NPCid]),
-	TmpNPCUser = psu_npc:user_init(NPCid, ((User#egs_user_model.character)#characters.mainlevel)#level.number),
+	TmpNPCUser = egs_npc_db:create(NPCid, ((User#egs_user_model.character)#characters.mainlevel)#level.number),
 	%% Create and join party.
 	case User#egs_user_model.partypid of
 		undefined ->
@@ -501,7 +501,7 @@ event({npc_invite, NPCid}, #state{gid=GID}) ->
 	{ok, User} = egs_user_model:read(GID),
 	%% Create NPC.
 	log("invited npcid ~b", [NPCid]),
-	TmpNPCUser = psu_npc:user_init(NPCid, ((User#egs_user_model.character)#characters.mainlevel)#level.number),
+	TmpNPCUser = egs_npc_db:create(NPCid, ((User#egs_user_model.character)#characters.mainlevel)#level.number),
 	%% Create and join party.
 	case User#egs_user_model.partypid of
 		undefined ->

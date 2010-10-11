@@ -23,9 +23,41 @@
 %% @doc Accounts. So far only used for storing temporary information.
 %% @todo Hash the password.
 %% @todo Add email, password_salt, is_ingame, register_time, last_login_time, etc.
--record(accounts, {
-	gid, username, password, auth_state
+-record(accounts, {gid, username, password, auth_state}).
+
+%% @doc NPC configuration data.
+%% @todo Add inventory, AI parameters.
+-record(npc, {name, race, gender, class, level_diff, appearance}).
+
+%% @doc Character appearance data structure, flesh version.
+-record(flesh_appearance, {
+	voicetype, voicepitch=127,
+	jacket, pants, shoes, ears, face, hairstyle,
+	jacketcolor=0, pantscolor=0, shoescolor=0, lineshieldcolor=0, badge=0,
+	eyebrows=0, eyelashes=0, eyesgroup=0, eyes=0,
+	bodysuit=0,
+	eyescolory=32767, eyescolorx=0,
+	lipsintensity=32767, lipscolory=32767, lipscolorx=0,
+	skincolor=65535,
+	hairstylecolory=32767, hairstylecolorx=0,
+	proportion=65535, proportionboxx=65535, proportionboxy=65535,
+	faceboxx=65535, faceboxy=65535
 }).
+
+%% @doc Character appearance data structure, metal version.
+-record(metal_appearance, {
+	voicetype, voicepitch=127,
+	torso, legs, arms, ears, face, headtype,
+	maincolor=0, lineshieldcolor=0,
+	eyebrows=0, eyelashes=0, eyesgroup=0, eyes=0,
+	eyescolory=32767, eyescolorx=0,
+	bodycolor=65535, subcolor=196607,
+	hairstylecolory=32767, hairstylecolorx=0,
+	proportion=65535, proportionboxx=65535, proportionboxy=65535,
+	faceboxx=65535, faceboxy=65535
+}).
+
+%% Past this point needs to be reviewed.
 
 %% @doc Table containing counters current values.
 -record(counters, {name, id}).
@@ -58,35 +90,6 @@
 %% @doc Character stats data structure.
 
 -record(stats, {atp, ata, tp, dfp, evp, mst, sta}).
-
-%% @doc Character appearance data structure, flesh version.
-
--record(flesh_appearance, {
-	voicetype, voicepitch=127,
-	jacket, pants, shoes, ears, face, hairstyle,
-	jacketcolor=0, pantscolor=0, shoescolor=0, lineshieldcolor=0, badge=0,
-	eyebrows=0, eyelashes=0, eyesgroup=0, eyes=0,
-	bodysuit=0,
-	eyescolory=32767, eyescolorx=0,
-	lipsintensity=32767, lipscolory=32767, lipscolorx=0,
-	skincolor=65535,
-	hairstylecolory=32767, hairstylecolorx=0,
-	proportion=65535, proportionboxx=65535, proportionboxy=65535,
-	faceboxx=65535, faceboxy=65535
-}).
-
-%% @doc Character appearance data structure, metal version.
--record(metal_appearance, {
-	voicetype, voicepitch=127,
-	torso, legs, arms, ears, face, headtype,
-	maincolor=0, lineshieldcolor=0,
-	eyebrows=0, eyelashes=0, eyesgroup=0, eyes=0,
-	eyescolory=32767, eyescolorx=0,
-	bodycolor=65535, subcolor=196607,
-	hairstylecolory=32767, hairstylecolorx=0,
-	proportion=65535, proportionboxx=65535, proportionboxy=65535,
-	faceboxx=65535, faceboxy=65535
-}).
 
 %% @doc Character options data structure.
 
