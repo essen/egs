@@ -28,8 +28,7 @@
 %% @doc Load and send the character information to the client.
 %% @todo Should wait for the 021c reply before doing area_change.
 %% @todo Move this whole function directly to psu_proto, probably.
-char_load(User) ->
-	State = #state{socket=User#egs_user_model.socket, gid=User#egs_user_model.id, lid=User#egs_user_model.lid},
+char_load(User, State) ->
 	send_0d01(User),
 	% 0246
 	send_0a0a((User#egs_user_model.character)#characters.inventory),
@@ -177,16 +176,15 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 	psu_proto:send_0236(State3),
 	if	User#egs_user_model.partypid =/= undefined, AreaType =:= mission ->
 			{ok, NPCList} = psu_party:get_npc(User#egs_user_model.partypid),
-			npc_load(User, NPCList);
+			npc_load(User, NPCList, State);
 		true -> ok
 	end,
 	{ok, State3}.
 
 %% @todo Don't change the NPC info unless you are the leader!
-npc_load(_Leader, []) ->
+npc_load(_Leader, [], _State) ->
 	ok;
-npc_load(Leader, [{PartyPos, NPCGID}|NPCList]) ->
-	State = #state{socket=Leader#egs_user_model.socket, gid=Leader#egs_user_model.id, lid=Leader#egs_user_model.lid},
+npc_load(Leader, [{PartyPos, NPCGID}|NPCList], State) ->
 	{ok, OldNPCUser} = egs_user_model:read(NPCGID),
 	#egs_user_model{instancepid=InstancePid, area=Area, entryid=EntryID, pos=Pos} = Leader,
 	NPCUser = OldNPCUser#egs_user_model{lid=PartyPos, instancepid=InstancePid, areatype=mission, area=Area, entryid=EntryID, pos=Pos},
@@ -201,7 +199,7 @@ npc_load(Leader, [{PartyPos, NPCGID}|NPCList]) ->
 	send_100f((NPCUser#egs_user_model.character)#characters.npcid, PartyPos),
 	send_1601(PartyPos),
 	send_1016(PartyPos),
-	npc_load(Leader, NPCList).
+	npc_load(Leader, NPCList, State).
 
 %% @doc Build the packet header.
 header(Command) ->

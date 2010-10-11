@@ -54,7 +54,7 @@ event({system_client_version_info, _Entrance, _Language, _Platform, Version}, St
 		closed
 	end;
 
-%% Game server info request handler.
+%% @doc Game server info request handler.
 event(system_game_server_request, State=#state{socket=Socket}) ->
 	{ServerIP, ServerPort} = egs_conf:read(game_server),
 	psu_proto:send_0216(ServerIP, ServerPort, State),
@@ -65,7 +65,9 @@ event(system_game_server_request, State=#state{socket=Socket}) ->
 %%      If the user is authenticated, send him the character flags list.
 %% @todo Remove the put calls when all the send_xxxx are moved out of psu_game and into psu_proto.
 event({system_key_auth_request, AuthGID, AuthKey}, State=#state{socket=Socket}) ->
-	egs_user_model:key_auth(AuthGID, AuthKey, Socket),
+	egs_accounts:key_auth(AuthGID, AuthKey),
+	LID = 1 + mnesia:dirty_update_counter(counters, lobby, 1) rem 1023,
+	egs_user_model:write(#egs_user_model{id=AuthGID, pid=self(), lid=LID}),
 	put(socket, Socket),
 	put(gid, AuthGID),
 	State2 = State#state{gid=AuthGID},
@@ -73,14 +75,13 @@ event({system_key_auth_request, AuthGID, AuthKey}, State=#state{socket=Socket}) 
 	{ok, egs_char_select, State2};
 
 %% @doc Authentication request handler. Currently always succeed.
-%%      Use the temporary session ID as the GID for now.
-%%      Use username and password as a folder name for saving character data.
 %% @todo Handle real GIDs whenever there's real authentication. GID is the second SessionID in the reply.
 %% @todo Apparently it's possible to ask a question in the reply here. Used for free course on JP.
 event({system_login_auth_request, Username, Password}, State) ->
-	{ok, AuthGID, AuthKey} = egs_user_model:login_auth(Username, Password),
+	{ok, GID} = egs_accounts:login_auth(Username, Password),
+	{ok, AuthKey} = egs_accounts:key_auth_init(GID),
 	io:format("auth success for ~s ~s~n", [Username, Password]),
-	psu_proto:send_0223(AuthGID, AuthKey, State);
+	psu_proto:send_0223(GID, AuthKey, State);
 
 %% @doc MOTD request handler. Page number starts at 0.
 %% @todo Currently ignore the language and send the same MOTD file to everyone.

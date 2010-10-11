@@ -43,8 +43,8 @@ raw(Command, _Data, State) ->
 
 %% @doc Character screen selection request and delivery.
 event(char_select_request, #state{gid=GID}) ->
-	{ok, User} = egs_user_model:read(GID),
-	psu_game:send_0d03(data_load(User#egs_user_model.folder, 0), data_load(User#egs_user_model.folder, 1), data_load(User#egs_user_model.folder, 2), data_load(User#egs_user_model.folder, 3));
+	Folder = egs_accounts:get_folder(GID),
+	psu_game:send_0d03(data_load(Folder, 0), data_load(Folder, 1), data_load(Folder, 2), data_load(Folder, 3));
 
 %% @doc The options default to 0 for everything except brightness to 4.
 %% @todo Don't forget to check for the character's name.
@@ -57,8 +57,8 @@ event({char_select_create, Slot, CharBin}, #state{gid=GID}) ->
 	%~ psu_characters:validate_name(Name),
 	%~ psu_appearance:validate_char_create(Race, Gender, Appearance),
 	%% end of check, continue doing it wrong past that point for now
-	{ok, User} = egs_user_model:read(GID),
-	Dir = io_lib:format("save/~s", [User#egs_user_model.folder]),
+	Folder = egs_accounts:get_folder(GID),
+	Dir = io_lib:format("save/~s", [Folder]),
 	File = io_lib:format("~s/~b-character", [Dir, Slot]),
 	_ = file:make_dir(Dir),
 	file:write_file(File, CharBin),
@@ -67,7 +67,8 @@ event({char_select_create, Slot, CharBin}, #state{gid=GID}) ->
 %% @doc Load the selected character into the game's universe.
 event({char_select_enter, Slot, _BackToPreviousField}, State=#state{gid=GID}) ->
 	{ok, User} = egs_user_model:read(GID),
-	[{status, 1}, {char, CharBin}, {options, OptionsBin}] = data_load(User#egs_user_model.folder, Slot),
+	Folder = egs_accounts:get_folder(GID),
+	[{status, 1}, {char, CharBin}, {options, OptionsBin}] = data_load(Folder, Slot),
 	<< Name:512/bits, RaceBin:8, GenderBin:8, ClassBin:8, AppearanceBin:776/bits, _/bits >> = CharBin,
 	Race = psu_characters:race_binary_to_atom(RaceBin),
 	Gender = psu_characters:gender_binary_to_atom(GenderBin),
@@ -75,7 +76,7 @@ event({char_select_enter, Slot, _BackToPreviousField}, State=#state{gid=GID}) ->
 	Appearance = psu_appearance:binary_to_tuple(Race, AppearanceBin),
 	Options = psu_characters:options_binary_to_tuple(OptionsBin),
 	Character = #characters{slot=Slot, name=Name, race=Race, gender=Gender, class=Class, appearance=Appearance, options=Options}, % TODO: temporary set the slot here, won't be needed later
-	User2 = User#egs_user_model{state=online, character=Character, area=#psu_area{questid=1100000, zoneid=0, mapid=4}, entryid=5},
+	User2 = User#egs_user_model{character=Character, area=#psu_area{questid=1100000, zoneid=0, mapid=4}, entryid=5},
 	egs_user_model:write(User2),
 	egs_user_model:item_add(GID, 16#11010000, #psu_special_item_variables{}),
 	egs_user_model:item_add(GID, 16#11020000, #psu_special_item_variables{}),
@@ -85,8 +86,9 @@ event({char_select_enter, Slot, _BackToPreviousField}, State=#state{gid=GID}) ->
 	egs_user_model:item_add(GID, 16#01010a00, #psu_striking_weapon_item_variables{current_pp=99, max_pp=100, element=#psu_element{type=2, percent=50}}),
 	egs_user_model:item_add(GID, 16#01010b00, #psu_striking_weapon_item_variables{current_pp=99, max_pp=100, element=#psu_element{type=3, percent=50}}),
 	{ok, User3} = egs_user_model:read(GID),
-	psu_game:char_load(User3),
-	{ok, egs_game, State#state{slot=Slot}}.
+	State2 = State#state{slot=Slot},
+	psu_game:char_load(User3, State2),
+	{ok, egs_game, State2}.
 
 %% Internal.
 

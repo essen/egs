@@ -20,6 +20,13 @@
 %% @doc Per-process state used by the various EGS modules.
 -record(state, {socket, gid, slot, lid=16#ffff, areanb=0}).
 
+%% @doc Accounts. So far only used for storing temporary information.
+%% @todo Hash the password.
+%% @todo Add email, password_salt, is_ingame, register_time, last_login_time, etc.
+-record(accounts, {
+	gid, username, password, auth_state
+}).
+
 %% @doc Table containing counters current values.
 -record(counters, {name, id}).
 
@@ -36,13 +43,12 @@
 
 -record(egs_user_model, {
 	%% General information.
-	id, lid, pid, socket, state, time, character,
+	id, lid, pid, time, character,
 	%% Location/state related information.
 	instancepid, partypid, areatype, area, entryid, pos=#pos{x=0.0, y=0.0, z=0.0, dir=0.0}, shopid,
 	prev_area=#psu_area{questid=0, zoneid=0, mapid=0}, prev_entryid=0, %% universeid
 	%% To be moved or deleted later on.
-	setid=0, %% @todo Current area's set number. Move that to psu_instance probably.
-	folder %% @todo Temporary save location.
+	setid=0 %% @todo Current area's set number. Move that to psu_instance probably.
 }).
 
 %% @doc Character main or class level data structure.
@@ -87,11 +93,6 @@
 -record(options, {textdisplayspeed, sound, musicvolume, soundeffectvolume, vibration, radarmapdisplay,
 	cutindisplay, mainmenucursorposition, camera3y, camera3x, camera1y, camera1x, controller, weaponswap,
 	lockon, brightness, functionkeysetting, buttondetaildisplay}).
-
-%% @doc Accounts data structure.
-%% @todo Make a disk table for storing accounts.
-
--record(accounts, {gid, username, password}). % also: characters, commonbox
 
 %% @doc Characters data structure.
 %% @todo Make a disk table for storing characters permanently. Also keep the current character in #users.

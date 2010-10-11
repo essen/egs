@@ -709,9 +709,9 @@ event({party_remove_member, PartyPos}, State=#state{gid=GID}) ->
 	psu_game:send_0204(DestUser, RemovedUser, 1),
 	psu_proto:send_0215(0, State);
 
-event({player_options_change, Options}, #state{gid=GID}) ->
-	{ok, User} = egs_user_model:read(GID),
-	file:write_file(io_lib:format("save/~s/~b-character.options", [User#egs_user_model.folder, (User#egs_user_model.character)#characters.slot]), Options);
+event({player_options_change, Options}, #state{gid=GID, slot=Slot}) ->
+	Folder = egs_accounts:get_folder(GID),
+	file:write_file(io_lib:format("save/~s/~b-character.options", [Folder, Slot]), Options);
 
 %% @todo If the player has a scape, use it! Otherwise red screen.
 %% @todo Right now we force revive with a dummy HP value.
@@ -751,7 +751,7 @@ event(unicube_request, _State) ->
 %% @todo When selecting 'Your room', load a default room.
 %% @todo When selecting 'Reload', reload the character in the current lobby.
 %% @todo Delete NPC characters and stop the party on entering myroom too.
-event({unicube_select, Selection, EntryID}, #state{gid=GID}) ->
+event({unicube_select, Selection, EntryID}, State=#state{gid=GID}) ->
 	case Selection of
 		cancel -> ignore;
 		16#ffffffff ->
@@ -761,7 +761,7 @@ event({unicube_select, Selection, EntryID}, #state{gid=GID}) ->
 			{ok, User} = egs_user_model:read(GID),
 			User2 = User#egs_user_model{area=#psu_area{questid=1120000, zoneid=0, mapid=100}, entryid=0},
 			egs_user_model:write(User2),
-			psu_game:char_load(User2);
+			psu_game:char_load(User2, State);
 		_UniID ->
 			log("uni selection (reload)"),
 			psu_game:send_0230(),
@@ -779,7 +779,7 @@ event({unicube_select, Selection, EntryID}, #state{gid=GID}) ->
 			end,
 			User2 = User#egs_user_model{entryid=EntryID},
 			egs_user_model:write(User2),
-			psu_game:char_load(User2)
+			psu_game:char_load(User2, State)
 	end.
 
 %% Internal.
