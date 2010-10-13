@@ -1,3 +1,81 @@
 List of counters:
 
-  0 Linear Line
+  0 Colony Linear Line
+  1 Space Docks
+  2 Parum Flyerbase
+  3 Parum Linear Line
+  4 Neudaiz Flyerbase
+  5 Moatoob Flyerbase
+  6 COG
+  7 AMF Headquarters
+  8 GRM
+ 10 Transfer Terminal (entry 0)
+ 11 Transfer Terminal (entry 1)
+ 15 Aurorey
+ 20 HIVE (entry 0)
+ 21 HIVE (entry 1)
+ 25 Dallgun
+ 30 Raffon Fieldbase (entry 0)
+ 31 Raffon Fieldbase (entry 1)
+ 35 Parum Lakeshore (entry 0)
+ 36 Parum Lakeshore (entry 1)
+ 40 Parum Underground (entry 0)
+ 41 Parum Underground (entry 1)
+ 42 Parum Underground (entry 2)
+ 45 Parum Denes (entry 0)
+ 46 Parum Denes (entry 1)
+ 48 Parum Waterfall
+ 50 Neudaiz Islands (entry 0)
+ 51 Neudaiz Islands (entry 1)
+ 52 Neudaiz Islands (entry 2)
+ 55 Neudaiz Relics (entry 0)
+ 56 Neudaiz Relics (entry 1)
+ 70 Neudaiz Mizuraki (entry 0)
+ 71 Neudaiz Mizuraki (entry 1)
+ 72 Neudaiz Mizuraki (entry 2)
+ 75 Neudaiz Hot Springs
+ 85 Moatoob Desert (entry 0)
+ 86 Moatoob Desert (entry 1)
+ 90 Moatoob Basin (entry 0)
+ 91 Moatoob Basin (entry 1)
+100 Moatoob Underground Lake (entry 0)
+101 Moatoob Underground Lake (entry 1)
+102 Moatoob Undergroupd Lake (entry 2)
+105 Moatoob Oasis
+108 Moatoob Glacier (entry 0)
+109 Moatoob Glacier (entry 1)
+110 Tutorial Linear Line
+111 Tutorial Transfer Terminal
+112 Parum Cafe
+114 Moatoob Pub
+115 GUARDIANS HQ
+116 Parum GUARDIANS
+117 Neudaiz GUARDIANS
+118 Moatoob GUARDIANS
+177 Colony R&D
+200 Rykros (entry 0)
+201 Rykros (entry 1)
+203 Falz Memoria
+205 Parum Rozenom (entry 0)
+206 Parum Rozenom (entry 1)
+210 Parum Beach (entry 0)
+211 Parum Beach (entry 1)
+215 Parum Subway (entry 0)
+216 Parum Subway (entry 1)
+220 Parum AMF Central (entry 0)
+221 Parum AMF Central (entry 1)
+225 Neudaiz Saguraki (entry 0)
+226 Neudaiz Saguraki (entry 1)
+227 Neudaiz Saguraki (entry 2)
+230 Neudaiz Pavilion (entry 0)
+231 Neudaiz Pavilion (entry 1)
+232 Neudaiz Pavilion (entry 2)
+235 Neudaiz Habirao (entry 0)
+236 Neudaiz Habirao (entry 1)
+240 Neudaiz Temple
+245 Moatoob Granigs (entry 0)
+246 Moatoob Granigs (entry 1)
+247 Moatoob Granigs (entry 2)
+250 Moatoob Il Cabo (entry 0)
+251 Moatoob Il Cabo (entry 1)
+255 Moatoob Casino
