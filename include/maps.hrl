@@ -651,22 +651,6 @@
 %% Background values include: 01 parum, 02 moatoob, 03 neudaiz, 04 guardians hq, 05 parum guardians, 06 moatoob guardians, 07 neudaiz guardians, 08 pitch black, ff destroyed colony
 
 -define(COUNTERS, [
-	% Linear Line: Phantom Ruins, Unsafe Passage, Unsafe Passage (AOTI, missing)
-
-	{  0, [{quests, "data/counters/colony.ll.pack"}, {bg, 255}, {options, << 16#01a92800:32, 3, 3, 0,
-		0, 3, 0, 3, 0, % Phantom Ruins C-S
-		3, 3, 3, 3, 3, % Unsafe Passage C-S2 variant 1
-		3, 3, 3, 3, 3, % Unsafe Passage C-S2 variant 2
-		3, 3, 3, 3, 3, % Unsafe Passage C-S2 variant 3
-	0:136 >>}]},
-
-	%~ {  0, [{quests, "data/counters/colony.ll.pack"}, {bg, 255}, {options, << 16#01a92800:32, 3, 3, 0,
-		%~ 3, 3, 3, 3, 0, % Phantom Ruins C-S
-		%~ 3, 3, 3, 3, 3, % Unsafe Passage C-S2 variant 1
-		%~ 3, 3, 3, 3, 3, % Unsafe Passage C-S2 variant 2
-		%~ 3, 3, 3, 3, 3, % Unsafe Passage C-S2 variant 3
-	%~ 0:136 >>}]},
-
 	% Space docks: Phantom Ruins, Dark Satellite, Familiar Trees (missing), Boss quest category (missing), Unit category (missing), Enemy category (missing)
 
 	{  1, [{quests, "data/counters/colony.docks.pack"}, {bg, 255}, {options, << 16#01805400:32, 0, 3, 0, 0, 0, 0,

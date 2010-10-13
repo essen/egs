@@ -303,10 +303,14 @@ event(counter_leave, State=#state{gid=GID}) ->
 
 %% @doc Send the code for the background image to use. But there's more that should be sent though.
 %% @todo Apparently background values 1 2 3 are never used on official servers. Find out why.
+%% @todo Rename to counter_bg_request.
 event({counter_options_request, CounterID}, _State) ->
 	log("counter options request ~p", [CounterID]),
-	[{quests, _}, {bg, Background}|_Tail] = proplists:get_value(CounterID, ?COUNTERS),
-	psu_game:send_1711(Background);
+	Bg = case proplists:get_value(CounterID, ?COUNTERS) of
+		undefined -> egs_counters:bg(CounterID);
+		[{quests, _}, {bg, Background}|_Tail] -> Background
+	end,
+	psu_game:send_1711(Bg);
 
 %% @todo Handle when the party already exists! And stop doing it wrong.
 event(counter_party_info_request, #state{gid=GID}) ->
@@ -318,16 +322,20 @@ event(counter_party_options_request, _State) ->
 	psu_game:send_170a();
 
 %% @doc Request the counter's quest files.
-event({counter_quest_files_request, CounterID}, _State) ->
+event({counter_quest_files_request, CounterID}, State) ->
 	log("counter quest files request ~p", [CounterID]),
-	[{quests, Filename}|_Tail] = proplists:get_value(CounterID, ?COUNTERS),
-	psu_game:send_0c06(Filename);
+	case proplists:get_value(CounterID, ?COUNTERS) of
+		undefined -> psu_proto:send_0c06(egs_counters:pack(CounterID), State);
+		[{quests, Filename}|_Tail] -> psu_game:send_0c06(Filename)
+	end;
 
 %% @doc Counter available mission list request handler.
-event({counter_quest_options_request, CounterID}, _State) ->
+event({counter_quest_options_request, CounterID}, State) ->
 	log("counter quest options request ~p", [CounterID]),
-	[{quests, _}, {bg, _}, {options, Options}] = proplists:get_value(CounterID, ?COUNTERS),
-	psu_game:send_0c10(Options);
+	case proplists:get_value(CounterID, ?COUNTERS) of
+		undefined -> psu_proto:send_0c10(egs_counters:opts(CounterID), State);
+		[{quests, _}, {bg, _}, {options, Options}] -> psu_game:send_0c10(Options)
+	end;
 
 %% @todo A and B are mostly unknown. Like most of everything else from the command 0e00...
 event({hit, FromTargetID, ToTargetID, A, B}, State=#state{gid=GID}) ->

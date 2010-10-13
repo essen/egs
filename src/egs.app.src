@@ -12,6 +12,7 @@
 		egs_npc_db,
 		egs_shops_db,
 		egs_accounts,
+		egs_counters,
 		egs_game_server,
 		egs_login_server,
 		egs_exit_mon,

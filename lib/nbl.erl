@@ -23,17 +23,15 @@
 %% @doc Pack an nbl file according to the given Options.
 %%      Example usage: nbl:pack([{files, [{file, "table.rel", [16#184, 16#188, 16#1a0]}, {file, "text.bin", []}]}]).
 pack(Options) ->
-	OutFilename = proplists:get_value(out, Options, "unnamed.nbl"),
 	Files = proplists:get_value(files, Options),
 	{Header, Data, DataSize, PtrArray, PtrArraySize} = pack_files(Files),
 	NbFiles = length(Files),
 	HeaderSize = 16#30 + 16#60 * NbFiles,
 	CompressedDataSize = 0,
 	EncryptSeed = 0,
-	NBL = << $N, $M, $L, $L, 2:16/little, 16#1300:16, HeaderSize:32/little, NbFiles:32/little,
+	<<	$N, $M, $L, $L, 2:16/little, 16#1300:16, HeaderSize:32/little, NbFiles:32/little,
 		DataSize:32/little, CompressedDataSize:32/little, PtrArraySize:32/little, EncryptSeed:32/little,
-		0:128, Header/binary, Data/binary, PtrArray/binary >>,
-	file:write_file(OutFilename, NBL).
+		0:128, Header/binary, Data/binary, PtrArray/binary >>.
 
 %% @doc Pack a list of files and return the header, data and pointer array parts.
 pack_files(Files) ->

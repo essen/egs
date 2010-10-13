@@ -1372,6 +1372,16 @@ send_0c00(CharUser, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
 		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32 >>).
 
+%% @doc Send the huge pack of quest files available in the counter.
+send_0c06(Pack, #state{socket=Socket}) ->
+	packet_send(Socket, << 16#0c060300:32, 0:288, 1:32/little-unsigned-integer, Pack/binary >>).
+
+%% @doc Send the counter's mission options (0 = invisible, 2 = disabled, 3 = available).
+%% @todo LID.
+send_0c10(Options, #state{socket=Socket, gid=DestGID}) ->
+	Size = byte_size(Options),
+	packet_send(Socket, << 16#0c100300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:64, 1, 0, Size:16/little, Options/binary >>).
+
 %% @doc Send the character flags list. This is the whole list of available values, not the character's.
 %%      Sent without fragmentation on official for unknown reasons. Do the same here.
 send_0d05(#state{socket=Socket, gid=DestGID}) ->
