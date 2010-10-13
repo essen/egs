@@ -140,7 +140,6 @@ get_counter(CounterID, Cache) ->
 	end.
 
 %% @doc Load a counter configuration file and return a table.rel binary along with its pointers array.
-%% @todo City isn't handled properly yet.
 load_table_rel(ConfFilename) ->
 	{ok, Settings} = file:consult(ConfFilename),
 	TName = proplists:get_value(t_name, Settings),
@@ -149,22 +148,24 @@ load_table_rel(ConfFilename) ->
 	{NbQuests, QuestsBin, NbGroups, GroupsBin} = load_table_rel_groups_to_bin(proplists:get_value(groups, Settings)),
 	QuestsPos = 16,
 	GroupsPos = 16 + byte_size(QuestsBin),
-	CityBin = case proplists:get_value(city, Settings) of
-		undefined -> << >>;
-		{QuestID, ZoneID, MapID, EntryID} ->
-			<< QuestID:32/little, ZoneID:16/little, MapID:16/little, EntryID:16/little >>
-	end,
-	CityPos = 0,
 	UnixTime = calendar:datetime_to_gregorian_seconds(calendar:now_to_universal_time(now()))
 		- calendar:datetime_to_gregorian_seconds({{1970, 1, 1}, {0, 0, 0}}),
 	MainBin = << 16#00000100:32, UnixTime:32/little, GroupsPos:32/little, QuestsPos:32/little,
 		NbGroups:16/little, NbQuests:16/little, TName:16/little, TDesc:16/little, CursorX:16/little, CursorY:16/little,
-		0:32, 0:16, 16#ffff:16, CityPos:32 >>,
+		0:32, 0:16, 16#ffff:16 >>,
 	MainPos = GroupsPos + byte_size(GroupsBin),
-	Data = << MainPos:32/little, 0:32, QuestsBin/binary, GroupsBin/binary, MainBin/binary >>,
+	{CityPos, CityBin} = case proplists:get_value(city, Settings) of
+		undefined -> {0, << >>};
+		{QuestID, ZoneID, MapID, EntryID} ->
+			{MainPos + byte_size(MainBin) + 4, << QuestID:32/little, ZoneID:16/little, MapID:16/little, EntryID:16/little >>}
+	end,
+	Data = << MainPos:32/little, 0:32, QuestsBin/binary, GroupsBin/binary, MainBin/binary, CityPos:32/little, CityBin/binary >>,
 	Size = byte_size(Data),
 	Data2 = << $N, $X, $R, 0, Size:32/little, Data/binary >>,
-	{Data2, [MainPos + 8, MainPos + 12]}.
+	case CityPos of
+		0 -> {Data2, [MainPos + 8, MainPos + 12]};
+		_ -> {Data2, [MainPos + 8, MainPos + 12, MainPos + 36]}
+	end.
 
 %% @doc Convert groups of quests to their binary equivalent for load_table_rel.
 load_table_rel_groups_to_bin(Groups) ->
