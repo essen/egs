@@ -651,26 +651,6 @@
 %% Background values include: 01 parum, 02 moatoob, 03 neudaiz, 04 guardians hq, 05 parum guardians, 06 moatoob guardians, 07 neudaiz guardians, 08 pitch black, ff destroyed colony
 
 -define(COUNTERS, [
-	% Space docks: Phantom Ruins, Dark Satellite, Familiar Trees (missing), Boss quest category (missing), Unit category (missing), Enemy category (missing)
-
-	{  1, [{quests, "data/counters/colony.docks.pack"}, {bg, 255}, {options, << 16#01805400:32, 0, 3, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, % Phantom Ruins C-S
-		3, 3, 3, 0, % Dark Satellite C-S variant 1
-		3, 3, 3, 3, % Dark Satellite C-S variant 2
-		3, 0, 3, 0, % Dark Satellite C-S variant 3
-		3, 0, 3, % Dark Satellite S2 variant 1-3
-		3, 0, 3, % Dark Satellite S3 variant 1-3
-	0:440 >>}]},
-
-	%~ {  1, [{quests, "data/counters/colony.docks.pack"}, {bg, 255}, {options, << 16#01805400:32, 3, 3, 0, 0, 0, 0,
-		%~ 3, 3, 3, 3, 0, % Phantom Ruins C-S
-		%~ 3, 3, 3, 3, % Dark Satellite C-S variant 1
-		%~ 3, 3, 3, 3, % Dark Satellite C-S variant 2
-		%~ 3, 3, 3, 3, % Dark Satellite C-S variant 3
-		%~ 3, 3, 3, % Dark Satellite S2 variant 1-3
-		%~ 3, 3, 3, % Dark Satellite S3 variant 1-3
-	%~ 0:440 >>}]},
-
 	% Parum East: Illusionary Shaft, Mad Creatures, Fire purification (missing), Scarred Planet (missing), Scarred Planet
 
 	{  2, [{quests, "data/counters/parum.east.pack"}, {bg, 1}, {options, << 16#01003c00:32, 3, 3, 0, 0, 3,
