@@ -765,10 +765,6 @@
 		%~ 3, 3, 3, % Fight for Food S2 variant 1-3
 	%~ 0:136 >>}]},
 
-	% Aurorey
-
-	{ 15, [{quests, "data/counters/colony.aurorey.pack"}, {bg, 255}, {options, << 16#01010400:32, 0:32 >>}]},
-
 	% HIVE (entry 0)
 
 	{ 20, [{quests, "data/counters/colony.hive-0.pack"}, {bg, 255}, {options, << 16#01050400:32, 0:32 >>}]},

@@ -94,9 +94,14 @@ build_counter(ConfFilename, CounterNbl) ->
 	SizeBin = iolist_to_binary([<< S:32/little >> || S <- SizeList]),
 	Padding = 8 * (512 - byte_size(PosBin)),
 	Pack = << PosBin/binary, 0:Padding, SizeBin/binary, 0:Padding, NbFiles:32/little, CounterNbl/binary, FilesBin/binary >>,
-	OptsList = lists:seq(1, length(Groups) + length(PosList)),
-	Opts = iolist_to_binary([<< 3:8 >> || _N <- OptsList]),
-	[{bg, proplists:get_value(bg, Settings)}, {opts, Opts}, {pack, Pack}].
+	Opts = case length(Groups) of
+		0 -> << >>;
+		L ->
+			OptsList = lists:seq(1, L + length(PosList)),
+			iolist_to_binary([<< 3:8 >> || _N <- OptsList])
+	end,
+	Opts2 = if byte_size(Opts) rem 2 =:= 0 -> Opts; true -> << Opts/binary, 0 >> end,
+	[{bg, proplists:get_value(bg, Settings)}, {opts, Opts2}, {pack, Pack}].
 
 build_counter_groups(Groups, PosList, SizeList) ->
 	build_counter_groups(Groups, PosList, SizeList, []).
