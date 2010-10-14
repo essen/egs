@@ -1040,27 +1040,6 @@
 
 	{114, [{quests, "data/counters/moatoob.pub.pack"}, {bg, 6}, {options, << 16#01000800:32, 3, 0:32, 3, 0:16 >>}]},
 
-	% GUARDIANS HQ: Episode 2 C rank, B rank, A rank, Episode 3 C rank, B rank, A rank, Winter event 1 (missing), Winter event 2 (missing)
-	% MAG event (missing), Side story C rank, Side story B rank, Side story A rank, Old event missions
-
-	{115, [{quests, "data/counters/colony.guardians.pack"}, {bg, 4}, {options, << 16#01807800:32, 3, 3, 3, 3, 3, 3, 0, 0, 0, 3, 3, 3, 3,
-		3, 3, 3, 3, 3, 3, 3, 3, 3, 3, % Episode 2 Difficulty C Chapters 1-10
-		3, 3, 3, 3, 3, 3, 3, 3, 3, 3, % Episode 2 Difficulty B Chapters 1-10
-		3, 3, 3, 3, 3, 3, 3, 3, 3, 3, % Episode 2 Difficulty A Chapters 1-10
-		3, 3, 3, 3, 3, 3, 3, 3, % Episode 3 Difficulty C Chapters 1-8
-		3, 3, 3, 3, 3, 3, 3, 3, % Episode 3 Difficulty B Chapters 1-8
-		3, 3, 3, 3, 3, 3, 3, 3, % Episode 3 Difficulty A Chapters 1-8
-		0:248,
-		3, 3, 3, % Side-story C-A
-		3, 3, 3, 3, 3, % MAG' C-S2
-		3, % Gifts from Beyond+
-		0:40,
-		3, % Hit the Counter! (MAG)
-		3, % Dark Crystal Seeker
-		3, % Hit the Counter! (Shred the Darkness)
-		3, % Photon Eraser Return
-	0:32 >>}]},
-
 	% Parum GUARDIANS: Partner Missions, Protectors a+ (missing), Protectors b+ (missing), Training Intro (missing), Party Missions, Versus, Item Exchange, (empty name, missing), (empty name, missing), (empty name, missing)
 
 	{116, [{quests, "data/counters/parum.guardians.pack"}, {bg, 5}, {options, << 16#01005000:32, 3, 0, 0, 0, 3, 3, 3, 0, 0, 0, 0,
