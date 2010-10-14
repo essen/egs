@@ -789,28 +789,6 @@
 		%~ 3, 3, 3, % SEED Awakened S3 variant 1-3
 	%~ 0:24 >>}]},
 
-	% Dallgun: Phantom Ruins, The Black Nest, True Darkness, (empty name, missing)
-
-	{ 25, [{quests, "data/counters/colony.dallgun.pack"}, {bg, 255}, {options, << 16#01003c00:32, 0, 3, 3, 0,
-		0, 0, 0, 0, 0, % Phantom Ruins C-S
-		3, 3, 3, 3, 3, 0, % The Black Nest C-S2 variant 1
-		3, 0, 0, 0, 3, 0, % The Black Nest C-S2 variant 2
-		3, 3, 0, 3, 0, 0, % The Black Nest C-S2 variant 3
-		0, 0, 0, 0, 0, % True Darkness C-S2 variant 1
-		3, 0, 3, 3, 0, % True Darkness C-S2 variant 2
-		3, 3, 3, 0, 3, % True Darkness C-S2 variant 3
-	0:144 >>}]},
-
-	%~ { 25, [{quests, "data/counters/colony.dallgun.pack"}, {bg, 255}, {options, << 16#01003c00:32, 3, 3, 3, 0,
-		%~ 3, 3, 3, 3, 0, % Phantom Ruins C-S
-		%~ 3, 3, 3, 3, 3, 0, % The Black Nest C-S2 variant 1
-		%~ 3, 3, 3, 3, 3, 0, % The Black Nest C-S2 variant 2
-		%~ 3, 3, 3, 3, 3, 0, % The Black Nest C-S2 variant 3
-		%~ 3, 3, 3, 3, 3, % True Darkness C-S2 variant 1
-		%~ 3, 3, 3, 3, 3, % True Darkness C-S2 variant 2
-		%~ 3, 3, 3, 3, 3, % True Darkness C-S2 variant 3
-	%~ 0:144 >>}]},
-
 	% Raffon Fieldbase (entry 0)
 
 	{ 30, [{quests, "data/counters/parum.raffon-0.pack"}, {bg, 1}, {options, << 16#01000400:32, 0:32 >>}]},
