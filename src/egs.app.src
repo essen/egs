@@ -1,7 +1,7 @@
 %%-*- mode: erlang -*-
 {application, egs, [
 	{description, "EGS online action-RPG game server"},
-	{vsn, "0.6"},
+	{vsn, "0.7"},
 	{modules, [
 		egs,
 		egs_app,
