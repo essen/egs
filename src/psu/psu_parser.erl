@@ -241,11 +241,11 @@ parse_object_args(28, _Params, _Data) ->
 	unknown_object_28;
 
 parse_object_args(31, _Params, Data) ->
-	<< KeySet:8, UnknownA:8, UnknownB:8, 1:8, 16#ffff:16, RawTrigEvent:16/little-unsigned-integer, RawReqEvent1:16/little-unsigned-integer, RawReqEvent2:16/little-unsigned-integer,
+	<< KeySet:8, UnknownA:8, UnknownB:8, UnknownC:8, 16#ffff:16, RawTrigEvent:16/little-unsigned-integer, RawReqEvent1:16/little-unsigned-integer, RawReqEvent2:16/little-unsigned-integer,
 		RawReqEvent3:16/little-unsigned-integer, 16#ffff:16, 16#ffffffff:32, 16#ffffffff:32 >> = Data,
 	TrigEvent = convert_eventid(RawTrigEvent),
 	ReqEvents = [convert_eventid(RawReqEvent1), convert_eventid(RawReqEvent2), convert_eventid(RawReqEvent3)],
-	log("key: keyset(~b) a(~b) b(~b) trigevent(~p) reqevents(~p)", [KeySet, UnknownA, UnknownB, TrigEvent, ReqEvents]),
+	log("key: keyset(~b) a(~b) b(~b) c(~b) trigevent(~p) reqevents(~p)", [KeySet, UnknownA, UnknownB, UnknownC, TrigEvent, ReqEvents]),
 	{key, KeySet, TrigEvent, ReqEvents};
 
 %% @todo Find out! Found in Gifts from Beyond+ and that other exchange mission. Also tutorial.
@@ -254,6 +254,10 @@ parse_object_args(33, _Params, _Data) ->
 
 parse_object_args(35, _Params, _Data) ->
 	boss;
+
+%% @todo Find out! v1 Mad Beasts zone 0.
+parse_object_args(37, _Params, _Data) ->
+	unknown_object_37;
 
 %% @todo Find out! Big push 2nd zone file.
 parse_object_args(39, _Params, _Data) ->
@@ -294,12 +298,20 @@ parse_object_args(51, _Params, Data) ->
 	<< _Unknown:224, TrigEvent:16/little, _Rest/bits >> = Data,
 	{goggle_target, TrigEvent};
 
+%% @doc Big SEED pod.
+parse_object_args(52, _Params, _Data) ->
+	seed_blewme;
+
 parse_object_args(53, _Params, _Data) ->
 	label;
 
-%% @todo Found in Scorched Valley, probably is the photon-erasable pods.
+%% @doc Photon-erasable pods.
 parse_object_args(54, _Params, _Data) ->
-	unknown_object_54;
+	seed_zoma;
+
+%% @doc For Photon Reflector on ice SEED zomas.
+parse_object_args(55, _Params, _Data) ->
+	photon_spot;
 
 parse_object_args(56, _Params, _Data) ->
 	chair;
