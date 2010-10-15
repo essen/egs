@@ -96,7 +96,7 @@ init([]) ->
 	{ok, undefined}.
 
 handle_call(count, _From, State) ->
-	Count = mnesia:table_info(?TABLE, size),
+	Count = mnesia:dirty_update_counter(counters, population, 0),
 	{reply, {ok, Count}, State};
 
 handle_call({read, {pid, Pid}}, _From, State) ->

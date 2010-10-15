@@ -37,6 +37,7 @@ start_link(Port) ->
 on_exit(Pid) ->
 	case egs_user_model:read({pid, Pid}) of
 		{ok, User} ->
+			mnesia:dirty_update_counter(counters, population, -1),
 			case User#egs_user_model.partypid of
 				undefined ->
 					ignore;
