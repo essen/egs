@@ -223,7 +223,39 @@
 
 	% Story Episode 2
 
-	{1131010, [{type, mission}, {file, "data/missions/ep2ch1.c.quest.nbl"}, {start, [0, 0, 0]}, {sets, 1}]}
+	{1131010, [{type, mission}, {file, "data/missions/ep2ch1.c.quest.nbl"}, {start, [0, 0, 0]}, {sets, 1}]},
+
+	%% Boss Tests.
+	{90120, [{type, mission}, {file, "data/missions/boss/lv1/alteraz/quest_ae.nbl"}, {start, [0, 100, 0]}, {sets, 1}]},
+	{90130, [{type, mission}, {file, "data/missions/boss/lv1/rolei/quest_ae.nbl"}, {start, [0, 100, 0]}, {sets, 1}]},
+	{90140, [{type, mission}, {file, "data/missions/boss/lv1/falz1/quest_ae.nbl"}, {start, [0, 100, 0]}, {sets, 1}]},
+	{90150, [{type, mission}, {file, "data/missions/boss/lv1/falz2/quest_ae.nbl"}, {start, [0, 100, 0]}, {sets, 1}]},
+	{90160, [{type, mission}, {file, "data/missions/boss/lv1/motherbrain/quest_ae.nbl"}, {start, [0, 100, 0]}, {sets, 1}]},
+
+	%% v1 Free Missions.
+	{110000, [{type, mission}, {file, "data/missions/v1/evacuation/quest_ae.nbl"}, {start, [0, 1130, 0]}, {sets, 1}]},
+	{110010, [{type, mission}, {file, "data/missions/v1/annihilation/quest_ae.nbl"}, {start, [0, 1300, 0]}, {sets, 1}]},
+	{110100, [{type, mission}, {file, "data/missions/v1/dark-satellite/quest_ae.nbl"}, {start, [0, 111, 0]}, {sets, 1}]},
+	{111000, [{type, mission}, {file, "data/missions/v1/creature-discomfort/quest_ae.nbl"}, {start, [0, 101, 0]}, {sets, 1}]},
+	{111010, [{type, mission}, {file, "data/missions/v1/burning-plains/quest_ae.nbl"}, {start, [0, 1120, 0]}, {sets, 1}]},
+	{111020, [{type, mission}, {file, "data/missions/v1/mad-beasts/quest_ae.nbl"}, {start, [0, 1130, 0]}, {sets, 1}]},
+	{111030, [{type, mission}, {file, "data/missions/v1/ruler-of-the-plains/quest_ae.nbl"}, {start, [0, 110, 0]}, {sets, 1}]},
+	{111100, [{type, mission}, {file, "data/missions/v1/what-is-in-the-ruins/quest_ae.nbl"}, {start, [0, 1102, 0]}, {sets, 1}]},
+	{111110, [{type, mission}, {file, "data/missions/v1/two-headed-sentinel/quest_ae.nbl"}, {start, [0, 1211, 0]}, {sets, 1}]},
+	{111200, [{type, mission}, {file, "data/missions/v1/cargo-train-rescue/quest_ae.nbl"}, {start, [0, 105, 0]}, {sets, 1}]},
+	{111300, [{type, mission}, {file, "data/missions/v1/endrum-underground/quest_ae.nbl"}, {start, [0, 110, 0]}, {sets, 1}]},
+	{112000, [{type, mission}, {file, "data/missions/v1/mizuraki-devastation/quest_ae.nbl"}, {start, [0, 101, 0]}, {sets, 1}]},
+	{112010, [{type, mission}, {file, "data/missions/v1/frozen-woods/quest_ae.nbl"}, {start, [0, 1111, 0]}, {sets, 1}]},
+	{112020, [{type, mission}, {file, "data/missions/v1/demons-above/quest_ae.nbl"}, {start, [0, 3115, 0]}, {sets, 1}]},
+	{112100, [{type, mission}, {file, "data/missions/v1/defend-islands/quest_ae.nbl"}, {start, [0, 3120, 0]}, {sets, 1}]},
+	{112120, [{type, mission}, {file, "data/missions/v1/woodland-flames/quest_ae.nbl"}, {start, [0, 1220, 0]}, {sets, 1}]},
+	{112200, [{type, mission}, {file, "data/missions/v1/grove-of-fanatics/quest_ae.nbl"}, {start, [0, 104, 0]}, {sets, 1}]},
+	{112210, [{type, mission}, {file, "data/missions/v1/temple-of-ice/quest_ae.nbl"}, {start, [0, 1201, 0]}, {sets, 1}]},
+	{113000, [{type, mission}, {file, "data/missions/v1/pandemonium/quest_ae.nbl"}, {start, [0, 3110, 0]}, {sets, 1}]},
+	{113100, [{type, mission}, {file, "data/missions/v1/tunnel-infestation/quest_ae.nbl"}, {start, [0, 210, 0]}, {sets, 1}]},
+	{113200, [{type, mission}, {file, "data/missions/v1/goliath-in-the-desert/quest_ae.nbl"}, {start, [0, 3120, 0]}, {sets, 1}]},
+	{113230, [{type, mission}, {file, "data/missions/v1/absolute-zero/quest_ae.nbl"}, {start, [0, 1221, 0]}, {sets, 1}]},
+	{113240, [{type, mission}, {file, "data/missions/v1/terror-in-the-desert/quest_ae.nbl"}, {start, [0, 4240, 0]}, {sets, 1}]}
 ]).
 
 -define(ZONES, [
@@ -557,7 +589,54 @@
 	{[1131010,0], [{file, "data/missions/ep2ch1.c.zone-0.nbl"}]},
 	{[1131010,1], [{file, "data/missions/ep2ch1.c.zone-1.nbl"}]},
 	{[1131010,2], [{file, "data/missions/ep2ch1.c.zone-2.nbl"}]},
-	{[1131010,3], [{file, "data/missions/ep2ch1.c.zone-3.nbl"}]}
+	{[1131010,3], [{file, "data/missions/ep2ch1.c.zone-3.nbl"}]},
+
+	%% Boss Tests.
+	{[90120, 0], [{file, "data/missions/boss/lv1/alteraz/zone00_ae.nbl"}, {sets, 1}]},
+	{[90120, 1], [{file, "data/missions/boss/lv1/alteraz/zone01_ae.nbl"}, {sets, 1}]},
+	{[90130, 0], [{file, "data/missions/boss/lv1/rolei/zone00_ae.nbl"}, {sets, 1}]},
+	{[90130, 1], [{file, "data/missions/boss/lv1/rolei/zone01_ae.nbl"}, {sets, 1}]},
+	{[90140, 0], [{file, "data/missions/boss/lv1/falz1/zone00_ae.nbl"}, {sets, 1}]},
+	{[90140, 1], [{file, "data/missions/boss/lv1/falz1/zone01_ae.nbl"}, {sets, 1}]},
+	{[90150, 0], [{file, "data/missions/boss/lv1/falz2/zone00_ae.nbl"}, {sets, 1}]},
+	{[90150, 1], [{file, "data/missions/boss/lv1/falz2/zone01_ae.nbl"}, {sets, 1}]},
+	{[90160, 0], [{file, "data/missions/boss/lv1/motherbrain/zone00_ae.nbl"}, {sets, 1}]},
+	{[90160, 1], [{file, "data/missions/boss/lv1/motherbrain/zone01_ae.nbl"}, {sets, 1}]},
+
+	%% v1 Free Missions.
+	{[110000, 0], [{file, "data/missions/v1/evacuation/zone00_ae.nbl"}, {sets, 1}]},
+	{[110010, 0], [{file, "data/missions/v1/annihilation/zone00_ae.nbl"}, {sets, 1}]},
+	{[110100, 0], [{file, "data/missions/v1/dark-satellite/zone00_ae.nbl"}, {sets, 1}]},
+	{[110100, 1], [{file, "data/missions/v1/dark-satellite/zone01_ae.nbl"}, {sets, 1}]},
+	{[110100, 2], [{file, "data/missions/v1/dark-satellite/zone02_ae.nbl"}, {sets, 1}]},
+	{[111000, 0], [{file, "data/missions/v1/creature-discomfort/zone00_ae.nbl"}, {sets, 1}]},
+	{[111010, 0], [{file, "data/missions/v1/burning-plains/zone00_ae.nbl"}, {sets, 1}]},
+	{[111020, 0], [{file, "data/missions/v1/mad-beasts/zone00_ae.nbl"}, {sets, 1}]},
+	{[111030, 0], [{file, "data/missions/v1/ruler-of-the-plains/zone00_ae.nbl"}, {sets, 1}]},
+	{[111030, 1], [{file, "data/missions/v1/ruler-of-the-plains/zone01_ae.nbl"}, {sets, 1}]},
+	{[111100, 0], [{file, "data/missions/v1/what-is-in-the-ruins/zone00_ae.nbl"}, {sets, 1}]},
+	{[111100, 1], [{file, "data/missions/v1/what-is-in-the-ruins/zone01_ae.nbl"}, {sets, 1}]},
+	{[111110, 0], [{file, "data/missions/v1/two-headed-sentinel/zone00_ae.nbl"}, {sets, 1}]},
+	{[111110, 1], [{file, "data/missions/v1/two-headed-sentinel/zone01_ae.nbl"}, {sets, 1}]},
+	{[111200, 0], [{file, "data/missions/v1/cargo-train-rescue/zone00_ae.nbl"}, {sets, 1}]},
+	{[111300, 0], [{file, "data/missions/v1/endrum-underground/zone00_ae.nbl"}, {sets, 1}]},
+	{[111300, 1], [{file, "data/missions/v1/endrum-underground/zone01_ae.nbl"}, {sets, 1}]},
+	{[112000, 0], [{file, "data/missions/v1/mizuraki-devastation/zone00_ae.nbl"}, {sets, 1}]},
+	{[112010, 0], [{file, "data/missions/v1/frozen-woods/zone00_ae.nbl"}, {sets, 1}]},
+	{[112020, 0], [{file, "data/missions/v1/demons-above/zone00_ae.nbl"}, {sets, 1}]},
+	{[112020, 1], [{file, "data/missions/v1/demons-above/zone01_ae.nbl"}, {sets, 1}]},
+	{[112100, 0], [{file, "data/missions/v1/defend-islands/zone00_ae.nbl"}, {sets, 1}]},
+	{[112120, 0], [{file, "data/missions/v1/woodland-flames/zone00_ae.nbl"}, {sets, 1}]},
+	{[112200, 0], [{file, "data/missions/v1/grove-of-fanatics/zone00_ae.nbl"}, {sets, 1}]},
+	{[112200, 1], [{file, "data/missions/v1/grove-of-fanatics/zone01_ae.nbl"}, {sets, 1}]},
+	{[112210, 0], [{file, "data/missions/v1/temple-of-ice/zone00_ae.nbl"}, {sets, 1}]},
+	{[113000, 0], [{file, "data/missions/v1/pandemonium/zone00_ae.nbl"}, {sets, 1}]},
+	{[113100, 0], [{file, "data/missions/v1/tunnel-infestation/zone00_ae.nbl"}, {sets, 1}]},
+	{[113200, 0], [{file, "data/missions/v1/goliath-in-the-desert/zone00_ae.nbl"}, {sets, 1}]},
+	{[113200, 1], [{file, "data/missions/v1/goliath-in-the-desert/zone01_ae.nbl"}, {sets, 1}]},
+	{[113230, 0], [{file, "data/missions/v1/absolute-zero/zone00_ae.nbl"}, {sets, 1}]},
+	{[113240, 0], [{file, "data/missions/v1/terror-in-the-desert/zone00_ae.nbl"}, {sets, 1}]},
+	{[113240, 1], [{file, "data/missions/v1/terror-in-the-desert/zone01_ae.nbl"}, {sets, 1}]}
 ]).
 
 -define(MAPS, [
@@ -1101,10 +1180,6 @@
 		%~ 3, 3, 3, 3, 3, 0, % The Dark God C-S2 variant 2
 		%~ 3, 3, 3, 3, 3, 0, % The Dark God C-S2 variant 3
 	%~ 0:24 >>}]},
-
-	% Falz Memoria
-
-	{203, [{quests, "data/counters/colony.memoria.pack"}, {bg, 255}, {options, << 16#01013800:32, 0:448 >>}]},
 
 	% Parum Rozenom (entry 0)
 
