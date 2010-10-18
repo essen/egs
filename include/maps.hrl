@@ -242,7 +242,7 @@
 	{111030, [{type, mission}, {file, "data/missions/v1/ruler-of-the-plains/quest_ae.nbl"}, {start, [0, 110, 0]}, {sets, 1}]},
 	{111100, [{type, mission}, {file, "data/missions/v1/what-is-in-the-ruins/quest_ae.nbl"}, {start, [0, 1102, 0]}, {sets, 1}]},
 	{111110, [{type, mission}, {file, "data/missions/v1/two-headed-sentinel/quest_ae.nbl"}, {start, [0, 1211, 0]}, {sets, 1}]},
-	{111200, [{type, mission}, {file, "data/missions/v1/cargo-train-rescue/quest_ae.nbl"}, {start, [0, 105, 0]}, {sets, 1}]},
+	{111200, [{type, mission}, {file, "data/missions/v1/cargo-train-rescue/quest_ae.nbl"}, {start, [0, 105, 3]}, {sets, 1}]},
 	{111300, [{type, mission}, {file, "data/missions/v1/endrum-underground/quest_ae.nbl"}, {start, [0, 110, 0]}, {sets, 1}]},
 	{112000, [{type, mission}, {file, "data/missions/v1/mizuraki-devastation/quest_ae.nbl"}, {start, [0, 101, 0]}, {sets, 1}]},
 	{112010, [{type, mission}, {file, "data/missions/v1/frozen-woods/quest_ae.nbl"}, {start, [0, 1111, 0]}, {sets, 1}]},
