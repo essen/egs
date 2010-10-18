@@ -668,11 +668,6 @@ send_170c() ->
 	{ok, File} = file:read_file("p/packet170c.bin"),
 	send(<< (header(16#170c))/binary, File/binary >>).
 
-%% @doc Send the background to use for the counter.
-%% @todo Background has more info past the first byte.
-send_1711(Background) ->
-	send(<< (header(16#1711))/binary, Background:32/little-unsigned-integer >>).
-
 %% @doc PP cube handler.
 %% @todo The 4 bytes before the file may vary. Everything past that is the same. Figure things out.
 send_1a04() ->

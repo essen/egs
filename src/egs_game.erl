@@ -304,13 +304,13 @@ event(counter_leave, State=#state{gid=GID}) ->
 %% @doc Send the code for the background image to use. But there's more that should be sent though.
 %% @todo Apparently background values 1 2 3 are never used on official servers. Find out why.
 %% @todo Rename to counter_bg_request.
-event({counter_options_request, CounterID}, _State) ->
+event({counter_options_request, CounterID}, State) ->
 	log("counter options request ~p", [CounterID]),
 	Bg = case proplists:get_value(CounterID, ?COUNTERS) of
 		undefined -> egs_counters:bg(CounterID);
 		[{quests, _}, {bg, Background}|_Tail] -> Background
 	end,
-	psu_game:send_1711(Bg);
+	psu_proto:send_1711(Bg, State);
 
 %% @todo Handle when the party already exists! And stop doing it wrong.
 event(counter_party_info_request, #state{gid=GID}) ->

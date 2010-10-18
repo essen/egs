@@ -1430,6 +1430,11 @@ send_1022(#egs_user_model{character=#characters{currenthp=HP}}, #state{socket=So
 send_1204(#state{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#12040300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:96, 16#20000000:32, 0:256 >>).
 
+%% @doc Send the background to use for the counter.
+%% @todo Handle LID properly.
+send_1711(Bg, #state{socket=Socket, gid=DestGID}) ->
+	packet_send(Socket, << 16#17110300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:64, Bg:8, 0:24 >>).
+
 %% @doc NPC shop request reply.
 %% @todo Handle the LID properly.
 send_1a02(A, B, C, D, #state{socket=Socket, gid=DestGID}) ->
