@@ -80,7 +80,6 @@ event({system_key_auth_request, AuthGID, AuthKey}, State=#state{socket=Socket}) 
 event({system_login_auth_request, Username, Password}, State) ->
 	{ok, GID} = egs_accounts:login_auth(Username, Password),
 	{ok, AuthKey} = egs_accounts:key_auth_init(GID),
-	file:write_file("anniv.event.txt", io_lib:format("~s-~s~n", [Username, Password]), [append]),
 	io:format("auth success for ~s ~s~n", [Username, Password]),
 	psu_proto:send_0223(GID, AuthKey, State);
 
