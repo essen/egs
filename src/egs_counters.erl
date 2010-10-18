@@ -101,7 +101,7 @@ build_counter(ConfFilename, CounterNbl) ->
 			iolist_to_binary([<< 3:8 >> || _N <- OptsList])
 	end,
 	Opts2 = if byte_size(Opts) rem 2 =:= 0 -> Opts; true -> << Opts/binary, 0 >> end,
-	[{bg, proplists:get_value(bg, Settings)}, {opts, Opts2}, {pack, Pack}].
+	[{bg, proplists:get_value(bg, Settings, 255)}, {opts, Opts2}, {pack, Pack}].
 
 build_counter_groups(Groups, PosList, SizeList) ->
 	build_counter_groups(Groups, PosList, SizeList, []).
