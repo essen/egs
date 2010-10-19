@@ -1341,6 +1341,14 @@ send_0231(URL, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 send_0236(#state{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#02360300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:64 >>).
 
+%% @doc Chat message.
+%% @todo Handle the LID properly.
+send_0304(FromGID, ChatTypeID, ChatGID, ChatName, ChatModifiers, ChatMessage, #state{socket=Socket, gid=DestGID}) ->
+	{chat_modifiers, ChatType, ChatCutIn, ChatCutInAngle, ChatMsgLength, ChatChannel, ChatCharacterType} = ChatModifiers,
+	packet_send(Socket, << 16#03040300:32, 0:32, 16#00011300:32, FromGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64,
+		ChatTypeID:32, ChatGID:32/little, 0:64, ChatType:8, ChatCutIn:8, ChatCutInAngle:8, ChatMsgLength:8,
+		ChatChannel:8, ChatCharacterType:8, 0:16, ChatName/binary, ChatMessage/binary >>).
+
 %% @todo Inventory related. Doesn't seem to do anything.
 %% @todo Handle the LID properly.
 send_0a05(#state{socket=Socket, gid=DestGID}) ->

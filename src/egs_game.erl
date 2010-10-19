@@ -33,8 +33,8 @@ info({egs, cast, Command}, #state{gid=GID}) ->
 	psu_game:send(<< A/binary, 16#00011300:32, B/binary, 16#00011300:32, GID:32/little-unsigned-integer, C/binary >>);
 
 %% @doc Forward the chat message to the client.
-info({egs, chat, ChatTypeID, ChatGID, ChatName, ChatModifiers, ChatMessage}, _State) ->
-	psu_game:send_0304(ChatTypeID, ChatGID, ChatName, ChatModifiers, ChatMessage);
+info({egs, chat, FromGID, ChatTypeID, ChatGID, ChatName, ChatModifiers, ChatMessage}, State) ->
+	psu_proto:send_0304(FromGID, ChatTypeID, ChatGID, ChatName, ChatModifiers, ChatMessage, State);
 
 info({egs, notice, Type, Message}, State) ->
 	psu_proto:send_0228(Type, 2, Message, State);
@@ -246,7 +246,7 @@ event({chat, _FromTypeID, FromGID, _FromName, Modifiers, ChatMsg}, #state{gid=Us
 	log("chat from ~s: ~s", [[re:replace(LogName, "\\0", "", [global, {return, binary}])], [re:replace(LogMessage, "\\0", "", [global, {return, binary}])]]),
 	%% broadcast
 	{ok, List} = egs_user_model:select(all),
-	lists:foreach(fun(X) -> X#egs_user_model.pid ! {egs, chat, BcastTypeID, BcastGID, BcastName, Modifiers, ChatMsg} end, List);
+	lists:foreach(fun(X) -> X#egs_user_model.pid ! {egs, chat, UserGID, BcastTypeID, BcastGID, BcastName, Modifiers, ChatMsg} end, List);
 
 %% @todo There's at least 9 different sets of locations. Handle all of them correctly.
 event(counter_background_locations_request, _State) ->

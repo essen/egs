@@ -321,12 +321,6 @@ build_0233_contents(Users) ->
 	Next = build_0233_contents(Rest),
 	<< Chunk/binary, Next/binary >>.
 
-%% @doc Send a chat command.
-send_0304(FromTypeID, FromGID, FromName, Modifiers, Message) ->
-	{chat_modifiers, ChatType, ChatCutIn, ChatCutInAngle, ChatMsgLength, ChatChannel, ChatCharacterType} = Modifiers,
-	send(<< 16#03040300:32, 0:288, FromTypeID:32/unsigned-integer, FromGID:32/little-unsigned-integer, 0:64,
-		ChatType:8, ChatCutIn:8, ChatCutInAngle:8, ChatMsgLength:8, ChatChannel:8, ChatCharacterType:8, 0:16, FromName:512/bits, Message/bits >>).
-
 %% @todo Force send a new player location. Used for warps.
 %% @todo The value before IntDir seems to be the player's current animation. 01 stand up, 08 ?, 17 normal sit
 send_0503(#pos{x=PrevX, y=PrevY, z=PrevZ, dir=_}) ->
