@@ -19,7 +19,7 @@
 
 -module(egs_npc_db).
 -behavior(gen_server).
--export([start_link/0, stop/0, all/0, count/0, create/2, reload/0]). %% API.
+-export([start_link/0, stop/0, all/0, create/2, reload/0]). %% API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
 
 %% Use the module name for the server's name.
@@ -42,10 +42,6 @@ stop() ->
 all() ->
 	gen_server:call(?SERVER, all).
 
-%% @spec count() -> integer()
-count() ->
-	gen_server:call(?SERVER, count).
-
 %% @spec read(NPCid, BaseLevel) -> term()
 create(NPCid, BaseLevel) ->
 	gen_server:call(?SERVER, {create, NPCid, BaseLevel}).
@@ -62,9 +58,6 @@ init([]) ->
 
 handle_call(all, _From, State) ->
 	{reply, ?NPC, State};
-
-handle_call(count, _From, State) ->
-	{reply, length(?NPC), State};
 
 %% @todo Handle stats, experience, based on level.
 handle_call({create, NPCid, BaseLevel}, _From, State) ->

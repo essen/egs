@@ -632,8 +632,9 @@ send_1601(PartyPos) ->
 %% @doc Send the player's NPC and PM information.
 %% @todo The value 4 is the card priority. Find what 3 is. When sending, the first 0 is an unknown value.
 send_1602() ->
-	NbNPC = egs_npc_db:count(),
-	Bin = iolist_to_binary([<< NPCid:8, 0, 4, 0, 3, 0:24 >> || {NPCid, _Data} <- egs_npc_db:all()]),
+	NPCList = egs_npc_db:all(),
+	NbNPC = length(NPCList),
+	Bin = iolist_to_binary([<< NPCid:8, 0, 4, 0, 3, 0:24 >> || {NPCid, _Data} <- NPCList]),
 	MiddlePaddingSize = 8 * (344 - byte_size(Bin)),
 	PMName = "My PM",
 	UCS2PMName = << << X:8, 0:8 >> || X <- PMName >>,
