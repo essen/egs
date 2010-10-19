@@ -764,7 +764,7 @@ event({unicube_select, Selection, EntryID}, State=#state{gid=GID}) ->
 		cancel -> ignore;
 		16#ffffffff ->
 			log("uni selection (my room)"),
-			psu_game:send_0230(),
+			psu_proto:send_0230(State),
 			% 0220
 			{ok, User} = egs_user_model:read(GID),
 			User2 = User#egs_user_model{area=#psu_area{questid=1120000, zoneid=0, mapid=100}, entryid=0},
@@ -772,7 +772,7 @@ event({unicube_select, Selection, EntryID}, State=#state{gid=GID}) ->
 			psu_game:char_load(User2, State);
 		_UniID ->
 			log("uni selection (reload)"),
-			psu_game:send_0230(),
+			psu_proto:send_0230(State),
 			% 0220
 			{ok, User} = egs_user_model:read(GID),
 			case User#egs_user_model.partypid of

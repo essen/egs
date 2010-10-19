@@ -289,11 +289,6 @@ send_0222() ->
 send_022c(A, B) ->
 	send(<< (header(16#022c))/binary, A:16/little-unsigned-integer, B:16/little-unsigned-integer >>).
 
-%% @todo Not sure. Sent when going to or from room.
-send_0230() ->
-	GID = get(gid),
-	send(<< 16#02300300:32, 0:32, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64 >>).
-
 %% @todo Figure out what the other things are.
 send_0233(Users) ->
 	NbUsers = length(Users),
