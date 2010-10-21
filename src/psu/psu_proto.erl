@@ -1041,6 +1041,24 @@ parse(Size, 16#1007, Channel, Data) ->
 	?ASSERT_EQ(VarI, 0),
 	{party_remove_member, PartyPos};
 
+parse(Size, 16#1701, Channel, Data) ->
+	<<	VarA:32/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little, VarF:32/little,
+		VarG:32/little, VarH:32/little, VarI:32/little, VarJ:32/little, VarK:32/little >> = Data,
+	?ASSERT_EQ(Size, 52),
+	?ASSERT_EQ(Channel, 2),
+	?ASSERT_EQ(VarA, 0),
+	?ASSERT_EQ(VarB, 0),
+	?ASSERT_EQ(VarC, 0),
+	?ASSERT_EQ(VarD, 0),
+	?ASSERT_EQ(VarE, 0),
+	?ASSERT_EQ(VarF, 0),
+	?ASSERT_EQ(VarG, 0),
+	?ASSERT_EQ(VarH, 0),
+	?ASSERT_EQ(VarI, 0),
+	?ASSERT_EQ(VarJ, 0),
+	?ASSERT_EQ(VarK, 16#ffffffff),
+	counter_join_party_request;
+
 parse(Size, 16#1705, Channel, Data) ->
 	<< _LID:16/little, VarA:16/little, VarB:32/little, VarC:32/little, VarD:32/little, VarE:32/little, VarF:32/little, VarG:32/little, VarH:32/little, VarI:32/little >> = Data,
 	?ASSERT_EQ(Size, 44),
@@ -1527,6 +1545,12 @@ send_1500(Character, #state{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#15000300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64,
 		Name/binary, RaceBin:8, GenderBin:8, ClassBin:8, VoiceType:8, VoicePitch:8, 0:24,
 		DestGID:32/little, 0:224, Comment/binary, 1, 4, 1, Slot, 0:64 >>).
+
+%% @doc Send the list of parties to join.
+%% @todo Handle lists of parties.
+%% @todo Probably has to handle a LID here, although it should always be 0.
+send_1701(#state{socket=Socket, gid=DestGID}) ->
+	packet_send(Socket, << 16#17010300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:96 >>).
 
 %% @doc Send the background to use for the counter.
 %% @todo Handle LID properly.

@@ -294,6 +294,10 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}, State=#sta
 	psu_proto:send_0236(State3),
 	{ok, State3};
 
+%% @todo Handle parties to join.
+event(counter_join_party_request, State) ->
+	psu_proto:send_1701(State);
+
 %% @doc Leave mission counter handler.
 event(counter_leave, State=#state{gid=GID}) ->
 	{ok, User} = egs_user_model:read(GID),
