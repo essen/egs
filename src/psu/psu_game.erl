@@ -25,11 +25,10 @@
 -include("include/missions.hrl").
 
 %% @doc Load and send the character information to the client.
-%% @todo Should wait for the 021c reply before doing area_change.
 %% @todo Move this whole function directly to psu_proto, probably.
 char_load(User, State) ->
-	send_0d01(User),
-	% 0246
+	psu_proto:send_0d01(User#egs_user_model.character, State),
+	%% 0246
 	send_0a0a((User#egs_user_model.character)#characters.inventory),
 	psu_proto:send_1006(5, 0, State), %% @todo The 0 here is PartyPos, save it in User.
 	psu_proto:send_1005(User#egs_user_model.character, State),
@@ -39,7 +38,7 @@ char_load(User, State) ->
 	send_1500(User),
 	send_1501(),
 	send_1512(),
-	% 0303
+	%% 0303
 	send_1602(),
 	psu_proto:send_021b(State).
 
@@ -423,19 +422,6 @@ send_0c10(Options) ->
 	GID = get(gid),
 	send(<< 16#0c100300:32, 0:32, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
 		16#00011300:32, GID:32/little-unsigned-integer, 0:64, Options/binary >>).
-
-%% @doc Send the data for the selected character.
-%% @todo The large chunk of 0s can have some values set... but what are they used for?
-%% @todo The values after the Char variable are the flags. Probably use bits to define what flag is and isn't set. Handle correctly.
-send_0d01(User) ->
-	GID = User#egs_user_model.id,
-	CharBin = psu_characters:character_tuple_to_binary(User#egs_user_model.character),
-	OptionsBin = psu_characters:options_tuple_to_binary((User#egs_user_model.character)#characters.options),
-	send(<< 16#0d010300:32, 16#ffff:16, 0:144, 16#00011300:32, GID:32/little, 0:64, CharBin/binary,
-		16#ffbbef1c:32, 16#f8ff0700:32, 16#fc810916:32, 16#7802134c:32,
-		16#b0c0040f:32, 16#7cf0e583:32, 16#b7bce0c6:32, 16#7ff8f963:32,
-		16#3fd7ffff:32, 16#fff7ffff:32, 16#f3ff63e0:32, 16#1fe00000:32,
-		0:7744, OptionsBin/binary >>).
 
 %% @doc Send the character list for selection.
 %% @todo There's a few odd values blanked, also the last known location apparently.

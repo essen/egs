@@ -1421,7 +1421,17 @@ send_0c10(Options, #state{socket=Socket, gid=DestGID}) ->
 	Size = byte_size(Options),
 	packet_send(Socket, << 16#0c100300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:64, 1, 0, Size:16/little, Options/binary >>).
 
-%% @doc Send the character flags list. This is the whole list of available values, not the character's.
+%% @doc Send the general data and flags for the selected character.
+%% @todo Handle bitflags and value flags properly.
+send_0d01(Character, #state{socket=Socket, gid=DestGID}) ->
+	CharBin = psu_characters:character_tuple_to_binary(Character),
+	OptionsBin = psu_characters:options_tuple_to_binary(Character#characters.options),
+	packet_send(Socket, << 16#0d010300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64, CharBin/binary,
+		16#ffbbef1c:32, 16#f8ff0700:32, 16#fc810916:32, 16#7802134c:32, 16#b0c0040f:32, 16#7cf0e583:32,
+		16#b7bce0c6:32, 16#7ff8f963:32, 16#3fd7ffff:32, 16#fff7ffff:32, 16#f3ff63e0:32, 16#1fe00000:32,
+		0:7744, OptionsBin/binary >>).
+
+%% @doc Send the flags list. This is the whole list of available values, not the character's.
 %%      Sent without fragmentation on official for unknown reasons. Do the same here.
 send_0d05(#state{socket=Socket, gid=DestGID}) ->
 	{ok, Flags} = file:read_file("p/flags.bin"),
