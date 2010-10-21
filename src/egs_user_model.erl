@@ -19,7 +19,7 @@
 
 -module(egs_user_model).
 -behavior(gen_server).
--export([start_link/0, stop/0, count/0, read/1, select/1, write/1, delete/1, item_nth/2, item_add/3, item_qty_add/3, shop_enter/2, shop_leave/1, shop_get/1, money_add/2]). %% API.
+-export([start_link/0, stop/0, read/1, select/1, write/1, delete/1, item_nth/2, item_add/3, item_qty_add/3, shop_enter/2, shop_leave/1, shop_get/1, money_add/2]). %% API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
 
 %% Use the module name for the server's name and for the table name.
@@ -45,10 +45,6 @@ start_link() ->
 %% @spec stop() -> stopped
 stop() ->
 	gen_server:call(?SERVER, stop).
-
-%% @spec count() -> {ok, Count}
-count() ->
-	gen_server:call(?SERVER, count).
 
 %% @spec read({pid, Pid}) -> {ok, User} | {error, badarg}
 %% @spec read(ID) -> {ok, User} | {error, badarg}
@@ -94,10 +90,6 @@ money_add(GID, MoneyDiff) ->
 init([]) ->
 	error_logger:info_report("egs_user_model started"),
 	{ok, undefined}.
-
-handle_call(count, _From, State) ->
-	Count = mnesia:dirty_update_counter(counters, population, 0),
-	{reply, {ok, Count}, State};
 
 handle_call({read, {pid, Pid}}, _From, State) ->
 	List = do(qlc:q([X || X <- mnesia:table(?TABLE), X#?TABLE.pid =:= Pid])),

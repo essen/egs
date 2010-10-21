@@ -199,7 +199,7 @@ raw(Command, _Data, State) ->
 
 %% Events.
 
-%% @todo When changing lobby to the room, 0230 must also be sent. Same when going from room to lobby.
+%% @todo When changing lobby to the room, or room to lobby, we must perform an universe change.
 %% @todo Probably move area_load inside the event and make other events call this one when needed.
 event({area_change, QuestID, ZoneID, MapID, EntryID}, State) ->
 	event({area_change, QuestID, ZoneID, MapID, EntryID, 16#ffffffff}, State);
@@ -751,44 +751,37 @@ event(player_type_capabilities_request, _State) ->
 event(ppcube_request, _State) ->
 	psu_game:send_1a04();
 
-%% @doc Uni cube handler.
-event(unicube_request, _State) ->
-	psu_game:send_021e();
+event(unicube_request, State) ->
+	psu_proto:send_021e(egs_universes:all(), State);
 
-%% @doc Uni selection handler. Selecting anything reloads the character which will then be sent to its associated area.
-%% @todo When selecting 'Your room', load a default room.
-%% @todo When selecting 'Reload', reload the character in the current lobby.
-%% @todo Delete NPC characters and stop the party on entering myroom too.
+%% @todo When selecting 'Your room', don't load a default room that's not yours.
+event({unicube_select, cancel, _EntryID}, _State) ->
+	ignore;
 event({unicube_select, Selection, EntryID}, State=#state{gid=GID}) ->
+	{ok, User} = egs_user_model:read(GID),
 	case Selection of
-		cancel -> ignore;
 		16#ffffffff ->
-			log("uni selection (my room)"),
-			psu_proto:send_0230(State),
-			% 0220
-			{ok, User} = egs_user_model:read(GID),
-			User2 = User#egs_user_model{area=#psu_area{questid=1120000, zoneid=0, mapid=100}, entryid=0},
-			egs_user_model:write(User2),
-			psu_game:char_load(User2, State);
-		_UniID ->
-			log("uni selection (reload)"),
-			psu_proto:send_0230(State),
-			% 0220
-			{ok, User} = egs_user_model:read(GID),
-			case User#egs_user_model.partypid of
-				undefined ->
-					ignore;
-				PartyPid ->
-					%% @todo Replace stop by leave when leaving stops the party correctly when nobody's there anymore.
-					%~ psu_party:leave(User#egs_user_model.partypid, User#egs_user_model.id)
-					{ok, NPCList} = psu_party:get_npc(PartyPid),
-					[egs_user_model:delete(NPCGID) || {_Spot, NPCGID} <- NPCList],
-					psu_party:stop(PartyPid)
-			end,
-			User2 = User#egs_user_model{entryid=EntryID},
-			egs_user_model:write(User2),
-			psu_game:char_load(User2, State)
-	end.
+			UniID = egs_universes:myroomid(),
+			User2 = User#egs_user_model{uni=UniID, area=#psu_area{questid=1120000, zoneid=0, mapid=100}, entryid=0};
+		_ ->
+			UniID = Selection,
+			User2 = User#egs_user_model{uni=UniID, entryid=EntryID}
+	end,
+	psu_proto:send_0230(State),
+	%% 0220
+	case User#egs_user_model.partypid of
+		undefined -> ignore;
+		PartyPid ->
+			%% @todo Replace stop by leave when leaving stops the party correctly when nobody's there anymore.
+			%~ psu_party:leave(User#egs_user_model.partypid, User#egs_user_model.id)
+			{ok, NPCList} = psu_party:get_npc(PartyPid),
+			[egs_user_model:delete(NPCGID) || {_Spot, NPCGID} <- NPCList],
+			psu_party:stop(PartyPid)
+	end,
+	egs_user_model:write(User2),
+	egs_universes:leave(User#egs_user_model.uni),
+	egs_universes:enter(UniID),
+	psu_game:char_load(User2, State).
 
 %% Internal.
 

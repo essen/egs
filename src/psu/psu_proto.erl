@@ -1301,6 +1301,33 @@ send_0216(IP, Port, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 send_021b(#state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#021b0300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64 >>).
 
+%% @doc Send the list of available universes.
+send_021e(Universes, #state{socket=Socket}) ->
+	NbUnis = length(Universes),
+	UnisBin = build_021e_uni(Universes, []),
+	packet_send(Socket, << 16#021e0300:32, 0:288, NbUnis:32/little, UnisBin/binary >>).
+
+build_021e_uni([], Acc) ->
+	iolist_to_binary(lists:reverse(Acc));
+build_021e_uni([{_UniID, {myroom, Name, NbPlayers, _MaxPlayers}}|Tail], Acc) ->
+	Padding = 8 * (44 - byte_size(Name)),
+	Bin = << 16#ffffffff:32, NbPlayers:16/little, 0:16, Name/binary, 0:Padding >>,
+	build_021e_uni(Tail, [Bin|Acc]);
+build_021e_uni([{UniID, {universe, Name, NbPlayers, _MaxPlayers}}|Tail], Acc) ->
+	Padding = 8 * (32 - byte_size(Name)),
+	PopString = lists:flatten(io_lib:format("~5b", [NbPlayers])),
+	PopString2 = << << X:8, 0:8 >> || X <- PopString >>,
+	Bin = << UniID:32/little, NbPlayers:16/little, 643:16/little, Name/binary, 0:Padding, PopString2/binary, 0:16 >>,
+	build_021e_uni(Tail, [Bin|Acc]).
+
+%% @doc Send the current universe info along with the current level cap.
+send_0222(UniID, #state{socket=Socket, gid=DestGID}) ->
+	{_Type, Name, NbPlayers, MaxPlayers} = egs_universes:read(UniID),
+	Padding = 8 * (44 - byte_size(Name)),
+	LevelCap = egs_conf:read(level_cap),
+	packet_send(Socket, << 16#02220300:32, 16#ffff:16, 0:16, 16#00001200:32, DestGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64,
+		UniID:32/little, NbPlayers:16/little, MaxPlayers:16/little, Name/binary, 0:Padding, LevelCap:32/little >>).
+
 %% @doc Send the auth key, or, in case of failure, a related error message.
 send_0223(AuthGID, AuthKey, #state{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#02230300:32, 0:160, 16#00000f00:32, DestGID:32/little, 0:64, AuthGID:32/little, AuthKey:32/bits >>).

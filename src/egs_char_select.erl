@@ -64,7 +64,7 @@ event({char_select_create, Slot, CharBin}, #state{gid=GID}) ->
 	file:write_file(File, CharBin),
 	file:write_file(io_lib:format("~s.options", [File]), << 0:128, 4, 0:56 >>);
 
-%% @doc Load the selected character into the game's universe.
+%% @doc Load the selected character into the game's default universe.
 event({char_select_enter, Slot, _BackToPreviousField}, State=#state{gid=GID}) ->
 	{ok, User} = egs_user_model:read(GID),
 	Folder = egs_accounts:get_folder(GID),
@@ -76,7 +76,9 @@ event({char_select_enter, Slot, _BackToPreviousField}, State=#state{gid=GID}) ->
 	Appearance = psu_appearance:binary_to_tuple(Race, AppearanceBin),
 	Options = psu_characters:options_binary_to_tuple(OptionsBin),
 	Character = #characters{slot=Slot, name=Name, race=Race, gender=Gender, class=Class, appearance=Appearance, options=Options}, % TODO: temporary set the slot here, won't be needed later
-	User2 = User#egs_user_model{character=Character, area=#psu_area{questid=1100000, zoneid=7, mapid=9202}, entryid=0},
+	UniID = egs_universes:defaultid(),
+	egs_universes:enter(UniID),
+	User2 = User#egs_user_model{uni=UniID, character=Character, area=#psu_area{questid=1100000, zoneid=7, mapid=9202}, entryid=0},
 	egs_user_model:write(User2),
 	egs_user_model:item_add(GID, 16#11010000, #psu_special_item_variables{}),
 	egs_user_model:item_add(GID, 16#11020000, #psu_special_item_variables{}),
@@ -87,7 +89,6 @@ event({char_select_enter, Slot, _BackToPreviousField}, State=#state{gid=GID}) ->
 	egs_user_model:item_add(GID, 16#01010b00, #psu_striking_weapon_item_variables{current_pp=99, max_pp=100, element=#psu_element{type=3, percent=50}}),
 	{ok, User3} = egs_user_model:read(GID),
 	State2 = State#state{slot=Slot},
-	mnesia:dirty_update_counter(counters, population, 1),
 	psu_game:char_load(User3, State2),
 	{ok, egs_game, State2}.
 

@@ -35,7 +35,7 @@ char_load(User, State) ->
 	send_1005((User#egs_user_model.character)#characters.name),
 	psu_proto:send_1006(12, State),
 	psu_proto:send_0210(State),
-	send_0222(),
+	psu_proto:send_0222(User#egs_user_model.uni, State),
 	send_1500(User),
 	send_1501(),
 	send_1512(),
@@ -254,36 +254,6 @@ send_0204(DestUser, TargetUser, Action) ->
 	send(<< 16#02040300:32, 0:32, TargetTypeID:32, TargetGID:32/little-unsigned-integer, 0:64,
 		16#00011300:32, DestGID:32/little-unsigned-integer, 0:64, TargetGID:32/little-unsigned-integer,
 		TargetLID:32/little-unsigned-integer, Action:32/little-unsigned-integer >>).
-
-%% @doc Send the list of available universes.
-send_021e() ->
-	{ok, Count} = egs_user_model:count(),
-	[StrCount] = io_lib:format("~b", [Count]),
-	Unis = [{16#ffffffff, center, "Your Room", ""}, {1, justify, "Reload", "     "}, {2, justify, "EGS Test", StrCount}],
-	NbUnis = length(Unis),
-	Bin = send_021e_build(Unis, []),
-	send(<< 16#021e0300:32, 0:288, NbUnis:32/little-unsigned-integer, Bin/binary >>).
-
-send_021e_build([], Acc) ->
-	iolist_to_binary(lists:reverse(Acc));
-send_021e_build([{ID, Align, Name, Pop}|Tail], Acc) ->
-	UCS2Name = << << X:8, 0:8 >> || X <- Name >>,
-	UCS2Pop = << << X:8, 0:8 >> || X <- Pop >>,
-	NamePadding = 8 * (32 - byte_size(UCS2Name)),
-	PopPadding = 8 * (12 - byte_size(UCS2Pop)),
-	IntAlign = case Align of justify -> 643; center -> 0 end,
-	send_021e_build(Tail, [<< ID:32/little-unsigned-integer, 0:16, IntAlign:16/little-unsigned-integer, UCS2Name/binary, 0:NamePadding, UCS2Pop/binary, 0:PopPadding >>|Acc]).
-
-%% @doc Send the current universe name and number.
-%% @todo Currently only have universe number 2, named EGS Test.
-%% @todo We must have a parameter indicating whether this is a room or a normal universe.
-send_0222() ->
-	UCS2Name = << << X:8, 0:8 >> || X <- "EGS Test" >>,
-	Padding = 8 * (44 - byte_size(UCS2Name)),
-	UniID = 2,
-	GID = get(gid),
-	send(<< 16#02220300:32, 16#ffff:16, 0:16, 16#00001200:32, GID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
-		UniID:32/little, 16#01009e02:32, UCS2Name/binary, 0:Padding, 16#aa000000:32 >>).
 
 %% @todo No idea!
 send_022c(A, B) ->

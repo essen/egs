@@ -37,7 +37,6 @@ start_link(Port) ->
 on_exit(Pid) ->
 	case egs_user_model:read({pid, Pid}) of
 		{ok, User} ->
-			mnesia:dirty_update_counter(counters, population, -1),
 			case User#egs_user_model.partypid of
 				undefined ->
 					ignore;
@@ -47,6 +46,7 @@ on_exit(Pid) ->
 					psu_party:stop(PartyPid)
 			end,
 			egs_user_model:delete(User#egs_user_model.id),
+			egs_universes:leave(User#egs_user_model.uni),
 			{ok, List} = egs_user_model:select({neighbors, User}),
 			lists:foreach(fun(Other) -> Other#egs_user_model.pid ! {egs, player_unspawn, User} end, List),
 			io:format("game (~p): quit~n", [User#egs_user_model.id]);
