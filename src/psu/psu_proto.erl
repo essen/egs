@@ -1512,6 +1512,22 @@ send_1022(#egs_user_model{character=#characters{currenthp=HP}}, #state{socket=So
 send_1204(#state{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#12040300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:96, 16#20000000:32, 0:256 >>).
 
+%% @doc Send the player's partner card.
+%% @todo Handle the LID and comment properly.
+send_1500(Character, #state{socket=Socket, gid=DestGID}) ->
+	#characters{slot=Slot, name=Name, race=Race, gender=Gender, class=Class, appearance=Appearance} = Character,
+	case Appearance of
+		#flesh_appearance{voicetype=VoiceType, voicepitch=VoicePitch} -> ok;
+		#metal_appearance{voicetype=VoiceType, voicepitch=VoicePitch} -> ok
+	end,
+	RaceBin = psu_characters:race_atom_to_binary(Race),
+	GenderBin = psu_characters:gender_atom_to_binary(Gender),
+	ClassBin = psu_characters:class_atom_to_binary(Class),
+	Comment = << 0:2816 >>,
+	packet_send(Socket, << 16#15000300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64,
+		Name/binary, RaceBin:8, GenderBin:8, ClassBin:8, VoiceType:8, VoicePitch:8, 0:24,
+		DestGID:32/little, 0:224, Comment/binary, 1, 4, 1, Slot, 0:64 >>).
+
 %% @doc Send the background to use for the counter.
 %% @todo Handle LID properly.
 send_1711(Bg, #state{socket=Socket, gid=DestGID}) ->

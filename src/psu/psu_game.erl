@@ -35,7 +35,7 @@ char_load(User, State) ->
 	psu_proto:send_1006(12, State),
 	psu_proto:send_0210(State),
 	psu_proto:send_0222(User#egs_user_model.uni, State),
-	send_1500(User),
+	psu_proto:send_1500(User#egs_user_model.character, State),
 	send_1501(),
 	send_1512(),
 	%% 0303
@@ -534,17 +534,6 @@ send_1309() ->
 send_1332() ->
 	{ok, << _Size:32, Packet/bits >>} = file:read_file("p/packet1332.bin"),
 	send(Packet).
-
-%% @doc Send the player's partner card.
-%% @todo Find out the remaining values.
-send_1500(User) ->
-	GID = User#egs_user_model.id,
-	#characters{slot=Slot, name=Name, race=Race, gender=Gender, class=Class} = User#egs_user_model.character,
-	RaceBin = psu_characters:race_atom_to_binary(Race),
-	GenderBin = psu_characters:gender_atom_to_binary(Gender),
-	ClassBin = psu_characters:class_atom_to_binary(Class),
-	send(<< 16#15000300:32, 16#ffff:16, 0:144, 16#00011300:32, GID:32/little, 0:64,
-		Name/binary, RaceBin:8, GenderBin:8, ClassBin:8, 0:40, GID:32/little, 0:3040, 16#010401:24, Slot:8, 0:64 >>).
 
 %% @todo Send an empty partner card list.
 send_1501() ->
