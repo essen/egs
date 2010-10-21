@@ -32,7 +32,7 @@ char_load(User, State) ->
 	% 0246
 	send_0a0a((User#egs_user_model.character)#characters.inventory),
 	psu_proto:send_1006(5, 0, State), %% @todo The 0 here is PartyPos, save it in User.
-	send_1005((User#egs_user_model.character)#characters.name),
+	psu_proto:send_1005(User#egs_user_model.character, State),
 	psu_proto:send_1006(12, State),
 	psu_proto:send_0210(State),
 	psu_proto:send_0222(User#egs_user_model.uni, State),
@@ -486,13 +486,6 @@ send_1004(Type, User, PartyPos) ->
 		0:64,
 		16#01000000:32, 16#01000000:32, %% @todo first is current hp, second is max hp
 		0:608 >>).
-
-%% @todo Figure out what the packet is.
-send_1005(Name) ->
-	{ok, File} = file:read_file("p/packet1005.bin"),
-	<< _:352, Before:160/bits, _:608, After/bits >> = File,
-	GID = get(gid),
-	send(<< 16#10050300:32, 16#ffff:16, 0:144, 16#00011300:32, GID:32/little, 0:64, Before/binary, GID:32/little, 0:64, Name/binary, After/binary >>).
 
 %% @todo No idea. Also the 2 PartyPos in the built packet more often than not match, but sometimes don't? That's probably because one is PartyPos and the other is LID or something.
 send_100f(NPCid, PartyPos) ->

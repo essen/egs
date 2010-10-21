@@ -1429,6 +1429,23 @@ send_0d05(#state{socket=Socket, gid=DestGID}) ->
 	Size = 4 + byte_size(Packet),
 	ssl:send(Socket, << Size:32/little, Packet/binary >>).
 
+%% @doc Send the client's own player's party information, on the bottom left of the screen.
+%% @todo Location and the 20 bytes following sometimes have values, not sure why; when joining a party maybe?
+send_1005(Character, #state{socket=Socket, gid=DestGID}) ->
+	#characters{name=Name, mainlevel=#level{number=Level}, currenthp=CurrentHP, maxhp=MaxHP} = Character,
+	Location = << 0:512 >>,
+	packet_send(Socket, << 16#10050300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64,
+		16#00000100:32, 0:32, 16#ffffffff:32, 0:32, 16#00011200:32, DestGID:32/little, 0:64,
+		Name/binary, Level:8, 0:16, 1:8, 16#01010000:32, 0:32, Location/binary,
+		16#ffffffff:32, 0:96, 16#ffffffff:32, 0:64, CurrentHP:32/little, MaxHP:32/little, 0:640,
+		16#0100ffff:32, 16#0000ff00:32, 16#ffff0000:32, 0:640, 16#ffffffff:32, 0:768,
+		16#0100ffff:32, 16#0000ff00:32, 16#ffff0000:32, 0:640, 16#ffffffff:32, 0:768,
+		16#0100ffff:32, 16#0000ff00:32, 16#ffff0000:32, 0:640, 16#ffffffff:32, 0:768,
+		16#0100ffff:32, 16#0000ff00:32, 16#ffff0000:32, 0:640, 16#ffffffff:32, 0:768,
+		16#0100ffff:32, 16#0000ff00:32, 16#ffff0000:32, 0:640, 16#ffffffff:32, 0:448,
+		16#ffffffff:32, 0:32, 16#ff020000:32, 16#ffff0000:32, 16#ffff0000:32, 16#ffff0000:32,
+		16#ffff0000:32, 16#ffff0000:32, 16#ffff0000:32, 0:3680 >>).
+
 %% @doc Party-related events.
 send_1006(EventID, State) ->
 	send_1006(EventID, 0, State).
