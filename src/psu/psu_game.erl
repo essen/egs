@@ -242,18 +242,6 @@ send_0113() ->
 	GID = get(gid),
 	send(<< 16#01130300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, GID:32/little-unsigned-integer, File/binary >>).
 
-%% @todo Not sure. Used for unspawning, and more.
-send_0204(DestUser, TargetUser, Action) ->
-	DestGID = DestUser#egs_user_model.id,
-	TargetTypeID = case (TargetUser#egs_user_model.character)#characters.type of
-		npc -> 16#00001d00;
-		_ -> 16#00001200
-	end,
-	#egs_user_model{id=TargetGID, lid=TargetLID} = TargetUser,
-	send(<< 16#02040300:32, 0:32, TargetTypeID:32, TargetGID:32/little-unsigned-integer, 0:64,
-		16#00011300:32, DestGID:32/little-unsigned-integer, 0:64, TargetGID:32/little-unsigned-integer,
-		TargetLID:32/little-unsigned-integer, Action:32/little-unsigned-integer >>).
-
 %% @todo No idea!
 send_022c(A, B) ->
 	send(<< (header(16#022c))/binary, A:16/little-unsigned-integer, B:16/little-unsigned-integer >>).
@@ -418,6 +406,7 @@ send_0c09() ->
 	send(<< (header(16#0c09))/binary, 0:64 >>).
 
 %% @doc Send the counter's mission options (0 = invisible, 2 = disabled, 3 = available).
+%% @todo Remove this function when all the counters have been converted.
 send_0c10(Options) ->
 	GID = get(gid),
 	send(<< 16#0c100300:32, 0:32, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,

@@ -1253,6 +1253,18 @@ send_0201(CharUser, #state{socket=Socket, gid=DestGID}) ->
 send_0202(#state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#020203bf:32, DestLID:16/little, 0:272, DestGID:32/little, 0:1024 >>).
 
+%% @doc Unspawn the given character.
+%% @todo LID.
+%% @todo The last 4 bytes are probably the number of players remaining in the zone.
+send_0204(User, #state{socket=Socket, gid=DestGID}) ->
+	CharTypeID = case (User#egs_user_model.character)#characters.type of
+		npc -> 16#00001d00;
+		_ -> 16#00001200
+	end,
+	#egs_user_model{id=CharGID, lid=CharLID} = User,
+	packet_send(Socket, << 16#02040300:32, 0:32, CharTypeID:32, CharGID:32/little, 0:64,
+		16#00011300:32, DestGID:32/little, 0:64, CharGID:32/little, CharLID:32/little, 100:32/little >>).
+
 %% @doc Make the client load a new map.
 %% @todo We set a value of 1 and not 0 after EntryID because this value is never found to be 0.
 send_0205(CharUser, IsSeasonal, #state{socket=Socket, gid=DestGID, lid=DestLID, areanb=AreaNb}) ->

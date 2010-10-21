@@ -47,9 +47,8 @@ info({egs, player_spawn, _Player}, #state{gid=GID}) ->
 	psu_game:send_0233(SpawnList);
 
 %% @doc Inform the client that a player has unspawn.
-info({egs, player_unspawn, Player}, #state{gid=GID}) ->
-	{ok, User} = egs_user_model:read(GID),
-	psu_game:send_0204(User, Player, 5);
+info({egs, player_unspawn, Player}, State) ->
+	psu_proto:send_0204(Player, State);
 
 %% @doc Warp the player to the given location.
 info({egs, warp, QuestID, ZoneID, MapID, EntryID}, State) ->
@@ -703,6 +702,7 @@ event({object_warp_take, BlockID, ListNb, ObjectNb}, #state{gid=GID}) ->
 	psu_game:send_0503(User#egs_user_model.pos),
 	psu_game:send_1211(16#ffffffff, 0, 14, 0);
 
+%% @todo Don't send_0204 if the player is removed from the party while in the lobby I guess.
 event({party_remove_member, PartyPos}, State=#state{gid=GID}) ->
 	log("party remove member ~b", [PartyPos]),
 	{ok, DestUser} = egs_user_model:read(GID),
@@ -714,7 +714,7 @@ event({party_remove_member, PartyPos}, State=#state{gid=GID}) ->
 		_ -> ignore
 	end,
 	psu_proto:send_1006(8, PartyPos, State),
-	psu_game:send_0204(DestUser, RemovedUser, 1),
+	psu_proto:send_0204(RemovedUser, State),
 	psu_proto:send_0215(0, State);
 
 event({player_options_change, Options}, #state{gid=GID, slot=Slot}) ->
