@@ -395,12 +395,6 @@ send_0c06(Filename) ->
 	{ok, << File/bits >>} = file:read_file(Filename),
 	send(<< 16#0c060300:32, 0:288, 1:32/little-unsigned-integer, File/binary >>).
 
-%% @doc Reply whether the player is allowed to use the transport option.
-%%      Use true for allowing it, and false otherwise.
-send_0c08(Response) ->
-	Value = if Response =:= true -> 0; true -> 1 end,
-	send(<< (header(16#0c08))/binary, Value:32 >>).
-
 %% @doc Send the trial start notification.
 send_0c09() ->
 	send(<< (header(16#0c09))/binary, 0:64 >>).

@@ -436,8 +436,8 @@ event({item_unequip, ItemIndex, TargetGID, TargetLID, A, B}, #state{gid=GID}) ->
 		0:64, TargetGID:32/little-unsigned-integer, TargetLID:32/little-unsigned-integer, ItemIndex, 2, Category, A, B:32/little-unsigned-integer >>);
 
 %% @todo Just ignore the meseta price for now and send the player where he wanna be!
-event(lobby_transport_request, _State) ->
-	psu_game:send_0c08(true);
+event(lobby_transport_request, State) ->
+	psu_proto:send_0c08(State);
 
 event(lumilass_options_request, State=#state{gid=GID}) ->
 	{ok, User} = egs_user_model:read(GID),

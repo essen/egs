@@ -1427,6 +1427,10 @@ send_0c00(CharUser, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 send_0c06(Pack, #state{socket=Socket}) ->
 	packet_send(Socket, << 16#0c060300:32, 0:288, 1:32/little-unsigned-integer, Pack/binary >>).
 
+%% @doc Reply that the player is allowed to use the lobby transport. Always allow.
+send_0c08(#state{socket=Socket, gid=DestGID}) ->
+	packet_send(Socket, << 16#0c080300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:96 >>).
+
 %% @doc Send the counter's mission options (0 = invisible, 2 = disabled, 3 = available).
 %% @todo LID.
 send_0c10(Options, #state{socket=Socket, gid=DestGID}) ->
