@@ -164,7 +164,7 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 			psu_proto:send_0a06(User, State2);
 		true -> ignore
 	end,
-	send_0233(SpawnList),
+	psu_proto:send_0233(SpawnList, State),
 	case User#egs_user_model.partypid of
 		undefined -> ignore;
 		_ -> send_022c(0, 16#12)
@@ -245,33 +245,6 @@ send_0113() ->
 %% @todo No idea!
 send_022c(A, B) ->
 	send(<< (header(16#022c))/binary, A:16/little-unsigned-integer, B:16/little-unsigned-integer >>).
-
-%% @todo Figure out what the other things are.
-send_0233(Users) ->
-	NbUsers = length(Users),
-	case NbUsers of
-		0 ->
-			ignore;
-		_ ->
-			GID = get(gid),
-			Header = << 16#02330300:32, 0:32, 16#00001200:32, GID:32/little-unsigned-integer, 0:64, 16#00011300:32,
-				GID:32/little-unsigned-integer, 0:64, NbUsers:32/little-unsigned-integer >>,
-			Contents = build_0233_contents(Users),
-			send(<< Header/binary, Contents/binary >>)
-	end.
-
-%% @todo God this function is ugly. Use tail recursion!
-build_0233_contents([]) ->
-	<< >>;
-build_0233_contents(Users) ->
-	[User|Rest] = Users,
-	LID = 16#010000 + User#egs_user_model.lid, %% @todo The LID must be 16 bits and 0233 seems to (almost always) require that 01 right there...
-	CharBin = psu_characters:character_user_to_binary(User#egs_user_model{lid=LID}),
-	IsGM = 0,
-	GameVersion = 0,
-	Chunk = << CharBin/binary, IsGM:8, 0:8, GameVersion:8, 0:8 >>,
-	Next = build_0233_contents(Rest),
-	<< Chunk/binary, Next/binary >>.
 
 %% @todo Force send a new player location. Used for warps.
 %% @todo The value before IntDir seems to be the player's current animation. 01 stand up, 08 ?, 17 normal sit

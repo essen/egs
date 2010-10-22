@@ -1397,6 +1397,19 @@ send_0231(URL, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#02310300:32, DestLID:16/little, 0:16, 16#00000f00:32, DestGID:32/little, 0:64,
 		16#00000f00:32, DestGID:32/little, 0:64, Length:32/little, URLBin/binary, 0:Padding >>).
 
+%% @todo Handle the LID properly.
+send_0233(Users, #state{socket=Socket, gid=DestGID}) ->
+	NbUsers = length(Users),
+	Bin = build_0233_users(Users, []),
+	packet_send(Socket, << 16#02330300:32, 0:32, 16#00001200:32, DestGID:32/little, 0:64,
+		16#00011300:32, DestGID:32/little, 0:64, NbUsers:32/little, Bin/binary, 0:608 >>).
+
+build_0233_users([], Acc) ->
+	iolist_to_binary(lists:reverse(Acc));
+build_0233_users([User|Tail], Acc) ->
+	Bin = psu_characters:character_user_to_binary(User),
+	build_0233_users(Tail, [<< Bin/binary, 0:32 >>|Acc]).
+
 %% @doc Start the zone handling: load the zone file and the objects sent separately.
 %% @todo Handle the LID properly.
 send_0236(#state{socket=Socket, gid=DestGID}) ->

@@ -41,10 +41,10 @@ info({egs, notice, Type, Message}, State) ->
 
 %% @doc Inform the client that a player has spawn.
 %% @todo Should be something along the lines of 010d 0205 203 201.
-info({egs, player_spawn, _Player}, #state{gid=GID}) ->
+info({egs, player_spawn, _Player}, State=#state{gid=GID}) ->
 	{ok, User} = egs_user_model:read(GID),
 	{ok, SpawnList} = egs_user_model:select({neighbors, User}),
-	psu_game:send_0233(SpawnList);
+	psu_proto:send_0233(SpawnList, State);
 
 %% @doc Inform the client that a player has unspawn.
 info({egs, player_unspawn, Player}, State) ->
