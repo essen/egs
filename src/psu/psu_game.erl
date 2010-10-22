@@ -123,7 +123,7 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 		true -> ignore
 	end,
 	State2 = State#state{areanb=State#state.areanb + 1},
-	psu_proto:send_0205(User, IsSeasonal, State2),
+	psu_proto:send_0205(User#egs_user_model{lid=0}, IsSeasonal, State2),
 	psu_proto:send_100e(User#egs_user_model.area, User#egs_user_model.entryid, AreaName, State2),
 	if	AreaType =:= mission ->
 			psu_proto:send_0215(0, State2),
@@ -164,7 +164,10 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 			psu_proto:send_0a06(User, State2);
 		true -> ignore
 	end,
-	psu_proto:send_0233(SpawnList, State),
+	if	length(SpawnList) =/= 0 ->
+			psu_proto:send_0233(SpawnList, State);
+		true -> ignore
+	end,
 	case User#egs_user_model.partypid of
 		undefined -> ignore;
 		_ -> send_022c(0, 16#12)

@@ -40,11 +40,13 @@ info({egs, notice, Type, Message}, State) ->
 	psu_proto:send_0228(Type, 2, Message, State);
 
 %% @doc Inform the client that a player has spawn.
-%% @todo Should be something along the lines of 010d 0205 203 201.
-info({egs, player_spawn, _Player}, State=#state{gid=GID}) ->
-	{ok, User} = egs_user_model:read(GID),
-	{ok, SpawnList} = egs_user_model:select({neighbors, User}),
-	psu_proto:send_0233(SpawnList, State);
+%% @todo Not sure what IsSeasonal or the AreaNb in 0205 should be for other spawns.
+info({egs, player_spawn, Player}, State) ->
+	psu_proto:send_0111(Player, 6, State),
+	psu_proto:send_010d(Player, State),
+	psu_proto:send_0205(Player, 0, State),
+	psu_proto:send_0203(Player, State),
+	psu_proto:send_0201(Player, State);
 
 %% @doc Inform the client that a player has unspawn.
 info({egs, player_unspawn, Player}, State) ->
@@ -273,7 +275,7 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}, State=#sta
 	psu_proto:send_0200(0, mission, State),
 	psu_proto:send_020f(ZoneFile, 0, 255, State),
 	State2 = State#state{areanb=State#state.areanb + 1},
-	psu_proto:send_0205(User, 0, State2),
+	psu_proto:send_0205(User#egs_user_model{lid=0}, 0, State2),
 	psu_proto:send_100e(CounterID, "Counter", State2),
 	psu_proto:send_0215(0, State2),
 	psu_proto:send_0215(0, State2),
