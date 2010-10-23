@@ -824,30 +824,6 @@
 		%~ 3, 3, 3, % Fight for Food S2 variant 1-3
 	%~ 0:136 >>}]},
 
-	% HIVE (entry 0)
-
-	{ 20, [{quests, "data/counters/colony.hive-0.pack"}, {bg, 255}, {options, << 16#01050400:32, 0:32 >>}]},
-
-	% HIVE (entry 1): Phantom Ruins, SEED Awakened
-
-	{ 21, [{quests, "data/counters/colony.hive-1.pack"}, {bg, 255}, {options, << 16#017e1c00:32, 0, 3,
-		0, 0, 0, 0, 0, % Phantom Ruins C-S
-		0, 3, 3, 3, % SEED Awakened C-S variant 1
-		3, 3, 3, 0, % SEED Awakened C-S variant 2
-		3, 0, 0, 0, % SEED Awakened C-S variant 3
-		3, 3, 3, % SEED Awakened S2 variant 1-3
-		3, 3, 3, % SEED Awakened S3 variant 1-3
-	0:24 >>}]},
-
-	%~ { 21, [{quests, "data/counters/colony.hive-1.pack"}, {bg, 255}, {options, << 16#017e1c00:32, 3, 3,
-		%~ 3, 3, 3, 3, 0, % Phantom Ruins C-S
-		%~ 3, 3, 3, 3, % SEED Awakened C-S variant 1
-		%~ 3, 3, 3, 3, % SEED Awakened C-S variant 2
-		%~ 3, 3, 3, 3, % SEED Awakened C-S variant 3
-		%~ 3, 3, 3, % SEED Awakened S2 variant 1-3
-		%~ 3, 3, 3, % SEED Awakened S3 variant 1-3
-	%~ 0:24 >>}]},
-
 	% Raffon Fieldbase (entry 0)
 
 	{ 30, [{quests, "data/counters/parum.raffon-0.pack"}, {bg, 1}, {options, << 16#01000400:32, 0:32 >>}]},
