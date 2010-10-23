@@ -1290,7 +1290,6 @@ send_0204(User, #state{socket=Socket, gid=DestGID}) ->
 		16#00011300:32, DestGID:32/little, 0:64, CharGID:32/little, CharLID:32/little, 100:32/little >>).
 
 %% @doc Make the client load a new map.
-%% @todo We set a value of 1 and not 0 after EntryID because this value is never found to be 0.
 send_0205(CharUser, IsSeasonal, #state{socket=Socket, gid=DestGID, lid=DestLID, areanb=AreaNb}) ->
 	#egs_user_model{lid=CharLID, area=#psu_area{zoneid=ZoneID, mapid=MapID}, entryid=EntryID} = CharUser,
 	packet_send(Socket, << 16#02050300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64,
