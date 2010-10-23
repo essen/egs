@@ -1,0 +1,24 @@
+0228
+
+Size:32
+Command:16 Channel:8 Garbage:8
+ffff:16 Garbage:16
+FromTypeID:32
+FromGID:32
+0:32
+0:32
+DestTypeID:32
+DestGID:32
+0:32
+0:32
+MsgType:32
+Duration:32
+Message:N 0:16
+
+Size: depends on Message
+FromTypeID: 0 if sent from the server itself, 00011500 if sent from a GM account
+FromGID: 0 if sent from the server itself, GID of the GM account otherwise
+DestTypeID: 00011300
+MsgType: 0 dialog in the middle of the screen; 1 scrolling message on top; 2 scrolling message on the right; 3 dialog in the middle for a specified Duration
+Duration: in seconds, only for MsgType 3; value of 2 otherwise
+Message: up to 511 unicode characters + ending \0\0

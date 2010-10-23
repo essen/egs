@@ -1,0 +1,32 @@
+100e
+
+Size:32
+Command:16 Channel:8 Garbage:8
+ffff:16 Garbage:16
+0:32
+0:32
+0:32
+0:32
+DestTypeID:32
+DestGID:32
+0:32
+0:32
+1:8 PartyPos:8 ZoneID:16
+MapID:16 EntryID:16
+QuestID:32
+LocationName:512
+TargetLID:32
+CounterID:32
+CounterType:32
+
+Size: 132
+Channel: 3
+DestTypeID: 00011300
+PartyPos: 0 1 2 3 4 5; for the given character
+ZoneID: 0 1 2 3 4 5 6 7 8 9 10 11 12 13 20
+MapID: many values
+EntryID: 0 1 2 3 4 5 6 7 8 10 11 12 13 14 20 21 22 23 7fff
+QuestID: many values; 7fffffff for counters
+LocationName: UCS2; can contain color codes, finished by \0\0
+CounterID: ffffffff when not a counter
+CounterType: 0 when not a counter; 1 when in a mission counter; 2 when in a shop/clothes change counter

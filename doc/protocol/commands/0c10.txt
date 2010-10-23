@@ -1,0 +1,26 @@
+0c10
+
+Size:32
+Command:16 Channel:8 Garbage:8
+DestLID:16 Garbage:16
+Garbage:32
+Garbage:32
+Garbage:32
+Garbage:32
+DestTypeID:32
+DestGID:32
+0:32
+0:32
+1:8 Garbage:8 OptionsSize:16
+Options:(OptionsSize * 8)
+
+Size: variable
+Channel: 3
+DestTypeID: 00011300
+OptionsSize: size of the list of per-mission options following this value
+Options: a list of bytes with 1 byte per option
+
+An option can be one of at least three values: 0 hidden; 2 visible but grayed; 3 visible and selectable.
+
+A counter defines categories and missions inside them. 
+The list of options start with categories and then continue with missions directly.

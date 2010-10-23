@@ -1,0 +1,23 @@
+0811
+
+Size:32
+Command:16 Channel:8 Garbage:8
+LID:16 0:16
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+CounterType:8 _UnknownC:8 FromZoneID:16
+FromMapID:16 FromEntryID:16
+CounterID:32
+ffffffff:32
+
+Size: 0x3c
+Channel: 2
+CounterType: apparently 1 for mission counters, 2 for others (shops, etc.)
+_UnknownC: either 0 0x29 0x32 or 0xff, 0x29 only when _UnknownB is 2; 0x29 most often
+CounterID: ffffffff used for shops etc., otherwise from 0 to 255 (a few unused values on official apparently)

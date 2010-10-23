@@ -1,0 +1,20 @@
+020d
+
+Size:32
+Command:16 Channel:8 Garbage:8
+ffff:16 0:16
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+AuthGID:32
+AuthKey:32
+0:32
+0:32
+
+Size: 60
+Channel: 2

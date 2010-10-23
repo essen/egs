@@ -1,0 +1,418 @@
+[ Research Status / Importance / Occurences / Command / Channels / Description ]
+
+Characters
+
+!*  C 6 0101 B--
+WIP C 7 0102 BCS animation state change (movement, sit, stand up, trigger unicube, talk to npc...)
+!*  C 6 0104 B-- sit position change (floor and chairs); goggle position change
+WIP A 7 0105 -CS weapon/armor equip, item use/drop and more; request/reply
+    ? 6 0106 -CS
+!*  C 4 0107 B-- sit on chair, get on vehicle
+    ? 6 0108 --S
+!   ? 4 0109 -C- weapon/item palette change
+WIP B 5 010a -CS shop listing request/reply
+OK  ? 5 010b -C- player enter area (probably broadcast spawn here)
+WIP A 6 010d --S character details (excluding location); similar to 0201
+!*  C 7 010f B-- talk to npc; set trap, boom trap
+WIP A 5 0110 -C- triggered event (death, type change, online status change...)
+OK  A 6 0111 --S trigger event
+    C 3 0112 --S
+!*  B 4 0113 --S types capabilities list
+OK  A 7 0115 --S update EXP/money...
+OK  A 5 0117 --S revive
+    ? 5 0119 -CS (probably make the RCSM shoot)
+
+System
+
+OK  A 5 0200 --S zone init
+WIP A 6 0201 --S character details (including location); similar to 010d
+OK  A 5 0202 --S hello
+OK  A 5 0203 --S spawn character
+OK  B 5 0204 --S unspawn character
+OK  A 6 0205 --S load map (related to 0806)
+OK  A 5 0208 --S end of loading (related to 0808)
+OK  A 4 020b -C- character selection: select slot
+OK  ? 5 020c -C- (despite the channel, sent by the server; channel 2)
+OK  A 4 020d -C- game auth: token authentication request
+OK  A 5 020e --S quest file transfer
+OK  A 5 020f --S zone file transfer
+OK  C 5 0210 --S current unix time
+OK  C 5 0215 --S
+OK  A 5 0216 --S login: forward to game server
+OK  A 5 0217 -C- login: game server address request
+OK  ? 5 0219 -C- login: password authentication request
+OK  A 5 021b --S (character selection: end)
+OK  ? 5 021c -C- (character selection: end) reply
+OK  A 4 021d -C- uni cube request
+OK  A 4 021e --S uni cube reply
+OK  A 4 021f -C- uni cube selection
+!   ? 4 0220 -C- (uni cube related, sent by the client? thought it was sent by the server)
+OK  A 5 0222 --S current uni details
+OK  ? 5 0223 --S login: password authentication success
+!   ? 3 0224 --S disconnect user, reason given
+OK  ? 5 0225 --S login: motd reply
+OK  A 5 0226 -C- login: motd request (jp only): same as 023f (apparently uses channel 3)
+OK  ? 5 0227 -C- login: whether the motd (TOS on official) was accepted
+OK  ? 3 0228 --S display a notice: global message; rare mission get message
+!*  ? 5 022c --S (probably related to parties or NPCs)
+--  - - 022d --S gameguard ping
+--  - - 022e -C- gameguard pong
+OK  ? 4 0230 --S (universe change related, including room doors)
+OK  A 2 0231 --S send user to website (used on wrong password)
+WIP A 5 0233 --S list of other characters in zone/lobby/area, whichever
+!   ? 3 0234 -C- (probably related to 0235; probably partner card related)
+    ? 3 0235 --S (probably related to 0234; probably partner card related; sends 1 GID and 4 card-like character infos)
+OK  A 5 0236 --S start zone handler (load objects and enable them)
+    ? 4 0237 -C-
+    ? 4 0238 --S (probably related to 0237)
+OK  A 5 023f -C- login: motd request (us only): same as 0226
+    ? 3 0245 --S
+!   ? 5 0246 --S add or replace text strings
+    ? 5 024b -C-
+    ? ? 024f -C- (gam/gas dialog request; jp only)
+    ? ? 0250 --S (gam/gas dialog reply; jp only)
+    ? ? 025e --S (lumilass-related; jp only)
+
+Chat
+
+!   B 2 0302 -C- shortcuts change
+!   B 5 0303 --S shortcuts list
+OK  A 6 0304 -CS message
+!   C 4 0305 --S sound
+
+Missions
+
+!*  C 7 0402 -C- enemy event (safely ignored?)
+!*  C 6 0404 -C- object event
+
+Movements
+
+!** A 8 0503 B-S position change
+!*  C 7 050f B-- camera change
+!*  C 7 0514 B-- stay still
+
+Area/State change
+
+OK  ? 5 0806 -C- (related to 0808)
+OK  A 5 0807 -C- area change
+OK  ? 5 0808 -C- (related to 0806)
+WIP ? 4 080c -C- npc force invite-- NO, more like invite npc specific for this quest (in the file), probably kills NPC on zone change too (but not map change apparently)
+OK  ? 5 080d -C- (area change successful notice?)
+OK  C 5 080e -C- client/platform/chosen entrance info
+OK  ? 4 080f -C- (npc related or story related)
+OK  A 4 0811 -C- enter counter
+OK  A 4 0812 -C- leave counter
+OK  A 3 0813 -C- npc invite
+OK  ? 4 0814 -C- (mission area change successful notice?)
+OK  ? 5 0815 -C- (non-mission area change successful notice?)
+OK  C 4 0818 -C- cpu/gpu info
+
+Items
+
+    ? 5 0a01 --S
+    ? 5 0a02 --S
+    ? 3 0a03 --S
+*   A 4 0a04 --S npc inventory
+OK  A 5 0a05 --S (player inventory related; the LID is changed right before this command, or right before the previous 0215 command in the case of missions)
+OK  A 5 0a06 --S player inventory: list of unique items id
+    ? 4 0a07 -CS (view stats/equip)
+    ? 3 0a08 --S
+**  C 5 0a09 -CS (probably: receive item)
+!*  A 5 0a0a --S player inventory
+    ? 2 0a0b --S
+    ? 4 0a0e --S
+    ? 4 0a0f --S
+OK  C 5 0a10 -C- item description request
+OK  C 5 0a11 --S item description reply
+
+Packet fragments
+
+OK  A 6 0b03 --- fragment (no channel)
+OK  A 6 0b05 --- reception confirmed (no channel)
+
+Quests
+
+OK  A 5 0c00 --S quest init
+OK  A 4 0c01 -C- mission start request
+!*  A 4 0c02 --S mission start reply (no 1020 or 1015 when rejected)
+OK  A 4 0c05 -C- counter quest files pack request
+OK  A 4 0c06 --S counter quest files pack transfer
+OK  A 3 0c07 -C- lobby transport request
+OK  A 3 0c08 --S lobby transport reply
+*   A 4 0c09 --S trial start, end
+    ? 5 0c0a --S
+    ? 4 0c0b --S
+    ? 4 0c0c --S
+OK  ? 4 0c0d -C- (mission start and mission area change related)
+OK  A 3 0c0e -C- mission abort
+OK  A 4 0c0f -C- counter options request
+OK  A 4 0c10 --S counter options reply
+!*  ? 3 0c11 -C- (story mission related; probably related to 0c12)
+!*  ? 3 0c12 --S (probably related to 0c11)
+    ? 3 0c13 -C- (probably related to 0c14)
+    ? 3 0c14 -C- (probably related to 0c13)
+
+Account/Flags
+
+WIP A 5 0d01 --S character selection: selected character details
+OK  A 2 0d02 -C- character selection: create character
+!*  A 4 0d03 --S character selection: character list reply
+!** C 5 0d04 -CS set flag
+OK  C 4 0d05 --S system flags list
+OK  A 4 0d06 -C- character selection: character list request
+OK  A 3 0d07 -C- options change
+!   ? 1 0d08 -C- (gbr info request, 1 per dialog)
+    ? 1 0d09 --S (gbr info reply 2, 4, 5; during GBR only)
+!   ? 1 0d0a --S (gbr info reply 1, 3; many GBR 0d04 sent by the server before that; also sent when not in GBR)
+
+Hits
+
+WIP A 6 0e00 -C- hit
+!   ? 3 0e01 -C- 
+*   A 7 0e07 --S hit reply
+    ? 4 0e08 --S 
+
+Zones
+
+!*  C 2 0f00 -C- vehicle init
+!*  C 2 0f02 -C- enter vehicle
+    ? 4 0f03 -C- (vehicle move?)
+!   ? 1 0f04 -C-
+!   ? 1 0f05 -C- (vehicle related)
+(0f06 vehicle related?)
+!*  C 2 0f07 -C- (enter vehicle related)
+!   ? 2 0f09 -C- (vehicle related)
+WIP A 6 0f0a -C- object event
+
+Parties
+
+!   ? 3 1002 -C- (leave party request)
+    ? 3 1003 --S
+*   A 4 1004 --S join event (add character info to the left of the screen)
+!*  ? 5 1005 --S
+OK  A 5 1006 --S trigger party event
+OK  ? 4 1007 -C- remove member request
+    ? 3 100a -CS (invite other player to party; received invite)
+    ? 3 100c -CS
+OK  A 5 100e --S character location
+*   ? 4 100f --S
+    ? 4 1011 --S
+    ? 2 1013 -C-
+!*  A 4 1015 --S mission start: quest file transfer (for mission details window)
+*   ? 4 1016 -CS (probably related to NPCs)
+    ? 6 1017 -CS (related to NPC removal from party in story mission)
+*   ? 6 1019 -CS
+*   ? 3 101a --S
+    ? 3 101b -C-
+    ? 3 101c --- (channel 5; accept party invite)
+    C 1 101d -C- (set invite block)
+    ? 3 101e --S
+    ? 6 101f --S character level and hp update (on the left of the screen); sometimes sent in other places
+OK  A 4 1020 --S (mission start related)
+OK  ? 6 1022 --S character hp update (on the left of the screen)
+
+Bosses
+
+!   ? 4 1101 -C-
+    ? 3 1102 -C-
+    ? 4 1103 -C-
+    ? 4 1104 --S
+    ? 3 1105 -C-
+*   ? 3 1106 -C-
+    ? 3 1107 -C-
+    ? 3 1108 --S
+    ? 3 1109 --S
+    ? 2 110a --S
+    ? 2 110b --S
+    ? 4 110c --S
+    ? 3 110d --S
+*   ? 4 110e --S
+    ? 4 110f --S
+    ? 4 1110 --S
+    ? 4 1111 --S
+*   ? 3 1112 -C- (probably related to 1113)
+*   ? 3 1113 --S (probably related to 1112)
+    ? 3 1114 --S
+    ? 2 1116 --S
+    ? 1 1117 --S
+    ? 2 1118 --S
+    ? 4 1119 --S
+    ? 3 111b --S
+    ? 3 111c --S
+    ? 2 111d --S
+    ? 2 111e --S
+    ? 3 111f --S
+    ? 4 1120 --S
+    ? 4 1121 --S
+    ? 4 1122 --S
+    ? 4 1123 -C-
+    ? 2 1124 --S
+
+Instances state
+
+    ? 7 1201 --S
+*   A 6 1202 --S
+OK  A 5 1204 --S
+*   A 6 1205 --S block/map event
+*   A 5 1206 --S
+*   A 4 1207 --S
+*   C 3 1208 --S (vehicle init related)
+*   C 3 120a --S (enter vehicle related)
+    ? 5 120b --S
+    ? 1 120c --S
+*   C 3 120f --S (enter vehicle related; reply for 0f07)
+    ? 1 1210 --S
+*   A 6 1211 --S (object event related)
+*   A 5 1212 --S
+*   A 6 1213 --S object state on/off
+*   A 3 1215 --S (boss gate related)
+**  C 3 1216 --- (airboard rally race start; channel 0)
+
+Player rooms
+
+    C 4 1304 -C-
+    C 2 1305 -C-
+*   C 4 1309 --S
+    C 4 130a --S
+    C 2 130b -C-
+    C 2 130c --S
+    C 6 130d -C-
+    C 6 130e --S
+    C 5 130f -C-
+    C 3 1310 --S
+    C 3 1312 --S
+    C 3 1313 -C-
+    C 3 1314 --S
+    C 2 1316 --S
+    C 5 1318 --S
+    C 2 1319 -C-
+    C 2 131a -C-
+    C 6 131b --S
+    C 3 131c --S
+    C 5 131e --S
+    C 3 131f --S
+    C 3 1320 --S
+    C 2 1321 --S
+    C 4 1323 --S
+    C 5 1324 --S
+    C 3 1325 --S
+    C 3 1326 --S
+    C 5 1327 --S
+    C 4 1328 -C-
+    C 3 1329 --S
+    C 2 132a -C-
+    C 4 132b --S
+    C 3 132c --S
+    C 4 132d -C-
+    C 3 132e --S (probably related to 132f)
+    C 3 132f -C- (probably related to 132e)
+    C 4 1330 -C-
+    C 2 1331 --S
+*   C 4 1332 --S
+    C 3 1333 --S
+    C 4 1334 -C-
+    C 4 1335 --S
+    C 4 1336 --S
+    C 4 1337 -C- (probably related to 1338)
+    C 4 1338 --S (probably related to 1337)
+    C 3 1339 --S
+
+???
+
+    ? 3 1402 -C- (occurs in 1025012, Sakura Blast A 2nd route)
+    ? 2 1403 -C-
+    ? 3 1410 --S
+
+Partner cards/Simple mail
+
+OK  A 5 1500 --S player's own partner card
+!*  B 5 1501 --S partner cards list
+!   ? 3 1503 --S (card received)
+!   ? 3 1504 -C- (card accepted)
+!   C 4 1506 -C- (partner cards online status request)
+!   C 4 1507 --S (partner cards online status reply; whether cards are online or offline)
+!   ? 3 1508 -C- (edit partner card; self only?)
+!   ? 3 1509 --S (add card to the list)
+!   ? 4 150b -C- send simple mail
+!   ? 4 150d -C- (mark simple mail as read?)
+!   ? 4 150f --S receive simple mail
+!*  B 5 1512 --S blacklist cards list
+!   ? 2 1513 -C- (add to blacklist)
+!   ? 3 1514 -C- (send partner card)
+!   ? 4 1515 -C- (probably related to 1516)
+    ? 4 1516 --S (probably related to 1515)
+
+NPC characters
+
+*   A 4 1601 --S (probably npc AI parameters)
+!*  A 5 1602 --S player's available NPC and PM info
+!   ? 3 1603 -C- (receive npc card related; see tutorial)
+!   ? 2 1604 -C- (sort priority related)
+!   ? 3 1605 -C- (receive npc card related; see tutorial; sort priority related)
+
+Counters
+
+WIP ? 4 1701 -CS parties list request/reply
+    ? 3 1702 -CS (probably join party request/reply)
+OK  B 4 1705 -C- party info recap request
+!*  B 4 1706 -CS party info recap change(C) reply(S)
+OK  C 4 1707 -C- menu event; select mission
+OK  B 4 1709 -C- party settings request
+!*  B 4 170a -CS party settings change(C) reply(S)
+OK  C 4 170b -C- counter background location points request
+WIP C 4 170c --S counter background location points reply (9 of them total)
+!   ? 3 170d -C- (probably related to 170e)
+    ? 3 170e --S (probably related to 170d)
+    ? 4 170f --S (probably reply to 1707, but not all the time?)
+OK  C 4 1710 -C- counter background request
+OK  C 4 1711 --S counter background reply
+
+???
+
+!   ? 2 1803 -C- (occurs in the AOTI story mission 1231022)
+
+Trade
+
+    ? 3 1901 -CS (trade request)
+    ? 3 1902 --S
+    ? 3 1903 -C-
+    ? 3 1904 --S
+
+Dialogs
+
+OK  A 5 1a01 -C- dialog request
+OK  B 4 1a02 --S dialog reply: standard
+OK  B 3 1a03 --S dialog reply: lumilass options
+!*  A 4 1a04 --S dialog reply: pp cube
+!   ? 3 1a05 -C- (lumilass: bought something)
+OK  B 4 1a07 --S dialog reply: types
+    ? 3 1a08 -C- (shop delivery request)
+    ? 3 1a09 --S (shop delivery reply)
+
+Casino/Temple
+
+!   C 4 1d01 -C- (casino shop/coins request)
+!   C 3 1d04 --S
+!   C 3 1d05 --S
+!   C 4 1d06 -C- (casino roulette bet request)
+!   C 5 1d07 --S
+!   C 2 1d08 -C- (luck lady request)
+!   C 2 1d09 --S (luck lady reply)
+!   C 3 1d0a -C- (probably related to 1d0b; offering box)
+!   C 3 1d0b --S (probably related to 1d0a)
+!   C 3 1d0c -C- (casino enter; slot machine request)
+!   C 3 1d0d -C-
+!   C 4 1d0e -C-
+!   C 3 1d0f --S
+    C 4 1d10 --S
+    C 3 1d11 --S
+    C 4 1d12 --S
+    C 3 1d13 --S
+    C 3 1d16 --S
+    C 3 1d17 --S
+    C 3 1d18 --S
+
+13 WIP 85 OK 336 Total
+
+! means the command has already been analyzed, at least partially
+* means the command is already found somewhere in the server but needs to be reviewed

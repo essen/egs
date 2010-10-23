@@ -1,0 +1,22 @@
+0a11
+
+Size:32
+Command:16 Channel:8 Garbage:8
+DestLID:16 Garbage:16
+0:32
+0:32
+0:32
+0:32
+DestTypeID:32
+DestGID:32
+0:32
+0:32
+ItemID:32
+Length:32
+ItemDesc/binary 0:16
+
+Size: depends on Length
+Channel: 3
+DestTypeID: 00011300
+Length: in characters, not in bytes
+ItemDesc: in UCS2, ending with 0:16

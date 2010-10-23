@@ -1,0 +1,22 @@
+0d07
+
+Size:32
+Command:16 Channel:8 0:8
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+TextDisplaySpeed:8 Sound:8 MusicVolume:8 SoundEffectVolume:8
+Vibration:8 RadarMapDisplay:8 CutInDisplay:8 MainMenuCursorPosition:8
+0:8 Camera3rdY:8 Camera3rdX:8 Camera1stY:8
+Camera1stX:8 Controller:8 WeaponSwap:8 LockOn:8
+Brightness:8 FunctionKeySetting:8 _UnknownA:8 ButtonDetailDisplay:8
+
+Size: 0x44
+Channel: 2
+_UnknownA: 0 1 2 3 4

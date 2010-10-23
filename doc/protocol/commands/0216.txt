@@ -1,0 +1,22 @@
+0216
+
+Size:32
+Command:16 Channel:8 0:8
+ffff:16 0:16
+0:32
+0:32
+0:32
+0:32
+TypeID:32
+GID:32
+0:32
+0:32
+IP:32
+Port:16 0:16
+
+Size: 52
+Channel: 3
+TypeID: 00000f00
+GID: the temporary SessionID
+IP: standard binary format, as four 8 bit integers
+Port: standard binary format

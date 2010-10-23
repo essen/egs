@@ -1,0 +1,19 @@
+0210
+
+Size:32
+Command:16 Channel:8 Garbage:8
+ffff:16 Garbage:16
+0:32
+0:32
+0:32
+0:32
+TypeID:32
+GID:32
+0:32
+0:32
+0:32
+UnixTime:32
+
+Size: 52
+TypeID: 00011300
+UnixTime: current unix time

@@ -1,0 +1,28 @@
+021e
+
+Size:32
+Command:16 Channel:8 0:8
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+NbUnis:32
+Unis:N
+
+per uni:
+UniID:32
+NbPlayers:16 Style:16
+StrName:256 (padded with 0s)
+StrPopulation:96 (padded with 0s)
+
+Size: 0x2c6
+Channel: 3
+NbUnis: 11 on official
+UniID: ffffffff for myroom; 1a 1c 1e 20 22 24 26 28 2a 2c for unis on official
+NbPlayers: 0 for myroom
+Style: 0 for centered (myroom), 0x0283 for left aligned + population count on the right (normal unis)

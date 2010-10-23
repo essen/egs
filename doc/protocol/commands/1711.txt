@@ -1,0 +1,30 @@
+1711
+
+Size:32
+Command:16 Channel:8 Garbage:8
+LID:16 0:16
+0:32
+0:32
+0:32
+0:32
+TypeID:32
+GID:32
+0:32
+0:32
+Background:8 Garbage:24
+
+Size: 0x30
+Channel: 3
+TypeID: always 00011300
+Background: 4 5 6 7 ff on official
+
+The background is always ff on official except for the following counters:
+	  8  5  GRM
+	112  5  Parum Cafe
+	114  6  Moatoob Pub
+	115  4  GUARDIANS HQ
+	116  5  Parum GUARDIANS
+	117  7  Neudaiz GUARDIANS
+	118  6  Moatoob GUARDIANS
+	170  4  (probably Program DF' counter)
+	177  4  Colony R&D

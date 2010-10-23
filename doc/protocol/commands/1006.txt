@@ -1,0 +1,37 @@
+1006
+
+Size:32
+Command:16 Channel:8 Garbage:8
+ffff:16 Garbage:16
+0:32
+0:32
+0:32
+0:32
+DestTypeID:32
+DestGID:32
+0:32
+0:32
+EventID:8 PartyPos:8 0:16
+
+Size: 48
+Channel: 3
+TypeID: 00011300
+EventID: 2 3 4 5 6 7 8 9 10 11 12 13 15 16 on official
+PartyPos: optional, depends on EventID
+
+EventID:
+	2: removes party people
+	3: you have been removed by the party leader message + remove party info
+	4 + PartyPos: X has left the party message
+	5 + PartyPos: X party leader change on the left
+	6 + PartyPos: ?
+	7 + PartyPos: X is the new party leader message
+	8 + PartyPos: X has been removed from the party + remove party info
+	9 + PartyPos: ?
+	10: Mission "%s" end message
+	11: The party leader has cancelled the mission message
+	12: ?
+	13 + PartyPos: X has been removed from the party + remove SOME party info
+	14 + PartyPos: X has joined the party message
+	15 + PartyPos: ?
+	16 + PartyPos: X has left the party message + remove party info (NPC only?)

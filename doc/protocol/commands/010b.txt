@@ -1,0 +1,30 @@
+010b
+
+Size:32
+Command:16 Channel:8 Garbage:8
+FromLID:16 0:16
+0:32
+FromGID:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+FromGID:32
+PartyPosOrLID:32
+0:16 IntDir:16
+PosX:32
+PosY:32
+PosZ:32
+0:32
+0:32
+QuestID:32
+ZoneID:32
+MapID:32
+EntryID:32
+
+Size: 0x5c
+Channel: 2
+FromGID: should be the same in both the header and the body (even for NPC characters)
+IntDir: character direction as a float converted to int:16

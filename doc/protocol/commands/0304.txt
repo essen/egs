@@ -1,0 +1,49 @@
+0304
+
+Size:32
+Command:16 Channel:8 Garbage:8
+DestLID:16 0:16
+FromTypeID:32
+FromGID:32
+0:32
+0:32
+DestTypeID:32
+DestGID:32
+0:32
+0:32
+SourceTypeID:32
+SourceGID:32
+0:32
+0:32
+ChatType:8 ChatCutIn:8 ChatCutInAngle:8 ChatMessageLength:8
+ChatChannel:8 ChatCharacterType:8 0:8 _UnknownH:8
+FromName:512
+ChatMessage:N
+
+Size: depends on ChatMessage
+Channel: 2, 3
+DestLID: sometimes ffff guessing in counters
+FromTypeID: 0 on channel 2; 00011300 on channel 3, this is the one for the player source, or leader if an NPC
+FromGID: 0 on channel 2; GID of the player source, or leader if an NPC on channel 3
+DestTypeID: 0 on channel 2; 00011300 on channel 3
+DestGID: 0 on channel 2; GID on channel 3
+channel 2:
+	SourceTypeID: 00000000 (? found twice in the logs) or 00001200 (player) or 00001d00 (npc)
+	SourceGID: can be 00000000 too? found twice in the logs too; otherwise player or npc GID
+channel 3:
+	SourceTypeID: 00001200 (player) or 00001d00 (npc); never 00000000 like on channel 2
+	SourceGID: player or npc GID; never 00000000 like on channel 2
+ChatType: 0=normal 1=shout 2=whisper
+ChatCutIn: 0=none 1=laugh 2=smile 3=wry_smile 4=surprised 5=confused 6=disappointed 7=deep_in_thought 8=sneer 9=dissatisfied 10=angry
+ChatCutInAngle: 0=default 1=(down 1 time) 2=(down 2 times) 3=(down 3 times)
+ChatMessageLength: a rounding happens, probably a good idea to check its validity
+	a 2 (D = len of a + 1)
+	hi 4 (D = len of hi + 2)
+	lol 4 (D = len of lol + 1)
+	lolo 6 (D = len of lolo + 2)
+	So probably string + \0\0 rounded below at a number multiple of 2.
+ChatChannel: 0=public 1=private
+ChatCharacterType: 0 2; probably 0 for a normal player, 2 for an NPC
+_UnknownH: from 0 to 255
+FromName: not available in v2.0
+ChatMessage: variable length, finishes by a double \0

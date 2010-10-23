@@ -1,0 +1,26 @@
+0200
+
+Size:32
+Command:16 Channel:8 Garbage:8
+LID:16 Garbage:16
+0:32
+0:32
+0:32
+0:32
+TypeID:32
+GID:32
+0:32
+0:32
+LID:16 ZoneID:16
+NbPlayers:32
+Var:320
+
+Size: always 5c
+TypeID: always 00011300
+LID: same as in both places; probably the player's new LID after entering this zone
+ZoneID: 0 1 2 3 4 5 6 7 8 9 10 11 32; I now have doubt over whether this is a ZoneID
+NbPlayers: many values from 0 to more than 255; number of players in this zone, starts at 1 (self) - LID is supposed to stay below that
+Var: either of
+	ffffffff 00040000 00000000 00000000 00000000 00000000 00000000 00140000 ffffffff ffffffff
+	ffffffff 06000000 02000000 00000000 00000000 40000000 00010000 00010000 ffffffff ffffffff
+	ffffffff 06000500 01000000 00000000 00000000 00040000 00010000 00140000 ffffffff ffffffff

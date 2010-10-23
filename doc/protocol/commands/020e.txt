@@ -1,0 +1,21 @@
+020e
+
+Size:32
+Command:16 Channel:8 0:8
+ffff:16 0:16
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+FileSize:32
+_UnknownA:32
+File/binary
+0:32
+
+Size: variable, depends on File
+Channel: 3
+_UnknownA: odd value but always in the same region; maybe the addition of all values in the file or something?

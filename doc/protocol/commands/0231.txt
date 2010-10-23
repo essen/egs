@@ -1,0 +1,21 @@
+0231
+
+Size:32
+Command:16 Channel:8 Garbage:8
+LID:16 0:16
+TypeID:32
+GID:32
+0:32
+0:32
+TypeID:32
+GID:32
+0:32
+0:32
+URLLength:32
+URL:16384
+
+Size: 560
+Channel: 3
+TypeID: always 00000f00
+URLLength: length(URL) + 1; the + 1 is because it includes the ending \0
+URL: as ASCII, padded with \0s

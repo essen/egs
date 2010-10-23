@@ -1,0 +1,32 @@
+0111
+
+Size:32
+Command:16 Channel:8 Garbage:8
+DestLID:16 Garbage:16
+0:32
+TargetGID:32
+0:32
+0:32
+DestTypeID:32
+DestGID:32
+0:32
+0:32
+TargetGID:32
+TargetLID:32
+EventID:32
+Param:32
+
+Size: 60
+Channel: 3
+TargetGID: player or npc
+DestTypeID: 00011300
+EventID: 2 3 4 5 6 7
+Param: only for EventID 3 and 7
+
+Events:
+	2: ? ; Param=0
+	3: red screen of death; Param: whether to ask if the player wants to go back to lobby, 0 or 1
+	4: healing pad aura + sound; Param=0
+	5: ? ; Param=0
+	6: ? ; Param=0 ; sent for lobby area change just before 010d
+	7: EXP FULL message; Param is the enemy TargetID that triggered this

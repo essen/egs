@@ -1,0 +1,23 @@
+0c06
+
+Size:32
+Command:16 Channel:8 0:8
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+1:32
+PositionList:4096
+SizeList:4096
+NbFiles:32
+Files:N
+
+Size: variable, generally big
+PositionList: list of Position:32, starting from Files
+SizeList: list of Size:32 for each files
+Files: concatened list of files

@@ -1,0 +1,21 @@
+0a06
+
+Size:32
+Command:16 Channel:8 0:8
+LID:16 0:16
+0:32
+DestGID:32
+0:32
+0:32
+DestTypeID:32
+DestGID:32
+0:32
+0:32
+ItemUUID00:32 ItemUUID01:32 ItemUUID02:32 ItemUUID03:32
+...
+ItemUUID56:32 ItemUUID57:32 ItemUUID58:32 ItemUUID59:32 
+
+Size: 284
+Channel: 3
+DestTypeID: 00011300
+ItemUUID**: an unique identifier for the item

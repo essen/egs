@@ -1,0 +1,27 @@
+0222
+
+Size:32
+Command:16 Channel:8 Garbage:8
+ffff:16 Garbage:16
+TargetTypeID:32
+TargetGID:32
+0:32
+0:32
+DestTypeID:32
+DestGID:32
+0:32
+0:32
+UniID:32
+NbPlayers:16 MaxPlayers:16
+Name:352
+LevelMax:32
+
+Size: always 100
+Channel: 3
+TargetTypeID: 00001200
+TargetGID: same as DestGID
+DestTypeID: 00011300
+UniID: on official: 0x15 0x1a 0x1c 0x1e 0x20 0x22 0x24 0x26 0x28 0x2a 0x2c; that means MyRoom has an UniID, 0x15
+NbPlayers: from 1 to 0x19f on official; number of players in this universe (all rooms count as one universe)
+MaxPlayers: 5000 for MyRoom, 670 for normal unis on official; 630 for normal unis on JP
+LevelMax: 170 on official; 180 on JP

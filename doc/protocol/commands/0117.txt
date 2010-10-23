@@ -1,0 +1,26 @@
+0117
+
+Size:32
+Command:16 Channel:8 Garbage:8
+DestLID:16 Garbage:16
+0:32
+TargetGID:32
+0:32
+0:32
+DestTypeID:32
+DestGID:32
+0:32
+0:32
+TargetGID:32
+TargetLID:32
+SE1:32 SE2:32
+HP:32
+0:32
+
+Size: 68
+Channel: 3
+TargetGID: either player or npc
+DestTypeID: 00011300
+SE1: 00000000 or 00000200(stay down) or 00001000(no idea); SE part 1
+SE2: various; SE part 2
+HP: how many HP to revive the player with

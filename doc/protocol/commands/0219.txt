@@ -1,0 +1,21 @@
+0219
+
+Size:32
+Command:16 Channel:8 Garbage:8
+ffff:16 0:16
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+Username:192
+Password:192
+_UnknownC:64
+
+Size: 100
+Channel: 2
+Username, Password: ASCII
+_UnknownC: always 29525a52 7510439e?

@@ -1,0 +1,18 @@
+1707
+
+Size:32
+Command:16 Channel:8 Garbage:8
+LID:16 0:16
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+QuestID:32
+
+Size: 0x30
+Channel: 2
+QuestID: currently selected quest in the counter

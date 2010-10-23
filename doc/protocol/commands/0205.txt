@@ -1,0 +1,30 @@
+0205
+
+Size:32
+Command:16 Channel:8 Garbage:8
+LID:16 Garbage:16
+0:32
+0:32
+0:32
+0:32
+TypeID:32
+GID:32
+0:32
+0:32
+ffffffff:32
+ZoneID:32
+MapID:32 
+EntryID:32
+AreaNb:32
+PlayerLID:16 _UnknownF:8 IsSeasonal:8
+
+TypeID: always 00011300
+ZoneID: 0 1 2 3 4 5 6 7 8 9 10 11 12 13 20
+MapID: 313 of them
+EntryID: 0 1 2 3 4 5 6 7 8 10 11 12 13 14 20 21 22 23 32767
+AreaNb: odd value, starts at 1, incremented after sending this command; replied by 0806
+PlayerLID: LID of the related player
+_UnknownF: sometimes 1
+IsSeasonal: 0 otherwise
+
+not sure how AreaNb works when 0205 is sent for spawning other players

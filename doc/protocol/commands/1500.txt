@@ -1,0 +1,27 @@
+1500
+
+Size:32
+Command:16 Channel:8 Garbage:8
+DestLID:16 Garbage:16
+0:32
+0:32
+0:32
+0:32
+DestTypeID:32
+DestGID:32
+0:32
+0:32
+Name:512
+Race:8 Gender:8 Class:8 VoiceType:8
+VoicePitch:8 0:24
+CardGID:32
+0:224
+Comment:2816
+1:8 4:8 1:8 CharacterSlot:8
+0:64
+
+Size: 0x200
+Channel: 3
+DestLID: 0 1 2 3 4 5 7 13 ffff (probably has a LID only when card is sent back after being edited)
+DestTypeID: 00011300
+CharacterSlot: 0 1 2 3

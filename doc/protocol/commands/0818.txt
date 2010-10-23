@@ -1,0 +1,22 @@
+0818
+
+Size:32
+Command:16 Channel:8 Garbage:8
+ffff:16 0:16
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+GPU:512
+CPU:384
+_UnknownB:32
+
+Size: 160
+Channel: 2
+GPU: ascii string
+CPU: ascii string
+_UnknownB: various values

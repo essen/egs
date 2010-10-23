@@ -1,0 +1,20 @@
+0c07
+
+Size:32
+Command:16 Channel:8 Garbage:8
+LID:16 0:16
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+QuestID:32
+Rate:32
+
+Size: 0x30
+Channel: 2
+QuestID: more than expected; 02421100 98d41000 a8fb1000 a9fb1000 abfb1000 b0d01000 c8cc1000 e0c81000
+Rate: 0 1 2 3 4 on official, price = 200 x Rate

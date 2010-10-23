@@ -1,0 +1,27 @@
+1204
+
+Size:32
+Command:16 Channel:8 Garbage:8
+DestLID:16 Garbage:16
+0:32
+0:32
+0:32
+0:32
+DestTypeID:32
+DestGID:32
+0:32
+0:32
+0:32
+20000000:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+
+Size: 84
+Channel: 3
+DestTypeID: 00011300

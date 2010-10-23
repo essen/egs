@@ -1,0 +1,25 @@
+0202
+
+Size:32
+Command:16 Channel:8 Garbage:8
+ffff:16 0:16
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+SessionID:32
+0:1024
+
+Size: 0xb0
+Channel: 3
+SessionID: like GID except typically only temporary; apparently official use the same counter for NPCs and for these SessionID
+0:1024: can also contain an error message, though details are limited on that; it's similar to 0223 though
+
+The following format will display an error:
+	0:32, 3:32/little, 0:48, Len:16/little, Error/binary, 0:Padding
+
+The server should disconnect the client right after sending that command if an error has been sent.

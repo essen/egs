@@ -1,0 +1,28 @@
+0c00
+
+Size:32
+Command:16 Channel:8 Garbage:8
+LID:16 Garbage:16
+0:32
+0:32
+0:32
+0:32
+TypeID:32
+GID:32
+0:32
+0:32
+QuestID:32
+ffffffff:32 ffffffff:32 ffffffff:32 ffffffff:32
+ffffffff:32 ffffffff:32 ffffffff:32 ffffffff:32
+ffffffff:32 ffffffff:32 ffffffff:32 ffffffff:32
+ffffffff:32 ffffffff:32 ffffffff:32 ffffffff:32
+ffffffff:32 ffffffff:32 ffffffff:32 ffffffff:32
+ffffffff:32 ffffffff:32 ffffffff:32 ffffffff:32
+ffffffff:32 ffffffff:32 ffffffff:32 ffffffff:32
+ffffffff:32 ffffffff:32 ffffffff:32 ffffffff:32
+
+Size: b0
+Channel: 3
+LID: sometimes ffff in lobbies (probably when first joining, but not necessarily)
+TypeID: 00011300
+QuestID: is ffffff7f for counters

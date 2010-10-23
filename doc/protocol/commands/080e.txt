@@ -1,0 +1,34 @@
+080e
+
+Size:32
+Command:16 Channel:8 Garbage:8
+ffff:16 0:16
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+_UnknownB:8 Language:8 _UnknownC:8 Entrance:8
+Platform:8 0:24
+Version:32 -> Revision:8, Minor:4, _UnknownE:12, Major:4, _UnknownF:4
+0:32
+0:32
+0:32
+
+Size: 68
+Channel: 2
+Language:
+	0 Japanese
+	1 English
+	3 French
+	4 German
+_UnknownB: always 0?
+_UnknownC: always 1?
+Entrance: 1 or 2
+Platform:
+	0 PS2
+	1 PC
+Version: the detail shown but as an unsigned int

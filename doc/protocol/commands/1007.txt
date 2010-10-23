@@ -1,0 +1,18 @@
+1007
+
+Size:32
+Command:16 Channel:8 Garbage:8
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+PartyPosOrLID:32
+Name:512
+
+Size: always 112
+Channel: 2

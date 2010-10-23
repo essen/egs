@@ -1,0 +1,30 @@
+1a02
+
+Size:32
+Command:16 Channel:8 Garbage:8
+DestLID:16 Garbage:16
+0:32
+0:32
+0:32
+0:32
+DestTypeID:32
+DestGID:32
+0:32
+0:32
+_UnknownC:32
+_UnknownD:16 _UnknownE:16
+_UnknownF:16 _UnknownG:16
+
+Size: always 56
+Channel: 3
+DestTypeID: 00011300
+_UnknownC: from around 00000009 to around 0000000e
+_UnknownD to _UnknownG: 6 types of values
+	00000100 00000000: any other shop
+	05000100 04000500: parum weapon grinding
+	05000500 04000700: tenora weapon grinding
+	05000800 04000000: yohmei weapon grinding
+	05001200 04000000: kubara weapon grinding
+	11001100 03000900: lumilass only
+
+see 1a01

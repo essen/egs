@@ -1,0 +1,25 @@
+0807
+
+Size:32
+Command:16 Channel:8 Garbage:8
+LID:16 0:16
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+QuestID:32
+ZoneID:16 MapID:16
+EntryID:16 AreaChangeNb:16
+TargetPartyPosOrLID:32
+
+Size: 0x3c
+Channel: 2
+ZoneID: 0 1 2 3 4 5 6 7 8 9 10 11 12 13 20 ffff; ffff on a mission start
+MapID: map number or ffff; ffff on a mission start
+EntryID: 0 1 2 3 4 5 6 7 8 11 12 13 14 20 21 22 23 ff7f ffff; ffff on a mission start; ff7f probably when using the mission crystal
+AreaChangeNb: number of times the player changed area
+TargetPartyPosOrLID: ffffffff for self, otherwise the party pos of the NPC to move with the player (used in story missions)

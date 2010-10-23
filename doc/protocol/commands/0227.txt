@@ -1,0 +1,18 @@
+0227
+
+Size:32
+Command:16 Channel:8 Garbage:8
+ffff:16 0:16
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+AcceptMOTD:32
+
+Size: 48
+Channel: 2
+AcceptMOTD: 1 if accepted, 0 otherwise

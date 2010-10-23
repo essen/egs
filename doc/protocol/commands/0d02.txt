@@ -1,0 +1,19 @@
+0d02
+
+Size:32
+Command:16 Channel:8 0:8
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+Slot:32
+NameAndAppearance
+
+Size: 324
+Channel: 2
+Slot: 0 1 2 3

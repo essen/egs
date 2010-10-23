@@ -1,0 +1,52 @@
+1a01
+
+Size:32
+Command:16 Channel:8 Garbage:8
+LID:16 0:16
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+LID:32
+ShopID:32
+EventID:32
+_UnknownB:32
+_UnknownC:32
+
+Size: 0x40
+Channel: 2
+LID: same in header and body
+EventID:
+	0: npc talk
+		ShopID defined; _UnknownB 0; _UnknownC many values
+		send_1a02
+	2: lumilass
+		ShopID always 0; _UnknownB 0 or 1 but mostly 0; _UnknownC gets many values
+		send_1a03
+	3: pp cube request
+		ShopID, _UnknownB always 0; _UnknownC gets many values
+		send_1a04
+	4: pp cube recharge all
+		ShopID always 0
+	5: pp cube recharge one
+		ShopID always 0
+	6: put on clothes/parts
+		ShopID, _UnknownB always 0
+	7: remove clothes/parts
+		ShopID always 0
+	9: types menu (also type select counter); whether types are enabled + a few other values
+		ShopID, _UnknownB, _UnknownC always 0
+		send_1a07
+
+apparently replies using 1a02 are dependent on the shopid? but the game doesn't seem to care
+but there's only a few of them after the first unknown value:
+		80 -> send_1a02(0, 17, 17, 3, 9); %% lumilass
+		90 -> send_1a02(0, 5, 1, 4, 5);   %% parum weapon grinding
+		91 -> send_1a02(0, 5, 5, 4, 7);   %% tenora weapon grinding
+		92 -> send_1a02(0, 5, 0, 4, 0);   %% yohmei weapon grinding
+		93 -> send_1a02(0, 5, 18, 4, 0);  %% kubara weapon grinding
+		_  -> send_1a02(0, 0, 1, 0, 0)

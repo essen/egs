@@ -1,0 +1,23 @@
+0225
+
+Size:32
+Command:16 Channel:8 Garbage:8
+LID:16 0:16
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+NbPages:8 CurrentPage:8 Length:16
+MOTD:N
+
+Size: variable
+Channel: 3
+LID: ffff
+NbPages: number of pages - 1
+Page: starts at 0
+Length: Size / 2 + 2; to include the \0 at the end
+MOTD: variable size

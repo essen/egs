@@ -1,0 +1,40 @@
+0115
+
+Size:32
+Command:16 Channel:8 Garbage:8
+DestLID:16 Garbage:16
+0:32
+TargetGID:32
+0:32
+0:32
+DestTypeID:32
+DestGID:32
+0:32
+0:32
+TargetGID:32
+TargetLID:32
+EnemyTargetID:32
+Level:32
+BlastBar:16 Luck:8 _UnknownJ:8
+0:32
+EXP:32
+0:32
+Money:32
+PlayTime:32
+for npc characters:
+	01000000:32 01000000:32 01000000:32 01000000:32 01000000:32 01000000:32 01000000:32 01000000:32
+	01000000:32 01000000:32 01000000:32 01000000:32 01000000:32 01000000:32 01000000:32 01000000:32
+	4e4f4630:32 08000000:32 00000000:32 00000000:32 4e454e44:32
+for player characters:
+	_UnknownK:32 _UnknownL:32 0:32 0:32 0:32
+	ClassLevelAndEXP:32 ClassLevelAndEXP:32 ClassLevelAndEXP:32 ClassLevelAndEXP:32
+	ClassLevelAndEXP:32 ClassLevelAndEXP:32 ClassLevelAndEXP:32 ClassLevelAndEXP:32
+	ClassLevelAndEXP:32 ClassLevelAndEXP:32 ClassLevelAndEXP:32 ClassLevelAndEXP:32
+	ClassLevelAndEXP:32 ClassLevelAndEXP:32 ClassLevelAndEXP:32 ClassLevelAndEXP:32
+
+Size: 168
+Channel: 3
+DestTypeID: 00011300
+TargetGID: either player or npc
+EnemyTargetID: presumably the TargetID of the enemy that got you leveled
+Level and following: seems to take the same format as 0201, refer there for details

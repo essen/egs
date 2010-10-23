@@ -1,0 +1,33 @@
+0223
+
+Size:32
+Command:16 Channel:8 0:8
+0:32
+0:32
+0:32
+0:32
+0:32
+TypeID:32
+GID:32
+0:32
+0:32
+AuthGID:32
+AuthKey:32
+(following is an optional part when a message must be shown)
+_UnknownA:32
+0:32
+0:16 Length:16
+Message:N
+
+Size: 52
+Channel: 3
+TypeID: 00000f00
+GID: the temporary one
+AuthGID: the real account GID; 0 if something went wrong
+AuthKey: random
+(then the optional part)
+_UnknownA: seems to be 3 for errors, but 0 is also found when the supplemental asks about free course
+Length: Size / 2 + 2; to include the \0 at the end
+Message: variable size
+
+0:16 before Length is probably the same thing as MOTD: pages.

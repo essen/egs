@@ -1,0 +1,17 @@
+080d
+
+Size:32
+Command:16 Channel:8 Garbage:8
+FromLID:16 0:16
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+
+Size: 0x2c
+Channel: 2
+FromLID: ffff or LID

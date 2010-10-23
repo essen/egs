@@ -1,0 +1,22 @@
+0d05
+
+Size:32
+Command:16 Channel:8 0:8
+0:32
+TypeID:32
+GID:32
+0:32
+0:32
+TypeID:32
+GID:32
+0:32
+0:32
+Flags
+
+Size: always 0x4e88
+Channel: 3
+TypeID, GID: same in both places
+Flags: to be studied further, though it's the same flags list for everyone so no hurry there
+
+There's apparently 3 categories of flags, which more than likely function differently.
+The command 0d04 is used to set or retrieve flags information.

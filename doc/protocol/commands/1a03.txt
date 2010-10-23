@@ -1,0 +1,26 @@
+1a03
+
+Size:32
+Command:16 Channel:8 Garbage:8
+DestLID:16 Garbage:16
+0:32
+0:32
+0:32
+0:32
+DestTypeID:32
+DestGID:32
+0:32
+0:32
+_UnknownC:32
+NbHairstyles:32
+NbHeadtypes:32
+0:416
+Hairstyles:Rest
+0:32
+
+Size: 1708; padded with 0s at the end so the size probably doesn't really matter, to be sure finish the packet with 0:32 though
+Channel: 3
+DestTypeID: 00011300
+NbHairstyles: number of hairstyles, not a size
+NbHeadtypes: number of headtypes, or 0 for fleshies; Headtypes list isn't sent though
+Hairstyles: list of 4 bytes appearance codes

@@ -1,0 +1,19 @@
+0215
+
+Size:32
+Command:16 Channel:8 Garbage:8
+LID:16 Garbage:16
+0:32
+0:32
+0:32
+0:32
+TypeID:32
+GID:32
+0:32
+0:32
+_UnknownC:32
+
+Size: 0x30
+Channel: 3
+TypeID: always 00011300
+_UnknownC: 0 1 2 3 4 5 ffffffff (PartyPos? Leader's PartyPos?)

@@ -1,0 +1,20 @@
+020f
+
+Size:32
+Command:16 Channel:8 0:8
+ffff:16 0:16
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+SetID:8 SeasonID:8 0:16
+FileSize:32
+File:N
+
+Size: depends on FileSize
+SetID: which set file to open (0 to N - 1)
+SeasonID: what season to load, if any; 255 otherwise

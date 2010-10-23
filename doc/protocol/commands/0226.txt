@@ -1,0 +1,19 @@
+0226
+
+Size:32
+Command:16 Channel:8 Garbage:8
+ffff:16 0:16
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+0:32
+PageNumber:8 Language:8 0:16
+
+Size: 48
+Channel: 3
+Page: starting from 0
+Language: see 080e

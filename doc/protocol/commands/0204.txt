@@ -1,0 +1,23 @@
+0204
+
+Size:32
+Command:16 Channel:8 Garbage:8
+DestLID:16 Garbage:16
+CharTypeID:32
+CharGID:32
+0:32
+0:32
+DestTypeID:32
+DestGID:32
+0:32
+0:32
+CharGID:32
+CharLID:32
+_UnknownC:32
+
+Size: 0x38
+Channel: 3
+CharTypeID: 00001200 for players, 00001d00 for NPCs
+CharGID: both NPC and players
+DestTypeID: 00011300
+_UnknownC: seems to be an LID that isn't either of DestLID or CharLID; should be the total number of players in the zone after the removal

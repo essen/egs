@@ -1,0 +1,25 @@
+1a07
+
+Size:32
+Command:16 Channel:8 Garbage:8
+DestLID:16 Garbage:16
+0:32
+0:32
+0:32
+0:32
+DestTypeID:32
+DestGID:32
+0:32
+0:32
+_UnknownC:32
+_UnknownD:16 0:16
+0:32
+HunterEnabled:8 RangerEnabled:8 ForceEnabled:8 FighgunnerEnabled:8
+GuntecherEnabled:8 WartecherEnabled:8 FortefighterEnabled:8 FortegunnerEnabled:8
+FortetecherEnabled:8 ProtranserEnabled:8 AcrofighterEnabled:8 AcrotecherEnabled:8
+FighmasterEnabled:8 GunmasterEnabled:8 MasterforceEnabled:8 AcromasterEnabled:8
+
+Size: 72
+Channel: 3
+DestTypeID: 00011300
+*Enabled: 0 no 1 yes

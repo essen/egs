@@ -1,0 +1,97 @@
+AreaNb:
+
+This number is associated with the player's session. It starts at 1 and is
+increased with each 0205 and 0208 calls for this player. It is not sure how
+0205 for spawning other players affects this value.
+
+Channel:
+
+Commands are sent over three channels: broadcast, client and server.
+Broadcast packets are received from the client and directly broadcast to
+all the other players in the same area with little modifications. Client
+commands are instructions from the client to the server and server commands
+are their opposite. Sometimes a command will use a wrong channel or a
+different channel entirely. Broadcast is channel 1, client is channel 2
+and server is channel 3.
+
+Command:
+
+The command is represented by a 16-bit integer value. It is more or less
+ordered by categories although it is not clear how some commands relate
+to others from the same category. See commands.txt for more details.
+
+Counter:
+
+A counter is a special area where players can start missions. It generally
+features a 2D background and menus on the left. As such it is also used for
+special shops like Lumilass or the clothes shops, along with special rooms
+where players can change their clothes.
+Mission counters all have a CounterID and a counter file with their
+settings. This file is sent alongside all the quests available from this
+counter. Counter files are server-side.
+
+CounterID:
+
+The CounterID is a 8-bit integer value going from 0 to 255 that represents
+a mission counter.
+
+EntryID:
+
+The EntryID is a 16-bit integer value and is the entrance identifier for
+a map. It is probably found as a parameter to entrance objects in the zone
+file.
+
+GID:
+
+GUARDIANS ID, the unique player identifier.
+
+LID:
+
+LID is a misnomer for what is essentially a temporary player identifier
+for the current zone he's in. Each zones maintain their lists of players
+and NPCs inside it and they are identified using this unique identifier.
+The LID is in fact a TargetID.
+
+Map:
+
+A map is an area where players can be, like Clyez City 1st Floor for
+example. Map files are client-side.
+A map is uniquely identified by a MapID and an area identifier.
+
+MapID:
+
+A MapID is a map identifier which represents a map file when associated
+with an area identifier.
+
+Quest:
+
+A quest is a set of zones with a few related settings. Quests can be
+lobbies, rooms or missions. Quests handle the area names and the list
+of entrance and exit values to other areas. Quest files are server-side.
+A quest is uniquely identified by a QuestID.
+
+QuestID:
+
+A QuestID is a quest identifier which represents a quest file.
+
+TargetID:
+
+A TargetID is an identifier for a target in a zone. A target can be a
+player, an enemy, an NPC, an object or a vehicle. Not all objects have
+a TargetID though. All TargetID are unique per zone.
+Players and NPCs have a TargetID starting from 0 up to 1023.
+From 1024 to 3823 the TargetID are for the various objects and enemies.
+3824 and above are for vehicles.
+
+Zone:
+
+A zone is a set of maps along with the objects available to each maps,
+a script, enemy parameters if any and any other file related to the zone.
+Zones can be used for lobbies, rooms or missions. They contain one or more
+maps. Zone files are server-side.
+A zone is uniquely identified by the combination of a QuestID and a ZoneID.
+
+ZoneID:
+
+A ZoneID is a zone identifier which represents a zone file when associated
+with a QuestID.
