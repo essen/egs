@@ -1137,19 +1137,6 @@
 
 	{177, [{quests, "data/counters/colony.rd.pack"}, {bg, 4}, {options, << 16#01000800:32, 3, 0:24, 3, 3, 0:16 >>}]},
 
-	% Rykros (entry 0)
-
-	{200, [{quests, "data/counters/colony.rykros-0.pack"}, {bg, 255}, {options, << 16#01000400:32, 0:32 >>}]},
-
-	% Rykros (entry 1): Phantom Ruins, The Dark God
-
-	{201, [{quests, "data/counters/colony.rykros-1.pack"}, {bg, 255}, {options, << 16#01d11c00:32, 0, 3,
-		0, 0, 0, 0, 0, % Phantom Ruins C-S
-		3, 0, 3, 3, 3, 0, % The Dark God C-S2 variant 1
-		3, 3, 3, 3, 3, 0, % The Dark God C-S2 variant 2
-		3, 3, 3, 3, 3, 0, % The Dark God C-S2 variant 3
-	0:24 >>}]},
-
 	%~ {201, [{quests, "data/counters/colony.rykros-1.pack"}, {bg, 255}, {options, << 16#01d11c00:32, 3, 3,
 		%~ 3, 3, 3, 3, 0, % Phantom Ruins C-S
 		%~ 3, 3, 3, 3, 3, 0, % The Dark God C-S2 variant 1
