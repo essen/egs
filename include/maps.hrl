@@ -44,20 +44,20 @@
 
 	{1000100, [{type, mission}, {file, "data/missions/fight-for-food.1.c.quest.nbl"},  {start, [0, 1200, 0]}, {sets, 4}]},
 	{1000101, [{type, mission}, {file, "data/missions/fight-for-food.1.b.quest.nbl"},  {start, [0, 1200, 0]}, {sets, 4}]},
-	{1000102, [{type, mission}, {file, "data/missions/fight-for-food.1.a.quest.nbl"},  {start, [0, 1200, 0]}, {sets, 4}]},
-	{1000103, [{type, mission}, {file, "data/missions/fight-for-food.1.s.quest.nbl"},  {start, [0, 1200, 0]}, {sets, 4}]},
+	%~ {1000102, [{type, mission}, {file, "data/missions/fight-for-food.1.a.quest.nbl"},  {start, [0, 1200, 0]}, {sets, 4}]},
+	%~ {1000103, [{type, mission}, {file, "data/missions/fight-for-food.1.s.quest.nbl"},  {start, [0, 1200, 0]}, {sets, 4}]},
 	{1000104, [{type, mission}, {file, "data/missions/fight-for-food.1.s2.quest.nbl"}, {start, [0, 1200, 0]}, {sets, 4}]},
 
 	{1000110, [{type, mission}, {file, "data/missions/fight-for-food.2.c.quest.nbl"},  {start, [0, 1301, 0]}, {sets, 4}]},
-	{1000111, [{type, mission}, {file, "data/missions/fight-for-food.2.b.quest.nbl"},  {start, [0, 1301, 0]}, {sets, 4}]},
-	{1000112, [{type, mission}, {file, "data/missions/fight-for-food.2.a.quest.nbl"},  {start, [0, 1301, 0]}, {sets, 4}]},
-	{1000113, [{type, mission}, {file, "data/missions/fight-for-food.2.s.quest.nbl"},  {start, [0, 1301, 0]}, {sets, 4}]},
+	%~ {1000111, [{type, mission}, {file, "data/missions/fight-for-food.2.b.quest.nbl"},  {start, [0, 1301, 0]}, {sets, 4}]},
+	%~ {1000112, [{type, mission}, {file, "data/missions/fight-for-food.2.a.quest.nbl"},  {start, [0, 1301, 0]}, {sets, 4}]},
+	%~ {1000113, [{type, mission}, {file, "data/missions/fight-for-food.2.s.quest.nbl"},  {start, [0, 1301, 0]}, {sets, 4}]},
 	{1000114, [{type, mission}, {file, "data/missions/fight-for-food.2.s2.quest.nbl"}, {start, [0, 1301, 0]}, {sets, 4}]},
 
 	{1000120, [{type, mission}, {file, "data/missions/fight-for-food.3.c.quest.nbl"},  {start, [0, 1301, 0]}, {sets, 4}]},
-	{1000121, [{type, mission}, {file, "data/missions/fight-for-food.3.b.quest.nbl"},  {start, [0, 1301, 0]}, {sets, 4}]},
+	%~ {1000121, [{type, mission}, {file, "data/missions/fight-for-food.3.b.quest.nbl"},  {start, [0, 1301, 0]}, {sets, 4}]},
 	{1000122, [{type, mission}, {file, "data/missions/fight-for-food.3.a.quest.nbl"},  {start, [0, 1301, 0]}, {sets, 4}]},
-	{1000123, [{type, mission}, {file, "data/missions/fight-for-food.3.s.quest.nbl"},  {start, [0, 1301, 0]}, {sets, 4}]},
+	%~ {1000123, [{type, mission}, {file, "data/missions/fight-for-food.3.s.quest.nbl"},  {start, [0, 1301, 0]}, {sets, 4}]},
 	{1000124, [{type, mission}, {file, "data/missions/fight-for-food.3.s2.quest.nbl"}, {start, [0, 1301, 0]}, {sets, 4}]},
 
 	% Dark Satellite
@@ -799,30 +799,6 @@
 	% GRM: Side story C rank, Side story B rank, Side story A rank
 
 	{  8, [{quests, "data/counters/parum.grm.pack"}, {bg, 5}, {options, << 16#01000c00:32, 3, 3, 3, 0, 3, 0, 3, 0, 3, 0:24 >>}]},
-
-	% Transfer Terminal (entry 0)
-
-	{ 10, [{quests, "data/counters/colony.terminal-0.pack"}, {bg, 255}, {options, << 16#01d10400:32, 0:32 >>}]},
-
-	% Transfer Terminal (entry 1): Phantom Ruins, Fight for Food, Fight for Food (AOTI, missing)
-
-	{ 11, [{quests, "data/counters/colony.terminal-1.pack"}, {bg, 255}, {options, << 16#01fc2800:32, 0, 3, 0,
-		0, 0, 0, 0, 0, % Phantom Ruins C-S
-		3, 3, 0, % Fight for Food C-A variant 1
-		3, 0, 0, % Fight for Food C-A variant 2
-		3, 0, 3, % Fight for Food C-A variant 3
-		0, 0, 0, % Fight for Food S variant 1-3
-		3, 3, 3, % Fight for Food S2 variant 1-3
-	0:136 >>}]},
-
-	%~ { 11, [{quests, "data/counters/colony.terminal-1.pack"}, {bg, 255}, {options, << 16#01fc2800:32, 3, 3, 0,
-		%~ 3, 3, 3, 3, 0, % Phantom Ruins C-S
-		%~ 3, 3, 3, % Fight for Food C-A variant 1
-		%~ 3, 3, 3, % Fight for Food C-A variant 2
-		%~ 3, 3, 3, % Fight for Food C-A variant 3
-		%~ 3, 3, 3, % Fight for Food S variant 1-3
-		%~ 3, 3, 3, % Fight for Food S2 variant 1-3
-	%~ 0:136 >>}]},
 
 	% Raffon Fieldbase (entry 0)
 
