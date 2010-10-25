@@ -63,10 +63,10 @@ WIP A 5 0233 --S list of other characters in zone/lobby/area, whichever
 !   ? 3 0234 -C- (probably related to 0235; probably partner card related)
     ? 3 0235 --S (probably related to 0234; probably partner card related; sends 1 GID and 4 card-like character infos)
 OK  A 5 0236 --S start zone handler (load objects and enable them)
-    ? 4 0237 -C-
-    ? 4 0238 --S (probably related to 0237)
+!   ? 4 0237 -C-
+!   ? 4 0238 --S (probably related to 0237)
 OK  A 5 023f -C- login: motd request (us only): same as 0226
-    ? 3 0245 --S
+!   ? 3 0245 --S
 !   ? 5 0246 --S add or replace text strings
     ? 5 024b -C-
     ? ? 024f -C- (gam/gas dialog request; jp only)
@@ -139,7 +139,7 @@ OK  A 4 0c05 -C- counter quest files pack request
 OK  A 4 0c06 --S counter quest files pack transfer
 OK  A 3 0c07 -C- lobby transport request
 OK  A 3 0c08 --S lobby transport reply
-*   A 4 0c09 --S trial start, end
+*   A 4 0c09 --S trial start; end (contains reward)
     ? 5 0c0a --S
     ? 4 0c0b --S
     ? 4 0c0c --S
@@ -250,10 +250,10 @@ Bosses
 
 Instances state
 
-    ? 7 1201 --S
+    ? 7 1201 --S (related to 0402; probably this enemy synchronization thing)
 *   A 6 1202 --S
 OK  A 5 1204 --S
-*   A 6 1205 --S block/map event
+!*  A 6 1205 --S block/map event
 *   A 5 1206 --S
 *   A 4 1207 --S
 *   C 3 1208 --S (vehicle init related)
@@ -262,9 +262,9 @@ OK  A 5 1204 --S
     ? 1 120c --S
 *   C 3 120f --S (enter vehicle related; reply for 0f07)
     ? 1 1210 --S
-*   A 6 1211 --S (object event related)
+!*  A 6 1211 --S (object event related)
 *   A 5 1212 --S
-*   A 6 1213 --S object state on/off
+!*  A 6 1213 --S object state on/off
 *   A 3 1215 --S (boss gate related)
 **  C 3 1216 --- (airboard rally race start; channel 0)
 
@@ -391,11 +391,11 @@ OK  B 4 1a07 --S dialog reply: types
 
 Casino/Temple
 
-!   C 4 1d01 -C- (casino shop/coins request)
-!   C 3 1d04 --S
-!   C 3 1d05 --S
+!   C 4 1d01 -C- (casino shop/coins request; also on casino shop buy)
+!   C 3 1d04 --S (casino shop related)
+!   C 3 1d05 --S (casino shop buy related)
 !   C 4 1d06 -C- (casino roulette bet request)
-!   C 5 1d07 --S
+!   C 5 1d07 --S (casino coin request and shop related)
 !   C 2 1d08 -C- (luck lady request)
 !   C 2 1d09 --S (luck lady reply)
 !   C 3 1d0a -C- (probably related to 1d0b; offering box)
@@ -403,14 +403,14 @@ Casino/Temple
 !   C 3 1d0c -C- (casino enter; slot machine request)
 !   C 3 1d0d -C-
 !   C 4 1d0e -C-
-!   C 3 1d0f --S
+!   C 3 1d0f --S (reply to 1d0c?)
     C 4 1d10 --S
     C 3 1d11 --S
     C 4 1d12 --S
     C 3 1d13 --S
     C 3 1d16 --S
-    C 3 1d17 --S
-    C 3 1d18 --S
+    C 3 1d17 --S (casino coin request related)
+    C 3 1d18 --S (casino coin request related)
 
 13 WIP 85 OK 336 Total
 
