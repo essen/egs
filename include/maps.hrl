@@ -228,9 +228,9 @@
 	%% Boss Tests.
 	{90120, [{type, mission}, {file, "data/missions/boss/lv1/alteraz/quest_ae.nbl"}, {start, [0, 100, 0]}, {sets, 1}]},
 	{90130, [{type, mission}, {file, "data/missions/boss/lv1/rolei/quest_ae.nbl"}, {start, [0, 100, 0]}, {sets, 1}]},
-	{90140, [{type, mission}, {file, "data/missions/boss/lv1/falz1/quest_ae.nbl"}, {start, [0, 100, 0]}, {sets, 1}]},
-	{90150, [{type, mission}, {file, "data/missions/boss/lv1/falz2/quest_ae.nbl"}, {start, [0, 100, 0]}, {sets, 1}]},
-	{90160, [{type, mission}, {file, "data/missions/boss/lv1/motherbrain/quest_ae.nbl"}, {start, [0, 100, 0]}, {sets, 1}]},
+	{90140, [{type, mission}, {file, "data/missions/boss/lv1/motherbrain/quest_ae.nbl"}, {start, [0, 100, 0]}, {sets, 1}]},
+	{90150, [{type, mission}, {file, "data/missions/boss/lv1/falz1/quest_ae.nbl"}, {start, [0, 100, 0]}, {sets, 1}]},
+	{90160, [{type, mission}, {file, "data/missions/boss/lv1/falz2/quest_ae.nbl"}, {start, [0, 100, 0]}, {sets, 1}]},
 
 	%% v1 Free Missions.
 	{110000, [{type, mission}, {file, "data/missions/v1/evacuation/quest_ae.nbl"}, {start, [0, 1130, 0]}, {sets, 1}]},
@@ -596,12 +596,12 @@
 	{[90120, 1], [{file, "data/missions/boss/lv1/alteraz/zone01_ae.nbl"}, {sets, 1}]},
 	{[90130, 0], [{file, "data/missions/boss/lv1/rolei/zone00_ae.nbl"}, {sets, 1}]},
 	{[90130, 1], [{file, "data/missions/boss/lv1/rolei/zone01_ae.nbl"}, {sets, 1}]},
-	{[90140, 0], [{file, "data/missions/boss/lv1/falz1/zone00_ae.nbl"}, {sets, 1}]},
-	{[90140, 1], [{file, "data/missions/boss/lv1/falz1/zone01_ae.nbl"}, {sets, 1}]},
-	{[90150, 0], [{file, "data/missions/boss/lv1/falz2/zone00_ae.nbl"}, {sets, 1}]},
-	{[90150, 1], [{file, "data/missions/boss/lv1/falz2/zone01_ae.nbl"}, {sets, 1}]},
-	{[90160, 0], [{file, "data/missions/boss/lv1/motherbrain/zone00_ae.nbl"}, {sets, 1}]},
-	{[90160, 1], [{file, "data/missions/boss/lv1/motherbrain/zone01_ae.nbl"}, {sets, 1}]},
+	{[90140, 0], [{file, "data/missions/boss/lv1/motherbrain/zone00_ae.nbl"}, {sets, 1}]},
+	{[90140, 1], [{file, "data/missions/boss/lv1/motherbrain/zone01_ae.nbl"}, {sets, 1}]},
+	{[90150, 0], [{file, "data/missions/boss/lv1/falz1/zone00_ae.nbl"}, {sets, 1}]},
+	{[90150, 1], [{file, "data/missions/boss/lv1/falz1/zone01_ae.nbl"}, {sets, 1}]},
+	{[90160, 0], [{file, "data/missions/boss/lv1/falz2/zone00_ae.nbl"}, {sets, 1}]},
+	{[90160, 1], [{file, "data/missions/boss/lv1/falz2/zone01_ae.nbl"}, {sets, 1}]},
 
 	%% v1 Free Missions.
 	{[110000, 0], [{file, "data/missions/v1/evacuation/zone00_ae.nbl"}, {sets, 1}]},
