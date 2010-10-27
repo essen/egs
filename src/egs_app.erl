@@ -40,10 +40,8 @@ stop(_State) ->
 	ok.
 
 %% @spec is_fresh_startup() -> true | false
-%% @doc Returns true if mnesia has not been initialized with
-%% the sherl schema.
-%% Thanks to Dale Harvey for this function posted to
-%% the erlang questions mailing list.
+%% @doc Returns true if mnesia has not been initialized with the egs schema.
+%% Thanks to Dale Harvey for this function posted to the erlang questions mailing list.
 is_fresh_startup() ->
 	Node = node(),
 	case mnesia:system_info(tables) of
@@ -55,7 +53,8 @@ is_fresh_startup() ->
 			end
 	end.
 
-%% @todo doc
+%% @spec db_init() -> ok
+%% @doc Initialize the database.
 db_init() ->
 	Nodes = [node()],
 	case mnesia:system_info(is_running) of
@@ -72,4 +71,5 @@ db_init() ->
 	mnesia:create_table(counters, [{attributes, record_info(fields, counters)}]),
 	mnesia:create_table(psu_object, [{attributes, record_info(fields, psu_object)}]),
 	mnesia:create_table(egs_user_model, [{attributes, record_info(fields, egs_user_model)}]),
-	error_logger:info_report("mnesia tables created").
+	error_logger:info_report("mnesia tables created"),
+	ok.
