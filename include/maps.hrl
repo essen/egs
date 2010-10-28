@@ -1055,14 +1055,6 @@
 		3, 3, 3, 3, 3, % Caves of Ice C-S2 variant 3
 	0:16 >>}]},
 
-	% Tutorial, Linear Line
-
-	{110, [{quests, "data/tutorial/colony.ll.pack"}, {bg, 255}, {options, << 16#01000800:32, 3, 3, 3, 3, 3, 3, 3, 3 >>}]},
-
-	% Tutorial, Transfer Terminal
-
-	{111, [{quests, "data/tutorial/colony.terminal.pack"}, {bg, 255}, {options, << 16#01000400:32, 0:32 >>}]},
-
 	% Parum Cafe: The Collector
 
 	{112, [{quests, "data/counters/parum.cafe.pack"}, {bg, 5}, {options, << 16#01000800:32, 3, 0:24, 3, 0:24 >>}]},
