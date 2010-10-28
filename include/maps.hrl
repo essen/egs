@@ -1089,18 +1089,6 @@
 		0, 3, % TECHNIC License
 	0:24 >>}]},
 
-	% Moatoob GUARDIANS: Party Missions, Versus, Item Exchange
-
-	{118, [{quests, "data/counters/moatoob.guardians.pack"}, {bg, 6}, {options, << 16#01001000:32, 3, 3, 3,
-		3, % Standby (Party)
-		3, 3, 3, 3, 3, % Bruce's Dungeon C-S2
-		3, % Standby (Versus)
-		3, % Airboard Rally
-		0:16,
-		3, % Skill License
-		0, 3 % Thunderfeast Deals
-	>>}]},
-
 	% Colony R&D: Clothes'n'Parts male/female
 
 	{177, [{quests, "data/counters/colony.rd.pack"}, {bg, 4}, {options, << 16#01000800:32, 3, 0:24, 3, 3, 0:16 >>}]},
