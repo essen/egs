@@ -21,7 +21,6 @@
 -export([keepalive/1, info/2, cast/3, raw/3, event/2]).
 
 -include("include/records.hrl").
--include("include/maps.hrl").
 
 %% @doc Send a keepalive.
 keepalive(#state{socket=Socket}) ->
@@ -311,11 +310,7 @@ event(counter_leave, State=#state{gid=GID}) ->
 %% @todo Rename to counter_bg_request.
 event({counter_options_request, CounterID}, State) ->
 	log("counter options request ~p", [CounterID]),
-	Bg = case proplists:get_value(CounterID, ?COUNTERS) of
-		undefined -> egs_counters:bg(CounterID);
-		[{quests, _}, {bg, Background}|_Tail] -> Background
-	end,
-	psu_proto:send_1711(Bg, State);
+	psu_proto:send_1711(egs_counters:bg(CounterID), State);
 
 %% @todo Handle when the party already exists! And stop doing it wrong.
 event(counter_party_info_request, #state{gid=GID}) ->
@@ -329,18 +324,12 @@ event(counter_party_options_request, _State) ->
 %% @doc Request the counter's quest files.
 event({counter_quest_files_request, CounterID}, State) ->
 	log("counter quest files request ~p", [CounterID]),
-	case proplists:get_value(CounterID, ?COUNTERS) of
-		undefined -> psu_proto:send_0c06(egs_counters:pack(CounterID), State);
-		[{quests, Filename}|_Tail] -> psu_game:send_0c06(Filename)
-	end;
+	psu_proto:send_0c06(egs_counters:pack(CounterID), State);
 
 %% @doc Counter available mission list request handler.
 event({counter_quest_options_request, CounterID}, State) ->
 	log("counter quest options request ~p", [CounterID]),
-	case proplists:get_value(CounterID, ?COUNTERS) of
-		undefined -> psu_proto:send_0c10(egs_counters:opts(CounterID), State);
-		[{quests, _}, {bg, _}, {options, Options}] -> psu_game:send_0c10(Options)
-	end;
+	psu_proto:send_0c10(egs_counters:opts(CounterID), State);
 
 %% @todo A and B are mostly unknown. Like most of everything else from the command 0e00...
 event({hit, FromTargetID, ToTargetID, A, B}, State=#state{gid=GID}) ->

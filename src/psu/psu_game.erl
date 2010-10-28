@@ -366,21 +366,9 @@ build_item_constants(#psu_special_item{}) ->
 send_0c02() ->
 	send(<< (header(16#0c02))/binary, 0:32 >>).
 
-%% @doc Send the huge pack of quest files available in the counter.
-send_0c06(Filename) ->
-	{ok, << File/bits >>} = file:read_file(Filename),
-	send(<< 16#0c060300:32, 0:288, 1:32/little-unsigned-integer, File/binary >>).
-
 %% @doc Send the trial start notification.
 send_0c09() ->
 	send(<< (header(16#0c09))/binary, 0:64 >>).
-
-%% @doc Send the counter's mission options (0 = invisible, 2 = disabled, 3 = available).
-%% @todo Remove this function when all the counters have been converted.
-send_0c10(Options) ->
-	GID = get(gid),
-	send(<< 16#0c100300:32, 0:32, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
-		16#00011300:32, GID:32/little-unsigned-integer, 0:64, Options/binary >>).
 
 %% @doc Send the character list for selection.
 %% @todo There's a few odd values blanked, also the last known location apparently.
