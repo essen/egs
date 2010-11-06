@@ -93,7 +93,7 @@ get_counter(CounterID, Cache) ->
 			ConfFilename = Dir ++ "counter.conf",
 			{TableRelData, TableRelPtrs} = egs_files:load_table_rel(ConfFilename),
 			TextBinData = egs_files:load_text_bin(Dir ++ "text.bin.en_US.txt"),
-			CounterNbl = nbl:pack([{files, [
+			CounterNbl = egs_files:nbl_pack([{files, [
 				{data, "table.rel", TableRelData, TableRelPtrs},
 				{data, "text.bin", TextBinData, []}
 			]}]),
