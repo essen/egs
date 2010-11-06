@@ -17,7 +17,7 @@
 %%	You should have received a copy of the GNU Affero General Public License
 %%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
--module(egs_counters).
+-module(egs_counters_db).
 -behavior(gen_server).
 -export([start_link/0, stop/0, bg/1, opts/1, pack/1, reload/0]). %% API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
