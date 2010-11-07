@@ -46,6 +46,11 @@ char_load(User, State) ->
 area_load(QuestID, ZoneID, MapID, EntryID, State) ->
 	{ok, OldUser} = egs_user_model:read(get(gid)),
 	[{type, AreaType}, {file, QuestFile}|MissionInfo] = proplists:get_value(QuestID, ?QUESTS, [{type, undefined}, {file, undefined}]),
+	QuestData = case QuestFile of
+		nofile -> egs_quests_db:quest(QuestID);
+		undefined -> undefined;
+		Filename -> {ok, D} = file:read_file(Filename), D
+	end,
 	[IsStart, RealZoneID, RealMapID, RealEntryID, NbSetsInQuest] = case AreaType of
 		mission ->
 			if	ZoneID =:= 65535 ->
@@ -78,12 +83,12 @@ area_load(QuestID, ZoneID, MapID, EntryID, State) ->
 	User = OldUser#egs_user_model{instancepid=InstancePid, areatype=AreaType, area={psu_area, QuestID, RealZoneID, RealMapID}, entryid=RealEntryID},
 	egs_user_model:write(User),
 	RealSetID = if SetID > NbSetsInZone - 1 -> NbSetsInZone - 1; true -> SetID end,
-	area_load(AreaType, IsStart, RealSetID, OldUser, User, QuestFile, ZoneFile, AreaName, State).
+	area_load(AreaType, IsStart, RealSetID, OldUser, User, QuestData, ZoneFile, AreaName, State).
 
-area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName, State) ->
+area_load(AreaType, IsStart, SetID, OldUser, User, QuestData, ZoneFile, AreaName, State) ->
 	#psu_area{questid=OldQuestID, zoneid=OldZoneID} = OldUser#egs_user_model.area,
 	#psu_area{questid=QuestID, zoneid=ZoneID, mapid=_MapID} = User#egs_user_model.area,
-	QuestChange = if OldQuestID /= QuestID, QuestFile /= undefined -> true; true -> false end,
+	QuestChange = if OldQuestID /= QuestID, QuestData /= undefined -> true; true -> false end,
 	if	ZoneFile =:= undefined ->
 			ZoneChange = false;
 		true ->
@@ -102,7 +107,7 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestFile, ZoneFile, AreaName
 	if	QuestChange =:= true ->
 			% load new quest
 			psu_proto:send_0c00(User, State),
-			psu_proto:send_020e(QuestFile, State);
+			psu_proto:send_020e(QuestData, State);
 		true -> ignore
 	end,
 	%% @todo The LID changes here.
@@ -428,9 +433,12 @@ send_100f(NPCid, PartyPos) ->
 %% @todo Handle correctly. 0:32 is actually a missing value. Value before that is unknown too.
 send_1015(QuestID) ->
 	[{type, _}, {file, QuestFile}|_] = proplists:get_value(QuestID, ?QUESTS),
-	{ok, File} = file:read_file(QuestFile),
-	Size = byte_size(File),
-	send(<< (header(16#1015))/binary, QuestID:32/little-unsigned-integer, 16#01010000:32, 0:32, Size:32/little-unsigned-integer, File/binary >>).
+	QuestData = case QuestFile of
+		nofile -> egs_quests_db:quest(QuestID);
+		Filename -> {ok, D} = file:read_file(Filename), D
+	end,
+	Size = byte_size(QuestData),
+	send(<< (header(16#1015))/binary, QuestID:32/little-unsigned-integer, 16#01010000:32, 0:32, Size:32/little-unsigned-integer, QuestData/binary >>).
 
 %% @todo No idea.
 send_1016(PartyPos) ->

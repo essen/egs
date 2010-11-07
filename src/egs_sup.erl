@@ -58,6 +58,7 @@ init([]) ->
 		{egs_counters_db, {egs_counters_db, start_link, []}, permanent, 5000, worker, dynamic},
 		{egs_items_db, {egs_items_db, start_link, []}, permanent, 5000, worker, dynamic},
 		{egs_npc_db, {egs_npc_db, start_link, []}, permanent, 5000, worker, dynamic},
+		{egs_quests_db, {egs_quests_db, start_link, []}, permanent, 5000, worker, dynamic},
 		{egs_shops_db, {egs_shops_db, start_link, []}, permanent, 5000, worker, dynamic},
 		{egs_accounts, {egs_accounts, start_link, []}, permanent, 5000, worker, dynamic},
 		{egs_universes, {egs_universes, start_link, []}, permanent, 5000, worker, dynamic},

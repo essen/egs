@@ -199,7 +199,7 @@
 
 	% Planetary lobbies
 
-	{1100000, [{type, lobby}, {file, "data/lobby/colony.quest.nbl"}]},
+	{1100000, [{type, lobby}, {file, nofile}]},
 	{1101000, [{type, lobby}, {file, "data/lobby/parum.quest.nbl"}]},
 	{1102000, [{type, lobby}, {file, "data/lobby/neudaiz.quest.nbl"}]},
 	{1103000, [{type, lobby}, {file, "data/lobby/moatoob.quest.nbl"}]},

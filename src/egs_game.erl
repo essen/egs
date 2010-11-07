@@ -261,14 +261,14 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}, State=#sta
 	FromArea = {psu_area, OldArea#psu_area.questid, FromZoneID, FromMapID},
 	User = OldUser#egs_user_model{areatype=counter, area={psu_area, 16#7fffffff, 0, 0}, entryid=0, prev_area=FromArea, prev_entryid=FromEntryID},
 	egs_user_model:write(User),
-	QuestFile = "data/lobby/counter.quest.nbl",
+	{ok, QuestData} = file:read_file("data/lobby/counter.quest.nbl"),
 	ZoneFile = "data/lobby/counter.zone.nbl",
 	%% broadcast unspawn to other people
 	{ok, UnspawnList} = egs_user_model:select({neighbors, OldUser}),
 	lists:foreach(fun(Other) -> Other#egs_user_model.pid ! {egs, player_unspawn, User} end, UnspawnList),
 	%% load counter
 	psu_proto:send_0c00(User, State),
-	psu_proto:send_020e(QuestFile, State),
+	psu_proto:send_020e(QuestData, State),
 	psu_proto:send_0a05(State),
 	psu_proto:send_010d(User#egs_user_model{lid=0}, State),
 	psu_proto:send_0200(0, mission, State),
