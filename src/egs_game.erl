@@ -261,7 +261,7 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}, State=#sta
 	FromArea = {psu_area, OldArea#psu_area.questid, FromZoneID, FromMapID},
 	User = OldUser#egs_user_model{areatype=counter, area={psu_area, 16#7fffffff, 0, 0}, entryid=0, prev_area=FromArea, prev_entryid=FromEntryID},
 	egs_user_model:write(User),
-	{ok, QuestData} = file:read_file("data/lobby/counter.quest.nbl"),
+	QuestData = egs_quests_db:quest(0),
 	ZoneFile = "data/lobby/counter.zone.nbl",
 	%% broadcast unspawn to other people
 	{ok, UnspawnList} = egs_user_model:select({neighbors, OldUser}),

@@ -1517,6 +1517,7 @@ send_1006(EventID, PartyPos, #state{socket=Socket, gid=DestGID}) ->
 %% @todo Handle PartyPos.
 %% @todo Receive the AreaName as UCS2 directly to allow for color codes and the like.
 %% @todo Handle TargetLID probably (right after the padding).
+%% @todo Do counters even have a name?
 send_100e(CounterID, AreaName, #state{socket=Socket, gid=DestGID}) ->
 	PartyPos = 0,
 	UCS2Name = << << X:8, 0:8 >> || X <- AreaName >>,
