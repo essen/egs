@@ -201,7 +201,7 @@
 
 	{1100000, [{type, lobby}, {file, nofile}]},
 	{1101000, [{type, lobby}, {file, nofile}]},
-	{1102000, [{type, lobby}, {file, "data/lobby/neudaiz.quest.nbl"}]},
+	{1102000, [{type, lobby}, {file, nofile}]},
 	{1103000, [{type, lobby}, {file, "data/lobby/moatoob.quest.nbl"}]},
 
 	{1104000, [{type, spaceport}, {file, "data/lobby/spaceport.quest.nbl"}]},
