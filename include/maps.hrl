@@ -204,7 +204,7 @@
 	{1102000, [{type, lobby}, {file, nofile}]},
 	{1103000, [{type, lobby}, {file, nofile}]},
 
-	{1104000, [{type, spaceport}, {file, "data/lobby/spaceport.quest.nbl"}]},
+	{1104000, [{type, spaceport}, {file, nofile}]},
 
 	% Tutorial
 

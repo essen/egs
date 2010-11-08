@@ -85,15 +85,17 @@ get_quest(QuestID, Cache) ->
 			ConfFilename = Dir ++ "quest.conf",
 			{QuestXnrData, QuestXnrPtrs} = egs_files:load_quest_xnr(ConfFilename),
 			UnitTitleBinFiles = load_unit_title_bin_files(Dir, ConfFilename),
-			TablePos = egs_files:nbl_padded_size(byte_size(QuestXnrData)),
-			TextSize = lists:sum([egs_files:nbl_padded_size(byte_size(D)) || {data, _F, D, _P} <- UnitTitleBinFiles]),
-			TablePos2 = TablePos + TextSize,
-			{UnitTitleTableRelData, UnitTitleTableRelPtrs} = egs_files:load_unit_title_table_rel(ConfFilename, TablePos2),
-			QuestNbl = egs_files:nbl_pack([{files,
-				[{data, "quest.xnr", QuestXnrData, QuestXnrPtrs}]
-			++	UnitTitleBinFiles
-			++	[{data, "unit_title_table.rel", UnitTitleTableRelData, UnitTitleTableRelPtrs}]
-			}]),
+			Files = [{data, "quest.xnr", QuestXnrData, QuestXnrPtrs}],
+			Files2 = Files ++ case UnitTitleBinFiles of
+				ignore -> [];
+				_Any ->
+					TablePos = egs_files:nbl_padded_size(byte_size(QuestXnrData)),
+					TextSize = lists:sum([egs_files:nbl_padded_size(byte_size(D)) || {data, _F, D, _P} <- UnitTitleBinFiles]),
+					TablePos2 = TablePos + TextSize,
+					{UnitTitleTableRelData, UnitTitleTableRelPtrs} = egs_files:load_unit_title_table_rel(ConfFilename, TablePos2),
+					UnitTitleBinFiles ++ [{data, "unit_title_table.rel", UnitTitleTableRelData, UnitTitleTableRelPtrs}]
+			end,
+			QuestNbl = egs_files:nbl_pack([{files, Files2}]),
 			Quest = [{quest, QuestNbl}],
 			Cache2 = [{QuestID, Quest}|Cache],
 			{Quest, Cache2};
@@ -103,8 +105,12 @@ get_quest(QuestID, Cache) ->
 
 load_unit_title_bin_files(Dir, ConfFilename) ->
 	{ok, Settings} = file:consult(ConfFilename),
-	Zones = proplists:get_value(zones, Settings),
-	[load_unit_title_bin(Dir, Zone) || Zone <- Zones].
+	case proplists:get_value(notitles, Settings) of
+		true -> ignore;
+		_Any ->
+			Zones = proplists:get_value(zones, Settings),
+			[load_unit_title_bin(Dir, Zone) || Zone <- Zones]
+	end.
 
 load_unit_title_bin(Dir, Zone) ->
 	ZoneID = proplists:get_value(zoneid, Zone),

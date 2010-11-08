@@ -187,6 +187,8 @@ load_quest_xnr_warps(QuestID, [Warp|Tail], Acc) ->
 	Bin2 = load_quest_xnr_warp(QuestID, NextWarp),
 	load_quest_xnr_warps(QuestID, Tail, [<< Bin1/binary, Bin2/binary >>|Acc]).
 
+%% @todo Counter(16#7fffffff) has ffff before EnemyLevel, why?
+%% @todo Spaceport(1104000) and counter(16#7fffffff) has 04010000 be 00010000, why?
 load_quest_xnr_zones(ZonesList, BasePos) ->
 	load_quest_xnr_zones(ZonesList, BasePos, [], [], []).
 load_quest_xnr_zones([], _BasePos, SetsAcc, SetsPtrsAcc, ZonesAcc) ->
