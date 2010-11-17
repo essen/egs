@@ -197,11 +197,10 @@ load_quest_xnr_zones([], _BasePos, SetsAcc, SetsPtrsAcc, ZonesAcc) ->
 	SetsPtrsList = lists:flatten(lists:reverse(SetsPtrsAcc)),
 	ZonesBin = iolist_to_binary(lists:reverse(ZonesAcc)),
 	{SetsBin, SetsPtrsList, ZonesBin};
-load_quest_xnr_zones([Zone|Tail], BasePos, SetsAcc, SetsPtrsAcc, ZonesAcc) ->
-	ZoneID = proplists:get_value(zoneid, Zone),
-	AreaID = proplists:get_value(areaid, Zone),
-	EnemyLevel = proplists:get_value(enemy_level, Zone),
-	SetList = proplists:get_value(sets, Zone),
+load_quest_xnr_zones([{ZoneID, ZoneParams}|Tail], BasePos, SetsAcc, SetsPtrsAcc, ZonesAcc) ->
+	AreaID = proplists:get_value(areaid, ZoneParams),
+	EnemyLevel = proplists:get_value(enemy_level, ZoneParams),
+	SetList = proplists:get_value(sets, ZoneParams),
 	NbSets = length(SetList),
 	SetsBin = iolist_to_binary([<< Set:32/little >> || Set <- SetList]),
 	SetsBin2 = << SetsBin/binary, BasePos:32/little, NbSets:32/little >>,
@@ -308,9 +307,8 @@ load_unit_title_table_rel_zones(Zones) ->
 	load_unit_title_table_rel_zones(Zones, 0, []).
 load_unit_title_table_rel_zones([], N, Acc) ->
 	{iolist_to_binary(lists:reverse(Acc)), N};
-load_unit_title_table_rel_zones([Zone|Tail], N, Acc) ->
-	ZoneID = proplists:get_value(zoneid, Zone),
-	Maps = proplists:get_value(maps, Zone),
+load_unit_title_table_rel_zones([{ZoneID, ZoneParams}|Tail], N, Acc) ->
+	Maps = proplists:get_value(maps, ZoneParams),
 	{Bin, N2} = load_unit_title_table_rel_maps(ZoneID, Maps),
 	load_unit_title_table_rel_zones(Tail, N + N2, [Bin|Acc]).
 

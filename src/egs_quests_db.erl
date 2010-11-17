@@ -112,8 +112,7 @@ load_unit_title_bin_files(Dir, ConfFilename) ->
 			[load_unit_title_bin(Dir, Zone) || Zone <- Zones]
 	end.
 
-load_unit_title_bin(Dir, Zone) ->
-	ZoneID = proplists:get_value(zoneid, Zone),
+load_unit_title_bin(Dir, {ZoneID, _ZoneParams}) ->
 	Filename = io_lib:format("unit_title_~2.10.0b.bin", [ZoneID]),
 	TxtFilename = io_lib:format("~s~s.en_US.txt", [Dir, Filename]),
 	{data, Filename, egs_files:load_text_bin(TxtFilename), []}.
