@@ -18,7 +18,8 @@
 %%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
 -module(egs_files).
--export([load_counter_pack/2, load_quest_xnr/1, load_table_rel/1, load_text_bin/1, load_unit_title_table_rel/2, nbl_pack/1, nbl_padded_size/1]).
+-export([load_counter_pack/2, load_quest_xnr/1, load_script_bin/1, load_table_rel/1,
+	load_text_bin/1, load_unit_title_table_rel/2, nbl_pack/1, nbl_padded_size/1]).
 
 %% @doc Build a counter's pack file, options and return them along with the background value.
 load_counter_pack(ConfFilename, CounterNbl) ->
@@ -207,6 +208,13 @@ load_quest_xnr_zones([Zone|Tail], BasePos, SetsAcc, SetsPtrsAcc, ZonesAcc) ->
 	SetPos = BasePos + NbSets * 4,
 	ZoneBin = << ZoneID:16/little, AreaID:16/little, AreaID:32/little, 0:16, EnemyLevel:8, 16#ff:8, 16#04010000:32, SetPos:32/little, 0:352 >>,
 	load_quest_xnr_zones(Tail, BasePos + byte_size(SetsBin2), [SetsBin2|SetsAcc], [SetPos|SetsPtrsAcc], [ZoneBin|ZonesAcc]).
+
+%% @doc Load a script file and compile it into the bytecode used by the game.
+load_script_bin(ScriptFilename) ->
+	{ok, Script} = file:read_file(ScriptFilename),
+	{ok, Tokens, _NbLines} = egs_script_lexer:string(binary_to_list(Script)),
+	{ok, ParseTree} = egs_script_parser:parse(Tokens),
+	egs_script_compiler:compile(ParseTree).
 
 %% @doc Load a counter configuration file and return a table.rel binary along with its pointers array.
 load_table_rel(ConfFilename) ->

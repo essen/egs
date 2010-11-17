@@ -1,0 +1,38 @@
+%% @author Loïc Hoguin <essen@dev-extend.eu>
+%% @copyright 2010 Loïc Hoguin.
+%% @doc EGS script parser.
+%%
+%%	This file is part of EGS.
+%%
+%%	EGS is free software: you can redistribute it and/or modify
+%%	it under the terms of the GNU Affero General Public License as
+%%	published by the Free Software Foundation, either version 3 of the
+%%	License, or (at your option) any later version.
+%%
+%%	EGS is distributed in the hope that it will be useful,
+%%	but WITHOUT ANY WARRANTY; without even the implied warranty of
+%%	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%%	GNU Affero General Public License for more details.
+%%
+%%	You should have received a copy of the GNU Affero General Public License
+%%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
+
+Nonterminals declarations declaration instructions instruction.
+Terminals integer name event function push syscall '->' ',' dot.
+Rootsymbol declarations.
+
+declarations -> declaration declarations : {'$1', '$2'}.
+declarations -> '$empty' : nil.
+
+declaration  -> event name '->' instructions dot : {event, unwrap('$2'), '$4'}.
+declaration  -> function name '->' instructions dot : {function, unwrap('$2'), '$4'}.
+
+instructions -> instruction ',' instructions : {'$1', '$3'}.
+instructions -> instruction : {'$1', nil}.
+
+instruction  -> push integer : {push, unwrap('$2')}.
+instruction  -> syscall : {syscall, unwrap('$1')}.
+
+Erlang code.
+
+unwrap({_,_,V}) -> V.
