@@ -10,4 +10,6 @@ This is a very early work in progress. It does not include any data files
 yet, meaning one cannot at this point run a server without using the
 proprietary files from AOTI.
 
+The server requires Erlang R14B to compile and run.
+
 Use 'make' to compile, 'make run' to run and 'make fclean' to cleanup.

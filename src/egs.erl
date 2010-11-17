@@ -34,6 +34,7 @@ ensure_started(App) ->
 %% @doc Start the EGS server.
 start() ->
 	ensure_started(crypto),
+	ensure_started(public_key),
 	ensure_started(ssl),
 	ssl:seed(crypto:rand_bytes(256)),
 	ensure_started(mnesia),
@@ -45,6 +46,7 @@ stop() ->
 	Res = application:stop(egs),
 	application:stop(mnesia),
 	application:stop(ssl),
+	application:stop(public_key),
 	application:stop(crypto),
 	Res.
 
