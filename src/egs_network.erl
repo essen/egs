@@ -21,7 +21,7 @@
 -export([listen/2, recv/3]). %% API.
 -export([accept/2]). %% Internal.
 
--define(OPTIONS, [binary, {active, true}, {reuseaddr, true}, {ssl_imp, new}, {certfile, "priv/ssl/servercert.pem"}, {keyfile, "priv/ssl/serverkey.pem"}, {password, "alpha"}]).
+-define(OPTIONS, [binary, {active, true}, {reuseaddr, true}, {ssl_imp, old}, {certfile, "priv/ssl/servercert.pem"}, {keyfile, "priv/ssl/serverkey.pem"}, {password, "alpha"}]).
 
 %% @doc Listen for connections.
 listen(Port, CallbackMod) ->
