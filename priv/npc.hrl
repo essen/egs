@@ -148,4 +148,4 @@
 %% @todo Not sure how to handle those yet. Also missing a bunch of PM data anyway.
 %% {42, #npc{name="My PM", level_diff=+0}}
 
-].
+]).

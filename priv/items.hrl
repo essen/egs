@@ -1141,4 +1141,4 @@
 {16#11020100, #psu_item{name="Photon Reflector", rarity=1, buy_price=none, sell_price=16#fa0a1f00, data=#psu_special_item{}}},
 {16#11020200, #psu_item{name="Photon Breaker", rarity=1, buy_price=none, sell_price=16#fa0a1f00, data=#psu_special_item{}}}
 
-].
+]).
