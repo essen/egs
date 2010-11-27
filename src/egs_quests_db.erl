@@ -19,8 +19,10 @@
 
 -module(egs_quests_db).
 -behavior(gen_server).
--export([start_link/0, stop/0, quest/1, reload/0]). %% API.
+-export([start_link/0, stop/0, quest/1, zone/2, reload/0]). %% API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
+
+-record(state, {quests_bin=[], zones_bin=[]}).
 
 %% Use the module name for the server's name.
 -define(SERVER, ?MODULE).
@@ -39,6 +41,10 @@ stop() ->
 quest(QuestID) ->
 	gen_server:call(?SERVER, {quest, QuestID}).
 
+%% @spec zone(QuestID, ZoneID) -> binary()
+zone(QuestID, ZoneID) ->
+	gen_server:call(?SERVER, {zone, QuestID, ZoneID}).
+
 %% @spec reload() -> ok
 reload() ->
 	gen_server:cast(?SERVER, reload).
@@ -46,12 +52,15 @@ reload() ->
 %% gen_server.
 
 init([]) ->
-	{ok, []}.
+	{ok, #state{}}.
 
-%% @doc Possible keys: quest.
-handle_call({Key, QuestID}, _From, State) ->
-	{Quest, State2} = get_quest(QuestID, State),
-	{reply, proplists:get_value(Key, Quest), State2};
+handle_call({quest, QuestID}, _From, State=#state{quests_bin=Cache}) ->
+	{Quest, Cache2} = get_quest(QuestID, Cache),
+	{reply, Quest, State#state{quests_bin=Cache2}};
+
+handle_call({zone, QuestID, ZoneID}, _From, State=#state{zones_bin=Cache}) ->
+	{Zone, Cache2} = get_zone(QuestID, ZoneID, Cache),
+	{reply, Zone, State#state{zones_bin=Cache2}};
 
 handle_call(stop, _From, State) ->
 	{stop, normal, stopped, State};
@@ -60,7 +69,7 @@ handle_call(_Request, _From, State) ->
 	{reply, ignored, State}.
 
 handle_cast(reload, _State) ->
-	{noreply, []};
+	{noreply, #state{}};
 
 handle_cast(_Msg, State) ->
 	{noreply, State}.
@@ -96,11 +105,41 @@ get_quest(QuestID, Cache) ->
 					UnitTitleBinFiles ++ [{data, "unit_title_table.rel", UnitTitleTableRelData, UnitTitleTableRelPtrs}]
 			end,
 			QuestNbl = egs_files:nbl_pack([{files, Files2}]),
-			Quest = [{quest, QuestNbl}],
-			Cache2 = [{QuestID, Quest}|Cache],
-			{Quest, Cache2};
-		Quest ->
-			{Quest, Cache}
+			Cache2 = [{QuestID, QuestNbl}|Cache],
+			{QuestNbl, Cache2};
+		QuestNbl ->
+			{QuestNbl, Cache}
+	end.
+
+%% @doc Return a zone information either from the cache or from the configuration files.
+%% @todo FilePos, text.bin, other sets, enemies.
+get_zone(QuestID, ZoneID, Cache) ->
+	case proplists:get_value({QuestID, ZoneID}, Cache) of
+		undefined ->
+			Dir = io_lib:format("priv/quests/~b/", [QuestID]),
+			ZoneDir = Dir ++ io_lib:format("zone-~b/", [ZoneID]),
+			{ok, QuestSettings} = file:consult(Dir ++ "quest.conf"),
+			Zones = proplists:get_value(zones, QuestSettings),
+			Zone = proplists:get_value(ZoneID, Zones),
+			AreaID = proplists:get_value(areaid, Zone),
+			Maps = proplists:get_value(maps, Zone),
+			FilePos = 0, %% @todo
+			{Set0, SetPtrs} = egs_files:load_set_rel(ZoneDir ++ io_lib:format("set_r~b.conf", [0]), AreaID, Maps, FilePos),
+			ScriptBin = egs_files:load_script_bin(ZoneDir ++ "script.es"),
+			ScriptBinSize = byte_size(ScriptBin),
+			ScriptBin2 = egs_prs:compress(ScriptBin),
+			ScriptBinSize2 = byte_size(ScriptBin2),
+			ScriptBin3 = << ScriptBinSize:32/little, ScriptBinSize2:32/little, 0:32, 1:32/little, 0:96, ScriptBin2/binary >>,
+			TextBin = egs_files:load_text_bin(ZoneDir ++ "text.bin.en_US.txt"),
+			ZoneNbl = egs_files:nbl_pack([{files, [
+				{data, "set_r0.rel", Set0, SetPtrs},
+				{data, "script.bin", ScriptBin3, []},
+				{data, "text.bin", TextBin, []}
+			]}]),
+			Cache2 = [{{QuestID, ZoneID}, ZoneNbl}|Cache],
+			{ZoneNbl, Cache2};
+		ZoneNbl ->
+			{ZoneNbl, Cache}
 	end.
 
 load_unit_title_bin_files(Dir, ConfFilename) ->

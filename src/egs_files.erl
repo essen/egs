@@ -18,7 +18,7 @@
 %%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
 -module(egs_files).
--export([load_counter_pack/2, load_quest_xnr/1, load_script_bin/1, load_table_rel/1,
+-export([load_counter_pack/2, load_quest_xnr/1, load_script_bin/1, load_set_rel/4, load_table_rel/1,
 	load_text_bin/1, load_unit_title_table_rel/2, nbl_pack/1, nbl_padded_size/1]).
 
 %% @doc Build a counter's pack file, options and return them along with the background value.
@@ -214,6 +214,161 @@ load_script_bin(ScriptFilename) ->
 	{ok, Tokens, _NbLines} = egs_script_lexer:string(binary_to_list(Script)),
 	{ok, ParseTree} = egs_script_parser:parse(Tokens),
 	egs_script_compiler:compile(ParseTree).
+
+%% @doc Load a set configuration file and return a set_r*.rel binary.
+load_set_rel(ConfFilename, AreaID, Maps, FilePos) ->
+	{ok, Settings} = file:consult(ConfFilename),
+	NbMaps = length(Maps),
+	AreaPtr = FilePos + 16,
+	MapsPtr = FilePos + 24,
+	{MapsBin, Ptrs} = load_set_rel_maps(Settings, Maps, MapsPtr, MapsPtr + NbMaps * 12),
+	Ptrs2 = [FilePos + 20|Ptrs],
+	Size = byte_size(MapsBin) + 24,
+	{<< $N, $X, $R, 0, Size:32/little, AreaPtr:32/little, 0:32,
+		AreaID:16/little, NbMaps:16/little, MapsPtr:32/little,
+		MapsBin/binary >>, Ptrs2}.
+
+load_set_rel_maps(Settings, Maps, MapsPos, GroupsPos) ->
+	load_set_rel_maps(Settings, Maps, MapsPos, GroupsPos, [], [], []).
+load_set_rel_maps(_Settings, [], _MapsPos, _GroupsPos, Ptrs, GroupsAcc, MapsAcc) ->
+	ObjectsBin = iolist_to_binary(lists:reverse(GroupsAcc)),
+	MapsBin = iolist_to_binary(lists:reverse(MapsAcc)),
+	{<< MapsBin/binary, ObjectsBin/binary >>, lists:sort(Ptrs)};
+load_set_rel_maps(Settings, [MapID|Tail], MapsPos, GroupsPos, Ptrs, GroupsAcc, MapsAcc) ->
+	Map = proplists:get_value({map, MapID}, Settings),
+	NbGroups = length(Map),
+	{GroupsBin, Ptrs2} = load_set_rel_groups(Map, GroupsPos, GroupsPos + NbGroups * 40, Ptrs),
+	MapBin = << MapID:16/little, NbGroups:16/little, GroupsPos:32/little, 0:32 >>,
+	load_set_rel_maps(Settings, Tail, MapsPos + 12, GroupsPos + byte_size(GroupsBin), [MapsPos + 4|Ptrs2], [GroupsBin|GroupsAcc], [MapBin|MapsAcc]).
+
+%% @todo 0:144, 16#ffff:16 0:32 can have some values.
+load_set_rel_groups(Groups, GroupsPos, ObjectsPos, Ptrs) ->
+	load_set_rel_groups(Groups, GroupsPos, ObjectsPos, Ptrs, 0, [], []).
+load_set_rel_groups([], _GroupsPos, _ObjectsPos, Ptrs, _N, ObjectsAcc, GroupsAcc) ->
+	ObjectsBin = iolist_to_binary(lists:reverse(ObjectsAcc)),
+	GroupsBin = iolist_to_binary(lists:reverse(GroupsAcc)),
+	{<< GroupsBin/binary, ObjectsBin/binary >>, Ptrs};
+load_set_rel_groups([Group|Tail], GroupsPos, ObjectsPos, Ptrs, N, ObjectsAcc, GroupsAcc) ->
+	NbObjects = length(Group),
+	{ObjectsBin, Ptrs2} = load_set_rel_objects(Group, ObjectsPos, ObjectsPos + NbObjects * 52, Ptrs),
+	GroupBin = << 16#ffffffff:32, 0:144, 16#ffff:16, 0:32, N:32/little, 0:16, NbObjects:16/little, ObjectsPos:32/little >>,
+	load_set_rel_groups(Tail, GroupsPos + 40, ObjectsPos + byte_size(ObjectsBin), [GroupsPos + 36|Ptrs2], N + 1, [ObjectsBin|ObjectsAcc], [GroupBin|GroupsAcc]).
+
+load_set_rel_objects(Objects, StdPos, ParamsPos, Ptrs) ->
+	load_set_rel_objects(Objects, StdPos, ParamsPos, Ptrs, [], []).
+load_set_rel_objects([], _StdPos, _ParamsPos, Ptrs, StdAcc, ParamsAcc) ->
+	StdBin = iolist_to_binary(lists:reverse(StdAcc)),
+	ParamsBin = iolist_to_binary(lists:reverse(ParamsAcc)),
+	{<< StdBin/binary, ParamsBin/binary >>, Ptrs};
+load_set_rel_objects([{ObjType, ObjPos, ObjRot, ObjParams}|Tail], StdPos, ParamsPos, Ptrs, StdAcc, ParamsAcc) ->
+	ParamsBin = load_set_rel_object_params(ObjType, ObjParams),
+	ParamsSize = byte_size(ParamsBin),
+	{ClassID, TypeID} = load_set_rel_object_id(ObjType),
+	{PosX, PosY, PosZ} = ObjPos,
+	{RotX, RotY, RotZ} = ObjRot,
+	StdBin = <<	16#ffffffff:32, ClassID:32/little, 16#ffffffff:32, 16#ffff:16, TypeID:16/little, 0:32,
+				PosX:32/little-float, PosY:32/little-float, PosZ:32/little-float,
+				RotX:32/little-float, RotY:32/little-float, RotZ:32/little-float,
+				ParamsSize:32/little, ParamsPos:32/little >>,
+	load_set_rel_objects(Tail, StdPos + 52, ParamsPos + ParamsSize, [StdPos + 48|Ptrs], [StdBin|StdAcc], [ParamsBin|ParamsAcc]).
+
+load_set_rel_object_id(static_model)    -> {4,  4};
+load_set_rel_object_id(invisible_block) -> {1, 10};
+load_set_rel_object_id(npc)             -> {2, 18};
+load_set_rel_object_id(door)            -> {5, 20};
+load_set_rel_object_id(entrance)        -> {2, 26};
+load_set_rel_object_id(exit)            -> {6, 27};
+load_set_rel_object_id(label)           -> {2, 53};
+load_set_rel_object_id(chair)           -> {2, 56};
+load_set_rel_object_id(uni_cube)        -> {0, 60};
+load_set_rel_object_id(pp_cube)         -> {0, 62};
+load_set_rel_object_id({raw, ClassID, TypeID}) -> {ClassID, TypeID}.
+
+load_set_rel_object_params(static_model, Params) ->
+	Model = proplists:get_value(model, Params),
+	Size = proplists:get_value(size, Params, 1.0),
+	<<	Model:32/little, Size:32/little-float, 16#0000ff00:32,
+			16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
+			16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32 >>;
+load_set_rel_object_params(invisible_block, Params) ->
+	{Width, Height, Depth} = proplists:get_value(dimension, Params),
+	<<	Width:32/little-float, Height:32/little-float, Depth:32/little-float, 16#ffff0000:32,
+		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, %% First ffffffff can be events required to enable (each being a 16-bit integer).
+		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32 >>; %% First ffffffff can be events required to disable.
+load_set_rel_object_params(npc, Params) ->
+	Model = proplists:get_value(model, Params),
+	ID = proplists:get_value(id, Params),
+	{CanTalk, TalkRadius} = case proplists:get_value(talk_radius, Params) of undefined -> {0, 0.0}; T -> {1, T} end,
+	{CanWalk, WalkRadius} = case proplists:get_value(walk_radius, Params) of undefined -> {0, 0.0}; W -> {1, W} end,
+	<<	Model:16/little, ID:16/little, TalkRadius:32/little-float, WalkRadius:32/little-float,
+		CanWalk:8, 0:24, CanTalk:8, 0:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32 >>;
+%% @todo The byte right after the first ffff can take the value 1.
+%% @todo The 2 bytes starting the many ffffffff at the end can take an unknown value.
+load_set_rel_object_params(door, Params) ->
+	Model = proplists:get_value(model, Params),
+	Variant = proplists:get_value(variant, Params, 255),
+	IsClosed = case proplists:get_value(closed, Params, false) of true -> 1; false -> 0 end,
+	<<	Model:32/little, IsClosed:8, 0:8, 16#ffff:16, 0:16, Variant:8, 0:8,
+		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32 >>;
+%% @todo 16#2041 is unknown (10.0 float). Other unknown values following can be non-0. Probably entrance and camera movements.
+load_set_rel_object_params(entrance, Params) ->
+	EntryID = proplists:get_value(entryid, Params),
+	<< EntryID:16/little, 0:32, 16#2041:16, 0:1088 >>;
+%% @todo The 2 bytes after CameraMovZ can have unknown values.
+load_set_rel_object_params(exit, Params) ->
+	EntryID = proplists:get_value(entryid, Params),
+	Animation = proplists:get_value(animation, Params),
+	AnimationID = case Animation of stop -> 0; walk -> 1; run -> 2 end,
+	{ExitBoxRad, ExitBoxW, ExitBoxH, ExitBoxD} = proplists:get_value(exit_box, Params),
+	{ExitMovX, ExitMovY, ExitMovZ} = proplists:get_value(exit_movement, Params),
+	{CameraBoxRad, CameraBoxW, CameraBoxH, CameraBoxD} = proplists:get_value(camera_box, Params),
+	{CameraMovX, CameraMovY, CameraMovZ} = proplists:get_value(camera_movement, Params),
+	CommonBin = <<	ExitBoxRad:32/little-float, ExitBoxW:32/little-float, ExitBoxH:32/little-float, ExitBoxD:32/little-float,
+					ExitMovX:32/little-float, ExitMovY:32/little-float, ExitMovZ:32/little-float, 0:192,
+					CameraBoxRad:32/little-float, CameraBoxW:32/little-float, CameraBoxH:32/little-float, CameraBoxD:32/little-float,
+					CameraMovX:32/little-float, CameraMovY:32/little-float, CameraMovZ:32/little-float,
+					16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32 >>,
+	case proplists:get_value(type, Params) of
+		counter ->
+			CounterID = proplists:get_value(counterid, Params),
+			<< CounterID:16/little, 1:16/little, 0:16, AnimationID:8, 1:8, EntryID:8, 0:16, 1:8, CommonBin/binary >>;
+		map ->
+			<< EntryID:16/little, 0:32, AnimationID:8, 1:8, 255:8, 0:16, 1:8, CommonBin/binary >>
+	end;
+%% @todo Not sure about the box. It's probably wrong.
+%% @todo Can only have up to 10 different label ids.
+load_set_rel_object_params(label, Params) ->
+	LabelID = proplists:get_value(labelid, Params),
+	{Rad, X, Y, Z} = proplists:get_value(box, Params),
+	<<	Rad:32/little-float, X:32/little-float, Y:32/little-float, Z:32/little-float, LabelID:8, 1:8, 0:16,
+		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32 >>;
+%% @todo Many unknown values...
+load_set_rel_object_params(chair, Params) ->
+	ID = proplists:get_value(id, Params),
+	ActionRadius = 1.0,
+	UnknownA = -20.0,
+	UnknownB = 30.0,
+	UnknownC = 110.0,
+	UnknownD = -6.0,
+	StandUpMoveDistance = 13.0, %% If not big enough, can't stand up. 13.0 sounds good for all chairs so far.
+	UnknownE = 94.0,
+	<<	ID:32/little, ActionRadius:32/little-float, 0, 1, 1, 0, UnknownA:32/little-float, UnknownB:32/little-float,
+		UnknownC:32/little-float, 0:32, UnknownD:32/little-float, StandUpMoveDistance:32/little-float, UnknownE:32/little-float >>;
+%% @todo First ffff sometimes is 0, find out why.
+load_set_rel_object_params(uni_cube, Params) ->
+	I = proplists:get_value(i, Params),
+	EntryID = proplists:get_value(entryid, Params),
+	<<	I:8, EntryID:16/little, 0:8,
+		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
+		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32 >>;
+%% @todo First ffff can be that same old unknown type of value.
+%% @todo First byte set to 1 = hidden?
+load_set_rel_object_params(pp_cube, _Params) ->
+	<< 0:32, 16#ffffffff:32, 16#ffffffff:32 >>;
+%% @doc Raw binary, used for testing.
+load_set_rel_object_params({raw, _ClassID, _TypeID}, ParamsBin) ->
+	ParamsBin.
+%% @todo ghosts: NbGhosts:32, Width:32/float, Unknown:32/float
 
 %% @doc Load a counter configuration file and return a table.rel binary along with its pointers array.
 load_table_rel(ConfFilename) ->

@@ -49,7 +49,7 @@ area_load(QuestID, ZoneID, MapID, EntryID, State) ->
 	QuestData = case QuestFile of
 		nofile -> egs_quests_db:quest(QuestID);
 		undefined -> undefined;
-		Filename -> {ok, D} = file:read_file(Filename), D
+		QFilename -> {ok, QD} = file:read_file(QFilename), QD
 	end,
 	[IsStart, RealZoneID, RealMapID, RealEntryID, NbSetsInQuest] = case AreaType of
 		mission ->
@@ -67,6 +67,11 @@ area_load(QuestID, ZoneID, MapID, EntryID, State) ->
 			[false, ZoneID, MapID, EntryID, ignored]
 	end,
 	[{file, ZoneFile}|ZoneSetInfo] = proplists:get_value([QuestID, RealZoneID], ?ZONES, [{file, undefined}]),
+	ZoneData = case ZoneFile of
+		nofile -> egs_quests_db:zone(QuestID, ZoneID);
+		undefined -> undefined;
+		ZFilename -> {ok, ZD} = file:read_file(ZFilename), ZD
+	end,
 	NbSetsInZone = case ZoneSetInfo of [] -> 1; [{sets, TmpNbSetsInZone}] -> TmpNbSetsInZone end,
 	if	AreaType =:= myroom ->
 			AreaName = "Your Room";
@@ -83,13 +88,13 @@ area_load(QuestID, ZoneID, MapID, EntryID, State) ->
 	User = OldUser#egs_user_model{instancepid=InstancePid, areatype=AreaType, area={psu_area, QuestID, RealZoneID, RealMapID}, entryid=RealEntryID},
 	egs_user_model:write(User),
 	RealSetID = if SetID > NbSetsInZone - 1 -> NbSetsInZone - 1; true -> SetID end,
-	area_load(AreaType, IsStart, RealSetID, OldUser, User, QuestData, ZoneFile, AreaName, State).
+	area_load(AreaType, IsStart, RealSetID, OldUser, User, QuestData, ZoneData, AreaName, State).
 
-area_load(AreaType, IsStart, SetID, OldUser, User, QuestData, ZoneFile, AreaName, State) ->
+area_load(AreaType, IsStart, SetID, OldUser, User, QuestData, ZoneData, AreaName, State) ->
 	#psu_area{questid=OldQuestID, zoneid=OldZoneID} = OldUser#egs_user_model.area,
 	#psu_area{questid=QuestID, zoneid=ZoneID, mapid=_MapID} = User#egs_user_model.area,
 	QuestChange = if OldQuestID /= QuestID, QuestData /= undefined -> true; true -> false end,
-	if	ZoneFile =:= undefined ->
+	if	ZoneData =:= undefined ->
 			ZoneChange = false;
 		true ->
 			ZoneChange = if OldQuestID =:= QuestID, OldZoneID =:= ZoneID -> false; true -> true end
@@ -124,7 +129,7 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestData, ZoneFile, AreaName
 			end,
 			psu_proto:send_010d(User#egs_user_model{lid=0}, State),
 			psu_proto:send_0200(ZoneID, AreaType, State),
-			psu_proto:send_020f(ZoneFile, SetID, SeasonID, State);
+			psu_proto:send_020f(ZoneData, SetID, SeasonID, State);
 		true -> ignore
 	end,
 	State2 = State#state{areanb=State#state.areanb + 1},
