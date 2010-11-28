@@ -469,13 +469,13 @@ load_unit_title_table_rel_zones([{ZoneID, ZoneParams}|Tail], N, Acc) ->
 
 %% @doc Pack an nbl file according to the given Options.
 %%      Example usage: nbl:pack([{files, [{file, "table.rel", [16#184, 16#188, 16#1a0]}, {file, "text.bin", []}]}]).
+%%      The data will be automatically compressed if the file is big enough to make it worth it.
 %% @todo The 0010 value is unknown. If it was too low it would crash the client when it cleans up the nbl.
 nbl_pack(Options) ->
 	Files = proplists:get_value(files, Options),
-	{Header, Data, DataSize, PtrArray, PtrArraySize} = nbl_pack_files(Files),
+	{Header, Data, DataSize, CompressedDataSize, PtrArray, PtrArraySize} = nbl_pack_files(Files),
 	NbFiles = length(Files),
 	HeaderSize = 16#30 + 16#60 * NbFiles,
-	CompressedDataSize = 0,
 	EncryptSeed = 0,
 	<<	$N, $M, $L, $L, 2:16/little, 16#0010:16, HeaderSize:32/little, NbFiles:32/little,
 		DataSize:32/little, CompressedDataSize:32/little, PtrArraySize:32/little, EncryptSeed:32/little,
@@ -489,7 +489,15 @@ nbl_pack_files([], {AccH, AccD, AccP, _FilePos, _PtrIndex}) ->
 	PaddingH = 8 * (16#7d0 - (byte_size(BinH) rem 16#800)),
 	PaddingH2 = if PaddingH =< 0 -> 16#800 + PaddingH; true -> PaddingH end,
 	BinD = iolist_to_binary(lists:reverse(AccD)),
-	PaddingD = 8 * (16#800 - (byte_size(BinD) rem 16#800)),
+	BinDSize = byte_size(BinD),
+	{BinD3, CompressedDataSize} = if BinDSize < 16#800 ->
+			{BinD, 0};
+		true ->
+			BinD2 = egs_prs:compress(BinD),
+			BinD2Size = byte_size(BinD2),
+			{BinD2, BinD2Size}
+	end,
+	PaddingD = 8 * (16#800 - (byte_size(BinD3) rem 16#800)),
 	PaddingD2 = if PaddingD =:= 8 * 16#800 -> 0; true -> PaddingD end,
 	BinP = iolist_to_binary(lists:reverse(AccP)),
 	PtrSize = byte_size(BinP),
@@ -499,9 +507,7 @@ nbl_pack_files([], {AccH, AccD, AccP, _FilePos, _PtrIndex}) ->
 			PaddingP = 8 * (16#800 - (byte_size(BinP) rem 16#800)),
 			<< BinP/binary, 0:PaddingP >>
 	end,
-	{<< BinH/binary, 0:PaddingH2 >>,
-	 << BinD/binary, 0:PaddingD2 >>, byte_size(BinD),
-	 PtrArray, PtrSize};
+	{<< BinH/binary, 0:PaddingH2 >>, << BinD3/binary, 0:PaddingD2 >>, BinDSize, CompressedDataSize, PtrArray, PtrSize};
 nbl_pack_files([{data, Filename, Data, PtrList}|Tail], {AccH, AccD, AccP, FilePos, PtrIndex}) ->
 	ID = case filename:extension(Filename) of
 		".bin" -> << $S, $T, $D, 0 >>;
