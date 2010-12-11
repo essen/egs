@@ -291,7 +291,6 @@ load_set_rel_object_params(static_model, Params) ->
 	<<	Model:32/little, Size:32/little-float, 16#0000ff00:32,
 			16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
 			16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32 >>;
-
 %% @todo If 00010000 has a 01 at the end, the sensor doesn't have an associated function in the script.
 %% @todo Not sure about the box. It's probably wrong.
 load_set_rel_object_params(sensor, Params) ->
