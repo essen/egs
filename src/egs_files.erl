@@ -310,7 +310,7 @@ load_set_rel_object_params(npc, Params) ->
 	{CanTalk, TalkRadius} = case proplists:get_value(talk_radius, Params) of undefined -> {0, 0.0}; T -> {1, T} end,
 	{CanWalk, WalkRadius} = case proplists:get_value(walk_radius, Params) of undefined -> {0, 0.0}; W -> {1, W} end,
 	<<	Model:16/little, ID:16/little, TalkRadius:32/little-float, WalkRadius:32/little-float,
-		CanWalk:8, 0:24, CanTalk:8, 0:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32 >>;
+		CanWalk:8, 0:24, CanTalk:8, 0:24, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32 >>;
 %% @todo The byte right after the first ffff can take the value 1.
 %% @todo The 2 bytes starting the many ffffffff at the end can take an unknown value.
 load_set_rel_object_params(door, Params) ->
