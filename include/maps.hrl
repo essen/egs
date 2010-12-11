@@ -512,7 +512,7 @@
 
 	% Colony
 
-	{[1100000, 0], [{file, "data/lobby/colony.zone-0.nbl"}]},
+	{[1100000, 0], [{file, nofile}]},
 	{[1100000, 1], [{file, "data/lobby/colony.zone-1.nbl"}]},
 	{[1100000, 2], [{file, "data/lobby/colony.zone-2.nbl"}]},
 	{[1100000, 3], [{file, "data/lobby/colony.zone-3.nbl"}]},
