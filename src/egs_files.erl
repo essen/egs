@@ -273,6 +273,7 @@ load_set_rel_objects([{ObjType, ObjPos, ObjRot, ObjParams}|Tail], StdPos, Params
 	load_set_rel_objects(Tail, StdPos + 52, ParamsPos + ParamsSize, [StdPos + 48|Ptrs], [StdBin|StdAcc], [ParamsBin|ParamsAcc]).
 
 load_set_rel_object_id(static_model)    -> {4,  4};
+load_set_rel_object_id(sensor)          -> {4,  9};
 load_set_rel_object_id(invisible_block) -> {1, 10};
 load_set_rel_object_id(npc)             -> {2, 18};
 load_set_rel_object_id(door)            -> {5, 20};
@@ -290,6 +291,14 @@ load_set_rel_object_params(static_model, Params) ->
 	<<	Model:32/little, Size:32/little-float, 16#0000ff00:32,
 			16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
 			16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32 >>;
+
+%% @todo If 00010000 has a 01 at the end, the sensor doesn't have an associated function in the script.
+%% @todo Not sure about the box. It's probably wrong.
+load_set_rel_object_params(sensor, Params) ->
+	ID = proplists:get_value(id, Params),
+	{Rad, X, Y, Z} = proplists:get_value(box, Params),
+	<<	Rad:32/little-float, X:32/little-float, Y:32/little-float, Z:32/little-float, 0:64, ID:32/little, 16#00010000:32, 0:96,
+		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32 >>;
 load_set_rel_object_params(invisible_block, Params) ->
 	{Width, Height, Depth} = proplists:get_value(dimension, Params),
 	<<	Width:32/little-float, Height:32/little-float, Depth:32/little-float, 16#ffff0000:32,
@@ -338,9 +347,9 @@ load_set_rel_object_params(exit, Params) ->
 %% @todo Not sure about the box. It's probably wrong.
 %% @todo Can only have up to 10 different label ids.
 load_set_rel_object_params(label, Params) ->
-	LabelID = proplists:get_value(labelid, Params),
+	ID = proplists:get_value(id, Params),
 	{Rad, X, Y, Z} = proplists:get_value(box, Params),
-	<<	Rad:32/little-float, X:32/little-float, Y:32/little-float, Z:32/little-float, LabelID:8, 1:8, 0:16,
+	<<	Rad:32/little-float, X:32/little-float, Y:32/little-float, Z:32/little-float, ID:8, 1:8, 0:16,
 		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32 >>;
 %% @todo Many unknown values...
 load_set_rel_object_params(chair, Params) ->
