@@ -24,7 +24,6 @@ all: clean missions server
 
 server:
 	@./rebar compile
-	rm src/egs_script_lexer.erl src/egs_script_parser.erl
 
 missions:
 	$(ERLC) src/psu/psu_parser.erl
