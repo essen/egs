@@ -358,7 +358,8 @@ load_set_rel_object_params(chair, Params) ->
 	UnknownB = 30.0,
 	UnknownC = 110.0,
 	UnknownD = -6.0,
-	StandUpMoveDistance = 13.0, %% If not big enough, can't stand up. 13.0 sounds good for all chairs so far.
+	%% If it looks like the player is going to get stuck in an object, the game won't allow the player to leave its chair.
+	StandUpMoveDistance = proplists:get_value(stand_dist, Params, 13.0),
 	UnknownE = 94.0,
 	<<	ID:32/little, ActionRadius:32/little-float, 0, 1, 1, 0, UnknownA:32/little-float, UnknownB:32/little-float,
 		UnknownC:32/little-float, 0:32, UnknownD:32/little-float, StandUpMoveDistance:32/little-float, UnknownE:32/little-float >>;
