@@ -15,25 +15,30 @@
 
 %% @doc Enter all maps event. Set the right music for the season.
 event entr_unit ->
-	obj.get_eventflag,
+	seq.get_unit,
 	case
-		      0 -> push 0, push  46, sound.play_bgm; %% party
-		      1 -> push 0, push  47, sound.play_bgm; %% new year
-		      2 -> push 0, push  48, sound.play_bgm; %% valentine
-		      3 -> push 0, push  49, sound.play_bgm; %% white day
-		      4 -> push 0, push  50, sound.play_bgm; %% spring
-		      5 -> push 0, push  47, sound.play_bgm; %% easter
-%%		      6 -> push 0, push  12, sound.play_bgm; %% parum unification
-		      7 -> push 0, push 121, sound.play_bgm; %% sonic
-%%		      8 -> push 0, push  14, sound.play_bgm; %% holy light
-%%		      9 -> push 0, push  50, sound.play_bgm; %% fireworks
-		     10 -> push 0, push  50, sound.play_bgm; %% autumn
-		     11 -> push 0, push  51, sound.play_bgm; %% halloween
-%%		     12 -> push 0, push  16, sound.play_bgm; %% native
-		     13 -> push 0, push  52, sound.play_bgm; %% christmas
-		     14 -> push 0, push  52, sound.play_bgm; %% winter
-		     15 -> push 0, push  44, sound.play_bgm; %% wedding
-		default -> push 0, push  40, sound.play_bgm  %% clyez city
+		    103 -> push 0, push 107, sound.play_bgm; %% WITHOUT A SAIL.
+		default -> 
+			obj.get_eventflag,
+			case
+				      0 -> push 0, push  46, sound.play_bgm; %% party
+				      1 -> push 0, push  47, sound.play_bgm; %% new year
+				      2 -> push 0, push  48, sound.play_bgm; %% valentine
+				      3 -> push 0, push  49, sound.play_bgm; %% white day
+				      4 -> push 0, push  50, sound.play_bgm; %% spring
+				      5 -> push 0, push  47, sound.play_bgm; %% easter
+%%				      6 -> push 0, push  12, sound.play_bgm; %% parum unification
+				      7 -> push 0, push 121, sound.play_bgm; %% sonic
+%%				      8 -> push 0, push  14, sound.play_bgm; %% holy light
+%%				      9 -> push 0, push  50, sound.play_bgm; %% fireworks
+				     10 -> push 0, push  50, sound.play_bgm; %% autumn
+				     11 -> push 0, push  51, sound.play_bgm; %% halloween
+%%				     12 -> push 0, push  16, sound.play_bgm; %% native
+				     13 -> push 0, push  52, sound.play_bgm; %% christmas
+				     14 -> push 0, push  52, sound.play_bgm; %% winter
+				     15 -> push 0, push  44, sound.play_bgm; %% wedding
+				default -> push 0, push  40, sound.play_bgm  %% clyez city
+			end
 	end.
 
 %% @doc Enter map 1 event. Initialize the labels.
@@ -77,6 +82,10 @@ event entr_unit0004 ->
 	push 22, push 7, obj.set_caption, %% Parum Spaceport.
 	push 0, npc.talk_on, %% Linear Line NPC.
 	push 1, npc.talk_on. %% Space Docks NPC.
+
+%% @doc Enter map 103 event. Initialize the label.
+event entr_unit0103 ->
+	push 3, push 0, obj.set_caption. %% Exits to 3rd floor.
 
 %% @doc Parum Spaceport exit.
 event goal_unit0004_num002 ->
