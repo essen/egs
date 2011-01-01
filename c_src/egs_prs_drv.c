@@ -19,7 +19,7 @@
 	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "/opt/erlang/lib/erlang/usr/include/erl_nif.h"
+#include <erl_nif.h>
 
 extern unsigned long prs_compress(unsigned char* source, unsigned char* dest, unsigned long size);
 
