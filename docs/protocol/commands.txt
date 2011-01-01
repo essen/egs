@@ -265,6 +265,7 @@ OK  A 5 1204 --S
 !*  A 6 1211 --S (object event related)
 *   A 5 1212 --S
 !*  A 6 1213 --S object state on/off
+    C 1 1214 --S season on/off
 *   A 3 1215 --S (boss gate related)
 **  C 3 1216 --- (airboard rally race start; channel 0)
 
@@ -412,7 +413,7 @@ Casino/Temple
     C 3 1d17 --S (casino coin request related)
     C 3 1d18 --S (casino coin request related)
 
-13 WIP 85 OK 336 Total
+13 WIP 85 OK 337 Total
 
 ! means the command has already been analyzed, at least partially
 * means the command is already found somewhere in the server but needs to be reviewed

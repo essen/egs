@@ -1,0 +1,21 @@
+1214
+
+Size:32
+Command:16 Channel:8 Garbage:8
+ffff:16 0:16
+0:32
+0:32
+0:32
+0:32
+DestTypeID:32
+DestGID:32
+0:32
+0:32
+QuestID:32
+ZoneID:32
+MapID:32
+IsSeasonal:32
+
+Channel: 3
+DestTypeID: 00011300
+IsSeasonal: 0 otherwise
