@@ -279,6 +279,7 @@ load_set_rel_object_id(npc)             -> {2, 18};
 load_set_rel_object_id(door)            -> {5, 20};
 load_set_rel_object_id(entrance)        -> {2, 26};
 load_set_rel_object_id(exit)            -> {6, 27};
+load_set_rel_object_id(type_counter)    -> {1, 47};
 load_set_rel_object_id(label)           -> {2, 53};
 load_set_rel_object_id(chair)           -> {2, 56};
 load_set_rel_object_id(uni_cube)        -> {0, 60};
@@ -343,6 +344,10 @@ load_set_rel_object_params(exit, Params) ->
 		map ->
 			<< EntryID:16/little, 0:32, AnimationID:8, 1:8, 255:8, 0:16, 1:8, CommonBin/binary >>
 	end;
+%% @todo Mostly unknown values!
+load_set_rel_object_params(type_counter, Params) ->
+	TalkRadius = proplists:get_value(talk_radius, Params),
+	<< TalkRadius:32/little-float, 0:384, 16#ffffffff:32 >>;
 %% @todo Not sure about the box. It's probably wrong.
 %% @todo Can only have up to 10 different label ids.
 load_set_rel_object_params(label, Params) ->
