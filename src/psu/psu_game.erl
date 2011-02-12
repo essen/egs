@@ -200,7 +200,7 @@ npc_load(Leader, [{PartyPos, NPCGID}|NPCList], State) ->
 	#users{instancepid=InstancePid, area=Area, entryid=EntryID, pos=Pos} = Leader,
 	NPCUser = OldNPCUser#users{lid=PartyPos, instancepid=InstancePid, areatype=mission, area=Area, entryid=EntryID, pos=Pos},
 	%% @todo This one on mission end/abort?
-	%~ OldNPCUser#users{lid=PartyPos, instancepid=undefined, areatype=AreaType, area={psu_area, 0, 0, 0}, entryid=0, pos={pos, 0.0, 0.0, 0.0, 0}}
+	%~ OldNPCUser#users{lid=PartyPos, instancepid=undefined, areatype=AreaType, area={psu_area, 0, 0, 0}, entryid=0, pos={0.0, 0.0, 0.0, 0}}
 	egs_users:write(NPCUser),
 	psu_proto:send_010d(NPCUser, State),
 	psu_proto:send_0201(NPCUser, State),
@@ -261,9 +261,9 @@ send_022c(A, B) ->
 
 %% @todo Force send a new player location. Used for warps.
 %% @todo The value before IntDir seems to be the player's current animation. 01 stand up, 08 ?, 17 normal sit
-send_0503(#pos{x=PrevX, y=PrevY, z=PrevZ, dir=_}) ->
+send_0503({PrevX, PrevY, PrevZ, _AnyDir}) ->
 	{ok, User} = egs_users:read(get(gid)),
-	#users{id=GID, pos=#pos{x=X, y=Y, z=Z, dir=Dir}, area=#psu_area{questid=QuestID, zoneid=ZoneID, mapid=MapID}, entryid=EntryID} = User,
+	#users{id=GID, pos={X, Y, Z, Dir}, area=#psu_area{questid=QuestID, zoneid=ZoneID, mapid=MapID}, entryid=EntryID} = User,
 	IntDir = trunc(Dir * 182.0416),
 	send(<< 16#05030300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, GID:32/little-unsigned-integer, 0:32,
 		16#1000:16, IntDir:16/little-unsigned-integer, PrevX:32/little-float, PrevY:32/little-float, PrevZ:32/little-float, X:32/little-float, Y:32/little-float, Z:32/little-float,

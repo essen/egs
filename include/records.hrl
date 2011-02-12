@@ -21,6 +21,10 @@
 
 -opaque sslsocket() :: any().
 
+%% EGS types.
+
+-type position() :: {X :: float(), Y :: float(), Z :: float(), Dir :: float()}.
+
 %% Records.
 
 %% @doc Per-process state used by the various EGS modules.
@@ -42,10 +46,6 @@
 	auth_state	:: undefined | {wait_for_authentication, binary(), any()}
 }).
 
-%% @doc Character position data structure.
-%% @todo Review.
--record(pos, {x, y, z, dir}).
-
 %% @doc Character area location data structure.
 %% @todo Review.
 -record(psu_area, {questid, zoneid, mapid}).
@@ -66,7 +66,7 @@
 	areatype	:: counter | mission | lobby | myroom | spaceport,
 	area		:: {psu_area, 0..16#ffffffff, 0..16#ffff, 0..9999},
 	entryid		:: 0..16#ffff,
-	pos = #pos{x=0.0, y=0.0, z=0.0, dir=0.0} :: {pos, float(), float(), float(), float()},
+	pos = {0.0, 0.0, 0.0, 0.0} :: position(),
 	shopid		:: integer(),
 	prev_area = #psu_area{questid=0, zoneid=0, mapid=0} :: {psu_area, 0..16#ffffffff, 0..16#ffff, 0..9999},
 	prev_entryid = 0 :: 0..16#ffff,

@@ -121,7 +121,7 @@ object_init([{'spawn', NbTargets, TrigEventID, _ReqEventID}|Tail], ZoneID, Block
 
 %% @doc warp: {InstancePid, ZoneID, warp, BlockID, ListIndex, ObjectIndex}
 object_init([{warp, DestX, DestY, DestZ, DestDir}|Tail], ZoneID, BlockID, ObjectID, TargetID, ListIndex, ObjectIndex) ->
-	object_insert(#psu_object{id={self(), ZoneID, warp, BlockID, ListIndex, ObjectIndex}, instancepid=self(), type=warp, args=#pos{x=DestX, y=DestY, z=DestZ, dir=DestDir}}),
+	object_insert(#psu_object{id={self(), ZoneID, warp, BlockID, ListIndex, ObjectIndex}, instancepid=self(), type=warp, args={DestX, DestY, DestZ, DestDir}}),
 	object_init(Tail, ZoneID, BlockID, ObjectID, TargetID, ListIndex, ObjectIndex + 1);
 
 %% @doc Ignore for now: boss_gate, shoot_button, goggle_target, trap (all kinds), sensor

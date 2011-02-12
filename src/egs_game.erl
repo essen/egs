@@ -64,7 +64,7 @@ cast(16#0503, Data, State=#state{gid=GID}) ->
 		QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer, _:32 >> = Data,
 	FloatDir = Dir / 46603.375,
 	{ok, User} = egs_users:read(GID),
-	NewUser = User#users{pos=#pos{x=X, y=Y, z=Z, dir=FloatDir}, area=#psu_area{questid=QuestID, zoneid=ZoneID, mapid=MapID}, entryid=EntryID},
+	NewUser = User#users{pos={X, Y, Z, FloatDir}, area=#psu_area{questid=QuestID, zoneid=ZoneID, mapid=MapID}, entryid=EntryID},
 	egs_users:write(NewUser),
 	cast(valid, Data, State);
 
@@ -75,7 +75,7 @@ cast(16#0514, Data, State=#state{gid=GID}) ->
 		MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer, _/bits >> = Data,
 	FloatDir = Dir / 46603.375,
 	{ok, User} = egs_users:read(GID),
-	NewUser = User#users{pos=#pos{x=X, y=Y, z=Z, dir=FloatDir}, area=#psu_area{questid=QuestID, zoneid=ZoneID, mapid=MapID}, entryid=EntryID},
+	NewUser = User#users{pos={X, Y, Z, FloatDir}, area=#psu_area{questid=QuestID, zoneid=ZoneID, mapid=MapID}, entryid=EntryID},
 	egs_users:write(NewUser),
 	cast(valid, Data, State);
 
