@@ -35,26 +35,26 @@ start_link(Port) ->
 %% @todo Cleanup the instance process if there's nobody in it anymore.
 %% @todo Leave party instead of stopping it.
 on_exit(Pid) ->
-	case egs_user_model:read({pid, Pid}) of
+	case egs_users:read({pid, Pid}) of
 		{ok, User} ->
-			case User#egs_user_model.partypid of
+			case User#users.partypid of
 				undefined ->
 					ignore;
 				PartyPid ->
 					{ok, NPCList} = psu_party:get_npc(PartyPid),
-					[egs_user_model:delete(NPCGID) || {_Spot, NPCGID} <- NPCList],
+					[egs_users:delete(NPCGID) || {_Spot, NPCGID} <- NPCList],
 					psu_party:stop(PartyPid)
 			end,
-			egs_user_model:delete(User#egs_user_model.id),
-			case User#egs_user_model.uni of
+			egs_users:delete(User#users.id),
+			case User#users.uni of
 				undefined ->
 					ignore;
 				UniID ->
 					egs_universes:leave(UniID),
-					{ok, List} = egs_user_model:select({neighbors, User}),
-					lists:foreach(fun(Other) -> Other#egs_user_model.pid ! {egs, player_unspawn, User} end, List)
+					{ok, List} = egs_users:select({neighbors, User}),
+					lists:foreach(fun(Other) -> Other#users.pid ! {egs, player_unspawn, User} end, List)
 			end,
-			io:format("game (~p): quit~n", [User#egs_user_model.id]);
+			io:format("game (~p): quit~n", [User#users.id]);
 		{error, _Reason} ->
 			ignore
 	end.

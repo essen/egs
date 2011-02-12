@@ -63,9 +63,9 @@ cast(16#0503, Data, State=#state{gid=GID}) ->
 	<< _:424, Dir:24/little-unsigned-integer, _PrevCoords:96, X:32/little-float, Y:32/little-float, Z:32/little-float,
 		QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer, _:32 >> = Data,
 	FloatDir = Dir / 46603.375,
-	{ok, User} = egs_user_model:read(GID),
-	NewUser = User#egs_user_model{pos=#pos{x=X, y=Y, z=Z, dir=FloatDir}, area=#psu_area{questid=QuestID, zoneid=ZoneID, mapid=MapID}, entryid=EntryID},
-	egs_user_model:write(NewUser),
+	{ok, User} = egs_users:read(GID),
+	NewUser = User#users{pos=#pos{x=X, y=Y, z=Z, dir=FloatDir}, area=#psu_area{questid=QuestID, zoneid=ZoneID, mapid=MapID}, entryid=EntryID},
+	egs_users:write(NewUser),
 	cast(valid, Data, State);
 
 %% @doc Stand still. Save the position and then dispatch it.
@@ -74,9 +74,9 @@ cast(16#0514, Data, State=#state{gid=GID}) ->
 		QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer,
 		MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer, _/bits >> = Data,
 	FloatDir = Dir / 46603.375,
-	{ok, User} = egs_user_model:read(GID),
-	NewUser = User#egs_user_model{pos=#pos{x=X, y=Y, z=Z, dir=FloatDir}, area=#psu_area{questid=QuestID, zoneid=ZoneID, mapid=MapID}, entryid=EntryID},
-	egs_user_model:write(NewUser),
+	{ok, User} = egs_users:read(GID),
+	NewUser = User#users{pos=#pos{x=X, y=Y, z=Z, dir=FloatDir}, area=#psu_area{questid=QuestID, zoneid=ZoneID, mapid=MapID}, entryid=EntryID},
+	egs_users:write(NewUser),
 	cast(valid, Data, State);
 
 %% @doc Default broadcast handler. Dispatch the command to everyone.
@@ -92,15 +92,15 @@ cast(Command, Data, #state{gid=GID})
 			Command =:= 16#050f;
 			Command =:= valid ->
 	<< _:32, A:64/bits, _:64, B:192/bits, _:64, C/bits >> = Data,
-	case egs_user_model:read(GID) of
+	case egs_users:read(GID) of
 		{error, _Reason} ->
 			ignore;
 		{ok, Self} ->
-			LID = Self#egs_user_model.lid,
+			LID = Self#users.lid,
 			Packet = << A/binary, 16#00011300:32, GID:32/little-unsigned-integer, B/binary,
 				GID:32/little-unsigned-integer, LID:32/little-unsigned-integer, C/binary >>,
-			{ok, SpawnList} = egs_user_model:select({neighbors, Self}),
-			lists:foreach(fun(User) -> User#egs_user_model.pid ! {egs, cast, Packet} end, SpawnList)
+			{ok, SpawnList} = egs_users:select({neighbors, Self}),
+			lists:foreach(fun(User) -> User#users.pid ! {egs, cast, Packet} end, SpawnList)
 	end.
 
 %% Raw commands.
@@ -113,8 +113,8 @@ raw(16#0402, << _:352, Data/bits >>, #state{gid=GID}) ->
 	case Type of
 		7 -> % spawn cleared @todo 1201 sent back with same values apparently, but not always
 			log("cleared spawn ~b", [SpawnID]),
-			{ok, User} = egs_user_model:read(GID),
-			{BlockID, EventID} = psu_instance:spawn_cleared_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, SpawnID),
+			{ok, User} = egs_users:read(GID),
+			{BlockID, EventID} = psu_instance:spawn_cleared_event(User#users.instancepid, (User#users.area)#psu_area.zoneid, SpawnID),
 			if	EventID =:= false -> ignore;
 				true -> psu_game:send_1205(EventID, BlockID, 0)
 			end;
@@ -216,9 +216,9 @@ event({area_change, QuestID, ZoneID, MapID, EntryID, PartyPos}, State) ->
 %% @todo The area_load function should probably not change the user's values.
 %% @todo Remove that ugly code when the above is done.
 event(char_load_complete, State=#state{gid=GID}) ->
-	{ok, User=#egs_user_model{area=#psu_area{questid=QuestID, zoneid=ZoneID, mapid=MapID},
-		entryid=EntryID}} = egs_user_model:read(GID),
-	egs_user_model:write(User#egs_user_model{area=#psu_area{questid=0, zoneid=0, mapid=0}, entryid=0}),
+	{ok, User=#users{area=#psu_area{questid=QuestID, zoneid=ZoneID, mapid=MapID},
+		entryid=EntryID}} = egs_users:read(GID),
+	egs_users:write(User#users{area=#psu_area{questid=0, zoneid=0, mapid=0}, entryid=0}),
 	event({area_change, QuestID, ZoneID, MapID, EntryID}, State);
 
 %% @doc Chat broadcast handler. Dispatch the message to everyone (for now).
@@ -233,11 +233,11 @@ event({chat, _FromTypeID, FromGID, _FromName, Modifiers, ChatMsg}, #state{gid=Us
 			log("chat FromGID=0"),
 			ignore;
 		UserGID -> %% player chat: disregard whatever was sent except modifiers and message.
-			{ok, User} = egs_user_model:read(UserGID),
-			[16#00001200, User#egs_user_model.id, (User#egs_user_model.character)#characters.name];
+			{ok, User} = egs_users:read(UserGID),
+			[16#00001200, User#users.id, (User#users.character)#characters.name];
 		NPCGID -> %% npc chat: @todo Check that the player is the party leader and this npc is in his party.
-			{ok, User} = egs_user_model:read(NPCGID),
-			[16#00001d00, FromGID, (User#egs_user_model.character)#characters.name]
+			{ok, User} = egs_users:read(NPCGID),
+			[16#00001d00, FromGID, (User#users.character)#characters.name]
 	end,
 	%% log the message as ascii to the console
 	[LogName|_] = re:split(BcastName, "\\0\\0", [{return, binary}]),
@@ -245,8 +245,8 @@ event({chat, _FromTypeID, FromGID, _FromName, Modifiers, ChatMsg}, #state{gid=Us
 	LogMessage = re:replace(TmpMessage, "\\n", " ", [global, {return, binary}]),
 	log("chat from ~s: ~s", [[re:replace(LogName, "\\0", "", [global, {return, binary}])], [re:replace(LogMessage, "\\0", "", [global, {return, binary}])]]),
 	%% broadcast
-	{ok, List} = egs_user_model:select(all),
-	lists:foreach(fun(X) -> X#egs_user_model.pid ! {egs, chat, UserGID, BcastTypeID, BcastGID, BcastName, Modifiers, ChatMsg} end, List);
+	{ok, List} = egs_users:select(all),
+	lists:foreach(fun(X) -> X#users.pid ! {egs, chat, UserGID, BcastTypeID, BcastGID, BcastName, Modifiers, ChatMsg} end, List);
 
 %% @todo There's at least 9 different sets of locations. Handle all of them correctly.
 event(counter_background_locations_request, _State) ->
@@ -256,25 +256,25 @@ event(counter_background_locations_request, _State) ->
 %% @todo Probably validate the From* values, to not send the player back inside a mission.
 event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}, State=#state{gid=GID}) ->
 	log("counter load ~b", [CounterID]),
-	{ok, OldUser} = egs_user_model:read(GID),
-	OldArea = OldUser#egs_user_model.area,
+	{ok, OldUser} = egs_users:read(GID),
+	OldArea = OldUser#users.area,
 	FromArea = {psu_area, OldArea#psu_area.questid, FromZoneID, FromMapID},
-	User = OldUser#egs_user_model{areatype=counter, area={psu_area, 16#7fffffff, 0, 0}, entryid=0, prev_area=FromArea, prev_entryid=FromEntryID},
-	egs_user_model:write(User),
+	User = OldUser#users{areatype=counter, area={psu_area, 16#7fffffff, 0, 0}, entryid=0, prev_area=FromArea, prev_entryid=FromEntryID},
+	egs_users:write(User),
 	QuestData = egs_quests_db:quest(0),
 	{ok, ZoneData} = file:read_file("data/lobby/counter.zone.nbl"),
 	%% broadcast unspawn to other people
-	{ok, UnspawnList} = egs_user_model:select({neighbors, OldUser}),
-	lists:foreach(fun(Other) -> Other#egs_user_model.pid ! {egs, player_unspawn, User} end, UnspawnList),
+	{ok, UnspawnList} = egs_users:select({neighbors, OldUser}),
+	lists:foreach(fun(Other) -> Other#users.pid ! {egs, player_unspawn, User} end, UnspawnList),
 	%% load counter
 	psu_proto:send_0c00(User, State),
 	psu_proto:send_020e(QuestData, State),
 	psu_proto:send_0a05(State),
-	psu_proto:send_010d(User#egs_user_model{lid=0}, State),
+	psu_proto:send_010d(User#users{lid=0}, State),
 	psu_proto:send_0200(0, mission, State),
 	psu_proto:send_020f(ZoneData, 0, 255, State),
 	State2 = State#state{areanb=State#state.areanb + 1},
-	psu_proto:send_0205(User#egs_user_model{lid=0}, 0, State2),
+	psu_proto:send_0205(User#users{lid=0}, 0, State2),
 	psu_proto:send_100e(CounterID, "Counter", State2),
 	psu_proto:send_0215(0, State2),
 	psu_proto:send_0215(0, State2),
@@ -284,9 +284,9 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}, State=#sta
 	psu_game:send_1206(),
 	psu_game:send_1207(),
 	psu_game:send_1212(),
-	psu_proto:send_0201(User#egs_user_model{lid=0}, State2),
+	psu_proto:send_0201(User#users{lid=0}, State2),
 	psu_proto:send_0a06(User, State2),
-	case User#egs_user_model.partypid of
+	case User#users.partypid of
 		undefined -> ignore;
 		_ -> psu_game:send_022c(0, 16#12)
 	end,
@@ -301,9 +301,9 @@ event(counter_join_party_request, State) ->
 
 %% @doc Leave mission counter handler.
 event(counter_leave, State=#state{gid=GID}) ->
-	{ok, User} = egs_user_model:read(GID),
-	PrevArea = User#egs_user_model.prev_area,
-	event({area_change, PrevArea#psu_area.questid, PrevArea#psu_area.zoneid, PrevArea#psu_area.mapid, User#egs_user_model.prev_entryid}, State);
+	{ok, User} = egs_users:read(GID),
+	PrevArea = User#users.prev_area,
+	event({area_change, PrevArea#psu_area.questid, PrevArea#psu_area.zoneid, PrevArea#psu_area.mapid, User#users.prev_entryid}, State);
 
 %% @doc Send the code for the background image to use. But there's more that should be sent though.
 %% @todo Apparently background values 1 2 3 are never used on official servers. Find out why.
@@ -314,8 +314,8 @@ event({counter_options_request, CounterID}, State) ->
 
 %% @todo Handle when the party already exists! And stop doing it wrong.
 event(counter_party_info_request, #state{gid=GID}) ->
-	{ok, User} = egs_user_model:read(GID),
-	psu_game:send_1706((User#egs_user_model.character)#characters.name);
+	{ok, User} = egs_users:read(GID),
+	psu_game:send_1706((User#users.character)#characters.name);
 
 %% @todo Item distribution is always set to random for now.
 event(counter_party_options_request, _State) ->
@@ -333,7 +333,7 @@ event({counter_quest_options_request, CounterID}, State) ->
 
 %% @todo A and B are mostly unknown. Like most of everything else from the command 0e00...
 event({hit, FromTargetID, ToTargetID, A, B}, State=#state{gid=GID}) ->
-	{ok, User} = egs_user_model:read(GID),
+	{ok, User} = egs_users:read(GID),
 	%% hit!
 	#hit_response{type=Type, user=NewUser, exp=HasEXP, damage=Damage, targethp=TargetHP, targetse=TargetSE, events=Events} = psu_instance:hit(User, FromTargetID, ToTargetID),
 	case Type of
@@ -341,7 +341,7 @@ event({hit, FromTargetID, ToTargetID, A, B}, State=#state{gid=GID}) ->
 			%% @todo also has a hit sent, we should send it too
 			events(Events, State);
 		_ ->
-			PlayerHP = (NewUser#egs_user_model.character)#characters.currenthp,
+			PlayerHP = (NewUser#users.character)#characters.currenthp,
 			case lists:member(death, TargetSE) of
 				true -> SE = 16#01000200;
 				false -> SE = 16#01000000
@@ -355,11 +355,11 @@ event({hit, FromTargetID, ToTargetID, A, B}, State=#state{gid=GID}) ->
 	end,
 	%% exp
 	if	HasEXP =:= true ->
-			psu_proto:send_0115(NewUser#egs_user_model{lid=0}, ToTargetID, State);
+			psu_proto:send_0115(NewUser#users{lid=0}, ToTargetID, State);
 		true -> ignore
 	end,
 	%% save
-	egs_user_model:write(NewUser);
+	egs_users:write(NewUser);
 
 event({hits, Hits}, State) ->
 	events(Hits, State);
@@ -377,7 +377,7 @@ event({item_description_request, ItemID}, State) ->
 %% @todo TargetGID and TargetLID must be validated, they're either the player's or his NPC characters.
 %% @todo Handle NPC characters properly.
 event({item_equip, ItemIndex, TargetGID, TargetLID, A, B}, #state{gid=GID}) ->
-	case egs_user_model:item_nth(GID, ItemIndex) of
+	case egs_users:item_nth(GID, ItemIndex) of
 		{ItemID, Variables} when element(1, Variables) =:= psu_special_item_variables ->
 			<< Category:8, _:24 >> = << ItemID:32 >>,
 			psu_game:send(<< 16#01050300:32, 0:64, TargetGID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
@@ -412,8 +412,8 @@ event({item_equip, ItemIndex, TargetGID, TargetLID, A, B}, #state{gid=GID}) ->
 	end;
 
 event({item_set_trap, ItemIndex, TargetGID, TargetLID, A, B}, #state{gid=GID}) ->
-	{ItemID, _Variables} = egs_user_model:item_nth(GID, ItemIndex),
-	egs_user_model:item_qty_add(GID, ItemIndex, -1),
+	{ItemID, _Variables} = egs_users:item_nth(GID, ItemIndex),
+	egs_users:item_qty_add(GID, ItemIndex, -1),
 	<< Category:8, _:24 >> = << ItemID:32 >>,
 	psu_game:send(<< 16#01050300:32, 0:64, TargetGID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
 		TargetGID:32/little, TargetLID:32/little, ItemIndex:8, 9:8, Category:8, A:8, B:32/little >>);
@@ -435,27 +435,27 @@ event(lobby_transport_request, State) ->
 	psu_proto:send_0c08(State);
 
 event(lumilass_options_request, State=#state{gid=GID}) ->
-	{ok, User} = egs_user_model:read(GID),
+	{ok, User} = egs_users:read(GID),
 	psu_proto:send_1a03(User, State);
 
 %% @todo Probably replenish the player HP when entering a non-mission area rather than when aborting the mission?
 event(mission_abort, State=#state{gid=GID}) ->
 	psu_proto:send_1006(11, State),
-	{ok, User} = egs_user_model:read(GID),
+	{ok, User} = egs_users:read(GID),
 	%% delete the mission
-	if	User#egs_user_model.instancepid =:= undefined -> ignore;
-		true -> psu_instance:stop(User#egs_user_model.instancepid)
+	if	User#users.instancepid =:= undefined -> ignore;
+		true -> psu_instance:stop(User#users.instancepid)
 	end,
 	%% full hp
-	Character = User#egs_user_model.character,
+	Character = User#users.character,
 	MaxHP = Character#characters.maxhp,
 	NewCharacter = Character#characters{currenthp=MaxHP},
-	NewUser = User#egs_user_model{character=NewCharacter, setid=0, instancepid=undefined},
-	egs_user_model:write(NewUser),
+	NewUser = User#users{character=NewCharacter, setid=0, instancepid=undefined},
+	egs_users:write(NewUser),
 	%% map change
-	if	User#egs_user_model.areatype =:= mission ->
-			PrevArea = User#egs_user_model.prev_area,
-			event({area_change, PrevArea#psu_area.questid, PrevArea#psu_area.zoneid, PrevArea#psu_area.mapid, User#egs_user_model.prev_entryid}, State);
+	if	User#users.areatype =:= mission ->
+			PrevArea = User#users.prev_area,
+			event({area_change, PrevArea#psu_area.questid, PrevArea#psu_area.zoneid, PrevArea#psu_area.mapid, User#users.prev_entryid}, State);
 		true -> ignore
 	end;
 
@@ -469,63 +469,63 @@ event({mission_start, QuestID}, State) ->
 %% @doc Force the invite of an NPC character while inside a mission. Mostly used by story missions.
 %%      Note that the NPC is often removed and reinvited between block/cutscenes.
 event({npc_force_invite, NPCid}, State=#state{gid=GID}) ->
-	{ok, User} = egs_user_model:read(GID),
+	{ok, User} = egs_users:read(GID),
 	%% Create NPC.
 	log("npc force invite ~p", [NPCid]),
-	TmpNPCUser = egs_npc_db:create(NPCid, ((User#egs_user_model.character)#characters.mainlevel)#level.number),
+	TmpNPCUser = egs_npc_db:create(NPCid, ((User#users.character)#characters.mainlevel)#level.number),
 	%% Create and join party.
-	case User#egs_user_model.partypid of
+	case User#users.partypid of
 		undefined ->
 			{ok, PartyPid} = psu_party:start_link(GID);
 		PartyPid ->
 			ignore
 	end,
-	{ok, PartyPos} = psu_party:join(PartyPid, npc, TmpNPCUser#egs_user_model.id),
-	#egs_user_model{instancepid=InstancePid, area=Area, entryid=EntryID, pos=Pos} = User,
-	NPCUser = TmpNPCUser#egs_user_model{lid=PartyPos, partypid=PartyPid, instancepid=InstancePid, areatype=mission, area=Area, entryid=EntryID, pos=Pos},
-	egs_user_model:write(NPCUser),
-	egs_user_model:write(User#egs_user_model{partypid=PartyPid}),
+	{ok, PartyPos} = psu_party:join(PartyPid, npc, TmpNPCUser#users.id),
+	#users{instancepid=InstancePid, area=Area, entryid=EntryID, pos=Pos} = User,
+	NPCUser = TmpNPCUser#users{lid=PartyPos, partypid=PartyPid, instancepid=InstancePid, areatype=mission, area=Area, entryid=EntryID, pos=Pos},
+	egs_users:write(NPCUser),
+	egs_users:write(User#users{partypid=PartyPid}),
 	%% Send stuff.
-	Character = NPCUser#egs_user_model.character,
+	Character = NPCUser#users.character,
 	SentNPCCharacter = Character#characters{gid=NPCid, npcid=NPCid},
-	SentNPCUser = NPCUser#egs_user_model{character=SentNPCCharacter},
+	SentNPCUser = NPCUser#users{character=SentNPCCharacter},
 	psu_proto:send_010d(SentNPCUser, State),
 	psu_proto:send_0201(SentNPCUser, State),
 	psu_proto:send_0215(0, State),
-	psu_game:send_0a04(SentNPCUser#egs_user_model.id),
+	psu_game:send_0a04(SentNPCUser#users.id),
 	psu_game:send_022c(0, 16#12),
 	psu_game:send_1004(npc_mission, SentNPCUser, PartyPos),
-	psu_game:send_100f((SentNPCUser#egs_user_model.character)#characters.npcid, PartyPos),
+	psu_game:send_100f((SentNPCUser#users.character)#characters.npcid, PartyPos),
 	psu_game:send_1601(PartyPos);
 
 %% @todo Also at the end send a 101a (NPC:16, PartyPos:16, ffffffff). Not sure about PartyPos.
 event({npc_invite, NPCid}, #state{gid=GID}) ->
-	{ok, User} = egs_user_model:read(GID),
+	{ok, User} = egs_users:read(GID),
 	%% Create NPC.
 	log("invited npcid ~b", [NPCid]),
-	TmpNPCUser = egs_npc_db:create(NPCid, ((User#egs_user_model.character)#characters.mainlevel)#level.number),
+	TmpNPCUser = egs_npc_db:create(NPCid, ((User#users.character)#characters.mainlevel)#level.number),
 	%% Create and join party.
-	case User#egs_user_model.partypid of
+	case User#users.partypid of
 		undefined ->
 			{ok, PartyPid} = psu_party:start_link(GID),
 			psu_game:send_022c(0, 16#12);
 		PartyPid ->
 			ignore
 	end,
-	{ok, PartyPos} = psu_party:join(PartyPid, npc, TmpNPCUser#egs_user_model.id),
-	NPCUser = TmpNPCUser#egs_user_model{lid=PartyPos, partypid=PartyPid},
-	egs_user_model:write(NPCUser),
-	egs_user_model:write(User#egs_user_model{partypid=PartyPid}),
+	{ok, PartyPos} = psu_party:join(PartyPid, npc, TmpNPCUser#users.id),
+	NPCUser = TmpNPCUser#users{lid=PartyPos, partypid=PartyPid},
+	egs_users:write(NPCUser),
+	egs_users:write(User#users{partypid=PartyPid}),
 	%% Send stuff.
-	Character = NPCUser#egs_user_model.character,
+	Character = NPCUser#users.character,
 	SentNPCCharacter = Character#characters{gid=NPCid, npcid=NPCid},
-	SentNPCUser = NPCUser#egs_user_model{character=SentNPCCharacter},
+	SentNPCUser = NPCUser#users{character=SentNPCCharacter},
 	psu_game:send_1004(npc_invite, SentNPCUser, PartyPos),
 	psu_game:send_101a(NPCid, PartyPos);
 
 %% @todo Should be 0115(money) 010a03(confirm sale).
 event({npc_shop_buy, ShopItemIndex, QuantityOrColor}, State=#state{gid=GID}) ->
-	ShopID = egs_user_model:shop_get(GID),
+	ShopID = egs_users:shop_get(GID),
 	ItemID = egs_shops_db:nth(ShopID, ShopItemIndex + 1),
 	log("npc shop ~p buy itemid ~8.16.0b quantity/color+1 ~p", [ShopID, ItemID, QuantityOrColor]),
 	#psu_item{name=Name, rarity=Rarity, buy_price=BuyPrice, sell_price=SellPrice, data=Constants} = egs_items_db:read(ItemID),
@@ -546,10 +546,10 @@ event({npc_shop_buy, ShopItemIndex, QuantityOrColor}, State=#state{gid=GID}) ->
 		psu_trap_item ->
 			{QuantityOrColor, #psu_trap_item_variables{quantity=QuantityOrColor}}
 	end,
-	egs_user_model:money_add(GID, -1 * BuyPrice * Quantity),
-	ItemUUID = egs_user_model:item_add(GID, ItemID, Variables),
-	{ok, User} = egs_user_model:read(GID),
-	psu_proto:send_0115(User#egs_user_model{lid=0}, State), %% @todo This one is apparently broadcast to everyone in the same zone.
+	egs_users:money_add(GID, -1 * BuyPrice * Quantity),
+	ItemUUID = egs_users:item_add(GID, ItemID, Variables),
+	{ok, User} = egs_users:read(GID),
+	psu_proto:send_0115(User#users{lid=0}, State), %% @todo This one is apparently broadcast to everyone in the same zone.
 	%% @todo Following command isn't done 100% properly.
 	UCS2Name = << << X:8, 0:8 >> || X <- Name >>,
 	NamePadding = 8 * (46 - byte_size(UCS2Name)),
@@ -562,12 +562,12 @@ event({npc_shop_buy, ShopItemIndex, QuantityOrColor}, State=#state{gid=GID}) ->
 %% @todo Currently send the normal items shop for all shops, differentiate.
 event({npc_shop_enter, ShopID}, #state{gid=GID}) ->
 	log("npc shop enter ~p", [ShopID]),
-	egs_user_model:shop_enter(GID, ShopID),
+	egs_users:shop_enter(GID, ShopID),
 	psu_game:send_010a(egs_shops_db:read(ShopID));
 
 event({npc_shop_leave, ShopID}, #state{gid=GID}) ->
 	log("npc shop leave ~p", [ShopID]),
-	egs_user_model:shop_leave(GID),
+	egs_users:shop_leave(GID),
 	psu_game:send(<< 16#010a0300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32,
 		GID:32/little-unsigned-integer, 0:64, GID:32/little-unsigned-integer, 0:32 >>);
 
@@ -608,14 +608,14 @@ event({object_boss_gate_leave, _ObjectID}, _State) ->
 event({object_box_destroy, ObjectID}, _State) ->
 	psu_game:send_1213(ObjectID, 3);
 
-%% @todo Second send_1211 argument should be User#egs_user_model.lid. Fix when it's correctly handled.
+%% @todo Second send_1211 argument should be User#users.lid. Fix when it's correctly handled.
 event({object_chair_sit, ObjectTargetID}, _State) ->
-	%~ {ok, User} = egs_user_model:read(get(gid)),
+	%~ {ok, User} = egs_users:read(get(gid)),
 	psu_game:send_1211(ObjectTargetID, 0, 8, 0);
 
-%% @todo Second psu_game:send_1211 argument should be User#egs_user_model.lid. Fix when it's correctly handled.
+%% @todo Second psu_game:send_1211 argument should be User#users.lid. Fix when it's correctly handled.
 event({object_chair_stand, ObjectTargetID}, _State) ->
-	%~ {ok, User} = egs_user_model:read(get(gid)),
+	%~ {ok, User} = egs_users:read(get(gid)),
 	psu_game:send_1211(ObjectTargetID, 0, 8, 2);
 
 event({object_crystal_activate, ObjectID}, _State) ->
@@ -626,59 +626,59 @@ event({object_event_trigger, BlockID, EventID}, _State) ->
 	psu_game:send_1205(EventID, BlockID, 0);
 
 event({object_goggle_target_activate, ObjectID}, #state{gid=GID}) ->
-	{ok, User} = egs_user_model:read(GID),
-	{BlockID, EventID} = psu_instance:std_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
+	{ok, User} = egs_users:read(GID),
+	{BlockID, EventID} = psu_instance:std_event(User#users.instancepid, (User#users.area)#psu_area.zoneid, ObjectID),
 	psu_game:send_1205(EventID, BlockID, 0),
 	psu_game:send_1213(ObjectID, 8);
 
 %% @todo Make NPC characters heal too.
 event({object_healing_pad_tick, [_PartyPos]}, State=#state{gid=GID}) ->
-	{ok, User} = egs_user_model:read(GID),
-	Character = User#egs_user_model.character,
+	{ok, User} = egs_users:read(GID),
+	Character = User#users.character,
 	if	Character#characters.currenthp =:= Character#characters.maxhp -> ignore;
 		true ->
 			NewHP = Character#characters.currenthp + Character#characters.maxhp div 10,
 			NewHP2 = if NewHP > Character#characters.maxhp -> Character#characters.maxhp; true -> NewHP end,
-			User2 = User#egs_user_model{character=Character#characters{currenthp=NewHP2}},
-			egs_user_model:write(User2),
-			psu_proto:send_0117(User2#egs_user_model{lid=0}, State),
-			psu_proto:send_0111(User2#egs_user_model{lid=0}, 4, State)
+			User2 = User#users{character=Character#characters{currenthp=NewHP2}},
+			egs_users:write(User2),
+			psu_proto:send_0117(User2#users{lid=0}, State),
+			psu_proto:send_0111(User2#users{lid=0}, 4, State)
 	end;
 
 event({object_key_console_enable, ObjectID}, #state{gid=GID}) ->
-	{ok, User} = egs_user_model:read(GID),
-	{BlockID, [EventID|_]} = psu_instance:std_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
+	{ok, User} = egs_users:read(GID),
+	{BlockID, [EventID|_]} = psu_instance:std_event(User#users.instancepid, (User#users.area)#psu_area.zoneid, ObjectID),
 	psu_game:send_1205(EventID, BlockID, 0),
 	psu_game:send_1213(ObjectID, 1);
 
 event({object_key_console_init, ObjectID}, #state{gid=GID}) ->
-	{ok, User} = egs_user_model:read(GID),
-	{BlockID, [_, EventID, _]} = psu_instance:std_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
+	{ok, User} = egs_users:read(GID),
+	{BlockID, [_, EventID, _]} = psu_instance:std_event(User#users.instancepid, (User#users.area)#psu_area.zoneid, ObjectID),
 	psu_game:send_1205(EventID, BlockID, 0);
 
 event({object_key_console_open_gate, ObjectID}, #state{gid=GID}) ->
-	{ok, User} = egs_user_model:read(GID),
-	{BlockID, [_, _, EventID]} = psu_instance:std_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
+	{ok, User} = egs_users:read(GID),
+	{BlockID, [_, _, EventID]} = psu_instance:std_event(User#users.instancepid, (User#users.area)#psu_area.zoneid, ObjectID),
 	psu_game:send_1205(EventID, BlockID, 0),
 	psu_game:send_1213(ObjectID, 1);
 
 %% @todo Now that it's separate from object_key_console_enable, handle it better than that, don't need a list of events.
 event({object_key_enable, ObjectID}, #state{gid=GID}) ->
-	{ok, User} = egs_user_model:read(GID),
-	{BlockID, [EventID|_]} = psu_instance:std_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
+	{ok, User} = egs_users:read(GID),
+	{BlockID, [EventID|_]} = psu_instance:std_event(User#users.instancepid, (User#users.area)#psu_area.zoneid, ObjectID),
 	psu_game:send_1205(EventID, BlockID, 0),
 	psu_game:send_1213(ObjectID, 1);
 
 %% @todo Some switch objects apparently work differently, like the light switch in Mines in MAG'.
 event({object_switch_off, ObjectID}, #state{gid=GID}) ->
-	{ok, User} = egs_user_model:read(GID),
-	{BlockID, EventID} = psu_instance:std_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
+	{ok, User} = egs_users:read(GID),
+	{BlockID, EventID} = psu_instance:std_event(User#users.instancepid, (User#users.area)#psu_area.zoneid, ObjectID),
 	psu_game:send_1205(EventID, BlockID, 1),
 	psu_game:send_1213(ObjectID, 0);
 
 event({object_switch_on, ObjectID}, #state{gid=GID}) ->
-	{ok, User} = egs_user_model:read(GID),
-	{BlockID, EventID} = psu_instance:std_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, ObjectID),
+	{ok, User} = egs_users:read(GID),
+	{BlockID, EventID} = psu_instance:std_event(User#users.instancepid, (User#users.area)#psu_area.zoneid, ObjectID),
 	psu_game:send_1205(EventID, BlockID, 0),
 	psu_game:send_1213(ObjectID, 1);
 
@@ -688,24 +688,24 @@ event({object_vehicle_boost_enable, ObjectID}, _State) ->
 event({object_vehicle_boost_respawn, ObjectID}, _State) ->
 	psu_game:send_1213(ObjectID, 0);
 
-%% @todo Second send_1211 argument should be User#egs_user_model.lid. Fix when it's correctly handled.
+%% @todo Second send_1211 argument should be User#users.lid. Fix when it's correctly handled.
 event({object_warp_take, BlockID, ListNb, ObjectNb}, #state{gid=GID}) ->
-	{ok, User} = egs_user_model:read(GID),
-	Pos = psu_instance:warp_event(User#egs_user_model.instancepid, (User#egs_user_model.area)#psu_area.zoneid, BlockID, ListNb, ObjectNb),
-	NewUser = User#egs_user_model{pos=Pos},
-	egs_user_model:write(NewUser),
-	psu_game:send_0503(User#egs_user_model.pos),
+	{ok, User} = egs_users:read(GID),
+	Pos = psu_instance:warp_event(User#users.instancepid, (User#users.area)#psu_area.zoneid, BlockID, ListNb, ObjectNb),
+	NewUser = User#users{pos=Pos},
+	egs_users:write(NewUser),
+	psu_game:send_0503(User#users.pos),
 	psu_game:send_1211(16#ffffffff, 0, 14, 0);
 
 %% @todo Don't send_0204 if the player is removed from the party while in the lobby I guess.
 event({party_remove_member, PartyPos}, State=#state{gid=GID}) ->
 	log("party remove member ~b", [PartyPos]),
-	{ok, DestUser} = egs_user_model:read(GID),
-	{ok, RemovedGID} = psu_party:get_member(DestUser#egs_user_model.partypid, PartyPos),
-	psu_party:remove_member(DestUser#egs_user_model.partypid, PartyPos),
-	{ok, RemovedUser} = egs_user_model:read(RemovedGID),
-	case (RemovedUser#egs_user_model.character)#characters.type of
-		npc -> egs_user_model:delete(RemovedGID);
+	{ok, DestUser} = egs_users:read(GID),
+	{ok, RemovedGID} = psu_party:get_member(DestUser#users.partypid, PartyPos),
+	psu_party:remove_member(DestUser#users.partypid, PartyPos),
+	{ok, RemovedUser} = egs_users:read(RemovedGID),
+	case (RemovedUser#users.character)#characters.type of
+		npc -> egs_users:delete(RemovedGID);
 		_ -> ignore
 	end,
 	psu_proto:send_1006(8, PartyPos, State),
@@ -722,20 +722,20 @@ event(player_death, State=#state{gid=GID}) ->
 	% @todo send_0115(get(gid), 16#ffffffff, LV=1, EXP=idk, Money=1000), % apparently sent everytime you die...
 	%% use scape:
 	NewHP = 10,
-	{ok, User} = egs_user_model:read(GID),
-	Char = User#egs_user_model.character,
-	User2 = User#egs_user_model{character=Char#characters{currenthp=NewHP}},
-	egs_user_model:write(User2),
-	psu_proto:send_0117(User2#egs_user_model{lid=0}, State),
+	{ok, User} = egs_users:read(GID),
+	Char = User#users.character,
+	User2 = User#users{character=Char#characters{currenthp=NewHP}},
+	egs_users:write(User2),
+	psu_proto:send_0117(User2#users{lid=0}, State),
 	psu_proto:send_1022(User2, State);
 	%% red screen with return to lobby choice:
 	%~ psu_proto:send_0111(User2, 3, 1, State);
 
 %% @todo Refill the player's HP to maximum, remove SEs etc.
 event(player_death_return_to_lobby, State=#state{gid=GID}) ->
-	{ok, User} = egs_user_model:read(GID),
-	PrevArea = User#egs_user_model.prev_area,
-	event({area_change, PrevArea#psu_area.questid, PrevArea#psu_area.zoneid, PrevArea#psu_area.mapid, User#egs_user_model.prev_entryid}, State);
+	{ok, User} = egs_users:read(GID),
+	PrevArea = User#users.prev_area,
+	event({area_change, PrevArea#psu_area.questid, PrevArea#psu_area.zoneid, PrevArea#psu_area.mapid, User#users.prev_entryid}, State);
 
 event(player_type_availability_request, State) ->
 	psu_proto:send_1a07(State);
@@ -753,28 +753,28 @@ event(unicube_request, State) ->
 event({unicube_select, cancel, _EntryID}, _State) ->
 	ignore;
 event({unicube_select, Selection, EntryID}, State=#state{gid=GID}) ->
-	{ok, User} = egs_user_model:read(GID),
+	{ok, User} = egs_users:read(GID),
 	case Selection of
 		16#ffffffff ->
 			UniID = egs_universes:myroomid(),
-			User2 = User#egs_user_model{uni=UniID, area=#psu_area{questid=1120000, zoneid=0, mapid=100}, entryid=0};
+			User2 = User#users{uni=UniID, area=#psu_area{questid=1120000, zoneid=0, mapid=100}, entryid=0};
 		_ ->
 			UniID = Selection,
-			User2 = User#egs_user_model{uni=UniID, entryid=EntryID}
+			User2 = User#users{uni=UniID, entryid=EntryID}
 	end,
 	psu_proto:send_0230(State),
 	%% 0220
-	case User#egs_user_model.partypid of
+	case User#users.partypid of
 		undefined -> ignore;
 		PartyPid ->
 			%% @todo Replace stop by leave when leaving stops the party correctly when nobody's there anymore.
-			%~ psu_party:leave(User#egs_user_model.partypid, User#egs_user_model.id)
+			%~ psu_party:leave(User#users.partypid, User#users.id)
 			{ok, NPCList} = psu_party:get_npc(PartyPid),
-			[egs_user_model:delete(NPCGID) || {_Spot, NPCGID} <- NPCList],
+			[egs_users:delete(NPCGID) || {_Spot, NPCGID} <- NPCList],
 			psu_party:stop(PartyPid)
 	end,
-	egs_user_model:write(User2),
-	egs_universes:leave(User#egs_user_model.uni),
+	egs_users:write(User2),
+	egs_universes:leave(User#users.uni),
 	egs_universes:enter(UniID),
 	psu_game:char_load(User2, State).
 

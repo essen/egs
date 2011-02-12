@@ -55,7 +55,7 @@ warp_event(InstancePid, ZoneID, BlockID, ListIndex, ObjectIndex) ->
 
 %% @todo @spec hit(ServerPid, TargetID, Args) -> Response
 hit(User, SourceID, TargetID) ->
-	gen_server:call(User#egs_user_model.instancepid, {hit, (User#egs_user_model.area)#psu_area.zoneid, User, SourceID, TargetID}).
+	gen_server:call(User#users.instancepid, {hit, (User#users.area)#psu_area.zoneid, User, SourceID, TargetID}).
 
 %% gen_server.
 
@@ -227,18 +227,18 @@ box_hit(#psu_object{args={BlockID, ObjectID, TrigEventID}}) ->
 enemy_hit(User) ->
 	Damage = 1,
 	IncEXP = 1,
-	Character = User#egs_user_model.character,
+	Character = User#users.character,
 	Level = Character#characters.mainlevel,
 	NewEXP = Level#level.exp + IncEXP,
 	NewLevel = Level#level{exp=NewEXP},
 	NewCharacter = Character#characters{mainlevel=NewLevel},
-	NewUser = User#egs_user_model{character=NewCharacter},
+	NewUser = User#users{character=NewCharacter},
 	% todo delete the enemy from the db when it dies
 	#hit_response{type=enemy, user=NewUser, exp=true, damage=Damage, targethp=0, targetse=[death]}.
 
 player_hit(User) ->
 	Damage = 10,
-	Character = User#egs_user_model.character,
+	Character = User#users.character,
 	TmpHP = Character#characters.currenthp - Damage,
 	if	TmpHP =< 0 ->
 			NewHP = 0,
@@ -248,5 +248,5 @@ player_hit(User) ->
 			SE = [flinch]
 	end,
 	NewCharacter = Character#characters{currenthp=NewHP},
-	NewUser = User#egs_user_model{character=NewCharacter},
+	NewUser = User#users{character=NewCharacter},
 	#hit_response{type=player, user=NewUser, damage=Damage, targethp=NewHP, targetse=SE}.

@@ -66,7 +66,7 @@ event({char_select_create, Slot, CharBin}, #state{gid=GID}) ->
 
 %% @doc Load the selected character into the game's default universe.
 event({char_select_enter, Slot, _BackToPreviousField}, State=#state{gid=GID}) ->
-	{ok, User} = egs_user_model:read(GID),
+	{ok, User} = egs_users:read(GID),
 	Folder = egs_accounts:get_folder(GID),
 	[{status, 1}, {char, CharBin}, {options, OptionsBin}] = data_load(Folder, Slot),
 	<< Name:512/bits, RaceBin:8, GenderBin:8, ClassBin:8, AppearanceBin:776/bits, _/bits >> = CharBin,
@@ -78,16 +78,16 @@ event({char_select_enter, Slot, _BackToPreviousField}, State=#state{gid=GID}) ->
 	Character = #characters{slot=Slot, name=Name, race=Race, gender=Gender, class=Class, appearance=Appearance, options=Options}, % TODO: temporary set the slot here, won't be needed later
 	UniID = egs_universes:defaultid(),
 	egs_universes:enter(UniID),
-	User2 = User#egs_user_model{uni=UniID, character=Character, area=#psu_area{questid=1100000, zoneid=0, mapid=4}, entryid=0},
-	egs_user_model:write(User2),
-	egs_user_model:item_add(GID, 16#11010000, #psu_special_item_variables{}),
-	egs_user_model:item_add(GID, 16#11020000, #psu_special_item_variables{}),
-	egs_user_model:item_add(GID, 16#11020100, #psu_special_item_variables{}),
-	egs_user_model:item_add(GID, 16#11020200, #psu_special_item_variables{}),
-	egs_user_model:item_add(GID, 16#01010900, #psu_striking_weapon_item_variables{current_pp=99, max_pp=100, element=#psu_element{type=1, percent=50}}),
-	egs_user_model:item_add(GID, 16#01010a00, #psu_striking_weapon_item_variables{current_pp=99, max_pp=100, element=#psu_element{type=2, percent=50}}),
-	egs_user_model:item_add(GID, 16#01010b00, #psu_striking_weapon_item_variables{current_pp=99, max_pp=100, element=#psu_element{type=3, percent=50}}),
-	{ok, User3} = egs_user_model:read(GID),
+	User2 = User#users{uni=UniID, character=Character, area=#psu_area{questid=1100000, zoneid=0, mapid=4}, entryid=0},
+	egs_users:write(User2),
+	egs_users:item_add(GID, 16#11010000, #psu_special_item_variables{}),
+	egs_users:item_add(GID, 16#11020000, #psu_special_item_variables{}),
+	egs_users:item_add(GID, 16#11020100, #psu_special_item_variables{}),
+	egs_users:item_add(GID, 16#11020200, #psu_special_item_variables{}),
+	egs_users:item_add(GID, 16#01010900, #psu_striking_weapon_item_variables{current_pp=99, max_pp=100, element=#psu_element{type=1, percent=50}}),
+	egs_users:item_add(GID, 16#01010a00, #psu_striking_weapon_item_variables{current_pp=99, max_pp=100, element=#psu_element{type=2, percent=50}}),
+	egs_users:item_add(GID, 16#01010b00, #psu_striking_weapon_item_variables{current_pp=99, max_pp=100, element=#psu_element{type=3, percent=50}}),
+	{ok, User3} = egs_users:read(GID),
 	State2 = State#state{slot=Slot},
 	psu_game:char_load(User3, State2),
 	{ok, egs_game, State2}.

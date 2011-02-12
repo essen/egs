@@ -27,15 +27,15 @@
 %% @doc Load and send the character information to the client.
 %% @todo Move this whole function directly to psu_proto, probably.
 char_load(User, State) ->
-	psu_proto:send_0d01(User#egs_user_model.character, State),
+	psu_proto:send_0d01(User#users.character, State),
 	%% 0246
-	send_0a0a((User#egs_user_model.character)#characters.inventory),
+	send_0a0a((User#users.character)#characters.inventory),
 	psu_proto:send_1006(5, 0, State), %% @todo The 0 here is PartyPos, save it in User.
-	psu_proto:send_1005(User#egs_user_model.character, State),
+	psu_proto:send_1005(User#users.character, State),
 	psu_proto:send_1006(12, State),
 	psu_proto:send_0210(State),
-	psu_proto:send_0222(User#egs_user_model.uni, State),
-	psu_proto:send_1500(User#egs_user_model.character, State),
+	psu_proto:send_0222(User#users.uni, State),
+	psu_proto:send_1500(User#users.character, State),
 	send_1501(),
 	send_1512(),
 	%% 0303
@@ -44,7 +44,7 @@ char_load(User, State) ->
 
 %% @doc Load the given map as a standard lobby.
 area_load(QuestID, ZoneID, MapID, EntryID, State) ->
-	{ok, OldUser} = egs_user_model:read(get(gid)),
+	{ok, OldUser} = egs_users:read(get(gid)),
 	[{type, AreaType}, {file, QuestFile}|MissionInfo] = proplists:get_value(QuestID, ?QUESTS, [{type, undefined}, {file, undefined}]),
 	QuestData = case QuestFile of
 		nofile -> egs_quests_db:quest(QuestID);
@@ -83,16 +83,16 @@ area_load(QuestID, ZoneID, MapID, EntryID, State) ->
 			{ok, RetPid} = psu_instance:start_link(Zones),
 			RetSetID = crypto:rand_uniform(0, NbSetsInQuest),
 			{RetPid, RetSetID};
-		true -> {OldUser#egs_user_model.instancepid, OldUser#egs_user_model.setid}
+		true -> {OldUser#users.instancepid, OldUser#users.setid}
 	end,
-	User = OldUser#egs_user_model{instancepid=InstancePid, areatype=AreaType, area={psu_area, QuestID, RealZoneID, RealMapID}, entryid=RealEntryID},
-	egs_user_model:write(User),
+	User = OldUser#users{instancepid=InstancePid, areatype=AreaType, area={psu_area, QuestID, RealZoneID, RealMapID}, entryid=RealEntryID},
+	egs_users:write(User),
 	RealSetID = if SetID > NbSetsInZone - 1 -> NbSetsInZone - 1; true -> SetID end,
 	area_load(AreaType, IsStart, RealSetID, OldUser, User, QuestData, ZoneData, AreaName, State).
 
 area_load(AreaType, IsStart, SetID, OldUser, User, QuestData, ZoneData, AreaName, State) ->
-	#psu_area{questid=OldQuestID, zoneid=OldZoneID} = OldUser#egs_user_model.area,
-	#psu_area{questid=QuestID, zoneid=ZoneID, mapid=_MapID} = User#egs_user_model.area,
+	#psu_area{questid=OldQuestID, zoneid=OldZoneID} = OldUser#users.area,
+	#psu_area{questid=QuestID, zoneid=ZoneID, mapid=_MapID} = User#users.area,
 	QuestChange = if OldQuestID /= QuestID, QuestData /= undefined -> true; true -> false end,
 	if	ZoneData =:= undefined ->
 			ZoneChange = false;
@@ -101,11 +101,11 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestData, ZoneData, AreaName
 	end,
 	{IsSeasonal, SeasonID} = egs_seasons:read(QuestID),
 	% broadcast spawn and unspawn to other people
-	{ok, UnspawnList} = egs_user_model:select({neighbors, OldUser}),
-	{ok, SpawnList} = egs_user_model:select({neighbors, User}),
-	lists:foreach(fun(Other) -> Other#egs_user_model.pid ! {egs, player_unspawn, User} end, UnspawnList),
+	{ok, UnspawnList} = egs_users:select({neighbors, OldUser}),
+	{ok, SpawnList} = egs_users:select({neighbors, User}),
+	lists:foreach(fun(Other) -> Other#users.pid ! {egs, player_unspawn, User} end, UnspawnList),
 	if	AreaType =:= lobby ->
-			lists:foreach(fun(Other) -> Other#egs_user_model.pid ! {egs, player_spawn, User} end, SpawnList);
+			lists:foreach(fun(Other) -> Other#users.pid ! {egs, player_spawn, User} end, SpawnList);
 		true -> ignore
 	end,
 	% load area
@@ -124,17 +124,17 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestData, ZoneData, AreaName
 			% load new zone
 			psu_proto:send_0a05(State),
 			if AreaType =:= lobby ->
-					psu_proto:send_0111(User#egs_user_model{lid=0}, 6, State);
+					psu_proto:send_0111(User#users{lid=0}, 6, State);
 				true -> ignore
 			end,
-			psu_proto:send_010d(User#egs_user_model{lid=0}, State),
+			psu_proto:send_010d(User#users{lid=0}, State),
 			psu_proto:send_0200(ZoneID, AreaType, State),
 			psu_proto:send_020f(ZoneData, SetID, SeasonID, State);
 		true -> ignore
 	end,
 	State2 = State#state{areanb=State#state.areanb + 1},
-	psu_proto:send_0205(User#egs_user_model{lid=0}, IsSeasonal, State2),
-	psu_proto:send_100e(User#egs_user_model.area, User#egs_user_model.entryid, AreaName, State2),
+	psu_proto:send_0205(User#users{lid=0}, IsSeasonal, State2),
+	psu_proto:send_100e(User#users.area, User#users.entryid, AreaName, State2),
 	if	AreaType =:= mission ->
 			psu_proto:send_0215(0, State2),
 			if	IsStart =:= true ->
@@ -169,7 +169,7 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestData, ZoneData, AreaName
 			send_1309();
 		true -> ignore
 	end,
-	psu_proto:send_0201(User#egs_user_model{lid=0}, State2),
+	psu_proto:send_0201(User#users{lid=0}, State2),
 	if	ZoneChange =:= true ->
 			psu_proto:send_0a06(User, State2);
 		true -> ignore
@@ -178,15 +178,15 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestData, ZoneData, AreaName
 			psu_proto:send_0233(SpawnList, State);
 		true -> ignore
 	end,
-	case User#egs_user_model.partypid of
+	case User#users.partypid of
 		undefined -> ignore;
 		_ -> send_022c(0, 16#12)
 	end,
 	State3 = State2#state{areanb=State2#state.areanb + 1},
 	psu_proto:send_0208(State3),
 	psu_proto:send_0236(State3),
-	if	User#egs_user_model.partypid =/= undefined, AreaType =:= mission ->
-			{ok, NPCList} = psu_party:get_npc(User#egs_user_model.partypid),
+	if	User#users.partypid =/= undefined, AreaType =:= mission ->
+			{ok, NPCList} = psu_party:get_npc(User#users.partypid),
 			npc_load(User, NPCList, State);
 		true -> ok
 	end,
@@ -196,18 +196,18 @@ area_load(AreaType, IsStart, SetID, OldUser, User, QuestData, ZoneData, AreaName
 npc_load(_Leader, [], _State) ->
 	ok;
 npc_load(Leader, [{PartyPos, NPCGID}|NPCList], State) ->
-	{ok, OldNPCUser} = egs_user_model:read(NPCGID),
-	#egs_user_model{instancepid=InstancePid, area=Area, entryid=EntryID, pos=Pos} = Leader,
-	NPCUser = OldNPCUser#egs_user_model{lid=PartyPos, instancepid=InstancePid, areatype=mission, area=Area, entryid=EntryID, pos=Pos},
+	{ok, OldNPCUser} = egs_users:read(NPCGID),
+	#users{instancepid=InstancePid, area=Area, entryid=EntryID, pos=Pos} = Leader,
+	NPCUser = OldNPCUser#users{lid=PartyPos, instancepid=InstancePid, areatype=mission, area=Area, entryid=EntryID, pos=Pos},
 	%% @todo This one on mission end/abort?
-	%~ OldNPCUser#egs_user_model{lid=PartyPos, instancepid=undefined, areatype=AreaType, area={psu_area, 0, 0, 0}, entryid=0, pos={pos, 0.0, 0.0, 0.0, 0}}
-	egs_user_model:write(NPCUser),
+	%~ OldNPCUser#users{lid=PartyPos, instancepid=undefined, areatype=AreaType, area={psu_area, 0, 0, 0}, entryid=0, pos={pos, 0.0, 0.0, 0.0, 0}}
+	egs_users:write(NPCUser),
 	psu_proto:send_010d(NPCUser, State),
 	psu_proto:send_0201(NPCUser, State),
 	psu_proto:send_0215(0, State),
-	send_0a04(NPCUser#egs_user_model.id),
+	send_0a04(NPCUser#users.id),
 	send_1004(npc_mission, NPCUser, PartyPos),
-	send_100f((NPCUser#egs_user_model.character)#characters.npcid, PartyPos),
+	send_100f((NPCUser#users.character)#characters.npcid, PartyPos),
 	send_1601(PartyPos),
 	send_1016(PartyPos),
 	npc_load(Leader, NPCList, State).
@@ -262,8 +262,8 @@ send_022c(A, B) ->
 %% @todo Force send a new player location. Used for warps.
 %% @todo The value before IntDir seems to be the player's current animation. 01 stand up, 08 ?, 17 normal sit
 send_0503(#pos{x=PrevX, y=PrevY, z=PrevZ, dir=_}) ->
-	{ok, User} = egs_user_model:read(get(gid)),
-	#egs_user_model{id=GID, pos=#pos{x=X, y=Y, z=Z, dir=Dir}, area=#psu_area{questid=QuestID, zoneid=ZoneID, mapid=MapID}, entryid=EntryID} = User,
+	{ok, User} = egs_users:read(get(gid)),
+	#users{id=GID, pos=#pos{x=X, y=Y, z=Z, dir=Dir}, area=#psu_area{questid=QuestID, zoneid=ZoneID, mapid=MapID}, entryid=EntryID} = User,
 	IntDir = trunc(Dir * 182.0416),
 	send(<< 16#05030300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, GID:32/little-unsigned-integer, 0:32,
 		16#1000:16, IntDir:16/little-unsigned-integer, PrevX:32/little-float, PrevY:32/little-float, PrevZ:32/little-float, X:32/little-float, Y:32/little-float, Z:32/little-float,
@@ -406,7 +406,7 @@ send_1004(Type, User, PartyPos) ->
 	end,
 
 	UserGID = get(gid),
-	#egs_user_model{id=GID, character=Character, area={psu_area, QuestID, ZoneID, MapID}, entryid=EntryID} = User,
+	#users{id=GID, character=Character, area={psu_area, QuestID, ZoneID, MapID}, entryid=EntryID} = User,
 	#characters{npcid=NPCid, name=Name, mainlevel=MainLevel} = Character,
 	Level = MainLevel#level.number,
 	send(<< 16#10040300:32, 16#ffff0000:32, 0:128, 16#00011300:32, UserGID:32/little-unsigned-integer, 0:64,

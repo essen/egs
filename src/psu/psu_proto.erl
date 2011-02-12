@@ -1198,8 +1198,8 @@ parse_hits(Hits, Acc) ->
 %% @todo Probably don't pattern match the data like this...
 %% @todo Handle the DestLID properly.
 send_010d(CharUser, #state{socket=Socket, gid=DestGID}) ->
-	CharGID = CharUser#egs_user_model.id,
-	CharLID = CharUser#egs_user_model.lid,
+	CharGID = CharUser#users.id,
+	CharLID = CharUser#users.lid,
 	<< _:640, CharBin/bits >> = psu_characters:character_user_to_binary(CharUser),
 	packet_send(Socket, << 16#010d0300:32, 0:160, 16#00011300:32, DestGID:32/little,
 		0:64, 1:32/little, 0:32, 16#00000300:32, 16#ffff0000:32, 0:32, CharGID:32/little,
@@ -1208,14 +1208,14 @@ send_010d(CharUser, #state{socket=Socket, gid=DestGID}) ->
 %% @doc Trigger a character-related event.
 send_0111(CharUser, EventID, State) ->
 	send_0111(CharUser, EventID, 0, State).
-send_0111(#egs_user_model{id=CharGID, lid=CharLID}, EventID, Param, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_0111(#users{id=CharGID, lid=CharLID}, EventID, Param, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#01110300:32, DestLID:16/little, 0:48, CharGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64,
 		CharGID:32/little, CharLID:32/little, EventID:32/little, Param:32/little >>).
 
 %% @doc Update the character level, blastbar, luck and money information.
 send_0115(CharUser, State) ->
 	send_0115(CharUser, 16#ffffffff, State).
-send_0115(#egs_user_model{id=CharGID, lid=CharLID, character=Character}, EnemyTargetID, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_0115(#users{id=CharGID, lid=CharLID, character=Character}, EnemyTargetID, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#01150300:32, DestLID:16/little, 0:48, CharGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64,
 		CharGID:32/little, CharLID:32/little, EnemyTargetID:32/little, (build_char_level(Character))/binary >>).
 
@@ -1235,7 +1235,7 @@ build_char_level(#characters{type=Type, mainlevel=#level{number=Level, exp=EXP},
 
 %% @doc Revive player with optional SEs.
 %% @todo SEs.
-send_0117(#egs_user_model{id=CharGID, lid=CharLID, character=#characters{currenthp=HP}}, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_0117(#users{id=CharGID, lid=CharLID, character=#characters{currenthp=HP}}, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	SE = << 0:64 >>,
 	packet_send(Socket, << 16#01170300:32, DestLID:16/little, 0:48, CharGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64,
 		CharGID:32/little, CharLID:32/little, SE/binary, HP:32/little, 0:32 >>).
@@ -1255,11 +1255,11 @@ send_0200(ZoneID, ZoneType, #state{socket=Socket, gid=DestGID}) ->
 %% @doc Send character location, appearance and other information.
 %% @todo Handle the DestLID properly.
 send_0201(CharUser, #state{socket=Socket, gid=DestGID}) ->
-	[CharTypeID, GameVersion] = case (CharUser#egs_user_model.character)#characters.type of
+	[CharTypeID, GameVersion] = case (CharUser#users.character)#characters.type of
 		npc -> [16#00001d00, 255];
 		_ -> [16#00001200, 0]
 	end,
-	CharGID = CharUser#egs_user_model.id,
+	CharGID = CharUser#users.id,
 	CharBin = psu_characters:character_user_to_binary(CharUser),
 	IsGM = 0,
 	OnlineStatus = 0,
@@ -1273,7 +1273,7 @@ send_0202(#state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 
 %% @doc Spawn a player with the given GID and LID.
 %% @todo Handle the LID properly.
-send_0203(#egs_user_model{id=CharGID, lid=CharLID}, #state{socket=Socket, gid=DestGID}) ->
+send_0203(#users{id=CharGID, lid=CharLID}, #state{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#02030300:32, 0:160, 16#00011300:32,
 		DestGID:32/little, 0:64, CharGID:32/little, CharLID:32/little >>).
 
@@ -1281,17 +1281,17 @@ send_0203(#egs_user_model{id=CharGID, lid=CharLID}, #state{socket=Socket, gid=De
 %% @todo LID.
 %% @todo The last 4 bytes are probably the number of players remaining in the zone.
 send_0204(User, #state{socket=Socket, gid=DestGID}) ->
-	CharTypeID = case (User#egs_user_model.character)#characters.type of
+	CharTypeID = case (User#users.character)#characters.type of
 		npc -> 16#00001d00;
 		_ -> 16#00001200
 	end,
-	#egs_user_model{id=CharGID, lid=CharLID} = User,
+	#users{id=CharGID, lid=CharLID} = User,
 	packet_send(Socket, << 16#02040300:32, 0:32, CharTypeID:32, CharGID:32/little, 0:64,
 		16#00011300:32, DestGID:32/little, 0:64, CharGID:32/little, CharLID:32/little, 100:32/little >>).
 
 %% @doc Make the client load a new map.
 send_0205(CharUser, IsSeasonal, #state{socket=Socket, gid=DestGID, lid=DestLID, areanb=AreaNb}) ->
-	#egs_user_model{lid=CharLID, area=#psu_area{zoneid=ZoneID, mapid=MapID}, entryid=EntryID} = CharUser,
+	#users{lid=CharLID, area=#psu_area{zoneid=ZoneID, mapid=MapID}, entryid=EntryID} = CharUser,
 	packet_send(Socket, << 16#02050300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64,
 		16#ffffffff:32, ZoneID:32/little, MapID:32/little, EntryID:32/little, AreaNb:32/little, CharLID:16/little, 0:8, IsSeasonal:8 >>).
 
@@ -1434,7 +1434,7 @@ send_0a05(#state{socket=Socket, gid=DestGID}) ->
 %% @doc Send the list of ItemUUID for the items in the inventory.
 %% @todo Handle the LID properly.
 send_0a06(CharUser, #state{socket=Socket, gid=DestGID}) ->
-	Len = length((CharUser#egs_user_model.character)#characters.inventory),
+	Len = length((CharUser#users.character)#characters.inventory),
 	UUIDs = lists:seq(1, Len),
 	Bin = iolist_to_binary([ << N:32/little >> || N <- UUIDs]),
 	Blanks = lists:seq(1, 60 - Len),
@@ -1450,7 +1450,7 @@ send_0a11(ItemID, ItemDesc, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 %% @doc Quest init.
 %% @todo When first entering a zone it seems LID should be set to ffff apparently.
 send_0c00(CharUser, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
-	#egs_user_model{area=#psu_area{questid=QuestID}} = CharUser,
+	#users{area=#psu_area{questid=QuestID}} = CharUser,
 	packet_send(Socket, << 16#0c000300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64, QuestID:32/little,
 		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
 		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
@@ -1538,7 +1538,7 @@ send_1020(#state{socket=Socket, gid=DestGID}) ->
 
 %% @doc Update HP in the party members information on the left.
 %% @todo Handle PartyPos. Probably only pass HP later.
-send_1022(#egs_user_model{character=#characters{currenthp=HP}}, #state{socket=Socket, gid=DestGID}) ->
+send_1022(#users{character=#characters{currenthp=HP}}, #state{socket=Socket, gid=DestGID}) ->
 	PartyPos = 0,
 	packet_send(Socket, << 16#10220300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64, HP:32/little, PartyPos:32/little >>).
 
@@ -1584,7 +1584,7 @@ send_1a02(A, B, C, D, #state{socket=Socket, gid=DestGID}) ->
 %% @todo Handle the LID properly.
 send_1a03(CharUser, #state{socket=Socket, gid=DestGID}) ->
 	{ok, Conf} = file:consult("priv/lumilass.conf"),
-	Character = CharUser#egs_user_model.character,
+	Character = CharUser#users.character,
 	NbHeadtypes = proplists:get_value({headtypes, Character#characters.gender, Character#characters.race}, Conf, 0),
 	HairstylesList = proplists:get_value({hairstyles, Character#characters.gender}, Conf),
 	NbHairstyles = length(HairstylesList),

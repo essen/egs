@@ -55,16 +55,16 @@ global(Message) ->
 	if	length(Message) > 511 ->
 			io:format("global: message too long~n");
 		true ->
-			{ok, List} = egs_user_model:select(all),
-			lists:foreach(fun(User) -> User#egs_user_model.pid ! {egs, notice, top, Message} end, List)
+			{ok, List} = egs_users:select(all),
+			lists:foreach(fun(User) -> User#users.pid ! {egs, notice, top, Message} end, List)
 	end.
 
 %% @doc Warp all players to a new map.
 warp(QuestID, ZoneID, MapID, EntryID) ->
-	{ok, List} = egs_user_model:select(all),
-	lists:foreach(fun(User) -> User#egs_user_model.pid ! {egs, warp, QuestID, ZoneID, MapID, EntryID} end, List).
+	{ok, List} = egs_users:select(all),
+	lists:foreach(fun(User) -> User#users.pid ! {egs, warp, QuestID, ZoneID, MapID, EntryID} end, List).
 
 %% @doc Warp one player to a new map.
 warp(GID, QuestID, ZoneID, MapID, EntryID) ->
-	{ok, User} = egs_user_model:read(GID),
-	User#egs_user_model.pid ! {egs, warp, QuestID, ZoneID, MapID, EntryID}.
+	{ok, User} = egs_users:read(GID),
+	User#users.pid ! {egs, warp, QuestID, ZoneID, MapID, EntryID}.

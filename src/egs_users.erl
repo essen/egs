@@ -1,6 +1,6 @@
 %% @author Loïc Hoguin <essen@dev-extend.eu>
 %% @copyright 2010 Loïc Hoguin.
-%% @doc User domain model.
+%% @doc Users handling.
 %%
 %%	This file is part of EGS.
 %%
@@ -17,14 +17,10 @@
 %%	You should have received a copy of the GNU Affero General Public License
 %%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
--module(egs_user_model).
--behavior(gen_server).
--export([start_link/0, stop/0, read/1, select/1, write/1, delete/1, item_nth/2, item_add/3, item_qty_add/3, shop_enter/2, shop_leave/1, shop_get/1, money_add/2]). %% API.
--export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
+-module(egs_users).
+-export([read/1, select/1, write/1, delete/1, item_nth/2, item_add/3, item_qty_add/3, shop_enter/2, shop_leave/1, shop_get/1, money_add/2]).
 
-%% Use the module name for the server's name and for the table name.
--define(SERVER, ?MODULE).
--define(TABLE, ?MODULE).
+-define(TABLE, users).
 
 -include("include/records.hrl").
 -include_lib("stdlib/include/qlc.hrl").
@@ -36,97 +32,54 @@ do(Q) ->
 	{atomic, Val} = mnesia:transaction(F),
 	Val.
 
-%% API
-
-%% @spec start_link() -> {ok,Pid::pid()}
-start_link() ->
-	gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
-
-%% @spec stop() -> stopped
-stop() ->
-	gen_server:call(?SERVER, stop).
+%% --
 
 %% @spec read({pid, Pid}) -> {ok, User} | {error, badarg}
 %% @spec read(ID) -> {ok, User} | {error, badarg}
+read({pid, Pid}) ->
+	List = do(qlc:q([X || X <- mnesia:table(?TABLE), X#?TABLE.pid =:= Pid])),
+	case List of
+		[] ->		{error, badarg};
+		[User] ->	{ok, User}
+	end;
 read(ID) ->
-	gen_server:call(?SERVER, {read, ID}).
+	case mnesia:transaction(fun() -> mnesia:read({?TABLE, ID}) end) of
+		{atomic, []} ->		{error, badarg};
+		{atomic, [Val]} ->	{ok, Val}
+	end.
 
 %% @spec select(all) -> {ok, List}
 %% @spec select({neighbors, User}) -> {ok, List}
-select(Type) ->
-	gen_server:call(?SERVER, {select, Type}).
-
-%% @spec write(User) -> ok
-write(User) ->
-	gen_server:cast(?SERVER, {write, User}).
-
-%% @spec delete(ID) -> ok
-delete(ID) ->
-	gen_server:cast(?SERVER, {delete, ID}).
-
-item_nth(GID, ItemIndex) ->
-	gen_server:call(?SERVER, {item_nth, GID, ItemIndex}).
-
-item_add(GID, ItemID, Variables) ->
-	gen_server:call(?SERVER, {item_add, GID, ItemID, Variables}).
-
-item_qty_add(GID, ItemIndex, QuantityDiff) ->
-	gen_server:cast(?SERVER, {item_qty_add, GID, ItemIndex, QuantityDiff}).
-
-shop_enter(GID, ShopID) ->
-	gen_server:cast(?SERVER, {shop_enter, GID, ShopID}).
-
-shop_leave(GID) ->
-	gen_server:cast(?SERVER, {shop_leave, GID}).
-
-shop_get(GID) ->
-	gen_server:call(?SERVER, {shop_get, GID}).
-
-money_add(GID, MoneyDiff) ->
-	gen_server:cast(?SERVER, {money_add, GID, MoneyDiff}).
-
-%% gen_server
-
-init([]) ->
-	error_logger:info_report("egs_user_model started"),
-	{ok, undefined}.
-
-handle_call({read, {pid, Pid}}, _From, State) ->
-	List = do(qlc:q([X || X <- mnesia:table(?TABLE), X#?TABLE.pid =:= Pid])),
-	case List of
-		[] -> {reply, {error, badarg}, State};
-		[User] -> {reply, {ok, User}, State}
-	end;
-
-handle_call({read, ID}, _From, State) ->
-	case mnesia:transaction(fun() -> mnesia:read({?TABLE, ID}) end) of
-		{atomic, []} -> {reply, {error, badarg}, State};
-		{atomic, [Val]} -> {reply, {ok, Val}, State}
-	end;
-
 %% @todo state = undefined | {wait_for_authentication, Key} | authenticated | online
-handle_call({select, all}, _From, State) ->
+select(all) ->
 	List = do(qlc:q([X || X <- mnesia:table(?TABLE),
 		X#?TABLE.pid /= undefined
 	])),
-	{reply, {ok, List}, State};
-
-handle_call({select, {neighbors, User}}, _From, State) ->
+	{ok, List};
+select({neighbors, User}) ->
 	List = do(qlc:q([X || X <- mnesia:table(?TABLE),
 		X#?TABLE.id /= User#?TABLE.id,
 		X#?TABLE.pid /= undefined,
 		X#?TABLE.instancepid =:= User#?TABLE.instancepid,
 		X#?TABLE.area =:= User#?TABLE.area
 	])),
-	{reply, {ok, List}, State};
+	{ok, List}.
 
-handle_call({item_nth, GID, ItemIndex}, _From, State) ->
-	{atomic, [User]} = mnesia:transaction(fun() -> mnesia:read({?TABLE, GID}) end),
-	{reply, lists:nth(ItemIndex + 1, (User#egs_user_model.character)#characters.inventory), State};
+%% @spec write(User) -> ok
+write(User) ->
+	mnesia:transaction(fun() -> mnesia:write(User) end).
 
-handle_call({item_add, GID, ItemID, Variables}, _From, State) ->
+%% @spec delete(ID) -> ok
+delete(ID) ->
+	mnesia:transaction(fun() -> mnesia:delete({?TABLE, ID}) end).
+
+item_nth(GID, ItemIndex) ->
 	{atomic, [User]} = mnesia:transaction(fun() -> mnesia:read({?TABLE, GID}) end),
-	Character = User#egs_user_model.character,
+	lists:nth(ItemIndex + 1, (User#users.character)#characters.inventory).
+
+item_add(GID, ItemID, Variables) ->
+	{atomic, [User]} = mnesia:transaction(fun() -> mnesia:read({?TABLE, GID}) end),
+	Character = User#users.character,
 	Inventory = Character#characters.inventory,
 	Inventory2 = case Variables of
 		#psu_consumable_item_variables{quantity=Quantity} ->
@@ -156,33 +109,15 @@ handle_call({item_add, GID, ItemID, Variables}, _From, State) ->
 			end
 	end,
 	Character2 = Character#characters{inventory=Inventory2},
-	mnesia:transaction(fun() -> mnesia:write(User#egs_user_model{character=Character2}) end),
-	if New =:= false -> {reply, 16#ffffffff, State};
-		true -> {reply, length(Inventory2), State}
-	end;
-
-handle_call({shop_get, GID}, _From, State) ->
-	{atomic, [User]} = mnesia:transaction(fun() -> mnesia:read({?TABLE, GID}) end),
-	{reply, User#egs_user_model.shopid, State};
-
-handle_call(stop, _From, State) ->
-	{stop, normal, stopped, State};
-
-handle_call(_Request, _From, State) ->
-	{reply, ignored, State}.
-
-handle_cast({write, User}, State) ->
-	mnesia:transaction(fun() -> mnesia:write(User) end),
-	{noreply, State};
-
-handle_cast({delete, ID}, State) ->
-	mnesia:transaction(fun() -> mnesia:delete({?TABLE, ID}) end),
-	{noreply, State};
+	mnesia:transaction(fun() -> mnesia:write(User#users{character=Character2}) end),
+	if New =:= false -> 16#ffffffff;
+		true -> length(Inventory2)
+	end.
 
 %% @todo Consumable items.
-handle_cast({item_qty_add, GID, ItemIndex, QuantityDiff}, State) ->
+item_qty_add(GID, ItemIndex, QuantityDiff) ->
 	{atomic, [User]} = mnesia:transaction(fun() -> mnesia:read({?TABLE, GID}) end),
-	Character = User#egs_user_model.character,
+	Character = User#users.character,
 	Inventory = Character#characters.inventory,
 	{ItemID, Variables} = lists:nth(ItemIndex + 1, Inventory),
 	case Variables of
@@ -197,43 +132,31 @@ handle_cast({item_qty_add, GID, ItemIndex, QuantityDiff}, State) ->
 			end
 	end,
 	Character2 = Character#characters{inventory=Inventory2},
-	mnesia:transaction(fun() -> mnesia:write(User#egs_user_model{character=Character2}) end),
-	{noreply, State};
+	mnesia:transaction(fun() -> mnesia:write(User#users{character=Character2}) end).
 
-handle_cast({shop_enter, GID, ShopID}, State) ->
+shop_enter(GID, ShopID) ->
 	mnesia:transaction(fun() ->
 		[User] = mnesia:wread({?TABLE, GID}),
-		mnesia:write(User#egs_user_model{shopid=ShopID})
-	end),
-	{noreply, State};
+		mnesia:write(User#users{shopid=ShopID})
+	end).
 
-handle_cast({shop_leave, GID}, State) ->
+shop_leave(GID) ->
 	mnesia:transaction(fun() ->
 		[User] = mnesia:wread({?TABLE, GID}),
-		mnesia:write(User#egs_user_model{shopid=undefined})
-	end),
-	{noreply, State};
+		mnesia:write(User#users{shopid=undefined})
+	end).
 
-handle_cast({money_add, GID, MoneyDiff}, State) ->
+shop_get(GID) ->
+	{atomic, [User]} = mnesia:transaction(fun() -> mnesia:read({?TABLE, GID}) end),
+	User#users.shopid.
+
+money_add(GID, MoneyDiff) ->
 	mnesia:transaction(fun() ->
 		[User] = mnesia:wread({?TABLE, GID}),
-		Character = User#egs_user_model.character,
+		Character = User#users.character,
 		Money = Character#characters.money + MoneyDiff,
 		if Money >= 0 ->
 			Character2 = Character#characters{money=Money},
-			mnesia:write(User#egs_user_model{character=Character2})
+			mnesia:write(User#users{character=Character2})
 		end
-	end),
-	{noreply, State};
-
-handle_cast(_Msg, State) ->
-	{noreply, State}.
-
-handle_info(_Info, State) ->
-	{noreply, State}.
-
-terminate(_Reason, _State) ->
-	ok.
-
-code_change(_OldVsn, State, _Extra) ->
-	{ok, State}.
+	end).

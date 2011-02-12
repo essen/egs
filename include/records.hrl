@@ -42,6 +42,38 @@
 	auth_state	:: undefined | {wait_for_authentication, binary(), any()}
 }).
 
+%% @doc Character position data structure.
+%% @todo Review.
+-record(pos, {x, y, z, dir}).
+
+%% @doc Character area location data structure.
+%% @todo Review.
+-record(psu_area, {questid, zoneid, mapid}).
+
+%% @doc Table containing the users currently logged in.
+%% @todo Probably can use a "param" or "extra" field to store the game-specific information (for things that don't need to be queried).
+-record(users, {
+	%% General information.
+	id			:: integer(), %% @todo Rename into gid.
+	lid			:: non_neg_integer(),
+	pid			:: pid(),
+	time		:: integer(),
+	character	:: tuple(), %% @todo Details.
+	%% Location/state related information.
+	uni			:: integer(),
+	instancepid	:: pid(),
+	partypid	:: pid(),
+	areatype	:: counter | mission | lobby | myroom | spaceport,
+	area		:: {psu_area, 0..16#ffffffff, 0..16#ffff, 0..9999},
+	entryid		:: 0..16#ffff,
+	pos = #pos{x=0.0, y=0.0, z=0.0, dir=0.0} :: {pos, float(), float(), float(), float()},
+	shopid		:: integer(),
+	prev_area = #psu_area{questid=0, zoneid=0, mapid=0} :: {psu_area, 0..16#ffffffff, 0..16#ffff, 0..9999},
+	prev_entryid = 0 :: 0..16#ffff,
+	%% To be moved or deleted later on.
+	setid = 0	:: non_neg_integer() %% @todo Current area's set number. Move that to psu_instance probably.
+}).
+
 %% Past this point needs to be reviewed.
 
 %% @doc NPC configuration data.
@@ -78,27 +110,6 @@
 
 %% @doc Table containing counters current values.
 -record(counters, {name, id}).
-
-%% @doc Character position data structure.
-
--record(pos, {x, y, z, dir}).
-
-%% @doc Character area location data structure.
-
--record(psu_area, {questid, zoneid, mapid}).
-
-%% @doc Table containing the users currently logged in.
-%% @todo Probably can use a "param" or "extra" field to store the game-specific information (for things that don't need to be queried).
-
--record(egs_user_model, {
-	%% General information.
-	id, lid, pid, time, character,
-	%% Location/state related information.
-	uni, instancepid, partypid, areatype, area, entryid, pos=#pos{x=0.0, y=0.0, z=0.0, dir=0.0}, shopid,
-	prev_area=#psu_area{questid=0, zoneid=0, mapid=0}, prev_entryid=0, %% universeid
-	%% To be moved or deleted later on.
-	setid=0 %% @todo Current area's set number. Move that to psu_instance probably.
-}).
 
 %% @doc Character main or class level data structure.
 

@@ -62,7 +62,6 @@ init([]) ->
 		{egs_quests_db, {egs_quests_db, start_link, []}, permanent, 5000, worker, dynamic},
 		{egs_shops_db, {egs_shops_db, start_link, []}, permanent, 5000, worker, dynamic},
 		{egs_universes, {egs_universes, start_link, []}, permanent, 5000, worker, dynamic},
-		{egs_user_model, {egs_user_model, start_link, []}, permanent, 5000, worker, dynamic},
 		{egs_game_server, {egs_game_server, start_link, [GamePort]}, permanent, 5000, worker, dynamic}
 	],
 	{ok, {{one_for_one, 10, 10}, PatchProcs ++ LoginProcs ++ OtherProcs}}.
