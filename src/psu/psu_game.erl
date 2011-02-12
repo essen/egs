@@ -85,14 +85,14 @@ area_load(QuestID, ZoneID, MapID, EntryID, State) ->
 			{RetPid, RetSetID};
 		true -> {OldUser#users.instancepid, OldUser#users.setid}
 	end,
-	User = OldUser#users{instancepid=InstancePid, areatype=AreaType, area={psu_area, QuestID, RealZoneID, RealMapID}, entryid=RealEntryID},
+	User = OldUser#users{instancepid=InstancePid, areatype=AreaType, area={QuestID, RealZoneID, RealMapID}, entryid=RealEntryID},
 	egs_users:write(User),
 	RealSetID = if SetID > NbSetsInZone - 1 -> NbSetsInZone - 1; true -> SetID end,
 	area_load(AreaType, IsStart, RealSetID, OldUser, User, QuestData, ZoneData, AreaName, State).
 
 area_load(AreaType, IsStart, SetID, OldUser, User, QuestData, ZoneData, AreaName, State) ->
-	#psu_area{questid=OldQuestID, zoneid=OldZoneID} = OldUser#users.area,
-	#psu_area{questid=QuestID, zoneid=ZoneID, mapid=_MapID} = User#users.area,
+	{OldQuestID, OldZoneID, _OldMapID} = OldUser#users.area,
+	{QuestID, ZoneID, _MapID} = User#users.area,
 	QuestChange = if OldQuestID /= QuestID, QuestData /= undefined -> true; true -> false end,
 	if	ZoneData =:= undefined ->
 			ZoneChange = false;
@@ -200,7 +200,7 @@ npc_load(Leader, [{PartyPos, NPCGID}|NPCList], State) ->
 	#users{instancepid=InstancePid, area=Area, entryid=EntryID, pos=Pos} = Leader,
 	NPCUser = OldNPCUser#users{lid=PartyPos, instancepid=InstancePid, areatype=mission, area=Area, entryid=EntryID, pos=Pos},
 	%% @todo This one on mission end/abort?
-	%~ OldNPCUser#users{lid=PartyPos, instancepid=undefined, areatype=AreaType, area={psu_area, 0, 0, 0}, entryid=0, pos={0.0, 0.0, 0.0, 0}}
+	%~ OldNPCUser#users{lid=PartyPos, instancepid=undefined, areatype=AreaType, area={0, 0, 0}, entryid=0, pos={0.0, 0.0, 0.0, 0}}
 	egs_users:write(NPCUser),
 	psu_proto:send_010d(NPCUser, State),
 	psu_proto:send_0201(NPCUser, State),
@@ -263,7 +263,7 @@ send_022c(A, B) ->
 %% @todo The value before IntDir seems to be the player's current animation. 01 stand up, 08 ?, 17 normal sit
 send_0503({PrevX, PrevY, PrevZ, _AnyDir}) ->
 	{ok, User} = egs_users:read(get(gid)),
-	#users{id=GID, pos={X, Y, Z, Dir}, area=#psu_area{questid=QuestID, zoneid=ZoneID, mapid=MapID}, entryid=EntryID} = User,
+	#users{id=GID, pos={X, Y, Z, Dir}, area={QuestID, ZoneID, MapID}, entryid=EntryID} = User,
 	IntDir = trunc(Dir * 182.0416),
 	send(<< 16#05030300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, GID:32/little-unsigned-integer, 0:32,
 		16#1000:16, IntDir:16/little-unsigned-integer, PrevX:32/little-float, PrevY:32/little-float, PrevZ:32/little-float, X:32/little-float, Y:32/little-float, Z:32/little-float,
@@ -406,7 +406,7 @@ send_1004(Type, User, PartyPos) ->
 	end,
 
 	UserGID = get(gid),
-	#users{id=GID, character=Character, area={psu_area, QuestID, ZoneID, MapID}, entryid=EntryID} = User,
+	#users{id=GID, character=Character, area={QuestID, ZoneID, MapID}, entryid=EntryID} = User,
 	#characters{npcid=NPCid, name=Name, mainlevel=MainLevel} = Character,
 	Level = MainLevel#level.number,
 	send(<< 16#10040300:32, 16#ffff0000:32, 0:128, 16#00011300:32, UserGID:32/little-unsigned-integer, 0:64,

@@ -55,7 +55,7 @@ warp_event(InstancePid, ZoneID, BlockID, ListIndex, ObjectIndex) ->
 
 %% @todo @spec hit(ServerPid, TargetID, Args) -> Response
 hit(User, SourceID, TargetID) ->
-	gen_server:call(User#users.instancepid, {hit, (User#users.area)#psu_area.zoneid, User, SourceID, TargetID}).
+	gen_server:call(User#users.instancepid, {hit, element(2, User#users.area), User, SourceID, TargetID}).
 
 %% gen_server.
 

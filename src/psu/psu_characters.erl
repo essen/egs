@@ -45,8 +45,8 @@ character_tuple_to_binary(Tuple) ->
 %% @todo The value before IntDir seems to be the player's current animation. 01 stand up, 08 ?, 17 normal sit
 
 character_user_to_binary(User) ->
-	#users{id=CharGID, lid=CharLID, character=Character, pos={X, Y, Z, Dir}, area={psu_area, QuestID, ZoneID, MapID}, entryid=EntryID,
-		prev_area={psu_area, PrevQuestID, PrevZoneID, PrevMapID}, prev_entryid=PrevEntryID} = User,
+	#users{id=CharGID, lid=CharLID, character=Character, pos={X, Y, Z, Dir}, area={QuestID, ZoneID, MapID}, entryid=EntryID,
+		prev_area={PrevQuestID, PrevZoneID, PrevMapID}, prev_entryid=PrevEntryID} = User,
 	#characters{npcid=NPCid, type=Type, mainlevel=Level, stats=Stats, se=SE, currenthp=CurrentHP, maxhp=MaxHP} = Character,
 	#level{number=LV} = Level,
 	CharBin = psu_characters:character_tuple_to_binary(Character),

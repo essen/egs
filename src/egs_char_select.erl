@@ -78,7 +78,7 @@ event({char_select_enter, Slot, _BackToPreviousField}, State=#state{gid=GID}) ->
 	Character = #characters{slot=Slot, name=Name, race=Race, gender=Gender, class=Class, appearance=Appearance, options=Options}, % TODO: temporary set the slot here, won't be needed later
 	UniID = egs_universes:defaultid(),
 	egs_universes:enter(UniID),
-	User2 = User#users{uni=UniID, character=Character, area=#psu_area{questid=1100000, zoneid=0, mapid=4}, entryid=0},
+	User2 = User#users{uni=UniID, character=Character, area={1100000, 0, 4}, entryid=0},
 	egs_users:write(User2),
 	egs_users:item_add(GID, 16#11010000, #psu_special_item_variables{}),
 	egs_users:item_add(GID, 16#11020000, #psu_special_item_variables{}),

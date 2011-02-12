@@ -64,7 +64,7 @@ cast(16#0503, Data, State=#state{gid=GID}) ->
 		QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer, _:32 >> = Data,
 	FloatDir = Dir / 46603.375,
 	{ok, User} = egs_users:read(GID),
-	NewUser = User#users{pos={X, Y, Z, FloatDir}, area=#psu_area{questid=QuestID, zoneid=ZoneID, mapid=MapID}, entryid=EntryID},
+	NewUser = User#users{pos={X, Y, Z, FloatDir}, area={QuestID, ZoneID, MapID}, entryid=EntryID},
 	egs_users:write(NewUser),
 	cast(valid, Data, State);
 
@@ -75,7 +75,7 @@ cast(16#0514, Data, State=#state{gid=GID}) ->
 		MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer, _/bits >> = Data,
 	FloatDir = Dir / 46603.375,
 	{ok, User} = egs_users:read(GID),
-	NewUser = User#users{pos={X, Y, Z, FloatDir}, area=#psu_area{questid=QuestID, zoneid=ZoneID, mapid=MapID}, entryid=EntryID},
+	NewUser = User#users{pos={X, Y, Z, FloatDir}, area={QuestID, ZoneID, MapID}, entryid=EntryID},
 	egs_users:write(NewUser),
 	cast(valid, Data, State);
 
@@ -114,7 +114,7 @@ raw(16#0402, << _:352, Data/bits >>, #state{gid=GID}) ->
 		7 -> % spawn cleared @todo 1201 sent back with same values apparently, but not always
 			log("cleared spawn ~b", [SpawnID]),
 			{ok, User} = egs_users:read(GID),
-			{BlockID, EventID} = psu_instance:spawn_cleared_event(User#users.instancepid, (User#users.area)#psu_area.zoneid, SpawnID),
+			{BlockID, EventID} = psu_instance:spawn_cleared_event(User#users.instancepid, element(2, User#users.area), SpawnID),
 			if	EventID =:= false -> ignore;
 				true -> psu_game:send_1205(EventID, BlockID, 0)
 			end;
@@ -216,9 +216,8 @@ event({area_change, QuestID, ZoneID, MapID, EntryID, PartyPos}, State) ->
 %% @todo The area_load function should probably not change the user's values.
 %% @todo Remove that ugly code when the above is done.
 event(char_load_complete, State=#state{gid=GID}) ->
-	{ok, User=#users{area=#psu_area{questid=QuestID, zoneid=ZoneID, mapid=MapID},
-		entryid=EntryID}} = egs_users:read(GID),
-	egs_users:write(User#users{area=#psu_area{questid=0, zoneid=0, mapid=0}, entryid=0}),
+	{ok, User=#users{area={QuestID, ZoneID, MapID}, entryid=EntryID}} = egs_users:read(GID),
+	egs_users:write(User#users{area={0, 0, 0}, entryid=0}),
 	event({area_change, QuestID, ZoneID, MapID, EntryID}, State);
 
 %% @doc Chat broadcast handler. Dispatch the message to everyone (for now).
@@ -257,9 +256,8 @@ event(counter_background_locations_request, _State) ->
 event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}, State=#state{gid=GID}) ->
 	log("counter load ~b", [CounterID]),
 	{ok, OldUser} = egs_users:read(GID),
-	OldArea = OldUser#users.area,
-	FromArea = {psu_area, OldArea#psu_area.questid, FromZoneID, FromMapID},
-	User = OldUser#users{areatype=counter, area={psu_area, 16#7fffffff, 0, 0}, entryid=0, prev_area=FromArea, prev_entryid=FromEntryID},
+	FromArea = {element(1, OldUser#users.area), FromZoneID, FromMapID},
+	User = OldUser#users{areatype=counter, area={16#7fffffff, 0, 0}, entryid=0, prev_area=FromArea, prev_entryid=FromEntryID},
 	egs_users:write(User),
 	QuestData = egs_quests_db:quest(0),
 	{ok, ZoneData} = file:read_file("data/lobby/counter.zone.nbl"),
@@ -303,7 +301,7 @@ event(counter_join_party_request, State) ->
 event(counter_leave, State=#state{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
 	PrevArea = User#users.prev_area,
-	event({area_change, PrevArea#psu_area.questid, PrevArea#psu_area.zoneid, PrevArea#psu_area.mapid, User#users.prev_entryid}, State);
+	event({area_change, element(1, PrevArea), element(2, PrevArea), element(3, PrevArea), User#users.prev_entryid}, State);
 
 %% @doc Send the code for the background image to use. But there's more that should be sent though.
 %% @todo Apparently background values 1 2 3 are never used on official servers. Find out why.
@@ -455,7 +453,7 @@ event(mission_abort, State=#state{gid=GID}) ->
 	%% map change
 	if	User#users.areatype =:= mission ->
 			PrevArea = User#users.prev_area,
-			event({area_change, PrevArea#psu_area.questid, PrevArea#psu_area.zoneid, PrevArea#psu_area.mapid, User#users.prev_entryid}, State);
+			event({area_change, element(1, PrevArea), element(2, PrevArea), element(3, PrevArea), User#users.prev_entryid}, State);
 		true -> ignore
 	end;
 
@@ -627,7 +625,7 @@ event({object_event_trigger, BlockID, EventID}, _State) ->
 
 event({object_goggle_target_activate, ObjectID}, #state{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
-	{BlockID, EventID} = psu_instance:std_event(User#users.instancepid, (User#users.area)#psu_area.zoneid, ObjectID),
+	{BlockID, EventID} = psu_instance:std_event(User#users.instancepid, element(2, User#users.area), ObjectID),
 	psu_game:send_1205(EventID, BlockID, 0),
 	psu_game:send_1213(ObjectID, 8);
 
@@ -647,38 +645,38 @@ event({object_healing_pad_tick, [_PartyPos]}, State=#state{gid=GID}) ->
 
 event({object_key_console_enable, ObjectID}, #state{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
-	{BlockID, [EventID|_]} = psu_instance:std_event(User#users.instancepid, (User#users.area)#psu_area.zoneid, ObjectID),
+	{BlockID, [EventID|_]} = psu_instance:std_event(User#users.instancepid, element(2, User#users.area), ObjectID),
 	psu_game:send_1205(EventID, BlockID, 0),
 	psu_game:send_1213(ObjectID, 1);
 
 event({object_key_console_init, ObjectID}, #state{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
-	{BlockID, [_, EventID, _]} = psu_instance:std_event(User#users.instancepid, (User#users.area)#psu_area.zoneid, ObjectID),
+	{BlockID, [_, EventID, _]} = psu_instance:std_event(User#users.instancepid, element(2, User#users.area), ObjectID),
 	psu_game:send_1205(EventID, BlockID, 0);
 
 event({object_key_console_open_gate, ObjectID}, #state{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
-	{BlockID, [_, _, EventID]} = psu_instance:std_event(User#users.instancepid, (User#users.area)#psu_area.zoneid, ObjectID),
+	{BlockID, [_, _, EventID]} = psu_instance:std_event(User#users.instancepid, element(2, User#users.area), ObjectID),
 	psu_game:send_1205(EventID, BlockID, 0),
 	psu_game:send_1213(ObjectID, 1);
 
 %% @todo Now that it's separate from object_key_console_enable, handle it better than that, don't need a list of events.
 event({object_key_enable, ObjectID}, #state{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
-	{BlockID, [EventID|_]} = psu_instance:std_event(User#users.instancepid, (User#users.area)#psu_area.zoneid, ObjectID),
+	{BlockID, [EventID|_]} = psu_instance:std_event(User#users.instancepid, element(2, User#users.area), ObjectID),
 	psu_game:send_1205(EventID, BlockID, 0),
 	psu_game:send_1213(ObjectID, 1);
 
 %% @todo Some switch objects apparently work differently, like the light switch in Mines in MAG'.
 event({object_switch_off, ObjectID}, #state{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
-	{BlockID, EventID} = psu_instance:std_event(User#users.instancepid, (User#users.area)#psu_area.zoneid, ObjectID),
+	{BlockID, EventID} = psu_instance:std_event(User#users.instancepid, element(2, User#users.area), ObjectID),
 	psu_game:send_1205(EventID, BlockID, 1),
 	psu_game:send_1213(ObjectID, 0);
 
 event({object_switch_on, ObjectID}, #state{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
-	{BlockID, EventID} = psu_instance:std_event(User#users.instancepid, (User#users.area)#psu_area.zoneid, ObjectID),
+	{BlockID, EventID} = psu_instance:std_event(User#users.instancepid, element(2, User#users.area), ObjectID),
 	psu_game:send_1205(EventID, BlockID, 0),
 	psu_game:send_1213(ObjectID, 1);
 
@@ -691,7 +689,7 @@ event({object_vehicle_boost_respawn, ObjectID}, _State) ->
 %% @todo Second send_1211 argument should be User#users.lid. Fix when it's correctly handled.
 event({object_warp_take, BlockID, ListNb, ObjectNb}, #state{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
-	Pos = psu_instance:warp_event(User#users.instancepid, (User#users.area)#psu_area.zoneid, BlockID, ListNb, ObjectNb),
+	Pos = psu_instance:warp_event(User#users.instancepid, element(2, User#users.area), BlockID, ListNb, ObjectNb),
 	NewUser = User#users{pos=Pos},
 	egs_users:write(NewUser),
 	psu_game:send_0503(User#users.pos),
@@ -735,7 +733,7 @@ event(player_death, State=#state{gid=GID}) ->
 event(player_death_return_to_lobby, State=#state{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
 	PrevArea = User#users.prev_area,
-	event({area_change, PrevArea#psu_area.questid, PrevArea#psu_area.zoneid, PrevArea#psu_area.mapid, User#users.prev_entryid}, State);
+	event({area_change, element(1, PrevArea), element(2, PrevArea), element(3, PrevArea), User#users.prev_entryid}, State);
 
 event(player_type_availability_request, State) ->
 	psu_proto:send_1a07(State);
@@ -757,7 +755,7 @@ event({unicube_select, Selection, EntryID}, State=#state{gid=GID}) ->
 	case Selection of
 		16#ffffffff ->
 			UniID = egs_universes:myroomid(),
-			User2 = User#users{uni=UniID, area=#psu_area{questid=1120000, zoneid=0, mapid=100}, entryid=0};
+			User2 = User#users{uni=UniID, area={1120000, 0, 100}, entryid=0};
 		_ ->
 			UniID = Selection,
 			User2 = User#users{uni=UniID, entryid=EntryID}

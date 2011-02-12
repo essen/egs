@@ -1291,7 +1291,7 @@ send_0204(User, #state{socket=Socket, gid=DestGID}) ->
 
 %% @doc Make the client load a new map.
 send_0205(CharUser, IsSeasonal, #state{socket=Socket, gid=DestGID, lid=DestLID, areanb=AreaNb}) ->
-	#users{lid=CharLID, area=#psu_area{zoneid=ZoneID, mapid=MapID}, entryid=EntryID} = CharUser,
+	#users{lid=CharLID, area={_QuestID, ZoneID, MapID}, entryid=EntryID} = CharUser,
 	packet_send(Socket, << 16#02050300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64,
 		16#ffffffff:32, ZoneID:32/little, MapID:32/little, EntryID:32/little, AreaNb:32/little, CharLID:16/little, 0:8, IsSeasonal:8 >>).
 
@@ -1450,7 +1450,7 @@ send_0a11(ItemID, ItemDesc, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 %% @doc Quest init.
 %% @todo When first entering a zone it seems LID should be set to ffff apparently.
 send_0c00(CharUser, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
-	#users{area=#psu_area{questid=QuestID}} = CharUser,
+	#users{area={QuestID, _ZoneID, _MapID}} = CharUser,
 	packet_send(Socket, << 16#0c000300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64, QuestID:32/little,
 		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
 		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
@@ -1524,7 +1524,7 @@ send_100e(CounterID, AreaName, #state{socket=Socket, gid=DestGID}) ->
 	CounterType = if CounterID =:= 16#ffffffff -> 2; true -> 1 end,
 	packet_send(Socket, << 16#100e0300:32, 16#ffffffbf:32, 0:128, 16#00011300:32, DestGID:32, 0:64,
 		1, PartyPos, 0:48, 16#ffffff7f:32, UCS2Name/binary, 0:Padding, 0:32, CounterID:32/little, CounterType:32/little >>).
-send_100e(#psu_area{questid=QuestID, zoneid=ZoneID, mapid=MapID}, EntryID, AreaName, #state{socket=Socket, gid=DestGID}) ->
+send_100e({QuestID, ZoneID, MapID}, EntryID, AreaName, #state{socket=Socket, gid=DestGID}) ->
 	PartyPos = 0,
 	UCS2Name = << << X:8, 0:8 >> || X <- AreaName >>,
 	Padding = 8 * (64 - byte_size(UCS2Name)),

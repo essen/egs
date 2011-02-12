@@ -23,6 +23,12 @@
 
 %% EGS types.
 
+-type questid()	:: 0..16#ffffffff. %% @todo What's the real max?
+-type zoneid()	:: 0..16#ffff. %% @todo What's the real max?
+-type mapid()	:: 0..9999.
+-type entryid()	:: 0..16#ffff. %% @todo What's the real max?
+
+-type area() :: {questid(), zoneid(), mapid()}.
 -type position() :: {X :: float(), Y :: float(), Z :: float(), Dir :: float()}.
 
 %% Records.
@@ -46,10 +52,6 @@
 	auth_state	:: undefined | {wait_for_authentication, binary(), any()}
 }).
 
-%% @doc Character area location data structure.
-%% @todo Review.
--record(psu_area, {questid, zoneid, mapid}).
-
 %% @doc Table containing the users currently logged in.
 %% @todo Probably can use a "param" or "extra" field to store the game-specific information (for things that don't need to be queried).
 -record(users, {
@@ -64,12 +66,12 @@
 	instancepid	:: pid(),
 	partypid	:: pid(),
 	areatype	:: counter | mission | lobby | myroom | spaceport,
-	area		:: {psu_area, 0..16#ffffffff, 0..16#ffff, 0..9999},
-	entryid		:: 0..16#ffff,
+	area		:: area(),
+	entryid		:: entryid(),
 	pos = {0.0, 0.0, 0.0, 0.0} :: position(),
 	shopid		:: integer(),
-	prev_area = #psu_area{questid=0, zoneid=0, mapid=0} :: {psu_area, 0..16#ffffffff, 0..16#ffff, 0..9999},
-	prev_entryid = 0 :: 0..16#ffff,
+	prev_area = {0, 0, 0} :: area(),
+	prev_entryid = 0 :: entryid(),
 	%% To be moved or deleted later on.
 	setid = 0	:: non_neg_integer() %% @todo Current area's set number. Move that to psu_instance probably.
 }).
