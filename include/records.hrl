@@ -17,13 +17,32 @@
 %%	You should have received a copy of the GNU Affero General Public License
 %%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
+%% Standard library types.
+
+-opaque sslsocket() :: any().
+
+%% Records.
+
 %% @doc Per-process state used by the various EGS modules.
--record(state, {socket, gid, slot, lid=16#ffff, areanb=0}).
+-record(state, {
+	socket			:: sslsocket(),
+	gid				:: integer(),
+	slot			:: 0..3,
+	lid = 16#ffff	:: 0..16#ffff,
+	areanb = 0		:: non_neg_integer()
+}).
 
 %% @doc Accounts. So far only used for storing temporary information.
 %% @todo Hash the password.
 %% @todo Add email, password_salt, is_ingame, register_time, last_login_time, etc.
--record(accounts, {gid, username, password, auth_state}).
+-record(accounts, {
+	gid			:: integer(),
+	username	:: string(),
+	password	:: string(),
+	auth_state	:: undefined | {wait_for_authentication, binary(), any()}
+}).
+
+%% Past this point needs to be reviewed.
 
 %% @doc NPC configuration data.
 %% @todo Add inventory, AI parameters.
@@ -56,8 +75,6 @@
 	proportion=65535, proportionboxx=65535, proportionboxy=65535,
 	faceboxx=65535, faceboxy=65535
 }).
-
-%% Past this point needs to be reviewed.
 
 %% @doc Table containing counters current values.
 -record(counters, {name, id}).
