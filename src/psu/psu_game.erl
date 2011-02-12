@@ -205,7 +205,7 @@ npc_load(Leader, [{PartyPos, NPCGID}|NPCList], State) ->
 	psu_proto:send_010d(NPCUser, State),
 	psu_proto:send_0201(NPCUser, State),
 	psu_proto:send_0215(0, State),
-	send_0a04(NPCUser#users.id),
+	send_0a04(NPCUser#users.gid),
 	send_1004(npc_mission, NPCUser, PartyPos),
 	send_100f((NPCUser#users.character)#characters.npcid, PartyPos),
 	send_1601(PartyPos),
@@ -263,7 +263,7 @@ send_022c(A, B) ->
 %% @todo The value before IntDir seems to be the player's current animation. 01 stand up, 08 ?, 17 normal sit
 send_0503({PrevX, PrevY, PrevZ, _AnyDir}) ->
 	{ok, User} = egs_users:read(get(gid)),
-	#users{id=GID, pos={X, Y, Z, Dir}, area={QuestID, ZoneID, MapID}, entryid=EntryID} = User,
+	#users{gid=GID, pos={X, Y, Z, Dir}, area={QuestID, ZoneID, MapID}, entryid=EntryID} = User,
 	IntDir = trunc(Dir * 182.0416),
 	send(<< 16#05030300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, GID:32/little-unsigned-integer, 0:32,
 		16#1000:16, IntDir:16/little-unsigned-integer, PrevX:32/little-float, PrevY:32/little-float, PrevZ:32/little-float, X:32/little-float, Y:32/little-float, Z:32/little-float,
@@ -406,7 +406,7 @@ send_1004(Type, User, PartyPos) ->
 	end,
 
 	UserGID = get(gid),
-	#users{id=GID, character=Character, area={QuestID, ZoneID, MapID}, entryid=EntryID} = User,
+	#users{gid=GID, character=Character, area={QuestID, ZoneID, MapID}, entryid=EntryID} = User,
 	#characters{npcid=NPCid, name=Name, mainlevel=MainLevel} = Character,
 	Level = MainLevel#level.number,
 	send(<< 16#10040300:32, 16#ffff0000:32, 0:128, 16#00011300:32, UserGID:32/little-unsigned-integer, 0:64,

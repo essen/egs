@@ -56,7 +56,7 @@
 %% @todo Probably can use a "param" or "extra" field to store the game-specific information (for things that don't need to be queried).
 -record(users, {
 	%% General information.
-	id			:: integer(), %% @todo Rename into gid.
+	gid			:: integer(),
 	lid			:: non_neg_integer(),
 	pid			:: pid(),
 	time		:: integer(),

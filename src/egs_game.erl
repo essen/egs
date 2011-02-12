@@ -233,7 +233,7 @@ event({chat, _FromTypeID, FromGID, _FromName, Modifiers, ChatMsg}, #state{gid=Us
 			ignore;
 		UserGID -> %% player chat: disregard whatever was sent except modifiers and message.
 			{ok, User} = egs_users:read(UserGID),
-			[16#00001200, User#users.id, (User#users.character)#characters.name];
+			[16#00001200, User#users.gid, (User#users.character)#characters.name];
 		NPCGID -> %% npc chat: @todo Check that the player is the party leader and this npc is in his party.
 			{ok, User} = egs_users:read(NPCGID),
 			[16#00001d00, FromGID, (User#users.character)#characters.name]
@@ -478,7 +478,7 @@ event({npc_force_invite, NPCid}, State=#state{gid=GID}) ->
 		PartyPid ->
 			ignore
 	end,
-	{ok, PartyPos} = psu_party:join(PartyPid, npc, TmpNPCUser#users.id),
+	{ok, PartyPos} = psu_party:join(PartyPid, npc, TmpNPCUser#users.gid),
 	#users{instancepid=InstancePid, area=Area, entryid=EntryID, pos=Pos} = User,
 	NPCUser = TmpNPCUser#users{lid=PartyPos, partypid=PartyPid, instancepid=InstancePid, areatype=mission, area=Area, entryid=EntryID, pos=Pos},
 	egs_users:write(NPCUser),
@@ -490,7 +490,7 @@ event({npc_force_invite, NPCid}, State=#state{gid=GID}) ->
 	psu_proto:send_010d(SentNPCUser, State),
 	psu_proto:send_0201(SentNPCUser, State),
 	psu_proto:send_0215(0, State),
-	psu_game:send_0a04(SentNPCUser#users.id),
+	psu_game:send_0a04(SentNPCUser#users.gid),
 	psu_game:send_022c(0, 16#12),
 	psu_game:send_1004(npc_mission, SentNPCUser, PartyPos),
 	psu_game:send_100f((SentNPCUser#users.character)#characters.npcid, PartyPos),
@@ -510,7 +510,7 @@ event({npc_invite, NPCid}, #state{gid=GID}) ->
 		PartyPid ->
 			ignore
 	end,
-	{ok, PartyPos} = psu_party:join(PartyPid, npc, TmpNPCUser#users.id),
+	{ok, PartyPos} = psu_party:join(PartyPid, npc, TmpNPCUser#users.gid),
 	NPCUser = TmpNPCUser#users{lid=PartyPos, partypid=PartyPid},
 	egs_users:write(NPCUser),
 	egs_users:write(User#users{partypid=PartyPid}),
@@ -766,7 +766,7 @@ event({unicube_select, Selection, EntryID}, State=#state{gid=GID}) ->
 		undefined -> ignore;
 		PartyPid ->
 			%% @todo Replace stop by leave when leaving stops the party correctly when nobody's there anymore.
-			%~ psu_party:leave(User#users.partypid, User#users.id)
+			%~ psu_party:leave(User#users.partypid, User#users.gid)
 			{ok, NPCList} = psu_party:get_npc(PartyPid),
 			[egs_users:delete(NPCGID) || {_Spot, NPCGID} <- NPCList],
 			psu_party:stop(PartyPid)

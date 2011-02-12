@@ -67,7 +67,7 @@ event(system_game_server_request, State=#state{socket=Socket}) ->
 event({system_key_auth_request, AuthGID, AuthKey}, State=#state{socket=Socket}) ->
 	egs_accounts:key_auth(AuthGID, AuthKey),
 	LID = 1 + mnesia:dirty_update_counter(counters, lobby, 1) rem 1023,
-	egs_users:write(#users{id=AuthGID, pid=self(), lid=LID}),
+	egs_users:write(#users{gid=AuthGID, pid=self(), lid=LID}),
 	put(socket, Socket),
 	put(gid, AuthGID),
 	State2 = State#state{gid=AuthGID},

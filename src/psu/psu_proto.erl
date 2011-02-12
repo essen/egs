@@ -1198,7 +1198,7 @@ parse_hits(Hits, Acc) ->
 %% @todo Probably don't pattern match the data like this...
 %% @todo Handle the DestLID properly.
 send_010d(CharUser, #state{socket=Socket, gid=DestGID}) ->
-	CharGID = CharUser#users.id,
+	CharGID = CharUser#users.gid,
 	CharLID = CharUser#users.lid,
 	<< _:640, CharBin/bits >> = psu_characters:character_user_to_binary(CharUser),
 	packet_send(Socket, << 16#010d0300:32, 0:160, 16#00011300:32, DestGID:32/little,
@@ -1208,14 +1208,14 @@ send_010d(CharUser, #state{socket=Socket, gid=DestGID}) ->
 %% @doc Trigger a character-related event.
 send_0111(CharUser, EventID, State) ->
 	send_0111(CharUser, EventID, 0, State).
-send_0111(#users{id=CharGID, lid=CharLID}, EventID, Param, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_0111(#users{gid=CharGID, lid=CharLID}, EventID, Param, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#01110300:32, DestLID:16/little, 0:48, CharGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64,
 		CharGID:32/little, CharLID:32/little, EventID:32/little, Param:32/little >>).
 
 %% @doc Update the character level, blastbar, luck and money information.
 send_0115(CharUser, State) ->
 	send_0115(CharUser, 16#ffffffff, State).
-send_0115(#users{id=CharGID, lid=CharLID, character=Character}, EnemyTargetID, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_0115(#users{gid=CharGID, lid=CharLID, character=Character}, EnemyTargetID, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#01150300:32, DestLID:16/little, 0:48, CharGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64,
 		CharGID:32/little, CharLID:32/little, EnemyTargetID:32/little, (build_char_level(Character))/binary >>).
 
@@ -1235,7 +1235,7 @@ build_char_level(#characters{type=Type, mainlevel=#level{number=Level, exp=EXP},
 
 %% @doc Revive player with optional SEs.
 %% @todo SEs.
-send_0117(#users{id=CharGID, lid=CharLID, character=#characters{currenthp=HP}}, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_0117(#users{gid=CharGID, lid=CharLID, character=#characters{currenthp=HP}}, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	SE = << 0:64 >>,
 	packet_send(Socket, << 16#01170300:32, DestLID:16/little, 0:48, CharGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64,
 		CharGID:32/little, CharLID:32/little, SE/binary, HP:32/little, 0:32 >>).
@@ -1259,7 +1259,7 @@ send_0201(CharUser, #state{socket=Socket, gid=DestGID}) ->
 		npc -> [16#00001d00, 255];
 		_ -> [16#00001200, 0]
 	end,
-	CharGID = CharUser#users.id,
+	CharGID = CharUser#users.gid,
 	CharBin = psu_characters:character_user_to_binary(CharUser),
 	IsGM = 0,
 	OnlineStatus = 0,
@@ -1273,7 +1273,7 @@ send_0202(#state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 
 %% @doc Spawn a player with the given GID and LID.
 %% @todo Handle the LID properly.
-send_0203(#users{id=CharGID, lid=CharLID}, #state{socket=Socket, gid=DestGID}) ->
+send_0203(#users{gid=CharGID, lid=CharLID}, #state{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#02030300:32, 0:160, 16#00011300:32,
 		DestGID:32/little, 0:64, CharGID:32/little, CharLID:32/little >>).
 
@@ -1285,7 +1285,7 @@ send_0204(User, #state{socket=Socket, gid=DestGID}) ->
 		npc -> 16#00001d00;
 		_ -> 16#00001200
 	end,
-	#users{id=CharGID, lid=CharLID} = User,
+	#users{gid=CharGID, lid=CharLID} = User,
 	packet_send(Socket, << 16#02040300:32, 0:32, CharTypeID:32, CharGID:32/little, 0:64,
 		16#00011300:32, DestGID:32/little, 0:64, CharGID:32/little, CharLID:32/little, 100:32/little >>).
 

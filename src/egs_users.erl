@@ -58,7 +58,7 @@ select(all) ->
 	{ok, List};
 select({neighbors, User}) ->
 	List = do(qlc:q([X || X <- mnesia:table(?TABLE),
-		X#?TABLE.id /= User#?TABLE.id,
+		X#?TABLE.gid /= User#?TABLE.gid,
 		X#?TABLE.pid /= undefined,
 		X#?TABLE.instancepid =:= User#?TABLE.instancepid,
 		X#?TABLE.area =:= User#?TABLE.area
