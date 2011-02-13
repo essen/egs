@@ -16,18 +16,14 @@
 #	You should have received a copy of the GNU Affero General Public License
 #	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
-ERL ?= erl
-ERLC ?= erlc
-APP := egs
-
 all: clean missions server
 
 server:
 	@./rebar compile
 
 missions:
-	$(ERLC) src/psu/psu_parser.erl
-	$(ERL) -noshell -noinput -sname missions -pa ebin -run psu_parser run -run init stop
+	erlc src/psu/psu_parser.erl
+	erl -noshell -noinput -sname missions -pa ebin -run psu_parser run -run init stop
 	rm psu_parser.beam
 
 clean:
@@ -36,9 +32,3 @@ clean:
 
 fclean: clean
 	rm -rf Mnesia.egs*
-
-run:
-	@echo "EGS is free software available under the GNU GPL version 3"
-	@echo "Copyright (C) 2010  Loic Hoguin"
-	@echo 
-	$(ERL) -sname egs -pa ebin -boot start_sasl -s reloader -s egs
