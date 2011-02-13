@@ -62,8 +62,7 @@ load_counter_pack_quests([{_QuestID, Filename}|Tail], PosList, SizeList, Acc) ->
 	load_counter_pack_quests(Tail, [Pos|PosList], [Size|SizeList], [File|Acc]).
 
 %% @doc Load a quest configuration file and return a quest.xnr binary along with its pointers array.
-load_quest_xnr(ConfFilename) ->
-	{ok, Settings} = file:consult(ConfFilename),
+load_quest_xnr(Settings) ->
 	QuestID = proplists:get_value(questid, Settings),
 	%% Temp flags.
 	TmpFlagsList = proplists:get_value(temp_flags, Settings),

@@ -65,7 +65,7 @@
 	uni			:: integer(),
 	instancepid	:: pid(),
 	partypid	:: pid(),
-	areatype	:: counter | mission | lobby | myroom | spaceport,
+	areatype	:: counter | mission | lobby | myroom,
 	area		:: area(),
 	entryid		:: entryid(),
 	pos = {0.0, 0.0, 0.0, 0.0} :: position(),

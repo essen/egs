@@ -16,15 +16,10 @@
 #	You should have received a copy of the GNU Affero General Public License
 #	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
-all: clean missions server
+all: server
 
 server:
 	@./rebar compile
-
-missions:
-	erlc src/psu/psu_parser.erl
-	erl -noshell -noinput -sname missions -pa ebin -run psu_parser run -run init stop
-	rm psu_parser.beam
 
 clean:
 	@./rebar clean

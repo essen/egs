@@ -21,8 +21,6 @@
 -compile(export_all). %% @todo Temporarily export all until send_xxxx functions are moved to psu_proto.
 
 -include("include/records.hrl").
--include("include/maps.hrl").
--include("include/missions.hrl").
 
 %% @doc Load and send the character information to the client.
 %% @todo Move this whole function directly to psu_proto, probably.
@@ -44,152 +42,56 @@ char_load(User, State) ->
 
 %% @doc Load the given map as a standard lobby.
 area_load(QuestID, ZoneID, MapID, EntryID, State) ->
-	{ok, OldUser} = egs_users:read(get(gid)),
-	[{type, AreaType}, {file, QuestFile}|MissionInfo] = proplists:get_value(QuestID, ?QUESTS, [{type, undefined}, {file, undefined}]),
-	QuestData = case QuestFile of
-		nofile -> egs_quests_db:quest(QuestID);
-		undefined -> undefined;
-		QFilename -> {ok, QD} = file:read_file(QFilename), QD
-	end,
-	[IsStart, RealZoneID, RealMapID, RealEntryID, NbSetsInQuest] = case AreaType of
-		mission ->
-			if	ZoneID =:= 65535 ->
-					[{start, [TmpZoneID, TmpMapID, TmpEntryID]}, {sets, TmpNbSets}] = MissionInfo,
-					[true, TmpZoneID, TmpMapID, TmpEntryID, TmpNbSets];
-				true -> [false, ZoneID, MapID, EntryID, ignored]
-			end;
-		myroom ->
-			if	ZoneID =:= 0 ->
-					[false, 0, 423, EntryID, ignored];
-				true -> [false, ZoneID, MapID, EntryID, ignored]
-			end;
-		_ ->
-			[false, ZoneID, MapID, EntryID, ignored]
-	end,
-	[{file, ZoneFile}|ZoneSetInfo] = proplists:get_value([QuestID, RealZoneID], ?ZONES, [{file, undefined}]),
-	ZoneData = case ZoneFile of
-		nofile -> egs_quests_db:zone(QuestID, ZoneID);
-		undefined -> undefined;
-		ZFilename -> {ok, ZD} = file:read_file(ZFilename), ZD
-	end,
-	NbSetsInZone = case ZoneSetInfo of [] -> 1; [{sets, TmpNbSetsInZone}] -> TmpNbSetsInZone end,
-	if	AreaType =:= myroom ->
-			AreaName = "Your Room";
-		true ->
-			[{name, AreaName}] = proplists:get_value([QuestID, RealMapID], ?MAPS, [{name, "dammy"}])
-	end,
-	{InstancePid, SetID} = if IsStart =:= true -> % initialize the mission
-			Zones = proplists:get_value(QuestID, ?MISSIONS),
-			{ok, RetPid} = psu_instance:start_link(Zones),
-			RetSetID = crypto:rand_uniform(0, NbSetsInQuest),
-			{RetPid, RetSetID};
-		true -> {OldUser#users.instancepid, OldUser#users.setid}
-	end,
-	User = OldUser#users{instancepid=InstancePid, areatype=AreaType, area={QuestID, RealZoneID, RealMapID}, entryid=RealEntryID},
-	egs_users:write(User),
-	RealSetID = if SetID > NbSetsInZone - 1 -> NbSetsInZone - 1; true -> SetID end,
-	area_load(AreaType, IsStart, RealSetID, OldUser, User, QuestData, ZoneData, AreaName, State).
-
-area_load(AreaType, IsStart, SetID, OldUser, User, QuestData, ZoneData, AreaName, State) ->
+	{ok, OldUser} = egs_users:read(State#state.gid),
 	{OldQuestID, OldZoneID, _OldMapID} = OldUser#users.area,
-	{QuestID, ZoneID, _MapID} = User#users.area,
-	QuestChange = if OldQuestID /= QuestID, QuestData /= undefined -> true; true -> false end,
-	if	ZoneData =:= undefined ->
-			ZoneChange = false;
-		true ->
-			ZoneChange = if OldQuestID =:= QuestID, OldZoneID =:= ZoneID -> false; true -> true end
-	end,
+	QuestData = egs_quests_db:quest(QuestID),
+	QuestChange = OldQuestID /= QuestID,
+	ZoneData = egs_quests_db:zone(QuestID, ZoneID),
+	ZoneChange = if OldQuestID =:= QuestID, OldZoneID =:= ZoneID -> false; true -> true end,
+	AreaType = egs_quests_db:area_type(QuestID, ZoneID),
+	AreaShortName = "dammy", %% @todo Load the short name from egs_quests_db.
+	SetID = 0, %% @todo Handle multiple sets properly.
 	{IsSeasonal, SeasonID} = egs_seasons:read(QuestID),
-	% broadcast spawn and unspawn to other people
-	{ok, UnspawnList} = egs_users:select({neighbors, OldUser}),
-	{ok, SpawnList} = egs_users:select({neighbors, User}),
-	lists:foreach(fun(Other) -> Other#users.pid ! {egs, player_unspawn, User} end, UnspawnList),
-	if	AreaType =:= lobby ->
-			lists:foreach(fun(Other) -> Other#users.pid ! {egs, player_spawn, User} end, SpawnList);
-		true -> ignore
-	end,
-	% load area
-	if	QuestChange =:= true ->
-			% load new quest
+	User = OldUser#users{areatype=AreaType, area={QuestID, ZoneID, MapID}, entryid=EntryID},
+	egs_users:write(User),
+	%% @todo Handle spawn and unspawn using egs_zone:leave and egs_zone:enter.
+	%% Load the quest.
+	if QuestChange ->
 			psu_proto:send_0c00(User, State),
 			psu_proto:send_020e(QuestData, State);
 		true -> ignore
 	end,
 	%% @todo The LID changes here.
-	if	IsStart =:= true ->
-			psu_proto:send_0215(16#ffffffff, State);
-		true -> ignore
-	end,
-	if	ZoneChange =:= true ->
-			% load new zone
+	%% Load the zone.
+	if ZoneChange ->
 			psu_proto:send_0a05(State),
-			if AreaType =:= lobby ->
-					psu_proto:send_0111(User#users{lid=0}, 6, State);
-				true -> ignore
-			end,
+			psu_proto:send_0111(User#users{lid=0}, 6, State),
 			psu_proto:send_010d(User#users{lid=0}, State),
 			psu_proto:send_0200(ZoneID, AreaType, State),
 			psu_proto:send_020f(ZoneData, SetID, SeasonID, State);
 		true -> ignore
 	end,
+	%% Load the player location.
 	State2 = State#state{areanb=State#state.areanb + 1},
 	psu_proto:send_0205(User#users{lid=0}, IsSeasonal, State2),
-	psu_proto:send_100e(User#users.area, User#users.entryid, AreaName, State2),
-	if	AreaType =:= mission ->
-			psu_proto:send_0215(0, State2),
-			if	IsStart =:= true ->
-					psu_proto:send_0215(0, State2),
-					send_0c09();
-				true -> ignore
-			end;
-		true ->
-			psu_proto:send_020c(State2)
-	end,
-	if	ZoneChange =:= true ->
-			case AreaType of
-				myroom ->
-					send_1332(),
-					send_1202(),
-					psu_proto:send_1204(State2),
-					send_1206();
-				mission ->
-					send_1202(),
-					psu_proto:send_1204(State2),
-					send_1206(),
-					send_1207();
-				_ -> ignore
-			end;
+	psu_proto:send_100e(User#users.area, User#users.entryid, AreaShortName, State2),
+	%% Load the zone objects.
+	if ZoneChange ->
+			send_1212(); %% @todo Only sent if there is a set file.
 		true -> ignore
 	end,
-	if	ZoneChange =:= true, AreaType =/= spaceport ->
-			send_1212();
-		true -> ignore
-	end,
-	if	AreaType =:= myroom ->
-			send_1309();
-		true -> ignore
-	end,
+	%% Load the player.
 	psu_proto:send_0201(User#users{lid=0}, State2),
-	if	ZoneChange =:= true ->
+	if ZoneChange ->
 			psu_proto:send_0a06(User, State2);
 		true -> ignore
 	end,
-	if	length(SpawnList) =/= 0 ->
-			psu_proto:send_0233(SpawnList, State);
-		true -> ignore
-	end,
-	case User#users.partypid of
-		undefined -> ignore;
-		_ -> send_022c(0, 16#12)
-	end,
+	%% @todo Send the spawn list.
+	%% End of loading.
 	State3 = State2#state{areanb=State2#state.areanb + 1},
 	psu_proto:send_0208(State3),
 	psu_proto:send_0236(State3),
-	if	User#users.partypid =/= undefined, AreaType =:= mission ->
-			{ok, NPCList} = psu_party:get_npc(User#users.partypid),
-			npc_load(User, NPCList, State);
-		true -> ok
-	end,
+	%% @todo Load APC characters.
 	{ok, State3}.
 
 %% @todo Don't change the NPC info unless you are the leader!
@@ -437,11 +339,7 @@ send_100f(NPCid, PartyPos) ->
 %% @doc Send the mission's quest file when starting a new mission.
 %% @todo Handle correctly. 0:32 is actually a missing value. Value before that is unknown too.
 send_1015(QuestID) ->
-	[{type, _}, {file, QuestFile}|_] = proplists:get_value(QuestID, ?QUESTS),
-	QuestData = case QuestFile of
-		nofile -> egs_quests_db:quest(QuestID);
-		Filename -> {ok, D} = file:read_file(Filename), D
-	end,
+	QuestData = egs_quests_db:quest(QuestID),
 	Size = byte_size(QuestData),
 	send(<< (header(16#1015))/binary, QuestID:32/little-unsigned-integer, 16#01010000:32, 0:32, Size:32/little-unsigned-integer, QuestData/binary >>).
 
