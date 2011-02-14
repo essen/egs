@@ -44,9 +44,9 @@ char_load(User, State) ->
 area_load(QuestID, ZoneID, MapID, EntryID, State) ->
 	{ok, OldUser} = egs_users:read(State#state.gid),
 	{OldQuestID, OldZoneID, _OldMapID} = OldUser#users.area,
-	QuestData = egs_quests_db:quest(QuestID),
+	QuestData = egs_quests_db:quest_nbl(QuestID),
 	QuestChange = OldQuestID /= QuestID,
-	ZoneData = egs_quests_db:zone(QuestID, ZoneID),
+	ZoneData = egs_quests_db:zone_nbl(QuestID, ZoneID),
 	ZoneChange = if OldQuestID =:= QuestID, OldZoneID =:= ZoneID -> false; true -> true end,
 	AreaType = egs_quests_db:area_type(QuestID, ZoneID),
 	AreaShortName = "dammy", %% @todo Load the short name from egs_quests_db.
@@ -339,7 +339,7 @@ send_100f(NPCid, PartyPos) ->
 %% @doc Send the mission's quest file when starting a new mission.
 %% @todo Handle correctly. 0:32 is actually a missing value. Value before that is unknown too.
 send_1015(QuestID) ->
-	QuestData = egs_quests_db:quest(QuestID),
+	QuestData = egs_quests_db:quest_nbl(QuestID),
 	Size = byte_size(QuestData),
 	send(<< (header(16#1015))/binary, QuestID:32/little-unsigned-integer, 16#01010000:32, 0:32, Size:32/little-unsigned-integer, QuestData/binary >>).
 

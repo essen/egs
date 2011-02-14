@@ -19,7 +19,7 @@
 
 -module(egs_quests_db).
 -behavior(gen_server).
--export([start_link/0, stop/0, quest/1, zone/2, area_type/2, reload/0]). %% API.
+-export([start_link/0, stop/0, quest_nbl/1, zone_nbl/2, area_type/2, reload/0]). %% API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
 
 -record(state, {quests=[], quests_bin=[], zones_bin=[]}).
@@ -37,13 +37,13 @@ start_link() ->
 stop() ->
 	gen_server:call(?SERVER, stop).
 
-%% @spec quest(QuestID) -> binary()
-quest(QuestID) ->
-	gen_server:call(?SERVER, {quest, QuestID}).
+%% @spec quest_nbl(QuestID) -> binary()
+quest_nbl(QuestID) ->
+	gen_server:call(?SERVER, {quest_nbl, QuestID}).
 
-%% @spec zone(QuestID, ZoneID) -> binary()
-zone(QuestID, ZoneID) ->
-	gen_server:call(?SERVER, {zone, QuestID, ZoneID}).
+%% @spec zone_nbl(QuestID, ZoneID) -> binary()
+zone_nbl(QuestID, ZoneID) ->
+	gen_server:call(?SERVER, {zone_nbl, QuestID, ZoneID}).
 
 area_type(QuestID, ZoneID) ->
 	gen_server:call(?SERVER, {area_type, QuestID, ZoneID}).
@@ -59,7 +59,7 @@ init([]) ->
 
 %% @doc Return a quest information either from the cache or from the configuration file,
 %% in which case it gets added to the cache for subsequent attempts.
-handle_call({quest, QuestID}, _From, State=#state{quests=Cache, quests_bin=BinCache}) ->
+handle_call({quest_nbl, QuestID}, _From, State=#state{quests=Cache, quests_bin=BinCache}) ->
 	case proplists:get_value(QuestID, BinCache) of
 		undefined ->
 			Dir = io_lib:format("priv/quests/~b/", [QuestID]),
@@ -85,7 +85,7 @@ handle_call({quest, QuestID}, _From, State=#state{quests=Cache, quests_bin=BinCa
 
 %% @doc Return a zone information either from the cache or from the configuration files.
 %% @todo FilePos, text.bin, other sets, enemies.
-handle_call({zone, QuestID, ZoneID}, _From, State=#state{quests=QuestsCache, zones_bin=BinCache}) ->
+handle_call({zone_nbl, QuestID, ZoneID}, _From, State=#state{quests=QuestsCache, zones_bin=BinCache}) ->
 	case proplists:get_value({QuestID, ZoneID}, BinCache) of
 		undefined ->
 			Dir = io_lib:format("priv/quests/~b/", [QuestID]),
