@@ -22,12 +22,17 @@
 -export([start_link/0, stop/0, all/0, defaultid/0, enter/1, leave/1, myroomid/0, read/1, reload/0]). %% API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
 
+-record(state, {unis=[], lobbies=[]}).
+
 %% Use the module name for the server's name.
 -define(SERVER, ?MODULE).
 
 %% Default universe IDs.
 -define(MYROOM_ID, 21).
 -define(DEFAULT_ID, 26).
+
+%% Lobbies: permanent quests to start with the universe.
+-define(LOBBIES, [1100000]).
 
 %% API.
 
@@ -71,14 +76,18 @@ reload() ->
 
 %% gen_server.
 
+%% @doc Create the unis, then load all the permanent quests nbl files, then create processes for all the needed quests.
 init([]) ->
-	{ok, [create_myroom()|create_unis()]}.
+	State = #state{unis=[create_myroom()|create_unis()]},
+	[egs_quests_db:quest_nbl(QuestID) || QuestID <- ?LOBBIES],
+	Lobbies = lists:flatten([init_lobbies(UniID) || {UniID, {Type, _Name, _NbPlayers, _MaxPlayers}} <- State#state.unis, Type =:= universe]),
+	{ok, State#state{lobbies=Lobbies}}.
 
 handle_call(all, _From, State) ->
-	{reply, State, State};
+	{reply, State#state.unis, State};
 
 handle_call({read, UniID}, _From, State) ->
-	{reply, proplists:get_value(UniID, State), State};
+	{reply, proplists:get_value(UniID, State#state.unis), State};
 
 handle_call(stop, _From, State) ->
 	{stop, normal, stopped, State};
@@ -87,21 +96,21 @@ handle_call(_Request, _From, State) ->
 	{reply, ignored, State}.
 
 handle_cast({enter, UniID}, State) ->
-	{Type, Name, NbPlayers, MaxPlayers} = proplists:get_value(UniID, State),
-	State2 = proplists:delete(UniID, State),
-	State3 = [{UniID, {Type, Name, NbPlayers + 1, MaxPlayers}}|State2],
-	State4 = lists:keysort(1, State3),
-	{noreply, State4};
+	{Type, Name, NbPlayers, MaxPlayers} = proplists:get_value(UniID, State#state.unis),
+	Unis = proplists:delete(UniID, State#state.unis),
+	Unis2 = [{UniID, {Type, Name, NbPlayers + 1, MaxPlayers}}|Unis],
+	Unis3 = lists:keysort(1, Unis2),
+	{noreply, State#state{unis=Unis3}};
 
 handle_cast({leave, UniID}, State) ->
-	{Type, Name, NbPlayers, MaxPlayers} = proplists:get_value(UniID, State),
-	State2 = proplists:delete(UniID, State),
-	State3 = [{UniID, {Type, Name, NbPlayers - 1, MaxPlayers}}|State2],
-	State4 = lists:keysort(1, State3),
-	{noreply, State4};
+	{Type, Name, NbPlayers, MaxPlayers} = proplists:get_value(UniID, State#state.unis),
+	Unis = proplists:delete(UniID, State#state.unis),
+	Unis2 = [{UniID, {Type, Name, NbPlayers - 1, MaxPlayers}}|Unis],
+	Unis3 = lists:keysort(1, Unis2),
+	{noreply, State#state{unis=Unis3}};
 
 handle_cast(reload, _State) ->
-	{noreply, [create_myroom()|create_unis()]};
+	{noreply, #state{unis=[create_myroom()|create_unis()]}};
 
 handle_cast(_Msg, State) ->
 	{noreply, State}.
@@ -131,3 +140,10 @@ create_unis([], _UniID, Acc) ->
 	lists:reverse(Acc);
 create_unis([Name|Tail], UniID, Acc) ->
 	create_unis(Tail, UniID + 2, [{UniID, {universe, Name, 0, 1000}}|Acc]).
+
+%% @doc Start lobbies for the given universe.
+init_lobbies(UniID) ->
+	lists:map(fun(QuestID) ->
+		{ok, Pid} = supervisor:start_child(egs_quests_sup, {{quest, UniID, QuestID}, {egs_quests, start_link, [UniID, QuestID]}, permanent, 5000, worker, dynamic}),
+		{{UniID, QuestID}, Pid}
+	end, ?LOBBIES).

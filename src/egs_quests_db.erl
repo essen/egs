@@ -19,7 +19,7 @@
 
 -module(egs_quests_db).
 -behavior(gen_server).
--export([start_link/0, stop/0, quest_nbl/1, zone_nbl/2, area_type/2, reload/0]). %% API.
+-export([start_link/0, stop/0, quest_nbl/1, zone_nbl/2, area_type/2, quest_zones/1, reload/0]). %% API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
 
 -record(state, {quests=[], quests_bin=[], zones_bin=[]}).
@@ -47,6 +47,9 @@ zone_nbl(QuestID, ZoneID) ->
 
 area_type(QuestID, ZoneID) ->
 	gen_server:call(?SERVER, {area_type, QuestID, ZoneID}).
+
+quest_zones(QuestID) ->
+	gen_server:call(?SERVER, {quest_zones, QuestID}).
 
 %% @spec reload() -> ok
 reload() ->
@@ -128,6 +131,11 @@ handle_call({area_type, QuestID, ZoneID}, _From, State=#state{quests=QuestsCache
 		_Any -> mission
 	end,
 	{reply, AreaType, State};
+
+handle_call({quest_zones, QuestID}, _From, State=#state{quests=QuestsCache}) ->
+	{_, Quest}	= lists:keyfind(QuestID, 1, QuestsCache),
+	{_, Zones}	= lists:keyfind(zones, 1, Quest),
+	{reply, Zones, State};
 
 handle_call(stop, _From, State) ->
 	{stop, normal, stopped, State};

@@ -54,6 +54,8 @@ init([]) ->
 	PatchProcs = [{{egs_patch_server, Port}, {egs_patch_server, start_link, [Port]}, permanent, 5000, worker, dynamic} || Port <- PatchPorts],
 	LoginProcs = [{{egs_login_server, Port}, {egs_login_server, start_link, [Port]}, permanent, 5000, worker, dynamic} || Port <- LoginPorts],
 	OtherProcs = [
+		{egs_quests_sup, {egs_quests_sup, start_link, []}, permanent, 5000, supervisor, [egs_quests_sup]},
+		{egs_zones_sup, {egs_zones_sup, start_link, []}, permanent, 5000, supervisor, [egs_zones_sup]},
 		{egs_seasons, {egs_seasons, start_link, []}, permanent, 5000, worker, dynamic},
 		{egs_counters_db, {egs_counters_db, start_link, []}, permanent, 5000, worker, dynamic},
 		{egs_items_db, {egs_items_db, start_link, []}, permanent, 5000, worker, dynamic},
