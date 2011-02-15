@@ -19,10 +19,10 @@
 
 -module(egs_quests_db).
 -behavior(gen_server).
--export([start_link/0, stop/0, quest_nbl/1, zone_nbl/2, area_type/2, quest_zones/1, reload/0]). %% API.
+-export([start_link/0, stop/0, quest_nbl/1, zone_nbl/2, area_type/2, quest_zones/1, set/3, reload/0]). %% API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
 
--record(state, {quests=[], quests_bin=[], zones_bin=[]}).
+-record(state, {quests=[], quests_bin=[], zones_bin=[], sets=[]}).
 
 %% Use the module name for the server's name.
 -define(SERVER, ?MODULE).
@@ -50,6 +50,9 @@ area_type(QuestID, ZoneID) ->
 
 quest_zones(QuestID) ->
 	gen_server:call(?SERVER, {quest_zones, QuestID}).
+
+set(QuestID, ZoneID, SetID) ->
+	gen_server:call(?SERVER, {set, QuestID, ZoneID, SetID}).
 
 %% @spec reload() -> ok
 reload() ->
@@ -136,6 +139,18 @@ handle_call({quest_zones, QuestID}, _From, State=#state{quests=QuestsCache}) ->
 	{_, Quest}	= lists:keyfind(QuestID, 1, QuestsCache),
 	{_, Zones}	= lists:keyfind(zones, 1, Quest),
 	{reply, Zones, State};
+
+%% @todo The set file is loaded both here and in zone_nbl. Thinking about it zone_nbl should call this function.
+%% @todo Same for quest_nbl loading quest files and binaries, there should be a function for the file itself called only when needed.
+handle_call({set, QuestID, ZoneID, SetID}, _From, State=#state{sets=SetsCache}) ->
+	case proplists:get_value({QuestID, ZoneID, SetID}, SetsCache) of
+		undefined ->
+			SetFilename = io_lib:format("priv/quests/~b/zone-~b/set_r~b.conf", [QuestID, ZoneID, SetID]),
+			Set = file:consult(SetFilename),
+			{reply, Set, State#state{sets=[{{QuestID, ZoneID, SetID}, Set}|SetsCache]}};
+		CachedSet ->
+			{reply, CachedSet, State}
+	end;
 
 handle_call(stop, _From, State) ->
 	{stop, normal, stopped, State};

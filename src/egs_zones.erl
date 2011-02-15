@@ -44,6 +44,7 @@ setid(Pid) ->
 
 init([UniID, QuestID, ZoneID, ZoneData]) ->
 	SetID = rand_setid(proplists:get_value(sets, ZoneData, [100])),
+	Set = egs_quests_db:set(QuestID, ZoneID, SetID),
 	{ok, #state{setid=SetID}}.
 
 handle_call(setid, _From, State) ->
