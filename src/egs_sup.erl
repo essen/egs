@@ -45,15 +45,10 @@ upgrade() ->
 
 %% @spec init([]) -> SupervisorTree
 %% @doc supervisor callback.
-%% @todo Probably link egs_conf to a supervisor too.
 init([]) ->
-	egs_conf:start_link(),
-	PatchPorts = egs_conf:read(patch_ports),
-	LoginPorts = egs_conf:read(login_ports),
-	{_ServerIP, GamePort} = egs_conf:read(game_server),
-	PatchProcs = [{{egs_patch_server, Port}, {egs_patch_server, start_link, [Port]}, permanent, 5000, worker, dynamic} || Port <- PatchPorts],
-	LoginProcs = [{{egs_login_server, Port}, {egs_login_server, start_link, [Port]}, permanent, 5000, worker, dynamic} || Port <- LoginPorts],
-	OtherProcs = [
+	Procs = [
+		{egs_conf, {egs_conf, start_link, []}, permanent, 5000, worker, dynamic},
+		{egs_servers_sup, {egs_servers_sup, start_link, []}, permanent, 5000, supervisor, [egs_servers_sup]},
 		{egs_quests_sup, {egs_quests_sup, start_link, []}, permanent, 5000, supervisor, [egs_quests_sup]},
 		{egs_zones_sup, {egs_zones_sup, start_link, []}, permanent, 5000, supervisor, [egs_zones_sup]},
 		{egs_seasons, {egs_seasons, start_link, []}, permanent, 5000, worker, dynamic},
@@ -63,7 +58,6 @@ init([]) ->
 		{egs_patch_files_db, {egs_patch_files_db, start_link, []}, permanent, 5000, worker, dynamic},
 		{egs_quests_db, {egs_quests_db, start_link, []}, permanent, 5000, worker, dynamic},
 		{egs_shops_db, {egs_shops_db, start_link, []}, permanent, 5000, worker, dynamic},
-		{egs_universes, {egs_universes, start_link, []}, permanent, 5000, worker, dynamic},
-		{egs_game_server, {egs_game_server, start_link, [GamePort]}, permanent, 5000, worker, dynamic}
+		{egs_universes, {egs_universes, start_link, []}, permanent, 5000, worker, dynamic}
 	],
-	{ok, {{one_for_one, 10, 10}, PatchProcs ++ LoginProcs ++ OtherProcs}}.
+	{ok, {{one_for_one, 10, 10}, Procs}}.
