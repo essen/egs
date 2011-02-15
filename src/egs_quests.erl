@@ -20,12 +20,10 @@
 -module(egs_quests).
 -behaviour(gen_server).
 
--export([start_link/2, stop/0]). %% API.
+-export([start_link/2, stop/1]). %% API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
 
 -record(state, {zones}).
-
--define(SERVER, ?MODULE).
 
 %% API.
 
@@ -33,16 +31,16 @@
 start_link(UniID, QuestID) ->
 	gen_server:start_link(?MODULE, [UniID, QuestID], []).
 
-%% @spec stop() -> stopped
-stop() ->
-	gen_server:call(?SERVER, stop).
+%% @spec stop(Pid) -> stopped
+stop(Pid) ->
+	gen_server:call(Pid, stop).
 
 %% gen_server.
 
 init([UniID, QuestID]) ->
 	Zones = egs_quests_db:quest_zones(QuestID),
-	ZonesPids = lists:map(fun({ZoneID, _Params}) ->
-		{ok, Pid} = supervisor:start_child(egs_zones_sup, {{zone, UniID, QuestID, ZoneID}, {egs_zones, start_link, [UniID, QuestID, ZoneID]}, permanent, 5000, worker, dynamic}),
+	ZonesPids = lists:map(fun({ZoneID, ZoneData}) ->
+		{ok, Pid} = supervisor:start_child(egs_zones_sup, {{zone, UniID, QuestID, ZoneID}, {egs_zones, start_link, [UniID, QuestID, ZoneID, ZoneData]}, permanent, 5000, worker, dynamic}),
 		{ZoneID, Pid}
 	end, Zones),
 	{ok, #state{zones=ZonesPids}}.
