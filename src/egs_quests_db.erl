@@ -146,7 +146,7 @@ handle_call({set, QuestID, ZoneID, SetID}, _From, State=#state{sets=SetsCache}) 
 	case proplists:get_value({QuestID, ZoneID, SetID}, SetsCache) of
 		undefined ->
 			SetFilename = io_lib:format("priv/quests/~b/zone-~b/set_r~b.conf", [QuestID, ZoneID, SetID]),
-			Set = file:consult(SetFilename),
+			{ok, Set} = file:consult(SetFilename),
 			{reply, Set, State#state{sets=[{{QuestID, ZoneID, SetID}, Set}|SetsCache]}};
 		CachedSet ->
 			{reply, CachedSet, State}
