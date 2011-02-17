@@ -20,6 +20,10 @@
 -module(egs_obj_door).
 -export([init/3]).
 
+%% @todo Real values.
+-is_indexed(true).
+-is_target(false).
+
 -record(egs_obj_door, {
 	pos :: {X :: float(), Y :: float(), Z :: float()},
 	rot :: {Rx :: float(), Ry :: float(), Zy :: float()}

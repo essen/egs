@@ -20,6 +20,10 @@
 -module(egs_obj_exit).
 -export([init/3]).
 
+%% @todo Real values.
+-is_indexed(false).
+-is_target(true).
+
 -record(egs_obj_exit, {
 	pos :: {X :: float(), Y :: float(), Z :: float()},
 	rot :: {Rx :: float(), Ry :: float(), Zy :: float()}

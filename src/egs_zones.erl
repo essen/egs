@@ -25,7 +25,9 @@
 
 -record(state, {
 	setid = 0		:: integer(),
-	objects = []	:: list()
+	objects = []	:: list(),
+	indexes = []	:: list(),
+	targets = []	:: list()
 }).
 
 %% API.
@@ -47,7 +49,8 @@ init([UniID, QuestID, ZoneID, ZoneData]) ->
 	SetID = rand_setid(proplists:get_value(sets, ZoneData, [100])),
 	Set = egs_quests_db:set(QuestID, ZoneID, SetID),
 	Objects = create_units(Set),
-	{ok, #state{setid=SetID}}.
+	{Indexes, Targets} = index_objects(Objects),
+	{ok, #state{setid=SetID, objects=Objects, indexes=Indexes, targets=Targets}}.
 
 handle_call(setid, _From, State) ->
 	{reply, State#state.setid, State};
@@ -112,3 +115,21 @@ create_objects([{ObjType, ObjPos, ObjRot, ObjParams}|Tail], MapNb, GroupNb, Obje
 create_object(Type, Pos, Rot, Params) ->
 	M = list_to_existing_atom(lists:flatten(["egs_obj_", atom_to_list(Type)])),
 	M:init(Pos, Rot, Params).
+
+%% @doc Build a list of object indexes and targets based on the list of objects.
+index_objects(Objects) ->
+	index_objects(Objects, 0, [], 1024, []).
+index_objects([], _Index, IndexesAcc, _Target, TargetsAcc) ->
+	{lists:reverse(IndexesAcc), lists:reverse(TargetsAcc)};
+index_objects([{Key, Object}|Tail], Index, IndexesAcc, Target, TargetsAcc) ->
+	M = element(1, Object),
+	Attrs = M:module_info(attributes),
+	{Index2, IndexesAcc2} = case lists:keyfind(is_indexed, 1, Attrs) of
+		{_, [true]}  -> {Index + 1, [{Index, Key}|IndexesAcc]};
+		{_, [false]} -> {Index, IndexesAcc}
+	end,
+	{Target2, TargetsAcc2} = case lists:keyfind(is_target, 1, Attrs) of
+		{_, [true]}  -> {Target + 1, [{Target, Key}|TargetsAcc]};
+		{_, [false]} -> {Target, TargetsAcc}
+	end,
+	index_objects(Tail, Index2, IndexesAcc2, Target2, TargetsAcc2).

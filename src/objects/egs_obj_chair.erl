@@ -20,6 +20,10 @@
 -module(egs_obj_chair).
 -export([init/3]).
 
+%% @todo Real values.
+-is_indexed(true).
+-is_target(true).
+
 -record(egs_obj_chair, {
 	pos :: {X :: float(), Y :: float(), Z :: float()},
 	rot :: {Rx :: float(), Ry :: float(), Zy :: float()}
