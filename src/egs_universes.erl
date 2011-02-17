@@ -19,7 +19,7 @@
 
 -module(egs_universes).
 -behavior(gen_server).
--export([start_link/0, stop/0, all/0, defaultid/0, enter/1, leave/1, myroomid/0, read/1, reload/0]). %% API.
+-export([start_link/0, stop/0, all/0, defaultid/0, enter/1, leave/1, myroomid/0, read/1, lobby_pid/2, reload/0]). %% API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
 
 -record(state, {unis=[], lobbies=[]}).
@@ -70,6 +70,9 @@ myroomid() ->
 read(UniID) ->
 	gen_server:call(?SERVER, {read, UniID}).
 
+lobby_pid(UniID, QuestID) ->
+	gen_server:call(?SERVER, {lobby_pid, UniID, QuestID}).
+
 %% @spec reload() -> ok
 reload() ->
 	gen_server:cast(?SERVER, reload).
@@ -88,6 +91,10 @@ handle_call(all, _From, State) ->
 
 handle_call({read, UniID}, _From, State) ->
 	{reply, proplists:get_value(UniID, State#state.unis), State};
+
+handle_call({lobby_pid, UniID, QuestID}, _From, State) ->
+	{_, Pid} = lists:keyfind({UniID, QuestID}, 1, State#state.lobbies),
+	{reply, Pid, State};
 
 handle_call(stop, _From, State) ->
 	{stop, normal, stopped, State};
