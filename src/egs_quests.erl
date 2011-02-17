@@ -20,7 +20,7 @@
 -module(egs_quests).
 -behaviour(gen_server).
 
--export([start_link/2, stop/1]). %% API.
+-export([start_link/2, stop/1, zone_pid/2]). %% API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
 
 -record(state, {zones}).
@@ -35,6 +35,9 @@ start_link(UniID, QuestID) ->
 stop(Pid) ->
 	gen_server:call(Pid, stop).
 
+zone_pid(Pid, ZoneID) ->
+	gen_server:call(Pid, {zone_pid, ZoneID}).
+
 %% gen_server.
 
 init([UniID, QuestID]) ->
@@ -44,6 +47,10 @@ init([UniID, QuestID]) ->
 		{ZoneID, Pid}
 	end, Zones),
 	{ok, #state{zones=ZonesPids}}.
+
+handle_call({zone_pid, ZoneID}, _From, State) ->
+	{_, Pid} = lists:keyfind(ZoneID, 1, State#state.zones),
+	{reply, Pid, State};
 
 handle_call(stop, _From, State) ->
 	{stop, normal, stopped, State};
