@@ -109,5 +109,6 @@ create_objects([{ObjType, ObjPos, ObjRot, ObjParams}|Tail], MapNb, GroupNb, Obje
 	create_objects(Tail, MapNb, GroupNb, ObjectNb + 1, [{{MapNb, GroupNb, ObjectNb}, Object}|Acc]).
 
 %% @doc Create the given object.
-create_object(ObjType, ObjPos, ObjRot, ObjParams) ->
-	{undefined, ObjType}.
+create_object(Type, Pos, Rot, Params) ->
+	M = list_to_existing_atom(lists:flatten(["egs_obj_", atom_to_list(Type)])),
+	M:init(Pos, Rot, Params).
