@@ -253,6 +253,7 @@ event(counter_background_locations_request, _State) ->
 
 %% @todo Make sure non-mission counters follow the same loading process.
 %% @todo Probably validate the From* values, to not send the player back inside a mission.
+%% @todo Handle egs_zones entering and leaving.
 event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}, State=#state{gid=GID}) ->
 	log("counter load ~b", [CounterID]),
 	{ok, OldUser} = egs_users:read(GID),

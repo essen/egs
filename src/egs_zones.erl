@@ -20,14 +20,16 @@
 -module(egs_zones).
 -behaviour(gen_server).
 
--export([start_link/4, stop/1, setid/1]). %% API.
+-export([start_link/4, stop/1, setid/1, enter/2, leave/2]). %% API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
 
 -record(state, {
 	setid = 0		:: integer(),
 	objects = []	:: list(),
 	indexes = []	:: list(),
-	targets = []	:: list()
+	targets = []	:: list(),
+	players = []	:: list(),
+	freelids = []	:: list()
 }).
 
 %% API.
@@ -43,6 +45,12 @@ stop(Pid) ->
 setid(Pid) ->
 	gen_server:call(Pid, setid).
 
+enter(Pid, GID) ->
+	gen_server:call(Pid, {enter, GID}).
+
+leave(Pid, GID) ->
+	gen_server:cast(Pid, {leave, GID}).
+
 %% gen_server.
 
 init([UniID, QuestID, ZoneID, ZoneData]) ->
@@ -50,16 +58,30 @@ init([UniID, QuestID, ZoneID, ZoneData]) ->
 	Set = egs_quests_db:set(QuestID, ZoneID, SetID),
 	Objects = create_units(Set),
 	{Indexes, Targets} = index_objects(Objects),
-	{ok, #state{setid=SetID, objects=Objects, indexes=Indexes, targets=Targets}}.
+	FreeLIDs = lists:seq(0, 1023),
+	{ok, #state{setid=SetID, objects=Objects, indexes=Indexes, targets=Targets, freelids=FreeLIDs}}.
 
 handle_call(setid, _From, State) ->
 	{reply, State#state.setid, State};
+
+handle_call({enter, GID}, _From, State) ->
+	Players = State#state.players,
+	[LID|FreeLIDs] = State#state.freelids,
+	%% @todo Broadcast spawn to other players in the zone.
+	{reply, LID, State#state{players=[{GID, LID}|Players], freelids=FreeLIDs}};
 
 handle_call(stop, _From, State) ->
 	{stop, normal, stopped, State};
 
 handle_call(_Request, _From, State) ->
 	{reply, ignored, State}.
+
+handle_cast({leave, GID}, State) ->
+	{_, LID} = lists:keyfind(GID, 1, State#state.players),
+	Players = lists:delete({GID, LID}, State#state.players),
+	FreeLIDs = State#state.freelids,
+	%% @todo Broadcast unspawn to other players in the zone.
+	{noreply, State#state{players=Players, freelids=[LID|FreeLIDs]}};
 
 handle_cast(_Msg, State) ->
 	{noreply, State}.

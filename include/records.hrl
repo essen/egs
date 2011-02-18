@@ -63,7 +63,8 @@
 	character	:: tuple(), %% @todo Details.
 	%% Location/state related information.
 	uni			:: integer(),
-	instancepid	:: pid(),
+	questpid	:: pid(),
+	zonepid		:: pid(),
 	partypid	:: pid(),
 	areatype	:: counter | mission | lobby | myroom,
 	area		:: area(),
@@ -73,6 +74,7 @@
 	prev_area = {0, 0, 0} :: area(),
 	prev_entryid = 0 :: entryid(),
 	%% To be moved or deleted later on.
+	instancepid	:: pid(),
 	setid = 0	:: non_neg_integer() %% @todo Current area's set number. Move that handling to the proper zone module later.
 }).
 
