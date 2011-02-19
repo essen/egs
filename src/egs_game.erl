@@ -253,18 +253,17 @@ event(counter_background_locations_request, _State) ->
 
 %% @todo Make sure non-mission counters follow the same loading process.
 %% @todo Probably validate the From* values, to not send the player back inside a mission.
-%% @todo Handle egs_zones entering and leaving.
+%% @todo Handle the LID change when entering counters.
 event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}, State=#state{gid=GID}) ->
 	log("counter load ~b", [CounterID]),
 	{ok, OldUser} = egs_users:read(GID),
 	FromArea = {element(1, OldUser#users.area), FromZoneID, FromMapID},
-	User = OldUser#users{areatype=counter, area={16#7fffffff, 0, 0}, entryid=0, prev_area=FromArea, prev_entryid=FromEntryID},
+	egs_zones:leave(OldUser#users.zonepid, OldUser#users.gid),
+	User = OldUser#users{questpid=undefined, zonepid=undefined, areatype=counter,
+		area={16#7fffffff, 0, 0}, entryid=0, prev_area=FromArea, prev_entryid=FromEntryID},
 	egs_users:write(User),
 	QuestData = egs_quests_db:quest_nbl(0),
 	{ok, ZoneData} = file:read_file("data/lobby/counter.zone.nbl"),
-	%% broadcast unspawn to other people
-	{ok, UnspawnList} = egs_users:select({neighbors, OldUser}),
-	lists:foreach(fun(Other) -> Other#users.pid ! {egs, player_unspawn, User} end, UnspawnList),
 	%% load counter
 	psu_proto:send_0c00(User, State),
 	psu_proto:send_020e(QuestData, State),
