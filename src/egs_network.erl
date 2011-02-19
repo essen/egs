@@ -103,6 +103,5 @@ split(Data, Acc) when byte_size(Data) < 4 ->
 split(<< Size:32/little, _/bits >> = Data, Acc) when Size > byte_size(Data) ->
 	{lists:reverse(Acc), Data};
 split(<< Size:32/little, _/bits >> = Data, Acc) ->
-	BitSize = Size * 8,
-	<< Split:BitSize/bits, Rest/bits >> = Data,
+	<< Split:Size/binary, Rest/bits >> = Data,
 	split(Rest, [Split|Acc]).
