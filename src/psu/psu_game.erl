@@ -44,9 +44,7 @@ char_load(User, State) ->
 area_load(QuestID, ZoneID, MapID, EntryID, State) ->
 	{ok, OldUser} = egs_users:read(State#state.gid),
 	{OldQuestID, OldZoneID, _OldMapID} = OldUser#users.area,
-	QuestData = egs_quests_db:quest_nbl(QuestID),
 	QuestChange = OldQuestID /= QuestID,
-	ZoneData = egs_quests_db:zone_nbl(QuestID, ZoneID),
 	ZoneChange = if OldQuestID =:= QuestID, OldZoneID =:= ZoneID -> false; true -> true end,
 	AreaType = egs_quests_db:area_type(QuestID, ZoneID),
 	AreaShortName = "dammy", %% @todo Load the short name from egs_quests_db.
@@ -56,7 +54,7 @@ area_load(QuestID, ZoneID, MapID, EntryID, State) ->
 	%% Load the quest.
 	User2 = if QuestChange ->
 			psu_proto:send_0c00(User, State),
-			psu_proto:send_020e(QuestData, State),
+			psu_proto:send_020e(egs_quests_db:quest_nbl(QuestID), State),
 			User#users{questpid=egs_universes:lobby_pid(User#users.uni, QuestID)};
 		true -> User
 	end,
@@ -69,7 +67,7 @@ area_load(QuestID, ZoneID, MapID, EntryID, State) ->
 			psu_proto:send_0111(User2#users{lid=0}, 6, State),
 			psu_proto:send_010d(User2#users{lid=0}, State),
 			psu_proto:send_0200(ZoneID, AreaType, State),
-			psu_proto:send_020f(ZoneData, egs_zones:setid(ZonePid), SeasonID, State),
+			psu_proto:send_020f(egs_quests_db:zone_nbl(QuestID, ZoneID), egs_zones:setid(ZonePid), SeasonID, State),
 			User2#users{zonepid=ZonePid};
 		true -> User2
 	end,
