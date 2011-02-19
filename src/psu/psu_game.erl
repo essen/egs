@@ -50,7 +50,6 @@ area_load(QuestID, ZoneID, MapID, EntryID, State) ->
 	ZoneChange = if OldQuestID =:= QuestID, OldZoneID =:= ZoneID -> false; true -> true end,
 	AreaType = egs_quests_db:area_type(QuestID, ZoneID),
 	AreaShortName = "dammy", %% @todo Load the short name from egs_quests_db.
-	SetID = 0, %% @todo Handle multiple sets properly.
 	{IsSeasonal, SeasonID} = egs_seasons:read(QuestID),
 	User = OldUser#users{areatype=AreaType, area={QuestID, ZoneID, MapID}, entryid=EntryID},
 	egs_users:write(User), %% @todo Booh ugly! But temporary.
@@ -70,7 +69,7 @@ area_load(QuestID, ZoneID, MapID, EntryID, State) ->
 			psu_proto:send_0111(User2#users{lid=0}, 6, State),
 			psu_proto:send_010d(User2#users{lid=0}, State),
 			psu_proto:send_0200(ZoneID, AreaType, State),
-			psu_proto:send_020f(ZoneData, SetID, SeasonID, State),
+			psu_proto:send_020f(ZoneData, egs_zones:setid(ZonePid), SeasonID, State),
 			User2#users{zonepid=ZonePid};
 		true -> User2
 	end,
