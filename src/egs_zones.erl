@@ -66,8 +66,9 @@ handle_call(setid, _From, State) ->
 
 handle_call({enter, GID}, _From, State) ->
 	Players = State#state.players,
+	PlayersGID = players_gid(Players),
 	[LID|FreeLIDs] = State#state.freelids,
-	%% @todo Broadcast spawn to other players in the zone.
+	egs_users:broadcast_spawn(GID, PlayersGID),
 	{reply, LID, State#state{players=[{GID, LID}|Players], freelids=FreeLIDs}};
 
 handle_call(stop, _From, State) ->
@@ -79,8 +80,9 @@ handle_call(_Request, _From, State) ->
 handle_cast({leave, GID}, State) ->
 	{_, LID} = lists:keyfind(GID, 1, State#state.players),
 	Players = lists:delete({GID, LID}, State#state.players),
+	PlayersGID = players_gid(Players),
 	FreeLIDs = State#state.freelids,
-	%% @todo Broadcast unspawn to other players in the zone.
+	egs_users:broadcast_unspawn(GID, PlayersGID),
 	{noreply, State#state{players=Players, freelids=[LID|FreeLIDs]}};
 
 handle_cast(_Msg, State) ->
@@ -155,3 +157,11 @@ index_objects([{Key, Object}|Tail], Index, IndexesAcc, Target, TargetsAcc) ->
 		{_, [false]} -> {Target, TargetsAcc}
 	end,
 	index_objects(Tail, Index2, IndexesAcc2, Target2, TargetsAcc2).
+
+%% @doc Return a list of GID from a list of {GID, LID}.
+players_gid(Players) ->
+	players_gid(Players, []).
+players_gid([], Acc) ->
+	Acc;
+players_gid([{GID, _LID}|Tail], Acc) ->
+	players_gid(Tail, [GID|Acc]).

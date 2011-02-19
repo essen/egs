@@ -53,7 +53,7 @@ area_load(QuestID, ZoneID, MapID, EntryID, State) ->
 	SetID = 0, %% @todo Handle multiple sets properly.
 	{IsSeasonal, SeasonID} = egs_seasons:read(QuestID),
 	User = OldUser#users{areatype=AreaType, area={QuestID, ZoneID, MapID}, entryid=EntryID},
-	%% @todo Handle spawn and unspawn using egs_zone:leave and egs_zone:enter.
+	egs_users:write(User), %% @todo Booh ugly! But temporary.
 	%% Load the quest.
 	User2 = if QuestChange ->
 			psu_proto:send_0c00(User, State),
@@ -67,28 +67,28 @@ area_load(QuestID, ZoneID, MapID, EntryID, State) ->
 			egs_zones:leave(User2#users.zonepid, User2#users.gid),
 			LID = egs_zones:enter(ZonePid, User2#users.gid),
 			psu_proto:send_0a05(State),
-			psu_proto:send_0111(User#users{lid=0}, 6, State),
-			psu_proto:send_010d(User#users{lid=0}, State),
+			psu_proto:send_0111(User2#users{lid=0}, 6, State),
+			psu_proto:send_010d(User2#users{lid=0}, State),
 			psu_proto:send_0200(ZoneID, AreaType, State),
 			psu_proto:send_020f(ZoneData, SetID, SeasonID, State),
-			User2#users{lid=LID, zonepid=ZonePid};
+			User2#users{zonepid=ZonePid};
 		true -> User2
 	end,
 	%% Save the user.
 	egs_users:write(User3),
 	%% Load the player location.
 	State2 = State#state{areanb=State#state.areanb + 1},
-	psu_proto:send_0205(User#users{lid=0}, IsSeasonal, State2),
-	psu_proto:send_100e(User#users.area, User#users.entryid, AreaShortName, State2),
+	psu_proto:send_0205(User3#users{lid=0}, IsSeasonal, State2),
+	psu_proto:send_100e(User3#users.area, User3#users.entryid, AreaShortName, State2),
 	%% Load the zone objects.
 	if ZoneChange ->
 			send_1212(); %% @todo Only sent if there is a set file.
 		true -> ignore
 	end,
 	%% Load the player.
-	psu_proto:send_0201(User#users{lid=0}, State2),
+	psu_proto:send_0201(User3#users{lid=0}, State2),
 	if ZoneChange ->
-			psu_proto:send_0a06(User, State2);
+			psu_proto:send_0a06(User3, State2);
 		true -> ignore
 	end,
 	%% @todo Send the spawn list.
