@@ -57,12 +57,12 @@ character_user_to_binary(User) ->
 	IntDir = trunc(Dir * 182.0416),
 	TypeID = case Type of npc -> 16#00001d00; _ -> 16#00001200 end,
 	NPCStuff = case Type of npc -> 16#01ff; _ -> 16#0000 end,
-	<<	TypeID:32, CharGID:32/little-unsigned-integer, 0:64, CharLID:16/little-unsigned-integer, 0:16, NPCStuff:16, NPCid:16/little, QuestID:32/little-unsigned-integer,
-		ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:16/little-unsigned-integer, 0:16,
-		16#0100:16, IntDir:16/little-unsigned-integer, X:32/little-float, Y:32/little-float, Z:32/little-float, 0:64,
-		PrevQuestID:32/little-unsigned-integer, PrevZoneID:32/little-unsigned-integer, PrevMapID:32/little-unsigned-integer, PrevEntryID:32/little-unsigned-integer,
-		CharBin/binary, EXPNextLevel:32/little-unsigned-integer, EXPCurrentLevel:32/little-unsigned-integer, MaxHP:32/little-unsigned-integer,
-		StatsBin/binary, 0:32, SEBin/binary, 0:32, LV:32/little-unsigned-integer, StatsBin/binary, CurrentHP:32/little-unsigned-integer, MaxHP:32/little-unsigned-integer,
+	<<	TypeID:32, CharGID:32/little, 0:64, CharLID:16/little, 0:16, NPCStuff:16, NPCid:16/little, QuestID:32/little,
+		ZoneID:32/little, MapID:32/little, EntryID:16/little, 0:16,
+		16#0100:16, IntDir:16/little, X:32/little-float, Y:32/little-float, Z:32/little-float, 0:64,
+		PrevQuestID:32/little, PrevZoneID:32/little, PrevMapID:32/little, PrevEntryID:32/little,
+		CharBin/binary, EXPNextLevel:32/little, EXPCurrentLevel:32/little, MaxHP:32/little,
+		StatsBin/binary, 0:32, SEBin/binary, 0:32, LV:32/little, StatsBin/binary, CurrentHP:32/little, MaxHP:32/little,
 		0:1344, 16#0000803f:32, 0:64, 16#0000803f:32, 0:64, 16#0000803f:32, 0:64, 16#0000803f:32, 0:64, 16#0000803f:32, 0:160, 16#0000803f:32, 0:352 >>.
 
 %% @doc Convert a class atom into a binary to be sent to clients.
@@ -177,8 +177,8 @@ se_list_to_binary(_List) ->
 
 stats_tuple_to_binary(Tuple) ->
 	{stats, ATP, ATA, TP, DFP, EVP, MST, STA} = Tuple,
-	<<	ATP:16/little-unsigned-integer, DFP:16/little-unsigned-integer, ATA:16/little-unsigned-integer, EVP:16/little-unsigned-integer, 
-		STA:16/little-unsigned-integer, 0:16, TP:16/little-unsigned-integer, MST:16/little-unsigned-integer >>.
+	<<	ATP:16/little, DFP:16/little, ATA:16/little, EVP:16/little,
+		STA:16/little, 0:16, TP:16/little, MST:16/little >>.
 
 %% @doc Validate the character's name.
 %%      00F7 is the RGBA color control character.

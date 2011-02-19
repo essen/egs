@@ -1449,7 +1449,7 @@ send_0c00(CharUser, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 
 %% @doc Send the huge pack of quest files available in the counter.
 send_0c06(Pack, #state{socket=Socket}) ->
-	packet_send(Socket, << 16#0c060300:32, 0:288, 1:32/little-unsigned-integer, Pack/binary >>).
+	packet_send(Socket, << 16#0c060300:32, 0:288, 1:32/little, Pack/binary >>).
 
 %% @doc Reply that the player is allowed to use the lobby transport. Always allow.
 send_0c08(#state{socket=Socket, gid=DestGID}) ->

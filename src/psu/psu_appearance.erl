@@ -29,10 +29,10 @@
 binary_to_tuple(cast, Binary) ->
 	<<	VoiceType:8, VoicePitch:8, _:24, Torso:32/unsigned-integer, Legs:32/unsigned-integer, Arms:32/unsigned-integer,
 		Ears:32/unsigned-integer, Face:32/unsigned-integer, HeadType:32/unsigned-integer, MainColor:8, _:24,
-		_:8, Eyebrows:8, Eyelashes:8, EyesGroup:8, Eyes:8, _:24, EyesColorY:32/little-unsigned-integer, EyesColorX:32/little-unsigned-integer,
-		_:96, BodyColor:32/little-unsigned-integer, SubColor:32/little-unsigned-integer, HairstyleColorY:32/little-unsigned-integer,
-		HairstyleColorX:32/little-unsigned-integer, Proportion:32/little-unsigned-integer, ProportionBoxX:32/little-unsigned-integer,
-		ProportionBoxY:32/little-unsigned-integer, FaceBoxX:32/little-unsigned-integer, FaceBoxY:32/little-unsigned-integer >> = Binary,
+		_:8, Eyebrows:8, Eyelashes:8, EyesGroup:8, Eyes:8, _:24, EyesColorY:32/little, EyesColorX:32/little,
+		_:96, BodyColor:32/little, SubColor:32/little, HairstyleColorY:32/little,
+		HairstyleColorX:32/little, Proportion:32/little, ProportionBoxX:32/little,
+		ProportionBoxY:32/little, FaceBoxX:32/little, FaceBoxY:32/little >> = Binary,
 	{metal_appearance, VoiceType, VoicePitch, Torso, Legs, Arms, Ears, Face, HeadType, MainColor, 0,
 		Eyebrows, Eyelashes, EyesGroup, Eyes, EyesColorY, EyesColorX, BodyColor, SubColor, HairstyleColorY, HairstyleColorX,
 		Proportion, ProportionBoxX, ProportionBoxY, FaceBoxX, FaceBoxY};
@@ -40,10 +40,10 @@ binary_to_tuple(cast, Binary) ->
 binary_to_tuple(_, Binary) ->
 	<<	VoiceType:8, VoicePitch:8, _:24, Jacket:32/unsigned-integer, Pants:32/unsigned-integer, Shoes:32/unsigned-integer,
 		Ears:32/unsigned-integer, Face:32/unsigned-integer, Hairstyle:32/unsigned-integer, JacketColor:8, PantsColor:8, ShoesColor:8, _:8,
-		_:8, Eyebrows:8, Eyelashes:8, EyesGroup:8, Eyes:8, BodySuit:8, _:16, EyesColorY:32/little-unsigned-integer, EyesColorX:32/little-unsigned-integer,
-		_:96, SkinColor:32/little-unsigned-integer, _:32, HairstyleColorY:32/little-unsigned-integer,
-		HairstyleColorX:32/little-unsigned-integer, Proportion:32/little-unsigned-integer, ProportionBoxX:32/little-unsigned-integer,
-		ProportionBoxY:32/little-unsigned-integer, FaceBoxX:32/little-unsigned-integer, FaceBoxY:32/little-unsigned-integer >> = Binary,
+		_:8, Eyebrows:8, Eyelashes:8, EyesGroup:8, Eyes:8, BodySuit:8, _:16, EyesColorY:32/little, EyesColorX:32/little,
+		_:96, SkinColor:32/little, _:32, HairstyleColorY:32/little,
+		HairstyleColorX:32/little, Proportion:32/little, ProportionBoxX:32/little,
+		ProportionBoxY:32/little, FaceBoxX:32/little, FaceBoxY:32/little >> = Binary,
 	{flesh_appearance, VoiceType, VoicePitch, Jacket, Pants, Shoes, Ears, Face, Hairstyle, JacketColor, PantsColor, ShoesColor,
 		0, 0, Eyebrows, Eyelashes, EyesGroup, Eyes, BodySuit, EyesColorY, EyesColorX, 32767, 32767, 0, SkinColor, HairstyleColorY,
 		HairstyleColorX, Proportion, ProportionBoxX, ProportionBoxY, FaceBoxX, FaceBoxY}.
@@ -55,10 +55,10 @@ tuple_to_binary(cast, Tuple) ->
 		Proportion, ProportionBoxX, ProportionBoxY, FaceBoxX, FaceBoxY} = Tuple,
 	<<	VoiceType:8, VoicePitch:8, 0:24, Torso:32/unsigned-integer, Legs:32/unsigned-integer, Arms:32/unsigned-integer,
 		Ears:32/unsigned-integer, Face:32/unsigned-integer, HeadType:32/unsigned-integer, MainColor:8, 0:16, LineshieldColor:8,
-		0:8, Eyebrows:8, Eyelashes:8, EyesGroup:8, Eyes:8, 0:24, EyesColorY:32/little-unsigned-integer, EyesColorX:32/little-unsigned-integer,
-		16#ff7f0000:32, 16#ff7f0000:32, 0:32, BodyColor:32/little-unsigned-integer, SubColor:32/little-unsigned-integer, HairstyleColorY:32/little-unsigned-integer,
-		HairstyleColorX:32/little-unsigned-integer, Proportion:32/little-unsigned-integer, ProportionBoxX:32/little-unsigned-integer,
-		ProportionBoxY:32/little-unsigned-integer, FaceBoxX:32/little-unsigned-integer, FaceBoxY:32/little-unsigned-integer >>;
+		0:8, Eyebrows:8, Eyelashes:8, EyesGroup:8, Eyes:8, 0:24, EyesColorY:32/little, EyesColorX:32/little,
+		16#ff7f0000:32, 16#ff7f0000:32, 0:32, BodyColor:32/little, SubColor:32/little, HairstyleColorY:32/little,
+		HairstyleColorX:32/little, Proportion:32/little, ProportionBoxX:32/little,
+		ProportionBoxY:32/little, FaceBoxX:32/little, FaceBoxY:32/little >>;
 
 tuple_to_binary(_, Tuple) ->
 	{flesh_appearance, VoiceType, VoicePitch, Jacket, Pants, Shoes, Ears, Face, Hairstyle, JacketColor, PantsColor, ShoesColor,
@@ -66,11 +66,11 @@ tuple_to_binary(_, Tuple) ->
 		SkinColor, HairstyleColorY, HairstyleColorX, Proportion, ProportionBoxX, ProportionBoxY, FaceBoxX, FaceBoxY} = Tuple,
 	<<	VoiceType:8, VoicePitch:8, 0:24, Jacket:32/unsigned-integer, Pants:32/unsigned-integer, Shoes:32/unsigned-integer,
 		Ears:32/unsigned-integer, Face:32/unsigned-integer, Hairstyle:32/unsigned-integer, JacketColor:8, PantsColor:8, ShoesColor:8, LineshieldColor:8,
-		Badge:8, Eyebrows:8, Eyelashes:8, EyesGroup:8, Eyes:8, BodySuit:8, 0:16, EyesColorY:32/little-unsigned-integer, EyesColorX:32/little-unsigned-integer,
-		LipsIntensity:32/little-unsigned-integer, LipsColorY:32/little-unsigned-integer, LipsColorX:32/little-unsigned-integer,
-		SkinColor:32/little-unsigned-integer, 16#ffff0200:32, HairstyleColorY:32/little-unsigned-integer,
-		HairstyleColorX:32/little-unsigned-integer, Proportion:32/little-unsigned-integer, ProportionBoxX:32/little-unsigned-integer,
-		ProportionBoxY:32/little-unsigned-integer, FaceBoxX:32/little-unsigned-integer, FaceBoxY:32/little-unsigned-integer >>.
+		Badge:8, Eyebrows:8, Eyelashes:8, EyesGroup:8, Eyes:8, BodySuit:8, 0:16, EyesColorY:32/little, EyesColorX:32/little,
+		LipsIntensity:32/little, LipsColorY:32/little, LipsColorX:32/little,
+		SkinColor:32/little, 16#ffff0200:32, HairstyleColorY:32/little,
+		HairstyleColorX:32/little, Proportion:32/little, ProportionBoxX:32/little,
+		ProportionBoxY:32/little, FaceBoxX:32/little, FaceBoxY:32/little >>.
 
 %% @doc Validate the character creation appearance data.
 %%      Trigger an exception rather than handling errors.

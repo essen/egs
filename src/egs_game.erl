@@ -29,7 +29,7 @@ keepalive(#state{socket=Socket}) ->
 %% @doc Forward the broadcasted command to the client.
 info({egs, cast, Command}, #state{gid=GID}) ->
 	<< A:64/bits, _:32, B:96/bits, _:64, C/bits >> = Command,
-	psu_game:send(<< A/binary, 16#00011300:32, B/binary, 16#00011300:32, GID:32/little-unsigned-integer, C/binary >>);
+	psu_game:send(<< A/binary, 16#00011300:32, B/binary, 16#00011300:32, GID:32/little, C/binary >>);
 
 %% @doc Forward the chat message to the client.
 info({egs, chat, FromGID, ChatTypeID, ChatGID, ChatName, ChatModifiers, ChatMessage}, State) ->
@@ -60,8 +60,8 @@ info({egs, warp, QuestID, ZoneID, MapID, EntryID}, State) ->
 %% @todo Handle broadcasting better than that. Review the commands at the same time.
 %% @doc Position change. Save the position and then dispatch it.
 cast(16#0503, Data, State=#state{gid=GID}) ->
-	<< _:424, Dir:24/little-unsigned-integer, _PrevCoords:96, X:32/little-float, Y:32/little-float, Z:32/little-float,
-		QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer, MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer, _:32 >> = Data,
+	<< _:424, Dir:24/little, _PrevCoords:96, X:32/little-float, Y:32/little-float, Z:32/little-float,
+		QuestID:32/little, ZoneID:32/little, MapID:32/little, EntryID:32/little, _:32 >> = Data,
 	FloatDir = Dir / 46603.375,
 	{ok, User} = egs_users:read(GID),
 	NewUser = User#users{pos={X, Y, Z, FloatDir}, area={QuestID, ZoneID, MapID}, entryid=EntryID},
@@ -70,9 +70,8 @@ cast(16#0503, Data, State=#state{gid=GID}) ->
 
 %% @doc Stand still. Save the position and then dispatch it.
 cast(16#0514, Data, State=#state{gid=GID}) ->
-	<< _:424, Dir:24/little-unsigned-integer, X:32/little-float, Y:32/little-float, Z:32/little-float,
-		QuestID:32/little-unsigned-integer, ZoneID:32/little-unsigned-integer,
-		MapID:32/little-unsigned-integer, EntryID:32/little-unsigned-integer, _/bits >> = Data,
+	<< _:424, Dir:24/little, X:32/little-float, Y:32/little-float, Z:32/little-float,
+		QuestID:32/little, ZoneID:32/little, MapID:32/little, EntryID:32/little, _/bits >> = Data,
 	FloatDir = Dir / 46603.375,
 	{ok, User} = egs_users:read(GID),
 	NewUser = User#users{pos={X, Y, Z, FloatDir}, area={QuestID, ZoneID, MapID}, entryid=EntryID},
@@ -97,8 +96,7 @@ cast(Command, Data, #state{gid=GID})
 			ignore;
 		{ok, Self} ->
 			LID = Self#users.lid,
-			Packet = << A/binary, 16#00011300:32, GID:32/little-unsigned-integer, B/binary,
-				GID:32/little-unsigned-integer, LID:32/little-unsigned-integer, C/binary >>,
+			Packet = << A/binary, 16#00011300:32, GID:32/little, B/binary, GID:32/little, LID:32/little, C/binary >>,
 			{ok, SpawnList} = egs_users:select({neighbors, Self}),
 			lists:foreach(fun(User) -> User#users.pid ! {egs, cast, Packet} end, SpawnList)
 	end.
@@ -109,7 +107,7 @@ cast(Command, Data, #state{gid=GID})
 %% @todo Spawn cleared response event shouldn't be handled following this packet but when we see the spawn actually dead HP-wise.
 %% @todo Type shouldn't be :32 but it seems when the later 16 have something it's not a spawn event.
 raw(16#0402, << _:352, Data/bits >>, #state{gid=GID}) ->
-	<< SpawnID:32/little-unsigned-integer, _:64, Type:32/little-unsigned-integer, _:64 >> = Data,
+	<< SpawnID:32/little, _:64, Type:32/little, _:64 >> = Data,
 	case Type of
 		7 -> % spawn cleared @todo 1201 sent back with same values apparently, but not always
 			log("cleared spawn ~b", [SpawnID]),
@@ -132,12 +130,12 @@ raw(16#0404, << _:352, Data/bits >>, _State) ->
 %% @todo Used in the tutorial. Not sure what it does. Give an item (the PA) maybe?
 %% @todo Probably should ignore that until more is known.
 raw(16#0a09, _Data, #state{gid=GID}) ->
-	psu_game:send(<< 16#0a090300:32, 0:32, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, 16#00003300:32, 0:32 >>);
+	psu_game:send(<< 16#0a090300:32, 0:32, 16#00011300:32, GID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64, 16#00003300:32, 0:32 >>);
 
 %% @todo Figure out this command.
 raw(16#0c11, << _:352, A:32/little, B:32/little >>, #state{gid=GID}) ->
 	log("0c11 ~p ~p", [A, B]),
-	psu_game:send(<< 16#0c120300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, A:32/little, 1:32/little >>);
+	psu_game:send(<< 16#0c120300:32, 0:160, 16#00011300:32, GID:32/little, 0:64, A:32/little, 1:32/little >>);
 
 %% @doc Set flag handler. Associate a new flag with the character.
 %%      Just reply with a success value for now.
@@ -145,33 +143,33 @@ raw(16#0c11, << _:352, A:32/little, B:32/little >>, #state{gid=GID}) ->
 raw(16#0d04, << _:352, Data/bits >>, #state{gid=GID}) ->
 	<< Flag:128/bits, A:16/bits, _:8, B/bits >> = Data,
 	log("flag handler for ~s", [re:replace(Flag, "\\0+", "", [global, {return, binary}])]),
-	psu_game:send(<< 16#0d040300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64, Flag/binary, A/binary, 1, B/binary >>);
+	psu_game:send(<< 16#0d040300:32, 0:160, 16#00011300:32, GID:32/little, 0:64, Flag/binary, A/binary, 1, B/binary >>);
 
 %% @doc Initialize a vehicle object.
 %% @todo Find what are the many values, including the odd Whut value (and whether it's used in the reply).
 %% @todo Separate the reply.
 raw(16#0f00, << _:352, Data/bits >>, _State) ->
-	<< A:32/little-unsigned-integer, 0:16, B:16/little-unsigned-integer, 0:16, C:16/little-unsigned-integer, 0, Whut:8, D:16/little-unsigned-integer, 0:16,
-		E:16/little-unsigned-integer, 0:16, F:16/little-unsigned-integer, G:16/little-unsigned-integer, H:16/little-unsigned-integer, I:32/little-unsigned-integer >> = Data,
+	<< A:32/little, 0:16, B:16/little, 0:16, C:16/little, 0, Whut:8, D:16/little, 0:16,
+		E:16/little, 0:16, F:16/little, G:16/little, H:16/little, I:32/little >> = Data,
 	log("init vehicle: ~b ~b ~b ~b ~b ~b ~b ~b ~b ~b", [A, B, C, Whut, D, E, F, G, H, I]),
-	psu_game:send(<< (psu_game:header(16#1208))/binary, A:32/little-unsigned-integer, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
-		0:16, B:16/little-unsigned-integer, 0:16, C:16/little-unsigned-integer, 0:16, D:16/little-unsigned-integer, 0:112,
-		E:16/little-unsigned-integer, 0:16, F:16/little-unsigned-integer, H:16/little-unsigned-integer, 1, 0, 100, 0, 10, 0, G:16/little-unsigned-integer, 0:16 >>);
+	psu_game:send(<< (psu_game:header(16#1208))/binary, A:32/little, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
+		0:16, B:16/little, 0:16, C:16/little, 0:16, D:16/little, 0:112,
+		E:16/little, 0:16, F:16/little, H:16/little, 1, 0, 100, 0, 10, 0, G:16/little, 0:16 >>);
 
 %% @doc Enter vehicle.
 %% @todo Separate the reply.
 raw(16#0f02, << _:352, Data/bits >>, _State) ->
-	<< A:32/little-unsigned-integer, B:32/little-unsigned-integer, C:32/little-unsigned-integer >> = Data,
+	<< A:32/little, B:32/little, C:32/little >> = Data,
 	log("enter vehicle: ~b ~b ~b", [A, B, C]),
 	HP = 100,
-	psu_game:send(<< (psu_game:header(16#120a))/binary, A:32/little-unsigned-integer, B:32/little-unsigned-integer, C:32/little-unsigned-integer, HP:32/little-unsigned-integer >>);
+	psu_game:send(<< (psu_game:header(16#120a))/binary, A:32/little, B:32/little, C:32/little, HP:32/little >>);
 
 %% @doc Sent right after entering the vehicle. Can't move without it.
 %% @todo Separate the reply.
 raw(16#0f07, << _:352, Data/bits >>, _State) ->
-	<< A:32/little-unsigned-integer, B:32/little-unsigned-integer >> = Data,
+	<< A:32/little, B:32/little >> = Data,
 	log("after enter vehicle: ~b ~b", [A, B]),
-	psu_game:send(<< (psu_game:header(16#120f))/binary, A:32/little-unsigned-integer, B:32/little-unsigned-integer >>);
+	psu_game:send(<< (psu_game:header(16#120f))/binary, A:32/little, B:32/little >>);
 
 %% @todo Not sure yet.
 raw(16#1019, _Data, _State) ->
@@ -188,7 +186,7 @@ raw(16#1112, << _:352, Data/bits >>, _State) ->
 
 %% @todo Not sure yet. Value is probably a TargetID. Used in Airboard Rally. Replying with the same value starts the race.
 raw(16#1216, << _:352, Data/bits >>, _State) ->
-	<< Value:32/little-unsigned-integer >> = Data,
+	<< Value:32/little >> = Data,
 	log("command 1216 with value ~b", [Value]),
 	psu_game:send_1216(Value);
 
@@ -344,10 +342,10 @@ event({hit, FromTargetID, ToTargetID, A, B}, State=#state{gid=GID}) ->
 				true -> SE = 16#01000200;
 				false -> SE = 16#01000000
 			end,
-			psu_game:send(<< 16#0e070300:32, 0:160, 16#00011300:32, GID:32/little-unsigned-integer, 0:64,
-				1:32/little-unsigned-integer, 16#01050000:32, Damage:32/little-unsigned-integer,
-				A/binary, 0:64, PlayerHP:32/little-unsigned-integer, 0:32, SE:32,
-				0:32, TargetHP:32/little-unsigned-integer, 0:32, B/binary,
+			psu_game:send(<< 16#0e070300:32, 0:160, 16#00011300:32, GID:32/little, 0:64,
+				1:32/little, 16#01050000:32, Damage:32/little,
+				A/binary, 0:64, PlayerHP:32/little, 0:32, SE:32,
+				0:32, TargetHP:32/little, 0:32, B/binary,
 				16#04320000:32, 16#80000000:32, 16#26030000:32, 16#89068d00:32, 16#0c1c0105:32, 0:64 >>)
 				% after TargetHP is SE-related too?
 	end,
@@ -425,8 +423,8 @@ event({item_unequip, ItemIndex, TargetGID, TargetLID, A, B}, #state{gid=GID}) ->
 		Y when Y =:= 5; Y =:= 6; Y =:= 7 -> 0; % clothes
 		_ -> 1 % weapons
 	end,
-	psu_game:send(<< 16#01050300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32, GID:32/little-unsigned-integer,
-		0:64, TargetGID:32/little-unsigned-integer, TargetLID:32/little-unsigned-integer, ItemIndex, 2, Category, A, B:32/little-unsigned-integer >>);
+	psu_game:send(<< 16#01050300:32, 0:64, GID:32/little, 0:64, 16#00011300:32, GID:32/little,
+		0:64, TargetGID:32/little, TargetLID:32/little, ItemIndex, 2, Category, A, B:32/little >>);
 
 %% @todo Just ignore the meseta price for now and send the player where he wanna be!
 event(lobby_transport_request, State) ->
@@ -566,8 +564,8 @@ event({npc_shop_enter, ShopID}, #state{gid=GID}) ->
 event({npc_shop_leave, ShopID}, #state{gid=GID}) ->
 	log("npc shop leave ~p", [ShopID]),
 	egs_users:shop_leave(GID),
-	psu_game:send(<< 16#010a0300:32, 0:64, GID:32/little-unsigned-integer, 0:64, 16#00011300:32,
-		GID:32/little-unsigned-integer, 0:64, GID:32/little-unsigned-integer, 0:32 >>);
+	psu_game:send(<< 16#010a0300:32, 0:64, GID:32/little, 0:64, 16#00011300:32,
+		GID:32/little, 0:64, GID:32/little, 0:32 >>);
 
 %% @todo Should be 0115(money) 010a03(confirm sale).
 event({npc_shop_sell, InventoryItemIndex, Quantity}, _State) ->
