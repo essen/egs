@@ -68,9 +68,10 @@ handle_call(setid, _From, State) ->
 	{reply, State#state.setid, State};
 
 handle_call({enter, GID}, _From, State) ->
+	[LID|FreeLIDs] = State#state.freelids,
+	egs_users:set_zone(GID, self(), LID),
 	Players = State#state.players,
 	PlayersGID = players_gid(Players),
-	[LID|FreeLIDs] = State#state.freelids,
 	egs_users:broadcast_spawn(GID, PlayersGID),
 	{reply, LID, State#state{players=[{GID, LID}|Players], freelids=FreeLIDs}};
 

@@ -18,7 +18,7 @@
 %%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
 -module(egs_users).
--export([read/1, select/1, write/1, delete/1, item_nth/2, item_add/3, item_qty_add/3, shop_enter/2, shop_leave/1, shop_get/1, money_add/2, broadcast_spawn/2, broadcast_unspawn/2]).
+-export([read/1, select/1, write/1, delete/1, item_nth/2, item_add/3, item_qty_add/3, shop_enter/2, shop_leave/1, shop_get/1, money_add/2, broadcast_spawn/2, broadcast_unspawn/2, set_zone/3]).
 
 -define(TABLE, users).
 
@@ -177,3 +177,7 @@ broadcast_unspawn(GID, PlayersGID) ->
 		{ok, DestUser} = read(DestGID),
 		DestUser#users.pid ! {egs, player_unspawn, OrigUser}
 	end, PlayersGID).
+
+set_zone(GID, ZonePid, LID) ->
+	{ok, User} = read(GID),
+	write(User#users{zonepid=ZonePid, lid=LID}).

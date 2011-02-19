@@ -57,7 +57,7 @@
 -record(users, {
 	%% General information.
 	gid			:: integer(),
-	lid			:: non_neg_integer(),
+	lid = 16#ffff	:: 0..16#ffff,
 	pid			:: pid(),
 	time		:: integer(),
 	character	:: tuple(), %% @todo Details.

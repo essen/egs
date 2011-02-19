@@ -1196,12 +1196,11 @@ parse_hits(Hits, Acc) ->
 
 %% @doc Send character appearance and other information.
 %% @todo Probably don't pattern match the data like this...
-%% @todo Handle the DestLID properly.
-send_010d(CharUser, #state{socket=Socket, gid=DestGID}) ->
+send_010d(CharUser, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	CharGID = CharUser#users.gid,
 	CharLID = CharUser#users.lid,
 	<< _:640, CharBin/bits >> = psu_characters:character_user_to_binary(CharUser),
-	packet_send(Socket, << 16#010d0300:32, 0:160, 16#00011300:32, DestGID:32/little,
+	packet_send(Socket, << 16#010d0300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little,
 		0:64, 1:32/little, 0:32, 16#00000300:32, 16#ffff0000:32, 0:32, CharGID:32/little,
 		0:192, CharGID:32/little, CharLID:32/little, 16#ffffffff:32, CharBin/binary >>).
 
@@ -1241,20 +1240,18 @@ send_0117(#users{gid=CharGID, lid=CharLID, character=#characters{currenthp=HP}},
 		CharGID:32/little, CharLID:32/little, SE/binary, HP:32/little, 0:32 >>).
 
 %% @doc Send the zone initialization command.
-%% @todo Handle the LID properly in both places.
 %% @todo Handle NbPlayers properly. There's more than 1 player!
-send_0200(ZoneID, ZoneType, #state{socket=Socket, gid=DestGID}) ->
+send_0200(ZoneID, ZoneType, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	Var = case ZoneType of
 		mission -> << 16#06000500:32, 16#01000000:32, 0:64, 16#00040000:32, 16#00010000:32, 16#00140000:32 >>;
 		myroom -> << 16#06000000:32, 16#02000000:32, 0:64, 16#40000000:32, 16#00010000:32, 16#00010000:32 >>;
 		_ -> << 16#00040000:32, 0:160, 16#00140000:32 >>
 	end,
-	packet_send(Socket, << 16#02000300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:64,
-		0:16, ZoneID:16/little, 1:32/little, 16#ffffffff:32, Var/binary, 16#ffffffff:32, 16#ffffffff:32 >>).
+	packet_send(Socket, << 16#02000300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64,
+		DestLID:16/little, ZoneID:16/little, 1:32/little, 16#ffffffff:32, Var/binary, 16#ffffffff:32, 16#ffffffff:32 >>).
 
 %% @doc Send character location, appearance and other information.
-%% @todo Handle the DestLID properly.
-send_0201(CharUser, #state{socket=Socket, gid=DestGID}) ->
+send_0201(CharUser, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	[CharTypeID, GameVersion] = case (CharUser#users.character)#characters.type of
 		npc -> [16#00001d00, 255];
 		_ -> [16#00001200, 0]
@@ -1263,7 +1260,7 @@ send_0201(CharUser, #state{socket=Socket, gid=DestGID}) ->
 	CharBin = psu_characters:character_user_to_binary(CharUser),
 	IsGM = 0,
 	OnlineStatus = 0,
-	packet_send(Socket, << 16#02010300:32, 0:32, CharTypeID:32, CharGID:32/little,
+	packet_send(Socket, << 16#02010300:32, DestLID:16/little, 0:16, CharTypeID:32, CharGID:32/little,
 		0:64, 16#00011300:32, DestGID:32/little, 0:64, CharBin/binary, IsGM:8, 0:8, OnlineStatus:8, GameVersion:8, 0:608 >>).
 
 %% @doc Hello command. Sent when a client connects to the game or login server.
@@ -1272,21 +1269,19 @@ send_0202(#state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#020203bf:32, DestLID:16/little, 0:272, DestGID:32/little, 0:1024 >>).
 
 %% @doc Spawn a player with the given GID and LID.
-%% @todo Handle the LID properly.
-send_0203(#users{gid=CharGID, lid=CharLID}, #state{socket=Socket, gid=DestGID}) ->
-	packet_send(Socket, << 16#02030300:32, 0:160, 16#00011300:32,
+send_0203(#users{gid=CharGID, lid=CharLID}, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+	packet_send(Socket, << 16#02030300:32, DestLID:16/little, 0:144, 16#00011300:32,
 		DestGID:32/little, 0:64, CharGID:32/little, CharLID:32/little >>).
 
 %% @doc Unspawn the given character.
-%% @todo LID.
 %% @todo The last 4 bytes are probably the number of players remaining in the zone.
-send_0204(User, #state{socket=Socket, gid=DestGID}) ->
+send_0204(User, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	CharTypeID = case (User#users.character)#characters.type of
 		npc -> 16#00001d00;
 		_ -> 16#00001200
 	end,
 	#users{gid=CharGID, lid=CharLID} = User,
-	packet_send(Socket, << 16#02040300:32, 0:32, CharTypeID:32, CharGID:32/little, 0:64,
+	packet_send(Socket, << 16#02040300:32, DestLID:16/little, 0:16, CharTypeID:32, CharGID:32/little, 0:64,
 		16#00011300:32, DestGID:32/little, 0:64, CharGID:32/little, CharLID:32/little, 100:32/little >>).
 
 %% @doc Make the client load a new map.
@@ -1296,9 +1291,8 @@ send_0205(CharUser, IsSeasonal, #state{socket=Socket, gid=DestGID, lid=DestLID, 
 		16#ffffffff:32, ZoneID:32/little, MapID:32/little, EntryID:32/little, AreaNb:32/little, CharLID:16/little, 0:8, IsSeasonal:8 >>).
 
 %% @doc Indicate to the client that loading should finish.
-%% @todo Handle the DestLID properly.
-send_0208(#state{socket=Socket, gid=DestGID, areanb=AreaNb}) ->
-	packet_send(Socket, << 16#02080300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:64, AreaNb:32/little >>).
+send_0208(#state{socket=Socket, gid=DestGID, lid=DestLID, areanb=AreaNb}) ->
+	packet_send(Socket, << 16#02080300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64, AreaNb:32/little >>).
 
 %% @todo No idea what this one does. For unknown reasons it uses channel 2.
 %% @todo Handle the DestLID properly?
@@ -1400,11 +1394,11 @@ send_0231(URL, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#02310300:32, DestLID:16/little, 0:16, 16#00000f00:32, DestGID:32/little, 0:64,
 		16#00000f00:32, DestGID:32/little, 0:64, Length:32/little, URLBin/binary, 0:Padding >>).
 
-%% @todo Handle the LID properly.
-send_0233(Users, #state{socket=Socket, gid=DestGID}) ->
+%% @doc Send the list of players already spawned in the zone when entering it.
+send_0233(Users, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	NbUsers = length(Users),
 	Bin = build_0233_users(Users, []),
-	packet_send(Socket, << 16#02330300:32, 0:32, 16#00001200:32, DestGID:32/little, 0:64,
+	packet_send(Socket, << 16#02330300:32, DestLID:16/little, 0:16, 16#00001200:32, DestGID:32/little, 0:64,
 		16#00011300:32, DestGID:32/little, 0:64, NbUsers:32/little, Bin/binary, 0:608 >>).
 
 build_0233_users([], Acc) ->
@@ -1414,32 +1408,28 @@ build_0233_users([User|Tail], Acc) ->
 	build_0233_users(Tail, [<< Bin/binary, 0:32 >>|Acc]).
 
 %% @doc Start the zone handling: load the zone file and the objects sent separately.
-%% @todo Handle the LID properly.
-send_0236(#state{socket=Socket, gid=DestGID}) ->
-	packet_send(Socket, << 16#02360300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:64 >>).
+send_0236(#state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+	packet_send(Socket, << 16#02360300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64 >>).
 
 %% @doc Chat message.
-%% @todo Handle the LID properly.
-send_0304(FromGID, ChatTypeID, ChatGID, ChatName, ChatModifiers, ChatMessage, #state{socket=Socket, gid=DestGID}) ->
+send_0304(FromGID, ChatTypeID, ChatGID, ChatName, ChatModifiers, ChatMessage, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	{chat_modifiers, ChatType, ChatCutIn, ChatCutInAngle, ChatMsgLength, ChatChannel, ChatCharacterType} = ChatModifiers,
-	packet_send(Socket, << 16#03040300:32, 0:32, 16#00011300:32, FromGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64,
+	packet_send(Socket, << 16#03040300:32, DestLID:16/little, 0:16, 16#00011300:32, FromGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64,
 		ChatTypeID:32, ChatGID:32/little, 0:64, ChatType:8, ChatCutIn:8, ChatCutInAngle:8, ChatMsgLength:8,
 		ChatChannel:8, ChatCharacterType:8, 0:16, ChatName/binary, ChatMessage/binary >>).
 
 %% @todo Inventory related. Doesn't seem to do anything.
-%% @todo Handle the LID properly.
-send_0a05(#state{socket=Socket, gid=DestGID}) ->
-	packet_send(Socket, << 16#0a050300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:64 >>).
+send_0a05(#state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+	packet_send(Socket, << 16#0a050300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64 >>).
 
 %% @doc Send the list of ItemUUID for the items in the inventory.
-%% @todo Handle the LID properly.
-send_0a06(CharUser, #state{socket=Socket, gid=DestGID}) ->
+send_0a06(CharUser, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	Len = length((CharUser#users.character)#characters.inventory),
 	UUIDs = lists:seq(1, Len),
 	Bin = iolist_to_binary([ << N:32/little >> || N <- UUIDs]),
 	Blanks = lists:seq(1, 60 - Len),
 	Bin2 = iolist_to_binary([ << 16#ffffffff:32 >> || _N <- Blanks]),
-	packet_send(Socket, << 16#0a060300:32, 0:64, DestGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64, Bin/binary, Bin2/binary >>).
+	packet_send(Socket, << 16#0a060300:32, DestLID:16/little, 0:48, DestGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64, Bin/binary, Bin2/binary >>).
 
 %% @doc Send an item's description.
 send_0a11(ItemID, ItemDesc, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
@@ -1466,10 +1456,9 @@ send_0c08(#state{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#0c080300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:96 >>).
 
 %% @doc Send the counter's mission options (0 = invisible, 2 = disabled, 3 = available).
-%% @todo LID.
-send_0c10(Options, #state{socket=Socket, gid=DestGID}) ->
+send_0c10(Options, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	Size = byte_size(Options),
-	packet_send(Socket, << 16#0c100300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:64, 1, 0, Size:16/little, Options/binary >>).
+	packet_send(Socket, << 16#0c100300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64, 1, 0, Size:16/little, Options/binary >>).
 
 %% @doc Send the general data and flags for the selected character.
 %% @todo Handle bitflags and value flags properly.
@@ -1543,9 +1532,8 @@ send_1022(#users{character=#characters{currenthp=HP}}, #state{socket=Socket, gid
 	packet_send(Socket, << 16#10220300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64, HP:32/little, PartyPos:32/little >>).
 
 %% @todo Always the same value, no idea what it's for.
-%% @todo Handle the LID properly.
-send_1204(#state{socket=Socket, gid=DestGID}) ->
-	packet_send(Socket, << 16#12040300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:96, 16#20000000:32, 0:256 >>).
+send_1204(#state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+	packet_send(Socket, << 16#12040300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:96, 16#20000000:32, 0:256 >>).
 
 %% @doc Send the player's partner card.
 %% @todo Handle the LID and comment properly.
@@ -1570,26 +1558,23 @@ send_1701(#state{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#17010300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:96 >>).
 
 %% @doc Send the background to use for the counter.
-%% @todo Handle LID properly.
-send_1711(Bg, #state{socket=Socket, gid=DestGID}) ->
-	packet_send(Socket, << 16#17110300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:64, Bg:8, 0:24 >>).
+send_1711(Bg, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+	packet_send(Socket, << 16#17110300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64, Bg:8, 0:24 >>).
 
 %% @doc NPC shop request reply.
-%% @todo Handle the LID properly.
-send_1a02(A, B, C, D, #state{socket=Socket, gid=DestGID}) ->
-	packet_send(Socket, << 16#1a020300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:96,
+send_1a02(A, B, C, D, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+	packet_send(Socket, << 16#1a020300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:96,
 		A:16/little, B:16/little, C:16/little, D:16/little >>).
 
 %% @doc Lumilass available hairstyles/headtypes handler.
-%% @todo Handle the LID properly.
-send_1a03(CharUser, #state{socket=Socket, gid=DestGID}) ->
+send_1a03(CharUser, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	{ok, Conf} = file:consult("priv/lumilass.conf"),
 	Character = CharUser#users.character,
 	NbHeadtypes = proplists:get_value({headtypes, Character#characters.gender, Character#characters.race}, Conf, 0),
 	HairstylesList = proplists:get_value({hairstyles, Character#characters.gender}, Conf),
 	NbHairstyles = length(HairstylesList),
 	HairstylesBin = iolist_to_binary([ << N:32 >> || N <- HairstylesList]),
-	packet_send(Socket, << 16#1a030300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:96,
+	packet_send(Socket, << 16#1a030300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:96,
 		NbHairstyles:32/little, NbHeadtypes:32/little, 0:416, HairstylesBin/binary, 0:32 >>).
 
 %% @doc Available types handler. Enable all 16 types.

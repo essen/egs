@@ -59,23 +59,27 @@ area_load(QuestID, ZoneID, MapID, EntryID, State) ->
 		true -> User
 	end,
 	%% Load the zone.
-	User3 = if ZoneChange ->
+	State1 = if ZoneChange ->
 			ZonePid = egs_quests:zone_pid(User2#users.questpid, ZoneID),
 			egs_zones:leave(User2#users.zonepid, User2#users.gid),
-			LID = egs_zones:enter(ZonePid, User2#users.gid),
-			psu_proto:send_0a05(State),
-			psu_proto:send_0111(User2#users{lid=0}, 6, State),
-			psu_proto:send_010d(User2#users{lid=0}, State),
-			psu_proto:send_0200(ZoneID, AreaType, State),
-			psu_proto:send_020f(egs_quests_db:zone_nbl(QuestID, ZoneID), egs_zones:setid(ZonePid), SeasonID, State),
-			User2#users{zonepid=ZonePid};
-		true -> User2
+			NewLID = egs_zones:enter(ZonePid, User2#users.gid),
+			NewState = State#state{lid=NewLID},
+			{ok, User3} = egs_users:read(User2#users.gid),
+			psu_proto:send_0a05(NewState),
+			psu_proto:send_0111(User3, 6, NewState),
+			psu_proto:send_010d(User3, NewState),
+			psu_proto:send_0200(ZoneID, AreaType, NewState),
+			psu_proto:send_020f(egs_quests_db:zone_nbl(QuestID, ZoneID), egs_zones:setid(ZonePid), SeasonID, NewState),
+			NewState;
+		true ->
+			User3 = User2,
+			State
 	end,
 	%% Save the user.
 	egs_users:write(User3),
 	%% Load the player location.
-	State2 = State#state{areanb=State#state.areanb + 1},
-	psu_proto:send_0205(User3#users{lid=0}, IsSeasonal, State2),
+	State2 = State1#state{areanb=State#state.areanb + 1},
+	psu_proto:send_0205(User3, IsSeasonal, State2),
 	psu_proto:send_100e(User3#users.area, User3#users.entryid, AreaShortName, State2),
 	%% Load the zone objects.
 	if ZoneChange ->
@@ -83,7 +87,7 @@ area_load(QuestID, ZoneID, MapID, EntryID, State) ->
 		true -> ignore
 	end,
 	%% Load the player.
-	psu_proto:send_0201(User3#users{lid=0}, State2),
+	psu_proto:send_0201(User3, State2),
 	if ZoneChange ->
 			psu_proto:send_0a06(User3, State2),
 			%% Load the other players in the zone.

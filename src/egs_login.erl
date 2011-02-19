@@ -66,8 +66,7 @@ event(system_game_server_request, State=#state{socket=Socket}) ->
 %% @todo Remove the put calls when all the send_xxxx are moved out of psu_game and into psu_proto.
 event({system_key_auth_request, AuthGID, AuthKey}, State=#state{socket=Socket}) ->
 	egs_accounts:key_auth(AuthGID, AuthKey),
-	LID = 1 + mnesia:dirty_update_counter(counters, lobby, 1) rem 1023,
-	egs_users:write(#users{gid=AuthGID, pid=self(), lid=LID}),
+	egs_users:write(#users{gid=AuthGID, pid=self()}),
 	put(socket, Socket),
 	put(gid, AuthGID),
 	State2 = State#state{gid=AuthGID},

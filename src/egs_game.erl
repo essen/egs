@@ -268,11 +268,11 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}, State=#sta
 	psu_proto:send_0c00(User, State),
 	psu_proto:send_020e(QuestData, State),
 	psu_proto:send_0a05(State),
-	psu_proto:send_010d(User#users{lid=0}, State),
+	psu_proto:send_010d(User, State),
 	psu_proto:send_0200(0, mission, State),
 	psu_proto:send_020f(ZoneData, 0, 255, State),
 	State2 = State#state{areanb=State#state.areanb + 1},
-	psu_proto:send_0205(User#users{lid=0}, 0, State2),
+	psu_proto:send_0205(User, 0, State2),
 	psu_proto:send_100e(CounterID, "Counter", State2),
 	psu_proto:send_0215(0, State2),
 	psu_proto:send_0215(0, State2),
@@ -282,7 +282,7 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}, State=#sta
 	psu_game:send_1206(),
 	psu_game:send_1207(),
 	psu_game:send_1212(),
-	psu_proto:send_0201(User#users{lid=0}, State2),
+	psu_proto:send_0201(User, State2),
 	psu_proto:send_0a06(User, State2),
 	case User#users.partypid of
 		undefined -> ignore;
@@ -353,7 +353,7 @@ event({hit, FromTargetID, ToTargetID, A, B}, State=#state{gid=GID}) ->
 	end,
 	%% exp
 	if	HasEXP =:= true ->
-			psu_proto:send_0115(NewUser#users{lid=0}, ToTargetID, State);
+			psu_proto:send_0115(NewUser, ToTargetID, State);
 		true -> ignore
 	end,
 	%% save
@@ -547,7 +547,7 @@ event({npc_shop_buy, ShopItemIndex, QuantityOrColor}, State=#state{gid=GID}) ->
 	egs_users:money_add(GID, -1 * BuyPrice * Quantity),
 	ItemUUID = egs_users:item_add(GID, ItemID, Variables),
 	{ok, User} = egs_users:read(GID),
-	psu_proto:send_0115(User#users{lid=0}, State), %% @todo This one is apparently broadcast to everyone in the same zone.
+	psu_proto:send_0115(User, State), %% @todo This one is apparently broadcast to everyone in the same zone.
 	%% @todo Following command isn't done 100% properly.
 	UCS2Name = << << X:8, 0:8 >> || X <- Name >>,
 	NamePadding = 8 * (46 - byte_size(UCS2Name)),
@@ -639,8 +639,8 @@ event({object_healing_pad_tick, [_PartyPos]}, State=#state{gid=GID}) ->
 			NewHP2 = if NewHP > Character#characters.maxhp -> Character#characters.maxhp; true -> NewHP end,
 			User2 = User#users{character=Character#characters{currenthp=NewHP2}},
 			egs_users:write(User2),
-			psu_proto:send_0117(User2#users{lid=0}, State),
-			psu_proto:send_0111(User2#users{lid=0}, 4, State)
+			psu_proto:send_0117(User2, State),
+			psu_proto:send_0111(User2, 4, State)
 	end;
 
 event({object_key_console_enable, ObjectID}, #state{gid=GID}) ->
@@ -724,7 +724,7 @@ event(player_death, State=#state{gid=GID}) ->
 	Char = User#users.character,
 	User2 = User#users{character=Char#characters{currenthp=NewHP}},
 	egs_users:write(User2),
-	psu_proto:send_0117(User2#users{lid=0}, State),
+	psu_proto:send_0117(User2, State),
 	psu_proto:send_1022(User2, State);
 	%% red screen with return to lobby choice:
 	%~ psu_proto:send_0111(User2, 3, 1, State);
