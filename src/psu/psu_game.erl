@@ -88,10 +88,16 @@ area_load(QuestID, ZoneID, MapID, EntryID, State) ->
 	%% Load the player.
 	psu_proto:send_0201(User3#users{lid=0}, State2),
 	if ZoneChange ->
-			psu_proto:send_0a06(User3, State2);
+			psu_proto:send_0a06(User3, State2),
+			%% Load the other players in the zone.
+			OtherPlayersGID = egs_zones:get_all_players(User3#users.zonepid, User3#users.gid),
+			if	OtherPlayersGID =:= [] -> ignore;
+				true ->
+					OtherPlayers = egs_users:select(OtherPlayersGID),
+					psu_proto:send_0233(OtherPlayers, State)
+			end;
 		true -> ignore
 	end,
-	%% @todo Send the spawn list.
 	%% End of loading.
 	State3 = State2#state{areanb=State2#state.areanb + 1},
 	psu_proto:send_0208(State3),

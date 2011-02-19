@@ -20,7 +20,7 @@
 -module(egs_zones).
 -behaviour(gen_server).
 
--export([start_link/4, stop/1, setid/1, enter/2, leave/2]). %% API.
+-export([start_link/4, stop/1, setid/1, enter/2, leave/2, get_all_players/2]). %% API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
 
 -record(state, {
@@ -51,6 +51,9 @@ enter(Pid, GID) ->
 leave(Pid, GID) ->
 	gen_server:cast(Pid, {leave, GID}).
 
+get_all_players(Pid, ExcludeGID) ->
+	gen_server:call(Pid, {get_all_players, ExcludeGID}).
+
 %% gen_server.
 
 init([UniID, QuestID, ZoneID, ZoneData]) ->
@@ -70,6 +73,9 @@ handle_call({enter, GID}, _From, State) ->
 	[LID|FreeLIDs] = State#state.freelids,
 	egs_users:broadcast_spawn(GID, PlayersGID),
 	{reply, LID, State#state{players=[{GID, LID}|Players], freelids=FreeLIDs}};
+
+handle_call({get_all_players, ExcludeGID}, _From, State) ->
+	{reply, lists:delete(ExcludeGID, players_gid(State#state.players)), State};
 
 handle_call(stop, _From, State) ->
 	{stop, normal, stopped, State};

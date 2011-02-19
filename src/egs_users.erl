@@ -63,7 +63,10 @@ select({neighbors, User}) ->
 		X#?TABLE.instancepid =:= User#?TABLE.instancepid,
 		X#?TABLE.area =:= User#?TABLE.area
 	])),
-	{ok, List}.
+	{ok, List};
+select(UsersGID) ->
+	L = [read(GID) || GID <- UsersGID],
+	[User || {ok, User} <- L].
 
 %% @spec write(User) -> ok
 write(User) ->
