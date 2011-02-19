@@ -45,15 +45,9 @@ on_exit(Pid) ->
 					[egs_users:delete(NPCGID) || {_Spot, NPCGID} <- NPCList],
 					psu_party:stop(PartyPid)
 			end,
+			egs_zones:leave(User#users.zonepid, User#users.gid),
+			egs_universes:leave(User#users.uni),
 			egs_users:delete(User#users.gid),
-			case User#users.uni of
-				undefined ->
-					ignore;
-				UniID ->
-					egs_universes:leave(UniID),
-					{ok, List} = egs_users:select({neighbors, User}),
-					lists:foreach(fun(Other) -> Other#users.pid ! {egs, player_unspawn, User} end, List)
-			end,
 			io:format("game (~p): quit~n", [User#users.gid]);
 		{error, _Reason} ->
 			ignore
