@@ -25,4 +25,4 @@ init() ->
 	erlang:load_nif("priv/egs_drv", 0).
 
 compress(_SrcBin) ->
-	exit(nif_library_not_loaded).
+	erlang:nif_error(not_loaded).
