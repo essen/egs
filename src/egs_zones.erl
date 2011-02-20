@@ -82,10 +82,9 @@ handle_call({enter, GID}, _From, State) ->
 handle_call({leave, GID}, _From, State) ->
 	{_, LID} = lists:keyfind(GID, 1, State#state.players),
 	Players = lists:delete({GID, LID}, State#state.players),
-	PlayersGID = players_gid(Players),
-	FreeLIDs = State#state.freelids,
-	egs_users:broadcast_unspawn(GID, PlayersGID),
-	{reply, ok, State#state{players=Players, freelids=[LID|FreeLIDs]}};
+	{ok, Spawn} = egs_users:read(GID),
+	egs_users:broadcast({egs, player_unspawn, Spawn}, players_gid(Players)),
+	{reply, ok, State#state{players=Players, freelids=[LID|State#state.freelids]}};
 
 handle_call({get_all_players, ExcludeGID}, _From, State) ->
 	{reply, lists:delete(ExcludeGID, players_gid(State#state.players)), State};
