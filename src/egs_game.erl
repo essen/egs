@@ -82,7 +82,7 @@ cast(16#0514, Data, State=#state{gid=GID}) ->
 %%      We clean up the command and use the real GID and LID of the user, disregarding what was sent and possibly tampered with.
 %%      Only a handful of commands are allowed to broadcast. An user tampering with it would get disconnected instantly.
 %% @todo Don't query the user data everytime! Keep the needed information in the State.
-cast(Command, Data, #state{gid=GID})
+cast(Command, Data, #state{gid=GID, lid=LID})
 	when	Command =:= 16#0101;
 			Command =:= 16#0102;
 			Command =:= 16#0104;
@@ -91,14 +91,9 @@ cast(Command, Data, #state{gid=GID})
 			Command =:= 16#050f;
 			Command =:= valid ->
 	<< _:32, A:64/bits, _:64, B:192/bits, _:64, C/bits >> = Data,
-	case egs_users:read(GID) of
-		{error, _Reason} ->
-			ignore;
-		{ok, User} ->
-			LID = User#users.lid,
-			Packet = << A/binary, 16#00011300:32, GID:32/little, B/binary, GID:32/little, LID:32/little, C/binary >>,
-			egs_zones:broadcast(User#users.zonepid, GID, Packet)
-	end.
+	{ok, User} = egs_users:read(GID),
+	Packet = << A/binary, 16#00011300:32, GID:32/little, B/binary, GID:32/little, LID:32/little, C/binary >>,
+	egs_zones:broadcast(User#users.zonepid, GID, Packet).
 
 %% Raw commands.
 
