@@ -94,11 +94,10 @@ cast(Command, Data, #state{gid=GID})
 	case egs_users:read(GID) of
 		{error, _Reason} ->
 			ignore;
-		{ok, Self} ->
-			LID = Self#users.lid,
+		{ok, User} ->
+			LID = User#users.lid,
 			Packet = << A/binary, 16#00011300:32, GID:32/little, B/binary, GID:32/little, LID:32/little, C/binary >>,
-			{ok, SpawnList} = egs_users:select({neighbors, Self}),
-			lists:foreach(fun(User) -> User#users.pid ! {egs, cast, Packet} end, SpawnList)
+			egs_zones:broadcast(User#users.zonepid, GID, Packet)
 	end.
 
 %% Raw commands.

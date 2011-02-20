@@ -20,7 +20,7 @@
 -module(egs_users).
 -behaviour(gen_server).
 
--export([start_link/0, stop/0, broadcast_spawn/2, broadcast_unspawn/2, set_zone/3]). %% API.
+-export([start_link/0, stop/0, broadcast_spawn/2, broadcast_unspawn/2, broadcast/2, set_zone/3]). %% API.
 -export([read/1, select/1, write/1, delete/1, item_nth/2, item_add/3, item_qty_add/3,
 		 shop_enter/2, shop_leave/1, shop_get/1, money_add/2]). %% Deprecated API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
@@ -50,6 +50,9 @@ broadcast_spawn(GID, PlayersGID) ->
 broadcast_unspawn(GID, PlayersGID) ->
 	gen_server:cast(?SERVER, {broadcast_unspawn, GID, PlayersGID}).
 
+broadcast(Message, PlayersGID) ->
+	gen_server:cast(?SERVER, {broadcast, Message, PlayersGID}).
+
 set_zone(GID, ZonePid, LID) ->
 	gen_server:call(?SERVER, {set_zone, GID, ZonePid, LID}).
 
@@ -60,10 +63,8 @@ set_zone(GID, ZonePid, LID) ->
 read(ID) ->
 	gen_server:call(?SERVER, {read, ID}).
 
-%% @spec select({neighbors, User}) -> {ok, List}
-%% @todo state = undefined | {wait_for_authentication, Key} | authenticated | online
-select(What) ->
-	gen_server:call(?SERVER, {select, What}).
+select(GIDsList) ->
+	gen_server:call(?SERVER, {select, GIDsList}).
 
 %% @spec write(User) -> ok
 write(User) ->
@@ -112,10 +113,6 @@ handle_call({read, GID}, _From, State) ->
 	{GID, User} = lists:keyfind(GID, 1, State#stateu.users),
 	{reply, {ok, User}, State};
 
-handle_call({select, {neighbors, #users{gid=FromGID, uni=FromUni, area=FromArea}}}, _From, State) ->
-	Users = [User || {GID, User = #users{uni=Uni, area=Area}}
-		<- State#stateu.users, GID =/= FromGID, Uni =:= FromUni, Area =:= FromArea],
-	{reply, {ok, Users}, State};
 handle_call({select, UsersGID}, _From, State) ->
 	Users = [begin
 		{GID, User} = lists:keyfind(GID, 1, State#stateu.users),
@@ -237,6 +234,12 @@ handle_cast({broadcast_unspawn, GID, PlayersGID}, State) ->
 	[begin	{_, #users{pid=DestPid}} = lists:keyfind(DestGID, 1, State#stateu.users),
 			DestPid ! {egs, player_unspawn, OrigUser}
 	 end || DestGID <- PlayersGID],
+	{noreply, State};
+
+handle_cast({broadcast, Message, PlayersGID}, State) ->
+	[begin	{GID, #users{pid=Pid}} = lists:keyfind(GID, 1, State#stateu.users),
+			Pid ! Message
+	 end || GID <- PlayersGID],
 	{noreply, State};
 
 handle_cast(_Msg, State) ->
