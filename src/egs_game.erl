@@ -261,7 +261,7 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}, State=#sta
 		area={16#7fffffff, 0, 0}, entryid=0, prev_area=FromArea, prev_entryid=FromEntryID},
 	egs_users:write(User),
 	QuestData = egs_quests_db:quest_nbl(0),
-	{ok, ZoneData} = file:read_file("data/lobby/counter.zone.nbl"),
+	ZoneData = << 0:16000 >>, %% Doing like official just in case.
 	%% load counter
 	psu_proto:send_0c00(User, State),
 	psu_proto:send_020e(QuestData, State),
