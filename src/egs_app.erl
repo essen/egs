@@ -67,7 +67,6 @@ db_init() ->
 	error_logger:info_report("mnesia schema created"),
 	error_logger:info_report("starting mnesia"),
 	mnesia:start(),
-	mnesia:create_table(accounts, [{attributes, record_info(fields, accounts)}]),
 	mnesia:create_table(counters, [{attributes, record_info(fields, counters)}]),
 	mnesia:create_table(users, [{attributes, record_info(fields, users)}]),
 	error_logger:info_report("mnesia tables created"),

@@ -42,16 +42,6 @@
 	areanb = 0		:: non_neg_integer()
 }).
 
-%% @doc Accounts. So far only used for storing temporary information.
-%% @todo Hash the password.
-%% @todo Add email, password_salt, is_ingame, register_time, last_login_time, etc.
--record(accounts, {
-	gid			:: integer(),
-	username	:: string(),
-	password	:: string(),
-	auth_state	:: undefined | {wait_for_authentication, binary(), any()}
-}).
-
 %% @doc Table containing the users currently logged in.
 %% @todo Probably can use a "param" or "extra" field to store the game-specific information (for things that don't need to be queried).
 -record(users, {

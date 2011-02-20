@@ -1,5 +1,5 @@
 %% @author Loïc Hoguin <essen@dev-extend.eu>
-%% @copyright 2010 Loïc Hoguin.
+%% @copyright 2010-2011 Loïc Hoguin.
 %% @doc Accounts handling.
 %%
 %%	This file is part of EGS.
@@ -18,48 +18,116 @@
 %%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
 -module(egs_accounts).
--export([get_folder/1, key_auth/2, key_auth_init/1, key_auth_timeout/1, login_auth/2]).
+-behaviour(gen_server).
 
--define(TABLE, accounts).
+-export([start_link/0, stop/0, get_folder/1, key_auth/2, key_auth_init/1, key_auth_timeout/1, login_auth/2]). %% API.
+-export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
 
--include("include/records.hrl").
+-define(SERVER, ?MODULE).
+
+%% @todo Make accounts permanent.
+%% @todo Hash the password.
+%% @todo Add email, password_salt, is_ingame, register_time, last_login_time, etc.
+-record(accounts, {
+	gid			:: integer(),
+	username	:: string(),
+	password	:: string(),
+	auth_state	:: undefined | {wait_for_authentication, binary(), any()}
+}).
+
+-record(state, {
+	accounts = []		:: list(#accounts{}),
+	next_gid = 10000001	:: integer()
+}).
+
+%% API.
+
+-spec start_link() -> {ok, Pid::pid()}.
+start_link() ->
+	gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+
+-spec stop() -> stopped.
+stop() ->
+	gen_server:call(?SERVER, stop).
 
 %% @todo Temporary code until we properly save the player data.
 get_folder(GID) ->
-	{atomic, [#accounts{username=Username, password=Password}]} = mnesia:transaction(fun() -> mnesia:read({?TABLE, GID}) end),
-	<< Username/binary, "-", Password/binary >>.
+	gen_server:call(?SERVER, {get_folder, GID}).
 
+-spec key_auth(GID::integer(), AuthKey::binary()) -> ok | {error, badarg}.
+%% @doc Authenticate using the given key.
 key_auth(GID, AuthKey) ->
-	{atomic, [#accounts{auth_state=AuthState}]} = mnesia:transaction(fun() -> mnesia:read({?TABLE, GID}) end),
+	gen_server:call(?SERVER, {key_auth, GID, AuthKey}).
+
+-spec key_auth_init(GID::integer()) -> {ok, AuthKey::binary()}.
+%% @doc Initialize key authentication. Obtain a key for a subsequent re-authentication on a different connection.
+key_auth_init(GID) ->
+	gen_server:call(?SERVER, {key_auth_init, GID}).
+
+-spec key_auth_timeout(GID::integer()) -> ok.
+%% @doc Key authentication timeout handling.
+%% @todo Probably handle the authentication in a gen_fsm properly.
+key_auth_timeout(GID) ->
+	gen_server:cast(?SERVER, {key_auth_timeout, GID}).
+
+-spec login_auth(Username::binary(), Password::binary()) -> {ok, GID::integer()}.
+%% @doc Authenticate using the given username and password.
+%% @todo Properly handle login authentication when accounts are saved.
+login_auth(Username, Password) ->
+	gen_server:call(?SERVER, {login_auth, Username, Password}).
+
+%% gen_server.
+
+init([]) ->
+	{ok, #state{}}.
+
+handle_call({get_folder, GID}, _From, State) ->
+	{_, #accounts{username=Username, password=Password}} = lists:keyfind(GID, 1, State#state.accounts),
+	{reply, << Username/binary, "-", Password/binary >>, State};
+
+handle_call({key_auth, GID, AuthKey}, _From, State) ->
+	{_, Account = #accounts{auth_state=AuthState}} = lists:keyfind(GID, 1, State#state.accounts),
 	case AuthState of
 		{wait_for_authentication, AuthKey, TRef} ->
 			timer:cancel(TRef),
-			mnesia:transaction(fun() ->
-				Account = mnesia:read({?TABLE, GID}),
-				mnesia:write(Account#accounts{auth_state=undefined})
-			end),
-			ok;
-		_Any ->
-			{error, badarg}
-	end.
+			Accounts = lists:delete({GID, Account}, State#state.accounts),
+			{reply, ok, State#state{accounts=[{GID, Account#accounts{auth_state=undefined}}|Accounts]}};
+		undefined ->
+			{reply, {error, badarg}, State}
+	end;
 
-key_auth_init(GID) ->
+handle_call({key_auth_init, GID}, _From, State) ->
 	AuthKey = crypto:rand_bytes(4),
 	TRef = timer:apply_after(10000, ?MODULE, key_auth_timeout, [GID]),
-	mnesia:transaction(fun() ->
-		[Account] = mnesia:read({?TABLE, GID}),
-		mnesia:write(Account#accounts{auth_state={wait_for_authentication, AuthKey, TRef}})
-	end),
-	{ok, AuthKey}.
+	{_, Account} = lists:keyfind(GID, 1, State#state.accounts),
+	Accounts = lists:delete({GID, Account}, State#state.accounts),
+	{reply, {ok, AuthKey}, State#state{accounts=
+		[{GID, Account#accounts{auth_state={wait_for_authentication, AuthKey, TRef}}}|Accounts]}};
 
-key_auth_timeout(GID) ->
-	mnesia:transaction(fun() ->
-		Account = mnesia:read({?TABLE, GID}),
-		mnesia:write(Account#accounts{auth_state=undefined})
-	end).
+handle_call({login_auth, Username, Password}, _From, State) ->
+	GID = State#state.next_gid,
+	Account = #accounts{gid=GID, username=Username, password=Password},
+	{reply, {ok, GID}, State#state{next_gid=GID + 1, accounts=[{GID, Account}|State#state.accounts]}};
 
-%% @todo Properly handle login authentication when accounts are saved.
-login_auth(Username, Password) ->
-	GID = 10000000 + mnesia:dirty_update_counter(counters, gid, 1),
-	mnesia:transaction(fun() -> mnesia:write(#accounts{gid=GID, username=Username, password=Password}) end),
-	{ok, GID}.
+handle_call(stop, _From, State) ->
+	{stop, normal, stopped, State};
+
+handle_call(_Request, _From, State) ->
+	{reply, ignored, State}.
+
+handle_cast({key_auth_timeout, GID}, State) ->
+	{_, Account} = lists:keyfind(GID, 1, State#state.accounts),
+	Accounts = lists:delete({GID, Account}, State#state.accounts),
+	{noreply, State#state{accounts= [{GID, Account#accounts{auth_state=undefined}}|Accounts]}};
+
+handle_cast(_Msg, State) ->
+	{noreply, State}.
+
+handle_info(_Info, State) ->
+	{noreply, State}.
+
+terminate(_Reason, _State) ->
+	ok.
+
+code_change(_OldVsn, State, _Extra) ->
+	{ok, State}.
