@@ -60,7 +60,6 @@ set_zone(GID, ZonePid, LID) ->
 read(ID) ->
 	gen_server:call(?SERVER, {read, ID}).
 
-%% @spec select(all) -> {ok, List}
 %% @spec select({neighbors, User}) -> {ok, List}
 %% @todo state = undefined | {wait_for_authentication, Key} | authenticated | online
 select(What) ->
@@ -113,9 +112,6 @@ handle_call({read, GID}, _From, State) ->
 	{GID, User} = lists:keyfind(GID, 1, State#stateu.users),
 	{reply, {ok, User}, State};
 
-handle_call({select, all}, _From, State) ->
-	Users = [User || {_GID, User} <- State#stateu.users],
-	{reply, {ok, Users}, State};
 handle_call({select, {neighbors, #users{gid=FromGID, uni=FromUni, area=FromArea}}}, _From, State) ->
 	Users = [User || {GID, User = #users{uni=Uni, area=Area}}
 		<- State#stateu.users, GID =/= FromGID, Uni =:= FromUni, Area =:= FromArea],
