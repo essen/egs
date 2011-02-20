@@ -156,10 +156,6 @@
 	inventory=[]
 }). % also: shortcuts partnercards blacklist npcs flags...
 
-%% @doc Table containing all mission objects.
-
--record(psu_object, {id, instancepid, type, args}).
-
 %% @doc Hit response data.
 
 -record(hit_response, {type, user, exp, damage, targethp, targetse, events}).
