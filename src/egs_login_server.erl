@@ -18,7 +18,7 @@
 %%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
 -module(egs_login_server).
--export([start_link/1, on_exit/1, init/1]).
+-export([start_link/1, init/1]).
 
 -include("include/records.hrl").
 
@@ -27,11 +27,6 @@
 start_link(Port) ->
 	Pid = spawn(egs_network, listen, [Port, ?MODULE]),
 	{ok, Pid}.
-
-%% @spec on_exit(Pid) -> ok
-%% @doc Nothing to do for the login server.
-on_exit(_Pid) ->
-	ok.
 
 %% @doc Initialize the game state and start receiving messages.
 init(Socket) ->
