@@ -36,7 +36,7 @@
 }).
 
 -record(state, {
-	accounts = []			:: list(#accounts{}),
+	accounts = []			:: list({GID::integer(), #accounts{}}),
 	next_gid = 10000001		:: integer(),
 	tmp_gid  = 16#ff000001	:: integer()
 }).
