@@ -1,1 +1,6 @@
+c_src/*.o
 deps
+ebin
+priv/*.so
+src/egs_script_lexer.erl
+src/egs_script_parser.erl
