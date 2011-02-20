@@ -18,7 +18,7 @@
 %%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
 -module(egs_game_server).
--export([start_link/1, on_exit/1, init/1]).
+-export([start_link/1, link_exit/0, on_exit/1, init/1]).
 
 -include("include/records.hrl").
 
@@ -30,33 +30,32 @@ start_link(Port) ->
 	LPid = spawn(egs_network, listen, [Port, ?MODULE]),
 	{ok, LPid}.
 
+%% @doc Link the on_exit handler to the current process.
+link_exit() ->
+	egs_game_server_exit_mon ! {link, self()}.
+
 %% @spec on_exit(Pid) -> ok
 %% @doc Cleanup the data associated with the failing process.
 %% @todo Cleanup the instance process if there's nobody in it anymore.
 %% @todo Leave party instead of stopping it.
 on_exit(Pid) ->
-	case egs_users:read({pid, Pid}) of
-		{ok, User} ->
-			case User#users.partypid of
-				undefined ->
-					ignore;
-				PartyPid ->
-					{ok, NPCList} = psu_party:get_npc(PartyPid),
-					[egs_users:delete(NPCGID) || {_Spot, NPCGID} <- NPCList],
-					psu_party:stop(PartyPid)
-			end,
-			egs_zones:leave(User#users.zonepid, User#users.gid),
-			egs_universes:leave(User#users.uni),
-			egs_users:delete(User#users.gid),
-			io:format("game (~p): quit~n", [User#users.gid]);
-		{error, _Reason} ->
-			ignore
-	end.
+	{ok, User} = egs_users:read({pid, Pid}),
+	case User#users.partypid of
+		undefined ->
+			ignore;
+		PartyPid ->
+			{ok, NPCList} = psu_party:get_npc(PartyPid),
+			[egs_users:delete(NPCGID) || {_Spot, NPCGID} <- NPCList],
+			psu_party:stop(PartyPid)
+	end,
+	egs_zones:leave(User#users.zonepid, User#users.gid),
+	egs_universes:leave(User#users.uni),
+	egs_users:delete(User#users.gid),
+	io:format("game (~p): quit~n", [User#users.gid]).
 
 %% @doc Initialize the game state and start receiving messages.
 %% @todo Handle keepalive messages globally?
 init(Socket) ->
-	egs_game_server_exit_mon ! {link, self()},
 	timer:send_interval(5000, {egs, keepalive}),
 	State = #state{socket=Socket, gid=egs_accounts:tmp_gid()},
 	psu_proto:send_0202(State),

@@ -79,6 +79,7 @@ event({char_select_enter, Slot, _BackToPreviousField}, State=#state{gid=GID}) ->
 	egs_universes:enter(UniID),
 	User = #users{gid=GID, pid=self(), uni=UniID, character=Character, area={1100000, 0, 4}, entryid=0},
 	egs_users:write(User),
+	egs_game_server:link_exit(),
 	egs_users:item_add(GID, 16#11010000, #psu_special_item_variables{}),
 	egs_users:item_add(GID, 16#11020000, #psu_special_item_variables{}),
 	egs_users:item_add(GID, 16#11020100, #psu_special_item_variables{}),
