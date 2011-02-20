@@ -20,7 +20,7 @@
 -module(egs_accounts).
 -behaviour(gen_server).
 
--export([start_link/0, stop/0, get_folder/1, key_auth/2, key_auth_init/1, key_auth_timeout/1, login_auth/2]). %% API.
+-export([start_link/0, stop/0, get_folder/1, key_auth/2, key_auth_init/1, key_auth_timeout/1, login_auth/2, tmp_gid/0]). %% API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
 
 -define(SERVER, ?MODULE).
@@ -36,8 +36,9 @@
 }).
 
 -record(state, {
-	accounts = []		:: list(#accounts{}),
-	next_gid = 10000001	:: integer()
+	accounts = []			:: list(#accounts{}),
+	next_gid = 10000001		:: integer(),
+	tmp_gid  = 16#ff000001	:: integer()
 }).
 
 %% API.
@@ -76,6 +77,11 @@ key_auth_timeout(GID) ->
 login_auth(Username, Password) ->
 	gen_server:call(?SERVER, {login_auth, Username, Password}).
 
+-spec tmp_gid() -> GID::integer().
+%% @doc Return an unused temporary GID for initial connection and APC characters.
+tmp_gid() ->
+	gen_server:call(?SERVER, tmp_gid).
+
 %% gen_server.
 
 init([]) ->
@@ -108,6 +114,10 @@ handle_call({login_auth, Username, Password}, _From, State) ->
 	GID = State#state.next_gid,
 	Account = #accounts{gid=GID, username=Username, password=Password},
 	{reply, {ok, GID}, State#state{next_gid=GID + 1, accounts=[{GID, Account}|State#state.accounts]}};
+
+handle_call(tmp_gid, _From, State) ->
+	GID = State#state.tmp_gid,
+	{reply, GID, State#state{tmp_gid=GID + 1}};
 
 handle_call(stop, _From, State) ->
 	{stop, normal, stopped, State};

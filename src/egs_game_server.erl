@@ -58,7 +58,6 @@ on_exit(Pid) ->
 init(Socket) ->
 	egs_game_server_exit_mon ! {link, self()},
 	timer:send_interval(5000, {egs, keepalive}),
-	TmpGID = 16#ff000000 + mnesia:dirty_update_counter(counters, tmpgid, 1),
-	State = #state{socket=Socket, gid=TmpGID},
+	State = #state{socket=Socket, gid=egs_accounts:tmp_gid()},
 	psu_proto:send_0202(State),
 	egs_network:recv(<< >>, egs_login, State).

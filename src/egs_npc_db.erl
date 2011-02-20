@@ -61,7 +61,7 @@ handle_call(all, _From, State) ->
 
 %% @todo Handle stats, experience, based on level.
 handle_call({create, NPCid, BaseLevel}, _From, State) ->
-	NPCGID = 16#ff000000 + mnesia:dirty_update_counter(counters, tmpgid, 1),
+	NPCGID = egs_accounts:tmp_gid(),
 	#npc{name=Name, race=Race, gender=Gender, class=Class, level_diff=LevelDiff, appearance=Appearance} = proplists:get_value(NPCid, ?NPC),
 	TmpUCS2Name = << << X:8, 0:8 >> || X <- Name >>,
 	Padding = 8 * (64 - byte_size(TmpUCS2Name)),

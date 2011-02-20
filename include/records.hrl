@@ -101,9 +101,6 @@
 	faceboxx=65535, faceboxy=65535
 }).
 
-%% @doc Table containing counters current values.
--record(counters, {name, id}).
-
 %% @doc Character main or class level data structure.
 
 -record(level, {number, exp}).
