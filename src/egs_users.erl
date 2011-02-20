@@ -20,7 +20,7 @@
 -module(egs_users).
 -behaviour(gen_server).
 
--export([start_link/0, stop/0, broadcast_spawn/2, broadcast_unspawn/2, broadcast/2, set_zone/3]). %% API.
+-export([start_link/0, stop/0, broadcast_unspawn/2, broadcast/2, set_zone/3]). %% API.
 -export([read/1, select/1, write/1, delete/1, item_nth/2, item_add/3, item_qty_add/3,
 		 shop_enter/2, shop_leave/1, shop_get/1, money_add/2]). %% Deprecated API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
@@ -43,9 +43,6 @@ start_link() ->
 -spec stop() -> stopped.
 stop() ->
 	gen_server:call(?SERVER, stop).
-
-broadcast_spawn(GID, PlayersGID) ->
-	gen_server:cast(?SERVER, {broadcast_spawn, GID, PlayersGID}).
 
 broadcast_unspawn(GID, PlayersGID) ->
 	gen_server:cast(?SERVER, {broadcast_unspawn, GID, PlayersGID}).
@@ -221,13 +218,6 @@ handle_call(stop, _From, State) ->
 
 handle_call(_Request, _From, State) ->
 	{reply, ignored, State}.
-
-handle_cast({broadcast_spawn, GID, PlayersGID}, State) ->
-	{GID, OrigUser} = lists:keyfind(GID, 1, State#stateu.users),
-	[begin	{_, #users{pid=DestPid}} = lists:keyfind(DestGID, 1, State#stateu.users),
-			DestPid ! {egs, player_spawn, OrigUser}
-	 end || DestGID <- PlayersGID],
-	{noreply, State};
 
 handle_cast({broadcast_unspawn, GID, PlayersGID}, State) ->
 	{GID, OrigUser} = lists:keyfind(GID, 1, State#stateu.users),

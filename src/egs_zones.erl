@@ -75,10 +75,9 @@ handle_call(setid, _From, State) ->
 handle_call({enter, GID}, _From, State) ->
 	[LID|FreeLIDs] = State#state.freelids,
 	egs_users:set_zone(GID, self(), LID),
-	Players = State#state.players,
-	PlayersGID = players_gid(Players),
-	egs_users:broadcast_spawn(GID, PlayersGID),
-	{reply, LID, State#state{players=[{GID, LID}|Players], freelids=FreeLIDs}};
+	{ok, Spawn} = egs_users:read(GID),
+	egs_users:broadcast({egs, player_spawn, Spawn}, players_gid(State#state.players)),
+	{reply, LID, State#state{players=[{GID, LID}|State#state.players], freelids=FreeLIDs}};
 
 handle_call({leave, GID}, _From, State) ->
 	{_, LID} = lists:keyfind(GID, 1, State#state.players),
