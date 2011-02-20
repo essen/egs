@@ -94,7 +94,7 @@ event({char_select_enter, Slot, _BackToPreviousField}, State=#state{gid=GID}) ->
 %% Internal.
 
 %% @doc Load the given character's data.
-%% @todo This function is temporary until we get permanent mnesia accounts.
+%% @todo This function is temporary until we get permanent accounts.
 data_load(Folder, Number) ->
 	Filename = io_lib:format("save/~s/~b-character", [Folder, Number]),
 	case file:read_file(Filename) of

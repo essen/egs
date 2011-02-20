@@ -1,5 +1,5 @@
 %% @author Loïc Hoguin <essen@dev-extend.eu>
-%% @copyright 2010 Loïc Hoguin.
+%% @copyright 2010-2011 Loïc Hoguin.
 %% @doc Users handling.
 %%
 %%	This file is part of EGS.
@@ -18,70 +18,130 @@
 %%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
 -module(egs_users).
--export([read/1, select/1, write/1, delete/1, item_nth/2, item_add/3, item_qty_add/3, shop_enter/2, shop_leave/1, shop_get/1, money_add/2, broadcast_spawn/2, broadcast_unspawn/2, set_zone/3]).
+-behaviour(gen_server).
 
--define(TABLE, users).
+-export([start_link/0, stop/0, broadcast_spawn/2, broadcast_unspawn/2, set_zone/3]). %% API.
+-export([read/1, select/1, write/1, delete/1, item_nth/2, item_add/3, item_qty_add/3,
+		 shop_enter/2, shop_leave/1, shop_get/1, money_add/2]). %% Deprecated API.
+-export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
+
+-define(SERVER, ?MODULE).
 
 -include("include/records.hrl").
--include_lib("stdlib/include/qlc.hrl").
 
-%% @spec do(Q) -> Record
-%% @doc Perform a mnesia transaction using a QLC query.
-do(Q) ->
-	F = fun() -> qlc:e(Q) end,
-	{atomic, Val} = mnesia:transaction(F),
-	Val.
+%% @todo We have a conflict with the global state record. Solve it then rename this to state.
+-record(stateu, {
+	users = [] :: list({GID::integer(), #users{}})
+}).
 
-%% --
+%% API.
+
+-spec start_link() -> {ok, Pid::pid()}.
+start_link() ->
+	gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+
+-spec stop() -> stopped.
+stop() ->
+	gen_server:call(?SERVER, stop).
+
+broadcast_spawn(GID, PlayersGID) ->
+	gen_server:cast(?SERVER, {broadcast_spawn, GID, PlayersGID}).
+
+broadcast_unspawn(GID, PlayersGID) ->
+	gen_server:cast(?SERVER, {broadcast_unspawn, GID, PlayersGID}).
+
+set_zone(GID, ZonePid, LID) ->
+	gen_server:call(?SERVER, {set_zone, GID, ZonePid, LID}).
+
+%% Deprecated API.
 
 %% @spec read({pid, Pid}) -> {ok, User} | {error, badarg}
 %% @spec read(ID) -> {ok, User} | {error, badarg}
-read({pid, Pid}) ->
-	List = do(qlc:q([X || X <- mnesia:table(?TABLE), X#?TABLE.pid =:= Pid])),
-	case List of
-		[] ->		{error, badarg};
-		[User] ->	{ok, User}
-	end;
 read(ID) ->
-	case mnesia:transaction(fun() -> mnesia:read({?TABLE, ID}) end) of
-		{atomic, []} ->		{error, badarg};
-		{atomic, [Val]} ->	{ok, Val}
-	end.
+	gen_server:call(?SERVER, {read, ID}).
 
 %% @spec select(all) -> {ok, List}
 %% @spec select({neighbors, User}) -> {ok, List}
 %% @todo state = undefined | {wait_for_authentication, Key} | authenticated | online
-select(all) ->
-	List = do(qlc:q([X || X <- mnesia:table(?TABLE),
-		X#?TABLE.pid /= undefined
-	])),
-	{ok, List};
-select({neighbors, User}) ->
-	List = do(qlc:q([X || X <- mnesia:table(?TABLE),
-		X#?TABLE.gid /= User#?TABLE.gid,
-		X#?TABLE.pid /= undefined,
-		X#?TABLE.instancepid =:= User#?TABLE.instancepid,
-		X#?TABLE.area =:= User#?TABLE.area
-	])),
-	{ok, List};
-select(UsersGID) ->
-	L = [read(GID) || GID <- UsersGID],
-	[User || {ok, User} <- L].
+select(What) ->
+	gen_server:call(?SERVER, {select, What}).
 
 %% @spec write(User) -> ok
 write(User) ->
-	mnesia:transaction(fun() -> mnesia:write(User) end).
+	gen_server:call(?SERVER, {write, User}).
 
-%% @spec delete(ID) -> ok
-delete(ID) ->
-	mnesia:transaction(fun() -> mnesia:delete({?TABLE, ID}) end).
+%% @spec delete(GID) -> ok
+delete(GID) ->
+	gen_server:call(?SERVER, {delete, GID}).
 
 item_nth(GID, ItemIndex) ->
-	{atomic, [User]} = mnesia:transaction(fun() -> mnesia:read({?TABLE, GID}) end),
-	lists:nth(ItemIndex + 1, (User#users.character)#characters.inventory).
+	gen_server:call(?SERVER, {item_nth, GID, ItemIndex}).
 
 item_add(GID, ItemID, Variables) ->
-	{atomic, [User]} = mnesia:transaction(fun() -> mnesia:read({?TABLE, GID}) end),
+	gen_server:call(?SERVER, {item_add, GID, ItemID, Variables}).
+
+%% @todo Consumable items.
+item_qty_add(GID, ItemIndex, QuantityDiff) ->
+	gen_server:call(?SERVER, {item_qty_add, GID, ItemIndex, QuantityDiff}).
+
+shop_enter(GID, ShopID) ->
+	gen_server:call(?SERVER, {shop_enter, GID, ShopID}).
+
+shop_leave(GID) ->
+	gen_server:call(?SERVER, {shop_leave, GID}).
+
+shop_get(GID) ->
+	gen_server:call(?SERVER, {shop_get, GID}).
+
+money_add(GID, MoneyDiff) ->
+	gen_server:call(?SERVER, {money_add, GID, MoneyDiff}).
+
+%% gen_server.
+
+init([]) ->
+	{ok, #stateu{}}.
+
+handle_call({set_zone, GID, ZonePid, LID}, _From, State) ->
+	{GID, User} = lists:keyfind(GID, 1, State#stateu.users),
+	Users2 = lists:delete({GID, User}, State#stateu.users),
+	{reply, ok, State#stateu{users=[{GID, User#users{zonepid=ZonePid, lid=LID}}|Users2]}};
+
+handle_call({read, {pid, Pid}}, _From, State) ->
+	[User] = [User || {_GID, User} <- State#stateu.users, User#users.pid =:= Pid],
+	{reply, {ok, User}, State};
+handle_call({read, GID}, _From, State) ->
+	{GID, User} = lists:keyfind(GID, 1, State#stateu.users),
+	{reply, {ok, User}, State};
+
+handle_call({select, all}, _From, State) ->
+	Users = [User || {_GID, User} <- State#stateu.users],
+	{reply, {ok, Users}, State};
+handle_call({select, {neighbors, #users{gid=FromGID, uni=FromUni, area=FromArea}}}, _From, State) ->
+	Users = [User || {GID, User = #users{uni=Uni, area=Area}}
+		<- State#stateu.users, GID =/= FromGID, Uni =:= FromUni, Area =:= FromArea],
+	{reply, {ok, Users}, State};
+handle_call({select, UsersGID}, _From, State) ->
+	Users = [begin
+		{GID, User} = lists:keyfind(GID, 1, State#stateu.users),
+		User
+	 end || GID <- UsersGID],
+	{reply, Users, State};
+
+handle_call({write, User}, _From, State) ->
+	Users2 = lists:keydelete(User#users.gid, 1, State#stateu.users),
+	{reply, ok, State#stateu{users=[{User#users.gid, User}|Users2]}};
+
+handle_call({delete, GID}, _From, State) ->
+	Users2 = lists:keydelete(GID, 1, State#stateu.users),
+	{reply, ok, State#stateu{users=Users2}};
+
+handle_call({item_nth, GID, ItemIndex}, _From, State) ->
+	{GID, User} = lists:keyfind(GID, 1, State#stateu.users),
+	Item = lists:nth(ItemIndex + 1, (User#users.character)#characters.inventory),
+	{reply, Item, State};
+
+handle_call({item_add, GID, ItemID, Variables}, _From, State) ->
+	{GID, User} = lists:keyfind(GID, 1, State#stateu.users),
 	Character = User#users.character,
 	Inventory = Character#characters.inventory,
 	Inventory2 = case Variables of
@@ -112,14 +172,15 @@ item_add(GID, ItemID, Variables) ->
 			end
 	end,
 	Character2 = Character#characters{inventory=Inventory2},
-	mnesia:transaction(fun() -> mnesia:write(User#users{character=Character2}) end),
-	if New =:= false -> 16#ffffffff;
-		true -> length(Inventory2)
-	end.
+	Users2 = lists:keydelete(User#users.gid, 1, State#stateu.users),
+	State2 = State#stateu{users=[{GID, User#users{character=Character2}}|Users2]},
+	case New of
+		false -> {reply, 16#ffffffff, State2};
+		true  -> {reply, length(Inventory2), State2}
+	end;
 
-%% @todo Consumable items.
-item_qty_add(GID, ItemIndex, QuantityDiff) ->
-	{atomic, [User]} = mnesia:transaction(fun() -> mnesia:read({?TABLE, GID}) end),
+handle_call({item_qty_add, GID, ItemIndex, QuantityDiff}, _From, State) ->
+	{GID, User} = lists:keyfind(GID, 1, State#stateu.users),
 	Character = User#users.character,
 	Inventory = Character#characters.inventory,
 	{ItemID, Variables} = lists:nth(ItemIndex + 1, Inventory),
@@ -135,49 +196,61 @@ item_qty_add(GID, ItemIndex, QuantityDiff) ->
 			end
 	end,
 	Character2 = Character#characters{inventory=Inventory2},
-	mnesia:transaction(fun() -> mnesia:write(User#users{character=Character2}) end).
+	Users2 = lists:keydelete(User#users.gid, 1, State#stateu.users),
+	{reply, ok, State#stateu{users=[{GID, User#users{character=Character2}}|Users2]}};
 
-shop_enter(GID, ShopID) ->
-	mnesia:transaction(fun() ->
-		[User] = mnesia:wread({?TABLE, GID}),
-		mnesia:write(User#users{shopid=ShopID})
-	end).
+handle_call({shop_enter, GID, ShopID}, _From, State) ->
+	{GID, User} = lists:keyfind(GID, 1, State#stateu.users),
+	Users2 = lists:delete({GID, User}, State#stateu.users),
+	{reply, ok, State#stateu{users=[{GID, User#users{shopid=ShopID}}|Users2]}};
 
-shop_leave(GID) ->
-	mnesia:transaction(fun() ->
-		[User] = mnesia:wread({?TABLE, GID}),
-		mnesia:write(User#users{shopid=undefined})
-	end).
+handle_call({shop_leave, GID}, _From, State) ->
+	{GID, User} = lists:keyfind(GID, 1, State#stateu.users),
+	Users2 = lists:delete({GID, User}, State#stateu.users),
+	{reply, ok, State#stateu{users=[{GID, User#users{shopid=undefined}}|Users2]}};
 
-shop_get(GID) ->
-	{atomic, [User]} = mnesia:transaction(fun() -> mnesia:read({?TABLE, GID}) end),
-	User#users.shopid.
+handle_call({shop_get, GID}, _From, State) ->
+	{GID, User} = lists:keyfind(GID, 1, State#stateu.users),
+	{reply, User#users.shopid, State};
 
-money_add(GID, MoneyDiff) ->
-	mnesia:transaction(fun() ->
-		[User] = mnesia:wread({?TABLE, GID}),
-		Character = User#users.character,
-		Money = Character#characters.money + MoneyDiff,
-		if Money >= 0 ->
-			Character2 = Character#characters{money=Money},
-			mnesia:write(User#users{character=Character2})
-		end
-	end).
+handle_call({money_add, GID, MoneyDiff}, _From, State) ->
+	{GID, User} = lists:keyfind(GID, 1, State#stateu.users),
+	Character = User#users.character,
+	Money = Character#characters.money + MoneyDiff,
+	if Money >= 0 ->
+		Character2 = Character#characters{money=Money},
+		Users2 = lists:delete({GID, User}, State#stateu.users),
+		{reply, ok, [{GID, User#users{character=Character2}}|Users2]}
+	end;
 
-broadcast_spawn(GID, PlayersGID) ->
-	{ok, OrigUser} = read(GID),
-	lists:foreach(fun(DestGID) ->
-		{ok, DestUser} = read(DestGID),
-		DestUser#users.pid ! {egs, player_spawn, OrigUser}
-	end, PlayersGID).
+handle_call(stop, _From, State) ->
+	{stop, normal, stopped, State};
 
-broadcast_unspawn(GID, PlayersGID) ->
-	{ok, OrigUser} = read(GID),
-	lists:foreach(fun(DestGID) ->
-		{ok, DestUser} = read(DestGID),
-		DestUser#users.pid ! {egs, player_unspawn, OrigUser}
-	end, PlayersGID).
+handle_call(_Request, _From, State) ->
+	{reply, ignored, State}.
 
-set_zone(GID, ZonePid, LID) ->
-	{ok, User} = read(GID),
-	write(User#users{zonepid=ZonePid, lid=LID}).
+handle_cast({broadcast_spawn, GID, PlayersGID}, State) ->
+	{GID, OrigUser} = lists:keyfind(GID, 1, State#stateu.users),
+	[begin	{_, #users{pid=DestPid}} = lists:keyfind(DestGID, 1, State#stateu.users),
+			DestPid ! {egs, player_spawn, OrigUser}
+	 end || DestGID <- PlayersGID],
+	{noreply, State};
+
+handle_cast({broadcast_unspawn, GID, PlayersGID}, State) ->
+	{GID, OrigUser} = lists:keyfind(GID, 1, State#stateu.users),
+	[begin	{_, #users{pid=DestPid}} = lists:keyfind(DestGID, 1, State#stateu.users),
+			DestPid ! {egs, player_unspawn, OrigUser}
+	 end || DestGID <- PlayersGID],
+	{noreply, State};
+
+handle_cast(_Msg, State) ->
+	{noreply, State}.
+
+handle_info(_Info, State) ->
+	{noreply, State}.
+
+terminate(_Reason, _State) ->
+	ok.
+
+code_change(_OldVsn, State, _Extra) ->
+	{ok, State}.

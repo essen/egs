@@ -27,6 +27,3 @@ deps:
 clean:
 	@./rebar clean
 	rm -f erl_crash.dump
-
-fclean: clean
-	rm -rf Mnesia.egs*

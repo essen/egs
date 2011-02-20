@@ -26,47 +26,9 @@
 %% @spec start(_Type, _StartArgs) -> ServerRet
 %% @doc application start callback for egs.
 start(_Type, _StartArgs) ->
-	case is_fresh_startup() of
-		true ->
-			db_init();
-		{exists, Tables} ->
-			ok = mnesia:wait_for_tables(Tables, 20000)
-	end,
 	egs_sup:start_link().
 
 %% @spec stop(_State) -> ServerRet
 %% @doc application stop callback for egs.
 stop(_State) ->
-	ok.
-
-%% @spec is_fresh_startup() -> true | false
-%% @doc Returns true if mnesia has not been initialized with the egs schema.
-%% Thanks to Dale Harvey for this function posted to the erlang questions mailing list.
-is_fresh_startup() ->
-	Node = node(),
-	case mnesia:system_info(tables) of
-		[schema] -> true;
-		Tables ->
-			case mnesia:table_info(schema, cookie) of
-				{_, Node} -> {exists, Tables};
-				_ -> true
-			end
-	end.
-
-%% @spec db_init() -> ok
-%% @doc Initialize the database.
-db_init() ->
-	Nodes = [node()],
-	case mnesia:system_info(is_running) of
-		yes ->
-			error_logger:info_report("stopping mnesia"),
-			mnesia:stop();
-		_ -> pass
-	end,
-	mnesia:create_schema(Nodes),
-	error_logger:info_report("mnesia schema created"),
-	error_logger:info_report("starting mnesia"),
-	mnesia:start(),
-	mnesia:create_table(users, [{attributes, record_info(fields, users)}]),
-	error_logger:info_report("mnesia tables created"),
 	ok.

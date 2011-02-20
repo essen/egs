@@ -8,8 +8,7 @@
 		kernel,
 		stdlib,
 		crypto,
-		ssl,
-		mnesia
+		ssl
 	]},
 	{mod, {egs_app, []}},
 	{env, []}

@@ -37,14 +37,12 @@ start() ->
 	ensure_started(public_key),
 	ensure_started(ssl),
 	ssl:seed(crypto:rand_bytes(256)),
-	ensure_started(mnesia),
 	application:start(egs).
 
 %% @spec stop() -> ok
 %% @doc Stop the EGS server.
 stop() ->
 	Res = application:stop(egs),
-	application:stop(mnesia),
 	application:stop(ssl),
 	application:stop(public_key),
 	application:stop(crypto),
