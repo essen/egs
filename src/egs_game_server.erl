@@ -39,7 +39,7 @@ link_exit() ->
 %% @todo Cleanup the instance process if there's nobody in it anymore.
 %% @todo Leave party instead of stopping it.
 on_exit(Pid) ->
-	{ok, User} = egs_users:read({pid, Pid}),
+	User = egs_users:find_by_pid(Pid),
 	case User#users.partypid of
 		undefined ->
 			ignore;

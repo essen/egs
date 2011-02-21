@@ -20,7 +20,7 @@
 -module(egs_users).
 -behaviour(gen_server).
 
--export([start_link/0, stop/0, broadcast/2, set_zone/3]). %% API.
+-export([start_link/0, stop/0, broadcast/2, find_by_pid/1, set_zone/3]). %% API.
 -export([read/1, select/1, write/1, delete/1, item_nth/2, item_add/3, item_qty_add/3,
 		 shop_enter/2, shop_leave/1, shop_get/1, money_add/2]). %% Deprecated API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
@@ -47,12 +47,14 @@ stop() ->
 broadcast(Message, PlayersGID) ->
 	gen_server:cast(?SERVER, {broadcast, Message, PlayersGID}).
 
+find_by_pid(Pid) ->
+	gen_server:call(?SERVER, {find_by_pid, Pid}).
+
 set_zone(GID, ZonePid, LID) ->
 	gen_server:call(?SERVER, {set_zone, GID, ZonePid, LID}).
 
 %% Deprecated API.
 
-%% @spec read({pid, Pid}) -> {ok, User} | {error, badarg}
 %% @spec read(ID) -> {ok, User} | {error, badarg}
 read(ID) ->
 	gen_server:call(?SERVER, {read, ID}).
@@ -95,14 +97,15 @@ money_add(GID, MoneyDiff) ->
 init([]) ->
 	{ok, #stateu{}}.
 
+handle_call({find_by_pid, Pid}, _From, State) ->
+	[User] = [User || {_GID, User} <- State#stateu.users, User#users.pid =:= Pid],
+	{reply, User, State};
+
 handle_call({set_zone, GID, ZonePid, LID}, _From, State) ->
 	{GID, User} = lists:keyfind(GID, 1, State#stateu.users),
 	Users2 = lists:delete({GID, User}, State#stateu.users),
 	{reply, ok, State#stateu{users=[{GID, User#users{zonepid=ZonePid, lid=LID}}|Users2]}};
 
-handle_call({read, {pid, Pid}}, _From, State) ->
-	[User] = [User || {_GID, User} <- State#stateu.users, User#users.pid =:= Pid],
-	{reply, {ok, User}, State};
 handle_call({read, GID}, _From, State) ->
 	{GID, User} = lists:keyfind(GID, 1, State#stateu.users),
 	{reply, {ok, User}, State};
