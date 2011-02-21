@@ -20,7 +20,7 @@
 -module(egs_users).
 -behaviour(gen_server).
 
--export([start_link/0, stop/0, broadcast/2, find_by_pid/1, set_zone/3]). %% API.
+-export([start_link/0, stop/0, broadcast/2, broadcast_all/1, find_by_pid/1, set_zone/3]). %% API.
 -export([read/1, select/1, write/1, delete/1, item_nth/2, item_add/3, item_qty_add/3,
 		 shop_enter/2, shop_leave/1, shop_get/1, money_add/2]). %% Deprecated API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
@@ -46,6 +46,9 @@ stop() ->
 
 broadcast(Message, PlayersGID) ->
 	gen_server:cast(?SERVER, {broadcast, Message, PlayersGID}).
+
+broadcast_all(Message) ->
+	gen_server:cast(?SERVER, {broadcast_all, Message}).
 
 find_by_pid(Pid) ->
 	gen_server:call(?SERVER, {find_by_pid, Pid}).
@@ -223,6 +226,10 @@ handle_cast({broadcast, Message, PlayersGID}, State) ->
 	[begin	{GID, #users{pid=Pid}} = lists:keyfind(GID, 1, State#stateu.users),
 			Pid ! Message
 	 end || GID <- PlayersGID],
+	{noreply, State};
+
+handle_cast({broadcast_all, Message}, State) ->
+	[Pid ! Message || {_GID, #users{pid=Pid}} <- State#stateu.users],
 	{noreply, State};
 
 handle_cast(_Msg, State) ->

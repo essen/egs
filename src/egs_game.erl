@@ -235,9 +235,7 @@ event({chat, _FromTypeID, FromGID, _FromName, Modifiers, ChatMsg}, #state{gid=Us
 	[TmpMessage|_] = re:split(ChatMsg, "\\0\\0", [{return, binary}]),
 	LogMessage = re:replace(TmpMessage, "\\n", " ", [global, {return, binary}]),
 	log("chat from ~s: ~s", [[re:replace(LogName, "\\0", "", [global, {return, binary}])], [re:replace(LogMessage, "\\0", "", [global, {return, binary}])]]),
-	%% broadcast
-	{ok, List} = egs_users:select(all),
-	lists:foreach(fun(X) -> X#users.pid ! {egs, chat, UserGID, BcastTypeID, BcastGID, BcastName, Modifiers, ChatMsg} end, List);
+	egs_users:broadcast_all({egs, chat, UserGID, BcastTypeID, BcastGID, BcastName, Modifiers, ChatMsg});
 
 %% @todo There's at least 9 different sets of locations. Handle all of them correctly.
 event(counter_background_locations_request, _State) ->
