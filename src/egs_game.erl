@@ -100,7 +100,7 @@ cast(Command, Data, #client{gid=GID, lid=LID})
 %% @todo Handle this packet properly.
 %% @todo Spawn cleared response event shouldn't be handled following this packet but when we see the spawn actually dead HP-wise.
 %% @todo Type shouldn't be :32 but it seems when the later 16 have something it's not a spawn event.
-raw(16#0402, << _:352, Data/bits >>, #client{gid=GID}) ->
+raw(16#0402, << _:352, Data/bits >>, Client=#client{gid=GID}) ->
 	<< SpawnID:32/little, _:64, Type:32/little, _:64 >> = Data,
 	case Type of
 		7 -> % spawn cleared @todo 1201 sent back with same values apparently, but not always
@@ -108,7 +108,7 @@ raw(16#0402, << _:352, Data/bits >>, #client{gid=GID}) ->
 			{ok, User} = egs_users:read(GID),
 			{BlockID, EventID} = psu_instance:spawn_cleared_event(User#users.instancepid, element(2, User#users.area), SpawnID),
 			if	EventID =:= false -> ignore;
-				true -> psu_game:send_1205(EventID, BlockID, 0)
+				true -> psu_proto:send_1205(EventID, BlockID, 0, Client)
 			end;
 		_ ->
 			ignore
@@ -116,10 +116,10 @@ raw(16#0402, << _:352, Data/bits >>, #client{gid=GID}) ->
 
 %% @todo Handle this packet.
 %% @todo 3rd Unsafe Passage C, EventID 10 BlockID 2 = mission cleared?
-raw(16#0404, << _:352, Data/bits >>, _Client) ->
+raw(16#0404, << _:352, Data/bits >>, Client) ->
 	<< EventID:8, BlockID:8, _:16, Value:8, _/bits >> = Data,
 	log("unknown command 0404: eventid ~b blockid ~b value ~b", [EventID, BlockID, Value]),
-	psu_game:send_1205(EventID, BlockID, Value);
+	psu_proto:send_1205(EventID, BlockID, Value, Client);
 
 %% @todo Used in the tutorial. Not sure what it does. Give an item (the PA) maybe?
 %% @todo Probably should ignore that until more is known.
@@ -176,7 +176,7 @@ raw(16#1106, << _:352, Data/bits >>, Client) ->
 	psu_proto:send_110e(Data, Client);
 
 %% @doc Probably asking permission to start the video (used for syncing?).
-raw(16#1112, << _:352, Data/bits >>, _Client) ->
+raw(16#1112, << _:352, Data/bits >>, Client) ->
 	psu_proto:send_1113(Data, Client);
 
 %% @todo Not sure yet. Value is probably a TargetID. Used in Airboard Rally. Replying with the same value starts the race.
@@ -611,13 +611,13 @@ event({object_crystal_activate, ObjectID}, _Client) ->
 	psu_game:send_1213(ObjectID, 1);
 
 %% @doc Server-side event.
-event({object_event_trigger, BlockID, EventID}, _Client) ->
-	psu_game:send_1205(EventID, BlockID, 0);
+event({object_event_trigger, BlockID, EventID}, Client) ->
+	psu_proto:send_1205(EventID, BlockID, 0, Client);
 
-event({object_goggle_target_activate, ObjectID}, #client{gid=GID}) ->
+event({object_goggle_target_activate, ObjectID}, Client=#client{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
 	{BlockID, EventID} = psu_instance:std_event(User#users.instancepid, element(2, User#users.area), ObjectID),
-	psu_game:send_1205(EventID, BlockID, 0),
+	psu_proto:send_1205(EventID, BlockID, 0, Client),
 	psu_game:send_1213(ObjectID, 8);
 
 %% @todo Make NPC characters heal too.
@@ -634,41 +634,41 @@ event({object_healing_pad_tick, [_PartyPos]}, Client=#client{gid=GID}) ->
 			psu_proto:send_0111(User2, 4, Client)
 	end;
 
-event({object_key_console_enable, ObjectID}, #client{gid=GID}) ->
+event({object_key_console_enable, ObjectID}, Client=#client{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
 	{BlockID, [EventID|_]} = psu_instance:std_event(User#users.instancepid, element(2, User#users.area), ObjectID),
-	psu_game:send_1205(EventID, BlockID, 0),
+	psu_proto:send_1205(EventID, BlockID, 0, Client),
 	psu_game:send_1213(ObjectID, 1);
 
-event({object_key_console_init, ObjectID}, #client{gid=GID}) ->
+event({object_key_console_init, ObjectID}, Client=#client{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
 	{BlockID, [_, EventID, _]} = psu_instance:std_event(User#users.instancepid, element(2, User#users.area), ObjectID),
-	psu_game:send_1205(EventID, BlockID, 0);
+	psu_proto:send_1205(EventID, BlockID, 0, Client);
 
-event({object_key_console_open_gate, ObjectID}, #client{gid=GID}) ->
+event({object_key_console_open_gate, ObjectID}, Client=#client{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
 	{BlockID, [_, _, EventID]} = psu_instance:std_event(User#users.instancepid, element(2, User#users.area), ObjectID),
-	psu_game:send_1205(EventID, BlockID, 0),
+	psu_proto:send_1205(EventID, BlockID, 0, Client),
 	psu_game:send_1213(ObjectID, 1);
 
 %% @todo Now that it's separate from object_key_console_enable, handle it better than that, don't need a list of events.
-event({object_key_enable, ObjectID}, #client{gid=GID}) ->
+event({object_key_enable, ObjectID}, Client=#client{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
 	{BlockID, [EventID|_]} = psu_instance:std_event(User#users.instancepid, element(2, User#users.area), ObjectID),
-	psu_game:send_1205(EventID, BlockID, 0),
+	psu_proto:send_1205(EventID, BlockID, 0, Client),
 	psu_game:send_1213(ObjectID, 1);
 
 %% @todo Some switch objects apparently work differently, like the light switch in Mines in MAG'.
-event({object_switch_off, ObjectID}, #client{gid=GID}) ->
+event({object_switch_off, ObjectID}, Client=#client{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
 	{BlockID, EventID} = psu_instance:std_event(User#users.instancepid, element(2, User#users.area), ObjectID),
-	psu_game:send_1205(EventID, BlockID, 1),
+	psu_proto:send_1205(EventID, BlockID, 1, Client),
 	psu_game:send_1213(ObjectID, 0);
 
-event({object_switch_on, ObjectID}, #client{gid=GID}) ->
+event({object_switch_on, ObjectID}, Client=#client{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
 	{BlockID, EventID} = psu_instance:std_event(User#users.instancepid, element(2, User#users.area), ObjectID),
-	psu_game:send_1205(EventID, BlockID, 0),
+	psu_proto:send_1205(EventID, BlockID, 0, Client),
 	psu_game:send_1213(ObjectID, 1);
 
 event({object_vehicle_boost_enable, ObjectID}, _Client) ->

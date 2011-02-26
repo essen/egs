@@ -337,11 +337,6 @@ send_1016(PartyPos) ->
 	GID = get(gid),
 	send(<< 16#10160300:32, 16#ffff0000:32, 0:128, 16#00011300:32, GID:32/little, 0:64, PartyPos:32/little >>).
 
-%% @doc Object events response?
-%% @todo Not sure what Value does exactly. It's either 0 or 1.
-send_1205(EventID, BlockID, Value) ->
-	send(<< (header(16#1205))/binary, EventID, BlockID, 0:16, Value, 0:24 >>).
-
 %% @todo Figure out what this packet does. Sane values for counter and missions for now.
 send_1206() ->
 	send(<< (header(16#1206))/binary, 0:32, 16#80020000:32, 0:5120 >>).

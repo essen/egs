@@ -1583,6 +1583,12 @@ send_1202(#client{socket=Socket, gid=DestGID}) ->
 send_1204(#client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#12040300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:96, 16#20000000:32, 0:256 >>).
 
+%% @doc Object events response?
+%% @todo Not sure what Value does exactly. It's either 0 or 1.
+%% @todo This packet hasn't been reviewed at all yet.
+send_1205(EventID, BlockID, Value, #client{socket=Socket, gid=DestGID}) ->
+	packet_send(Socket, << 16#12050300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64, EventID, BlockID, 0:16, Value, 0:24 >>).
+
 %% @doc Send the player's partner card.
 %% @todo Handle the LID and comment properly.
 send_1500(Character, #client{socket=Socket, gid=DestGID}) ->
