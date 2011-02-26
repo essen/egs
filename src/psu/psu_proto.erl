@@ -1551,6 +1551,11 @@ send_1015(QuestID, #client{socket=Socket, gid=DestGID}) ->
 
 %% @todo No idea.
 %% @todo This packet hasn't been reviewed at all yet.
+send_1016(PartyPos, #client{socket=Socket, gid=DestGID}) ->
+	packet_send(Socket, << 16#10160300:32, 16#ffff0000:32, 0:128, 16#00011300:32, DestGID:32/little, 0:64, PartyPos:32/little >>).
+
+%% @todo No idea.
+%% @todo This packet hasn't been reviewed at all yet.
 send_101a(NPCid, PartyPos, #client{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#101a0300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:64, NPCid:16/little, PartyPos:16/little, 16#ffffffff:32 >>).
 

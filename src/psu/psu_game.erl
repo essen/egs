@@ -123,7 +123,7 @@ npc_load(Leader, [{PartyPos, NPCGID}|NPCList], Client) ->
 	send_1004(npc_mission, NPCUser, PartyPos),
 	psu_proto:send_100f((NPCUser#users.character)#characters.npcid, PartyPos, Client),
 	psu_proto:send_1601(PartyPos, Client),
-	send_1016(PartyPos),
+	psu_proto:send_1016(PartyPos, Client),
 	npc_load(Leader, NPCList, Client).
 
 %% @doc Send the given packet to the client.
@@ -326,11 +326,6 @@ send_1004(Type, User, PartyPos) ->
 		0:64,
 		16#01000000:32, 16#01000000:32, %% @todo first is current hp, second is max hp
 		0:608 >>).
-
-%% @todo No idea.
-send_1016(PartyPos) ->
-	GID = get(gid),
-	send(<< 16#10160300:32, 16#ffff0000:32, 0:128, 16#00011300:32, GID:32/little, 0:64, PartyPos:32/little >>).
 
 %% @todo Figure out this room packet.
 send_1309() ->
