@@ -83,7 +83,7 @@ area_load(QuestID, ZoneID, MapID, EntryID, Client) ->
 	psu_proto:send_100e(User3#users.area, User3#users.entryid, AreaShortName, Client2),
 	%% Load the zone objects.
 	if ZoneChange ->
-			send_1212(); %% @todo Only sent if there is a set file.
+			psu_proto:send_1212(Client2); %% @todo Only sent if there is a set file.
 		true -> ignore
 	end,
 	%% Load the player.
@@ -336,10 +336,6 @@ send_1004(Type, User, PartyPos) ->
 send_1016(PartyPos) ->
 	GID = get(gid),
 	send(<< 16#10160300:32, 16#ffff0000:32, 0:128, 16#00011300:32, GID:32/little, 0:64, PartyPos:32/little >>).
-
-%% @doc Make the client load the quest previously sent.
-send_1212() ->
-	send(<< (header(16#1212))/binary, 0:19200 >>).
 
 %% @todo Not sure. Related to keys.
 send_1213(A, B) ->

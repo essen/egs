@@ -268,11 +268,11 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}, Client=#cl
 	psu_proto:send_0215(0, Client2),
 	psu_proto:send_0215(0, Client2),
 	psu_proto:send_020c(Client2),
-	psu_proto:send_1202(),
+	psu_proto:send_1202(Client2),
 	psu_proto:send_1204(Client2),
 	psu_proto:send_1206(Client2),
 	psu_proto:send_1207(Client2),
-	psu_game:send_1212(),
+	psu_proto:send_1212(Client2),
 	psu_proto:send_0201(User, Client2),
 	psu_proto:send_0a06(User, Client2),
 	case User#users.partypid of

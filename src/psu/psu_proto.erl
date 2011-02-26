@@ -1607,6 +1607,11 @@ send_1207(#client{socket=Socket, gid=DestGID}) ->
 send_1211(A, B, C, D, #client{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#12110300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64, A:32/little, B:32/little, C:32/little, D:32/little >>).
 
+%% @doc Make the client load the quest previously sent.
+%% @todo This packet hasn't been reviewed at all yet.
+send_1212(#client{socket=Socket, gid=DestGID}) ->
+	packet_send(Socket, << 16#12120300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64, 0:19200 >>).
+
 %% @doc Send the player's partner card.
 %% @todo Handle the LID and comment properly.
 send_1500(Character, #client{socket=Socket, gid=DestGID}) ->
