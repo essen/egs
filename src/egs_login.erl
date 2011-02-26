@@ -45,14 +45,15 @@ raw(Command, _Data, _Client) ->
 
 %% @doc Reject version < 2.0009.2.
 %% @todo Reject wrong platforms too.
-event({system_client_version_info, _Entrance, _Language, _Platform, Version}, Client=#client{socket=Socket}) ->
-	if Version >= 2009002 -> ignore; true ->
-		psu_proto:send_0231("http://psumods.co.uk/forums/comments.php?DiscussionID=40#Item_1", Client),
-		{ok, ErrorMsg} = file:read_file("priv/login/error_version.txt"),
-		psu_proto:send_0223(ErrorMsg, Client),
-		ssl:close(Socket),
-		closed
-	end;
+event({system_client_version_info, _Entrance, _Language, _Platform, Version}, Client=#client{socket=Socket})
+		when Version < 2009002 ->
+	psu_proto:send_0231("http://psumods.co.uk/forums/comments.php?DiscussionID=40#Item_1", Client),
+	{ok, ErrorMsg} = file:read_file("priv/login/error_version.txt"),
+	psu_proto:send_0223(ErrorMsg, Client),
+	ssl:close(Socket),
+	closed;
+event({system_client_version_info, _Entrance, _Language, _Platform, _Version}, _Client) ->
+	ok;
 
 %% @doc Game server info request handler.
 event(system_game_server_request, Client=#client{socket=Socket}) ->
