@@ -1638,6 +1638,12 @@ send_1500(Character, #client{socket=Socket, gid=DestGID}) ->
 		Name/binary, RaceBin:8, GenderBin:8, ClassBin:8, VoiceType:8, VoicePitch:8, 0:24,
 		DestGID:32/little, 0:224, Comment/binary, 1, 4, 1, Slot, 0:64 >>).
 
+%% @todo NPC related packet, sent when there's an NPC in the area.
+%% @todo This packet hasn't been reviewed at all yet.
+send_1601(PartyPos, #client{socket=Socket, gid=DestGID}) ->
+	{ok, << _:32, Bin/bits >>} = file:read_file("p/packet1601.bin"),
+	packet_send(Socket, << 16#16010300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64, PartyPos:32/little, Bin/binary >>).
+
 %% @doc Send the list of parties to join.
 %% @todo Handle lists of parties.
 %% @todo Probably has to handle a LID here, although it should always be 0.

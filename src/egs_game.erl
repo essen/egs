@@ -485,7 +485,7 @@ event({npc_force_invite, NPCid}, Client=#client{gid=GID}) ->
 	psu_proto:send_022c(0, 16#12, Client),
 	psu_game:send_1004(npc_mission, SentNPCUser, PartyPos),
 	psu_proto:send_100f((SentNPCUser#users.character)#characters.npcid, PartyPos, Client),
-	psu_game:send_1601(PartyPos);
+	psu_proto:send_1601(PartyPos, Client);
 
 %% @todo Also at the end send a 101a (NPC:16, PartyPos:16, ffffffff). Not sure about PartyPos.
 event({npc_invite, NPCid}, Client=#client{gid=GID}) ->

@@ -122,7 +122,7 @@ npc_load(Leader, [{PartyPos, NPCGID}|NPCList], Client) ->
 	send_0a04(NPCUser#users.gid),
 	send_1004(npc_mission, NPCUser, PartyPos),
 	psu_proto:send_100f((NPCUser#users.character)#characters.npcid, PartyPos, Client),
-	send_1601(PartyPos),
+	psu_proto:send_1601(PartyPos, Client),
 	send_1016(PartyPos),
 	npc_load(Leader, NPCList, Client).
 
@@ -361,11 +361,6 @@ send_1501() ->
 send_1512() ->
 	GID = get(gid),
 	send(<< 16#15120300:32, 16#ffff:16, 0:144, 16#00011300:32, GID:32/little, 0:46144 >>).
-
-%% @todo NPC related packet, sent when there's an NPC in the area.
-send_1601(PartyPos) ->
-	{ok, << _:32, Bin/bits >>} = file:read_file("p/packet1601.bin"),
-	send(<< (header(16#1601))/binary, PartyPos:32/little, Bin/binary >>).
 
 %% @doc Send the player's NPC and PM information.
 %% @todo The value 4 is the card priority. Find what 3 is. When sending, the first 0 is an unknown value.
