@@ -158,12 +158,6 @@ build_010a_list([ItemID|Tail], Acc) ->
 	Bin = << UCS2Name/binary, 0:NamePadding, RarityBin:8, 0:8, BinItemID/binary, SellPrice:32/little, DataBin/binary >>,
 	build_010a_list(Tail, [Bin|Acc]).
 
-%% @todo Types capability list.
-send_0113() ->
-	{ok, File} = file:read_file("p/typesinfo.bin"),
-	GID = get(gid),
-	send(<< 16#01130300:32, 0:64, GID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64, GID:32/little, File/binary >>).
-
 %% @todo Handle more than just goggles.
 send_0a0a(Inventory) ->
 	{ok, << _:68608/bits, Rest/bits >>} = file:read_file("p/packet0a0a.bin"),

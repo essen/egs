@@ -1211,6 +1211,12 @@ send_0111(#users{gid=CharGID, lid=CharLID}, EventID, Param, #client{socket=Socke
 	packet_send(Socket, << 16#01110300:32, DestLID:16/little, 0:48, CharGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64,
 		CharGID:32/little, CharLID:32/little, EventID:32/little, Param:32/little >>).
 
+%% @todo Types capability list.
+%% @todo This packet hasn't been reviewed at all yet.
+send_0113(#client{socket=Socket, gid=DestGID}) ->
+	{ok, File} = file:read_file("p/typesinfo.bin"),
+	packet_send(Socket, << 16#01130300:32, 0:64, DestGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64, DestGID:32/little, File/binary >>).
+
 %% @doc Update the character level, blastbar, luck and money information.
 send_0115(CharUser, Client) ->
 	send_0115(CharUser, 16#ffffffff, Client).
