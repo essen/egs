@@ -579,23 +579,23 @@ event({npc_shop_request, ShopID}, Client) ->
 	end;
 
 %% @todo Not sure what are those hardcoded values.
-event({object_boss_gate_activate, ObjectID}, _Client) ->
-	psu_game:send_1213(ObjectID, 0),
+event({object_boss_gate_activate, ObjectID}, Client) ->
+	psu_proto:send_1213(ObjectID, 0, Client),
 	psu_game:send_1215(2, 16#7008),
 	%% @todo Following sent after the warp?
-	psu_game:send_1213(37, 0),
+	psu_proto:send_1213(37, 0, Client),
 	%% @todo Why resend this?
-	psu_game:send_1213(ObjectID, 0);
+	psu_proto:send_1213(ObjectID, 0, Client);
 
-event({object_boss_gate_enter, ObjectID}, _Client) ->
-	psu_game:send_1213(ObjectID, 1);
+event({object_boss_gate_enter, ObjectID}, Client) ->
+	psu_proto:send_1213(ObjectID, 1, Client);
 
 %% @todo Do we need to send something back here?
 event({object_boss_gate_leave, _ObjectID}, _Client) ->
 	ignore;
 
-event({object_box_destroy, ObjectID}, _Client) ->
-	psu_game:send_1213(ObjectID, 3);
+event({object_box_destroy, ObjectID}, Client) ->
+	psu_proto:send_1213(ObjectID, 3, Client);
 
 %% @todo Second send_1211 argument should be User#users.lid. Fix when it's correctly handled.
 event({object_chair_sit, ObjectTargetID}, Client) ->
@@ -607,8 +607,8 @@ event({object_chair_stand, ObjectTargetID}, Client) ->
 	%~ {ok, User} = egs_users:read(get(gid)),
 	psu_proto:send_1211(ObjectTargetID, 0, 8, 2, Client);
 
-event({object_crystal_activate, ObjectID}, _Client) ->
-	psu_game:send_1213(ObjectID, 1);
+event({object_crystal_activate, ObjectID}, Client) ->
+	psu_proto:send_1213(ObjectID, 1, Client);
 
 %% @doc Server-side event.
 event({object_event_trigger, BlockID, EventID}, Client) ->
@@ -618,7 +618,7 @@ event({object_goggle_target_activate, ObjectID}, Client=#client{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
 	{BlockID, EventID} = psu_instance:std_event(User#users.instancepid, element(2, User#users.area), ObjectID),
 	psu_proto:send_1205(EventID, BlockID, 0, Client),
-	psu_game:send_1213(ObjectID, 8);
+	psu_proto:send_1213(ObjectID, 8, Client);
 
 %% @todo Make NPC characters heal too.
 event({object_healing_pad_tick, [_PartyPos]}, Client=#client{gid=GID}) ->
@@ -638,7 +638,7 @@ event({object_key_console_enable, ObjectID}, Client=#client{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
 	{BlockID, [EventID|_]} = psu_instance:std_event(User#users.instancepid, element(2, User#users.area), ObjectID),
 	psu_proto:send_1205(EventID, BlockID, 0, Client),
-	psu_game:send_1213(ObjectID, 1);
+	psu_proto:send_1213(ObjectID, 1, Client);
 
 event({object_key_console_init, ObjectID}, Client=#client{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
@@ -649,33 +649,33 @@ event({object_key_console_open_gate, ObjectID}, Client=#client{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
 	{BlockID, [_, _, EventID]} = psu_instance:std_event(User#users.instancepid, element(2, User#users.area), ObjectID),
 	psu_proto:send_1205(EventID, BlockID, 0, Client),
-	psu_game:send_1213(ObjectID, 1);
+	psu_proto:send_1213(ObjectID, 1, Client);
 
 %% @todo Now that it's separate from object_key_console_enable, handle it better than that, don't need a list of events.
 event({object_key_enable, ObjectID}, Client=#client{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
 	{BlockID, [EventID|_]} = psu_instance:std_event(User#users.instancepid, element(2, User#users.area), ObjectID),
 	psu_proto:send_1205(EventID, BlockID, 0, Client),
-	psu_game:send_1213(ObjectID, 1);
+	psu_proto:send_1213(ObjectID, 1, Client);
 
 %% @todo Some switch objects apparently work differently, like the light switch in Mines in MAG'.
 event({object_switch_off, ObjectID}, Client=#client{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
 	{BlockID, EventID} = psu_instance:std_event(User#users.instancepid, element(2, User#users.area), ObjectID),
 	psu_proto:send_1205(EventID, BlockID, 1, Client),
-	psu_game:send_1213(ObjectID, 0);
+	psu_proto:send_1213(ObjectID, 0, Client);
 
 event({object_switch_on, ObjectID}, Client=#client{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
 	{BlockID, EventID} = psu_instance:std_event(User#users.instancepid, element(2, User#users.area), ObjectID),
 	psu_proto:send_1205(EventID, BlockID, 0, Client),
-	psu_game:send_1213(ObjectID, 1);
+	psu_proto:send_1213(ObjectID, 1, Client);
 
-event({object_vehicle_boost_enable, ObjectID}, _Client) ->
-	psu_game:send_1213(ObjectID, 1);
+event({object_vehicle_boost_enable, ObjectID}, Client) ->
+	psu_proto:send_1213(ObjectID, 1, Client);
 
-event({object_vehicle_boost_respawn, ObjectID}, _Client) ->
-	psu_game:send_1213(ObjectID, 0);
+event({object_vehicle_boost_respawn, ObjectID}, Client) ->
+	psu_proto:send_1213(ObjectID, 0, Client);
 
 %% @todo Second send_1211 argument should be User#users.lid. Fix when it's correctly handled.
 event({object_warp_take, BlockID, ListNb, ObjectNb}, Client=#client{gid=GID}) ->

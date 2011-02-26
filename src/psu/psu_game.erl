@@ -337,10 +337,6 @@ send_1016(PartyPos) ->
 	GID = get(gid),
 	send(<< 16#10160300:32, 16#ffff0000:32, 0:128, 16#00011300:32, GID:32/little, 0:64, PartyPos:32/little >>).
 
-%% @todo Not sure. Related to keys.
-send_1213(A, B) ->
-	send(<< (header(16#1213))/binary, A:32/little, B:32/little >>).
-
 %% @todo Related to boss gates.
 send_1215(A, B) ->
 	send(<< (header(16#1215))/binary, A:32/little, 0:16, B:16/little >>).
