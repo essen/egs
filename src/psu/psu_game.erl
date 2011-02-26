@@ -125,8 +125,3 @@ npc_load(Leader, [{PartyPos, NPCGID}|NPCList], Client) ->
 	psu_proto:send_1601(PartyPos, Client),
 	psu_proto:send_1016(PartyPos, Client),
 	npc_load(Leader, NPCList, Client).
-
-%% @doc Send the given packet to the client.
-%% @todo Consolidate the receive and send functions better.
-send(Packet) ->
-	psu_proto:packet_send(get(socket), Packet).
