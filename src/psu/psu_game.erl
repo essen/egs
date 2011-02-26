@@ -337,11 +337,6 @@ send_1016(PartyPos) ->
 	GID = get(gid),
 	send(<< 16#10160300:32, 16#ffff0000:32, 0:128, 16#00011300:32, GID:32/little, 0:64, PartyPos:32/little >>).
 
-%% @todo Figure out what this packet does. Sane values for counter and missions for now.
-send_1207() ->
-	Chunk = << 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 0:224, 16#0000ffff:32, 16#ff000000:32, 16#64000a00:32 >>,
-	send(<< (header(16#1207))/binary, Chunk/binary, Chunk/binary, Chunk/binary, Chunk/binary, Chunk/binary, Chunk/binary >>).
-
 %% @todo Object interaction? Figure out. C probably the interaction type.
 %% @todo Apparently A would be TargetID/ffffffff, B would be the player LID, C would be the object type? D still completely unknown.
 send_1211(A, B, C, D) ->
