@@ -145,50 +145,7 @@ build_0a0a_item_variables([], _N, Acc) ->
 	Padding = 17280 - 8 * byte_size(Bin),
 	<< Bin/binary, 0:Padding >>;
 build_0a0a_item_variables([{ItemID, Variables}|Tail], N, Acc) ->
-	build_0a0a_item_variables(Tail, N + 1, [build_item_variables(ItemID, N, Variables)|Acc]).
-
-build_item_variables(ItemID, ItemUUID, #psu_clothing_item_variables{color=ColorNb}) ->
-	#psu_item{rarity=Rarity, data=#psu_clothing_item{colors=ColorsBin}} = egs_items_db:read(ItemID),
-	RarityInt = Rarity - 1,
-	ColorInt = if ColorNb < 5 -> ColorNb; true -> 16#10 + ColorNb - 5 end,
-	Bits = ColorNb * 8,
-	<< _Before:Bits, ColorA:4, ColorB:4, _After/bits >> = ColorsBin,
-	<< 0:32, ItemUUID:32/little, ItemID:32, 0:88, RarityInt:8, ColorA:8, ColorB:8, ColorInt:8, 0:72 >>;
-build_item_variables(ItemID, ItemUUID, #psu_consumable_item_variables{quantity=Quantity}) ->
-	#psu_item{rarity=Rarity, data=#psu_consumable_item{max_quantity=MaxQuantity, action=Action}} = egs_items_db:read(ItemID),
-	RarityInt = Rarity - 1,
-	<< 0:32, ItemUUID:32/little, ItemID:32, Quantity:32/little, MaxQuantity:32/little, 0:24, RarityInt:8, Action:8, 0:88 >>;
-build_item_variables(ItemID, ItemUUID, #psu_parts_item_variables{}) ->
-	#psu_item{rarity=Rarity} = egs_items_db:read(ItemID),
-	RarityInt = Rarity - 1,
-	<< 0:32, ItemUUID:32/little, ItemID:32, 0:88, RarityInt:8, 0:96 >>;
-%% @todo Handle rank, rarity and hands properly.
-build_item_variables(ItemID, ItemUUID, Variables) when element(1, Variables) =:= psu_striking_weapon_item_variables ->
-	#psu_striking_weapon_item_variables{is_active=IsActive, slot=Slot, current_pp=CurrentPP, max_pp=MaxPP,
-		element=#psu_element{type=EleType, percent=ElePercent}, pa=#psu_pa{type=PAType, level=PALevel}} = Variables,
-	Rank = 4,
-	Grind = 0,
-	Rarity = 14, %% Rarity - 1
-	Hand = both,
-	<< _:8, WeaponType:8, _:16 >> = << ItemID:32 >>,
-	HandBin = case Hand of
-		both -> << 16#0000:16 >>;
-		_ -> error
-	end,
-	<< IsActive:8, Slot:8, 0:16, ItemUUID:32/little, ItemID:32, 0:32, CurrentPP:16/little, MaxPP:16/little, 0:16, %% @todo What's this 0:16?
-		Grind:4, Rank:4, Rarity:8, EleType:8, ElePercent:8, HandBin/binary, WeaponType:8, PAType:8, PALevel:8, 0:40 >>;
-build_item_variables(ItemID, ItemUUID, #psu_special_item_variables{}) ->
-	Action = case ItemID of
-		16#11010000 -> << 16#12020100:32 >>;
-		16#11020000 -> << 16#15000000:32 >>;
-		16#11020100 -> << 0:32 >>;
-		16#11020200 -> << 0:32 >>
-	end,
-	<< 0:32, ItemUUID:32/little, ItemID:32, 0:24, 16#80:8, 0:56, 16#80:8, 0:32, Action/binary, 0:32 >>;
-build_item_variables(ItemID, ItemUUID, #psu_trap_item_variables{quantity=Quantity}) ->
-	#psu_item{rarity=Rarity, data=#psu_trap_item{max_quantity=MaxQuantity}} = egs_items_db:read(ItemID),
-	RarityInt = Rarity - 1,
-	<< 0:32, ItemUUID:32/little, ItemID:32, Quantity:32/little, MaxQuantity:32/little, 0:24, RarityInt:8, 0:96 >>.
+	build_0a0a_item_variables(Tail, N + 1, [psu_proto:build_item_variables(ItemID, N, Variables)|Acc]).
 
 build_0a0a_item_constants([], Acc) ->
 	Bin = iolist_to_binary(lists:reverse(Acc)),
