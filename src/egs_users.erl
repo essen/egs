@@ -29,8 +29,7 @@
 
 -include("include/records.hrl").
 
-%% @todo We have a conflict with the global state record. Solve it then rename this to state.
--record(stateu, {
+-record(state, {
 	users = [] :: list({GID::integer(), #users{}})
 }).
 
@@ -98,43 +97,43 @@ money_add(GID, MoneyDiff) ->
 %% gen_server.
 
 init([]) ->
-	{ok, #stateu{}}.
+	{ok, #state{}}.
 
 handle_call({find_by_pid, Pid}, _From, State) ->
-	[User] = [User || {_GID, User} <- State#stateu.users, User#users.pid =:= Pid],
+	[User] = [User || {_GID, User} <- State#state.users, User#users.pid =:= Pid],
 	{reply, User, State};
 
 handle_call({set_zone, GID, ZonePid, LID}, _From, State) ->
-	{GID, User} = lists:keyfind(GID, 1, State#stateu.users),
-	Users2 = lists:delete({GID, User}, State#stateu.users),
-	{reply, ok, State#stateu{users=[{GID, User#users{zonepid=ZonePid, lid=LID}}|Users2]}};
+	{GID, User} = lists:keyfind(GID, 1, State#state.users),
+	Users2 = lists:delete({GID, User}, State#state.users),
+	{reply, ok, State#state{users=[{GID, User#users{zonepid=ZonePid, lid=LID}}|Users2]}};
 
 handle_call({read, GID}, _From, State) ->
-	{GID, User} = lists:keyfind(GID, 1, State#stateu.users),
+	{GID, User} = lists:keyfind(GID, 1, State#state.users),
 	{reply, {ok, User}, State};
 
 handle_call({select, UsersGID}, _From, State) ->
 	Users = [begin
-		{GID, User} = lists:keyfind(GID, 1, State#stateu.users),
+		{GID, User} = lists:keyfind(GID, 1, State#state.users),
 		User
 	 end || GID <- UsersGID],
 	{reply, Users, State};
 
 handle_call({write, User}, _From, State) ->
-	Users2 = lists:keydelete(User#users.gid, 1, State#stateu.users),
-	{reply, ok, State#stateu{users=[{User#users.gid, User}|Users2]}};
+	Users2 = lists:keydelete(User#users.gid, 1, State#state.users),
+	{reply, ok, State#state{users=[{User#users.gid, User}|Users2]}};
 
 handle_call({delete, GID}, _From, State) ->
-	Users2 = lists:keydelete(GID, 1, State#stateu.users),
-	{reply, ok, State#stateu{users=Users2}};
+	Users2 = lists:keydelete(GID, 1, State#state.users),
+	{reply, ok, State#state{users=Users2}};
 
 handle_call({item_nth, GID, ItemIndex}, _From, State) ->
-	{GID, User} = lists:keyfind(GID, 1, State#stateu.users),
+	{GID, User} = lists:keyfind(GID, 1, State#state.users),
 	Item = lists:nth(ItemIndex + 1, (User#users.character)#characters.inventory),
 	{reply, Item, State};
 
 handle_call({item_add, GID, ItemID, Variables}, _From, State) ->
-	{GID, User} = lists:keyfind(GID, 1, State#stateu.users),
+	{GID, User} = lists:keyfind(GID, 1, State#state.users),
 	Character = User#users.character,
 	Inventory = Character#characters.inventory,
 	Inventory2 = case Variables of
@@ -165,15 +164,15 @@ handle_call({item_add, GID, ItemID, Variables}, _From, State) ->
 			end
 	end,
 	Character2 = Character#characters{inventory=Inventory2},
-	Users2 = lists:keydelete(User#users.gid, 1, State#stateu.users),
-	State2 = State#stateu{users=[{GID, User#users{character=Character2}}|Users2]},
+	Users2 = lists:keydelete(User#users.gid, 1, State#state.users),
+	State2 = State#state{users=[{GID, User#users{character=Character2}}|Users2]},
 	case New of
 		false -> {reply, 16#ffffffff, State2};
 		true  -> {reply, length(Inventory2), State2}
 	end;
 
 handle_call({item_qty_add, GID, ItemIndex, QuantityDiff}, _From, State) ->
-	{GID, User} = lists:keyfind(GID, 1, State#stateu.users),
+	{GID, User} = lists:keyfind(GID, 1, State#state.users),
 	Character = User#users.character,
 	Inventory = Character#characters.inventory,
 	{ItemID, Variables} = lists:nth(ItemIndex + 1, Inventory),
@@ -189,30 +188,30 @@ handle_call({item_qty_add, GID, ItemIndex, QuantityDiff}, _From, State) ->
 			end
 	end,
 	Character2 = Character#characters{inventory=Inventory2},
-	Users2 = lists:keydelete(User#users.gid, 1, State#stateu.users),
-	{reply, ok, State#stateu{users=[{GID, User#users{character=Character2}}|Users2]}};
+	Users2 = lists:keydelete(User#users.gid, 1, State#state.users),
+	{reply, ok, State#state{users=[{GID, User#users{character=Character2}}|Users2]}};
 
 handle_call({shop_enter, GID, ShopID}, _From, State) ->
-	{GID, User} = lists:keyfind(GID, 1, State#stateu.users),
-	Users2 = lists:delete({GID, User}, State#stateu.users),
-	{reply, ok, State#stateu{users=[{GID, User#users{shopid=ShopID}}|Users2]}};
+	{GID, User} = lists:keyfind(GID, 1, State#state.users),
+	Users2 = lists:delete({GID, User}, State#state.users),
+	{reply, ok, State#state{users=[{GID, User#users{shopid=ShopID}}|Users2]}};
 
 handle_call({shop_leave, GID}, _From, State) ->
-	{GID, User} = lists:keyfind(GID, 1, State#stateu.users),
-	Users2 = lists:delete({GID, User}, State#stateu.users),
-	{reply, ok, State#stateu{users=[{GID, User#users{shopid=undefined}}|Users2]}};
+	{GID, User} = lists:keyfind(GID, 1, State#state.users),
+	Users2 = lists:delete({GID, User}, State#state.users),
+	{reply, ok, State#state{users=[{GID, User#users{shopid=undefined}}|Users2]}};
 
 handle_call({shop_get, GID}, _From, State) ->
-	{GID, User} = lists:keyfind(GID, 1, State#stateu.users),
+	{GID, User} = lists:keyfind(GID, 1, State#state.users),
 	{reply, User#users.shopid, State};
 
 handle_call({money_add, GID, MoneyDiff}, _From, State) ->
-	{GID, User} = lists:keyfind(GID, 1, State#stateu.users),
+	{GID, User} = lists:keyfind(GID, 1, State#state.users),
 	Character = User#users.character,
 	Money = Character#characters.money + MoneyDiff,
 	if Money >= 0 ->
 		Character2 = Character#characters{money=Money},
-		Users2 = lists:delete({GID, User}, State#stateu.users),
+		Users2 = lists:delete({GID, User}, State#state.users),
 		{reply, ok, [{GID, User#users{character=Character2}}|Users2]}
 	end;
 
@@ -223,13 +222,13 @@ handle_call(_Request, _From, State) ->
 	{reply, ignored, State}.
 
 handle_cast({broadcast, Message, PlayersGID}, State) ->
-	[begin	{GID, #users{pid=Pid}} = lists:keyfind(GID, 1, State#stateu.users),
+	[begin	{GID, #users{pid=Pid}} = lists:keyfind(GID, 1, State#state.users),
 			Pid ! Message
 	 end || GID <- PlayersGID],
 	{noreply, State};
 
 handle_cast({broadcast_all, Message}, State) ->
-	[Pid ! Message || {_GID, #users{pid=Pid}} <- State#stateu.users],
+	[Pid ! Message || {_GID, #users{pid=Pid}} <- State#state.users],
 	{noreply, State};
 
 handle_cast(_Msg, State) ->
