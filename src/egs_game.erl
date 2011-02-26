@@ -268,7 +268,7 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}, Client=#cl
 	psu_proto:send_0215(0, Client2),
 	psu_proto:send_0215(0, Client2),
 	psu_proto:send_020c(Client2),
-	psu_game:send_1202(),
+	psu_proto:send_1202(),
 	psu_proto:send_1204(Client2),
 	psu_game:send_1206(),
 	psu_game:send_1207(),
