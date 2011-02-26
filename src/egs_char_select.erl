@@ -42,9 +42,9 @@ raw(Command, _Data, Client) ->
 %% Events.
 
 %% @doc Character screen selection request and delivery.
-event(char_select_request, #client{gid=GID}) ->
+event(char_select_request, Client=#client{gid=GID}) ->
 	Folder = egs_accounts:get_folder(GID),
-	psu_game:send_0d03(data_load(Folder, 0), data_load(Folder, 1), data_load(Folder, 2), data_load(Folder, 3));
+	psu_proto:send_0d03(data_load(Folder, 0), data_load(Folder, 1), data_load(Folder, 2), data_load(Folder, 3), Client);
 
 %% @doc The options default to 0 for everything except brightness to 4.
 %% @todo Don't forget to check for the character's name.

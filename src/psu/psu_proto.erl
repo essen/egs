@@ -1485,6 +1485,21 @@ send_0d01(Character, #client{socket=Socket, gid=DestGID}) ->
 		16#b7bce0c6:32, 16#7ff8f963:32, 16#3fd7ffff:32, 16#fff7ffff:32, 16#f3ff63e0:32, 16#1fe00000:32,
 		0:7744, OptionsBin/binary >>).
 
+%% @doc Send the character list for selection.
+%% @todo There's a few odd values blanked, also the last known location apparently.
+%% @todo This packet hasn't been reviewed at all yet.
+send_0d03(Data0, Data1, Data2, Data3, #client{socket=Socket, gid=DestGID}) ->
+	[{status, Status0}, {char, Char0}|_] = Data0,
+	[{status, Status1}, {char, Char1}|_] = Data1,
+	[{status, Status2}, {char, Char2}|_] = Data2,
+	[{status, Status3}, {char, Char3}|_] = Data3,
+	packet_send(Socket, << 16#0d030300:32, 0:32, 16#00011300:32, DestGID:32/little, 0:64,
+		16#00011300:32, DestGID:32/little, 0:104,
+		Status0:8, 0:48, Char0/binary, 0:520,
+		Status1:8, 0:48, Char1/binary, 0:520,
+		Status2:8, 0:48, Char2/binary, 0:520,
+		Status3:8, 0:48, Char3/binary, 0:512 >>).
+
 %% @doc Send the flags list. This is the whole list of available values, not the character's.
 %%      Sent without fragmentation on official for unknown reasons. Do the same here.
 send_0d05(#client{socket=Socket, gid=DestGID}) ->

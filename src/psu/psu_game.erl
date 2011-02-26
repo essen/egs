@@ -277,20 +277,6 @@ build_item_constants(#psu_trap_item{max_quantity=MaxQuantity}) ->
 build_item_constants(#psu_special_item{}) ->
 	<< 0:160 >>.
 
-%% @doc Send the character list for selection.
-%% @todo There's a few odd values blanked, also the last known location apparently.
-send_0d03(Data0, Data1, Data2, Data3) ->
-	[{status, Status0}, {char, Char0}|_] = Data0,
-	[{status, Status1}, {char, Char1}|_] = Data1,
-	[{status, Status2}, {char, Char2}|_] = Data2,
-	[{status, Status3}, {char, Char3}|_] = Data3,
-	GID = get(gid),
-	send(<< 16#0d030300:32/unsigned-integer, 0:32, 16#00011300:32, GID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:104,
-		Status0:8, 0:48, Char0/binary, 0:520,
-		Status1:8, 0:48, Char1/binary, 0:520,
-		Status2:8, 0:48, Char2/binary, 0:520,
-		Status3:8, 0:48, Char3/binary, 0:512 >>).
-
 %% @todo Add a character (NPC or real) to the party members on the right of the screen.
 %% @todo NPCid is 65535 for normal characters.
 %% @todo Apparently the 4 location ids are set to 0 when inviting an NPC in the lobby - NPCs have their location set to 0 when in lobby; also odd value before PartyPos related to missions
