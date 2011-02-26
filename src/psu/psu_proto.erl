@@ -1194,6 +1194,33 @@ parse_hits(Hits, Acc) ->
 	%~ << D1:32, D2:32, D3:32, D4:32, D5:32 >> = D,
 	parse_hits(Rest, [{hit, FromTargetID, ToTargetID, A, B}|Acc]).
 
+%% @doc Send a shop listing.
+%% @todo This packet (and its build_010a_list function) hasn't been reviewed at all yet.
+send_010a(ItemsList, #client{socket=Socket, gid=DestGID}) ->
+	NbItems = length(ItemsList),
+	ItemsBin = build_010a_list(ItemsList, []),
+	packet_send(Socket, << 16#010a0300:32, 0:64, DestGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64,
+		DestGID:32/little, 0:32, 1:16/little, NbItems:8, 2:8, 0:32, ItemsBin/binary >>).
+
+%% @todo The values set to 0 are unknown.
+build_010a_list([], Acc) ->
+	iolist_to_binary(lists:reverse(Acc));
+build_010a_list([ItemID|Tail], Acc) ->
+	#psu_item{name=Name, rarity=Rarity, buy_price=SellPrice, data=Data} = egs_items_db:read(ItemID),
+	UCS2Name = << << X:8, 0:8 >> || X <- Name >>,
+	NamePadding = 8 * (46 - byte_size(UCS2Name)),
+	RarityBin = Rarity - 1,
+	DataBin = psu_game:build_item_constants(Data),
+	BinItemID = case element(1, Data) of
+		psu_clothing_item -> %% Change the ItemID to enable all colors.
+			<< A:8, _:4, B:12, _:8 >> = << ItemID:32 >>,
+			<< A:8, 3:4, B:12, 16#ff:8 >>;
+		_Any ->
+			<< ItemID:32 >>
+	end,
+	Bin = << UCS2Name/binary, 0:NamePadding, RarityBin:8, 0:8, BinItemID/binary, SellPrice:32/little, DataBin/binary >>,
+	build_010a_list(Tail, [Bin|Acc]).
+
 %% @doc Send character appearance and other information.
 %% @todo Probably don't pattern match the data like this...
 send_010d(CharUser, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->

@@ -549,10 +549,10 @@ event({npc_shop_buy, ShopItemIndex, QuantityOrColor}, Client=#client{gid=GID}) -
 		UCS2Name/binary, 0:NamePadding, RarityInt:8, Category:8, SellPrice:32/little, (psu_game:build_item_constants(Constants))/binary >>);
 
 %% @todo Currently send the normal items shop for all shops, differentiate.
-event({npc_shop_enter, ShopID}, #client{gid=GID}) ->
+event({npc_shop_enter, ShopID}, Client=#client{gid=GID}) ->
 	log("npc shop enter ~p", [ShopID]),
 	egs_users:shop_enter(GID, ShopID),
-	psu_game:send_010a(egs_shops_db:read(ShopID));
+	psu_proto:send_010a(egs_shops_db:read(ShopID), Client);
 
 event({npc_shop_leave, ShopID}, #client{gid=GID}) ->
 	log("npc shop leave ~p", [ShopID]),

@@ -131,33 +131,6 @@ npc_load(Leader, [{PartyPos, NPCGID}|NPCList], Client) ->
 send(Packet) ->
 	psu_proto:packet_send(get(socket), Packet).
 
-%% @doc Send a shop listing.
-send_010a(ItemsList) ->
-	GID = get(gid),
-	NbItems = length(ItemsList),
-	ItemsBin = build_010a_list(ItemsList, []),
-	send(<< 16#010a0300:32, 0:64, GID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
-		GID:32/little, 0:32, 1:16/little, NbItems:8, 2:8, 0:32, ItemsBin/binary >>).
-
-%% @todo The values set to 0 are unknown.
-build_010a_list([], Acc) ->
-	iolist_to_binary(lists:reverse(Acc));
-build_010a_list([ItemID|Tail], Acc) ->
-	#psu_item{name=Name, rarity=Rarity, buy_price=SellPrice, data=Data} = egs_items_db:read(ItemID),
-	UCS2Name = << << X:8, 0:8 >> || X <- Name >>,
-	NamePadding = 8 * (46 - byte_size(UCS2Name)),
-	RarityBin = Rarity - 1,
-	DataBin = build_item_constants(Data),
-	BinItemID = case element(1, Data) of
-		psu_clothing_item -> %% Change the ItemID to enable all colors.
-			<< A:8, _:4, B:12, _:8 >> = << ItemID:32 >>,
-			<< A:8, 3:4, B:12, 16#ff:8 >>;
-		_Any ->
-			<< ItemID:32 >>
-	end,
-	Bin = << UCS2Name/binary, 0:NamePadding, RarityBin:8, 0:8, BinItemID/binary, SellPrice:32/little, DataBin/binary >>,
-	build_010a_list(Tail, [Bin|Acc]).
-
 %% @todo Handle more than just goggles.
 send_0a0a(Inventory) ->
 	{ok, << _:68608/bits, Rest/bits >>} = file:read_file("p/packet0a0a.bin"),
