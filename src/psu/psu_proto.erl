@@ -1465,6 +1465,11 @@ send_0c06(Pack, #client{socket=Socket}) ->
 send_0c08(#client{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#0c080300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:96 >>).
 
+%% @doc Send the trial start notification.
+%% @todo This packet hasn't been reviewed at all yet.
+send_0c09(#client{socket=Socket, gid=DestGID}) ->
+	packet_send(Socket, << 16#0c090300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:64, 0:64 >>).
+
 %% @doc Send the counter's mission options (0 = invisible, 2 = disabled, 3 = available).
 send_0c10(Options, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	Size = byte_size(Options),

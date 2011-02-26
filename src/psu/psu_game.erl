@@ -282,10 +282,6 @@ build_item_constants(#psu_trap_item{max_quantity=MaxQuantity}) ->
 build_item_constants(#psu_special_item{}) ->
 	<< 0:160 >>.
 
-%% @doc Send the trial start notification.
-send_0c09() ->
-	send(<< (header(16#0c09))/binary, 0:64 >>).
-
 %% @doc Send the character list for selection.
 %% @todo There's a few odd values blanked, also the last known location apparently.
 send_0d03(Data0, Data1, Data2, Data3) ->
