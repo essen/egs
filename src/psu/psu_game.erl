@@ -169,10 +169,6 @@ send_0113() ->
 	GID = get(gid),
 	send(<< 16#01130300:32, 0:64, GID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64, GID:32/little, File/binary >>).
 
-%% @todo No idea!
-send_022c(A, B) ->
-	send(<< (header(16#022c))/binary, A:16/little, B:16/little >>).
-
 %% @todo Force send a new player location. Used for warps.
 %% @todo The value before IntDir seems to be the player's current animation. 01 stand up, 08 ?, 17 normal sit
 send_0503({PrevX, PrevY, PrevZ, _AnyDir}) ->

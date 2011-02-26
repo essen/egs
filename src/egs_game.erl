@@ -277,7 +277,7 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}, Client=#cl
 	psu_proto:send_0a06(User, Client2),
 	case User#users.partypid of
 		undefined -> ignore;
-		_ -> psu_game:send_022c(0, 16#12)
+		_ -> psu_proto:send_022c(0, 16#12, Client)
 	end,
 	Client3 = Client2#client{areanb=Client2#client.areanb + 1},
 	psu_proto:send_0208(Client3),
@@ -482,13 +482,13 @@ event({npc_force_invite, NPCid}, Client=#client{gid=GID}) ->
 	psu_proto:send_0201(SentNPCUser, Client),
 	psu_proto:send_0215(0, Client),
 	psu_game:send_0a04(SentNPCUser#users.gid),
-	psu_game:send_022c(0, 16#12),
+	psu_proto:send_022c(0, 16#12, Client),
 	psu_game:send_1004(npc_mission, SentNPCUser, PartyPos),
 	psu_game:send_100f((SentNPCUser#users.character)#characters.npcid, PartyPos),
 	psu_game:send_1601(PartyPos);
 
 %% @todo Also at the end send a 101a (NPC:16, PartyPos:16, ffffffff). Not sure about PartyPos.
-event({npc_invite, NPCid}, #client{gid=GID}) ->
+event({npc_invite, NPCid}, Client=#client{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
 	%% Create NPC.
 	log("invited npcid ~b", [NPCid]),
@@ -497,7 +497,7 @@ event({npc_invite, NPCid}, #client{gid=GID}) ->
 	case User#users.partypid of
 		undefined ->
 			{ok, PartyPid} = psu_party:start_link(GID),
-			psu_game:send_022c(0, 16#12);
+			psu_proto:send_022c(0, 16#12, Client);
 		PartyPid ->
 			ignore
 	end,

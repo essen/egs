@@ -1382,6 +1382,11 @@ send_0228(Type, Duration, Message, #client{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#02280300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64,
 		TypeInt:32/little, Duration:32/little, UCS2Message/binary, 0:16 >>).
 
+%% @todo No idea!
+%% @todo This packet hasn't been reviewed at all yet.
+send_022c(A, B, #client{socket=Socket, gid=DestGID}) ->
+	packet_send(Socket, << 16#022c0300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:64, A:16/little, B:16/little >>).
+
 %% @todo Not sure. Sent when going to or from room. Possibly when changing universes too?
 send_0230(#client{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#02300300:32, 16#ffff:16, 0:16, 16#00011300:32, DestGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64 >>).
