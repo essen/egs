@@ -1549,6 +1549,11 @@ send_1015(QuestID, #client{socket=Socket, gid=DestGID}) ->
 	Size = byte_size(QuestData),
 	packet_send(Socket, << 16#10150300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:64, QuestID:32/little, 16#01010000:32, 0:32, Size:32/little, QuestData/binary >>).
 
+%% @todo No idea.
+%% @todo This packet hasn't been reviewed at all yet.
+send_101a(NPCid, PartyPos, #client{socket=Socket, gid=DestGID}) ->
+	packet_send(Socket, << 16#101a0300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:64, NPCid:16/little, PartyPos:16/little, 16#ffffffff:32 >>).
+
 %% @doc Mission start related.
 send_1020(#client{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#10200300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64 >>).

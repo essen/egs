@@ -510,7 +510,7 @@ event({npc_invite, NPCid}, Client=#client{gid=GID}) ->
 	SentNPCCharacter = Character#characters{gid=NPCid, npcid=NPCid},
 	SentNPCUser = NPCUser#users{character=SentNPCCharacter},
 	psu_game:send_1004(npc_invite, SentNPCUser, PartyPos),
-	psu_game:send_101a(NPCid, PartyPos);
+	psu_proto:send_101a(NPCid, PartyPos, Client);
 
 %% @todo Should be 0115(money) 010a03(confirm sale).
 event({npc_shop_buy, ShopItemIndex, QuantityOrColor}, Client=#client{gid=GID}) ->
