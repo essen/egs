@@ -307,8 +307,8 @@ event(counter_party_info_request, Client=#client{gid=GID}) ->
 	psu_proto:send_1706((User#users.character)#characters.name, Client);
 
 %% @todo Item distribution is always set to random for now.
-event(counter_party_options_request, _Client) ->
-	psu_game:send_170a();
+event(counter_party_options_request, Client) ->
+	psu_proto:send_170a(Client);
 
 %% @doc Request the counter's quest files.
 event({counter_quest_files_request, CounterID}, Client) ->

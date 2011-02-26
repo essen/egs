@@ -375,11 +375,6 @@ send_1602() ->
 	GID = get(gid),
 	send(<< 16#16020300:32, 16#ffff:16, 0:144, 16#00011300:32, GID:32/little, 0:96, Bin/binary, 0:MiddlePaddingSize, NbNPC, 0:24, UCS2PMName/binary, 0:EndPaddingSize, 0:32 >>).
 
-%% @doc Party settings. Item distribution is random for now.
-%% @todo Handle correctly.
-send_170a() ->
-	send(<< (header(16#170a))/binary, 16#01010c08:32 >>).
-
 %% @todo Find what the heck this packet is.
 send_170c() ->
 	{ok, File} = file:read_file("p/packet170c.bin"),
