@@ -126,11 +126,6 @@ npc_load(Leader, [{PartyPos, NPCGID}|NPCList], Client) ->
 	send_1016(PartyPos),
 	npc_load(Leader, NPCList, Client).
 
-%% @doc Build the packet header.
-header(Command) ->
-	GID = get(gid),
-	<< Command:16/unsigned-integer, 16#0300:16, 0:160, 16#00011300:32, GID:32/little, 0:64 >>.
-
 %% @doc Send the given packet to the client.
 %% @todo Consolidate the receive and send functions better.
 send(Packet) ->
