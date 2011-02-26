@@ -1664,6 +1664,12 @@ send_1706(CharName, #client{socket=Socket, gid=DestGID}) ->
 send_170a(#client{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#170a0300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64, 16#01010c08:32 >>).
 
+%% @todo Find what the heck this packet is.
+%% @todo This packet hasn't been reviewed at all yet.
+send_170c(#client{socket=Socket, gid=DestGID}) ->
+	{ok, File} = file:read_file("p/packet170c.bin"),
+	packet_send(Socket, << 16#170c0300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64, File/binary >>).
+
 %% @doc Send the background to use for the counter.
 send_1711(Bg, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#17110300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64, Bg:8, 0:24 >>).

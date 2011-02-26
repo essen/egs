@@ -239,8 +239,8 @@ event({chat, _FromTypeID, FromGID, _FromName, Modifiers, ChatMsg}, #client{gid=U
 	egs_users:broadcast_all({egs, chat, UserGID, BcastTypeID, BcastGID, BcastName, Modifiers, ChatMsg});
 
 %% @todo There's at least 9 different sets of locations. Handle all of them correctly.
-event(counter_background_locations_request, _Client) ->
-	psu_game:send_170c();
+event(counter_background_locations_request, Client) ->
+	psu_proto:send_170c(Client);
 
 %% @todo Make sure non-mission counters follow the same loading process.
 %% @todo Probably validate the From* values, to not send the player back inside a mission.

@@ -375,11 +375,6 @@ send_1602() ->
 	GID = get(gid),
 	send(<< 16#16020300:32, 16#ffff:16, 0:144, 16#00011300:32, GID:32/little, 0:96, Bin/binary, 0:MiddlePaddingSize, NbNPC, 0:24, UCS2PMName/binary, 0:EndPaddingSize, 0:32 >>).
 
-%% @todo Find what the heck this packet is.
-send_170c() ->
-	{ok, File} = file:read_file("p/packet170c.bin"),
-	send(<< (header(16#170c))/binary, File/binary >>).
-
 %% @doc PP cube handler.
 %% @todo The 4 bytes before the file may vary. Everything past that is the same. Figure things out.
 send_1a04() ->
