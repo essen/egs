@@ -295,8 +295,3 @@ send_1004(Type, User, PartyPos) ->
 send_1309() ->
 	{ok, << _Size:32, Packet/bits >>} = file:read_file("p/packet1309.bin"),
 	send(Packet).
-
-%% @todo Figure out this room packet.
-send_1332() ->
-	{ok, << _Size:32, Packet/bits >>} = file:read_file("p/packet1332.bin"),
-	send(Packet).
