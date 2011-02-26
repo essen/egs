@@ -337,11 +337,6 @@ send_1016(PartyPos) ->
 	GID = get(gid),
 	send(<< 16#10160300:32, 16#ffff0000:32, 0:128, 16#00011300:32, GID:32/little, 0:64, PartyPos:32/little >>).
 
-%% @todo Object interaction? Figure out. C probably the interaction type.
-%% @todo Apparently A would be TargetID/ffffffff, B would be the player LID, C would be the object type? D still completely unknown.
-send_1211(A, B, C, D) ->
-	send(<< (header(16#1211))/binary, A:32/little, B:32/little, C:32/little, D:32/little >>).
-
 %% @doc Make the client load the quest previously sent.
 send_1212() ->
 	send(<< (header(16#1212))/binary, 0:19200 >>).

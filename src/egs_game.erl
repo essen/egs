@@ -598,14 +598,14 @@ event({object_box_destroy, ObjectID}, _Client) ->
 	psu_game:send_1213(ObjectID, 3);
 
 %% @todo Second send_1211 argument should be User#users.lid. Fix when it's correctly handled.
-event({object_chair_sit, ObjectTargetID}, _Client) ->
+event({object_chair_sit, ObjectTargetID}, Client) ->
 	%~ {ok, User} = egs_users:read(get(gid)),
-	psu_game:send_1211(ObjectTargetID, 0, 8, 0);
+	psu_proto:send_1211(ObjectTargetID, 0, 8, 0, Client);
 
 %% @todo Second psu_game:send_1211 argument should be User#users.lid. Fix when it's correctly handled.
-event({object_chair_stand, ObjectTargetID}, _Client) ->
+event({object_chair_stand, ObjectTargetID}, Client) ->
 	%~ {ok, User} = egs_users:read(get(gid)),
-	psu_game:send_1211(ObjectTargetID, 0, 8, 2);
+	psu_proto:send_1211(ObjectTargetID, 0, 8, 2, Client);
 
 event({object_crystal_activate, ObjectID}, _Client) ->
 	psu_game:send_1213(ObjectID, 1);
@@ -678,13 +678,13 @@ event({object_vehicle_boost_respawn, ObjectID}, _Client) ->
 	psu_game:send_1213(ObjectID, 0);
 
 %% @todo Second send_1211 argument should be User#users.lid. Fix when it's correctly handled.
-event({object_warp_take, BlockID, ListNb, ObjectNb}, #client{gid=GID}) ->
+event({object_warp_take, BlockID, ListNb, ObjectNb}, Client=#client{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
 	Pos = psu_instance:warp_event(User#users.instancepid, element(2, User#users.area), BlockID, ListNb, ObjectNb),
 	NewUser = User#users{pos=Pos},
 	egs_users:write(NewUser),
 	psu_game:send_0503(User#users.pos),
-	psu_game:send_1211(16#ffffffff, 0, 14, 0);
+	psu_proto:send_1211(16#ffffffff, 0, 14, 0, Client);
 
 %% @todo Don't send_0204 if the player is removed from the party while in the lobby I guess.
 event({party_remove_member, PartyPos}, Client=#client{gid=GID}) ->
