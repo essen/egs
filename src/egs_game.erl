@@ -453,7 +453,7 @@ event({mission_start, QuestID}, Client) ->
 	log("mission start ~b", [QuestID]),
 	psu_proto:send_1020(Client),
 	psu_game:send_1015(QuestID),
-	psu_game:send_0c02();
+	psu_proto:send_0c02(Client);
 
 %% @doc Force the invite of an NPC character while inside a mission. Mostly used by story missions.
 %%      Note that the NPC is often removed and reinvited between block/cutscenes.

@@ -282,10 +282,6 @@ build_item_constants(#psu_trap_item{max_quantity=MaxQuantity}) ->
 build_item_constants(#psu_special_item{}) ->
 	<< 0:160 >>.
 
-%% @todo Figure out last 4 bytes!
-send_0c02() ->
-	send(<< (header(16#0c02))/binary, 0:32 >>).
-
 %% @doc Send the trial start notification.
 send_0c09() ->
 	send(<< (header(16#0c09))/binary, 0:64 >>).

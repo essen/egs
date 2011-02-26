@@ -1452,6 +1452,11 @@ send_0c00(CharUser, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
 		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32 >>).
 
+%% @todo Figure out last 4 bytes!
+%% @todo This packet hasn't been reviewed at all yet.
+send_0c02(#client{socket=Socket, gid=DestGID}) ->
+	packet_send(Socket, << 16#0c020300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:64, 0:32 >>).
+
 %% @doc Send the huge pack of quest files available in the counter.
 send_0c06(Pack, #client{socket=Socket}) ->
 	packet_send(Socket, << 16#0c060300:32, 0:288, 1:32/little, Pack/binary >>).
