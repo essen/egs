@@ -1486,6 +1486,37 @@ send_0a06(CharUser, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	Bin2 = iolist_to_binary([ << 16#ffffffff:32 >> || _N <- Blanks]),
 	packet_send(Socket, << 16#0a060300:32, DestLID:16/little, 0:48, DestGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64, Bin/binary, Bin2/binary >>).
 
+%% @todo Handle more than just goggles.
+%% @todo This packet hasn't been reviewed at all yet.
+send_0a0a(Inventory, #client{socket=Socket, gid=DestGID}) ->
+	{ok, << _:68608/bits, Rest/bits >>} = file:read_file("p/packet0a0a.bin"),
+	NbItems = length(Inventory),
+	ItemVariables = build_0a0a_item_variables(Inventory, 1, []),
+	ItemConstants = build_0a0a_item_constants(Inventory, []),
+	packet_send(Socket, << 16#0a0a0300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64,
+		NbItems:8, 0:8, 6:8, 0:72, 0:192, 0:2304, ItemVariables/binary, ItemConstants/binary, 0:13824, Rest/binary >>).
+
+build_0a0a_item_variables([], _N, Acc) ->
+	Bin = iolist_to_binary(lists:reverse(Acc)),
+	Padding = 17280 - 8 * byte_size(Bin),
+	<< Bin/binary, 0:Padding >>;
+build_0a0a_item_variables([{ItemID, Variables}|Tail], N, Acc) ->
+	build_0a0a_item_variables(Tail, N + 1, [psu_proto:build_item_variables(ItemID, N, Variables)|Acc]).
+
+build_0a0a_item_constants([], Acc) ->
+	Bin = iolist_to_binary(lists:reverse(Acc)),
+	Padding = 34560 - 8 * byte_size(Bin),
+	<< Bin/binary, 0:Padding >>;
+build_0a0a_item_constants([{ItemID, _Variables}|Tail], Acc) ->
+	#psu_item{name=Name, rarity=Rarity, sell_price=SellPrice, data=Data} = egs_items_db:read(ItemID),
+	UCS2Name = << << X:8, 0:8 >> || X <- Name >>,
+	NamePadding = 8 * (46 - byte_size(UCS2Name)),
+	<< Category:8, _:24 >> = << ItemID:32 >>,
+	DataBin = psu_proto:build_item_constants(Data),
+	RarityInt = Rarity - 1,
+	Bin = << UCS2Name/binary, 0:NamePadding, RarityInt:8, Category:8, SellPrice:32/little, DataBin/binary >>,
+	build_0a0a_item_constants(Tail, [Bin|Acc]).
+
 %% @doc Send an item's description.
 send_0a11(ItemID, ItemDesc, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	Length = 1 + byte_size(ItemDesc) div 2,
