@@ -302,9 +302,9 @@ event({counter_options_request, CounterID}, Client) ->
 	psu_proto:send_1711(egs_counters_db:bg(CounterID), Client);
 
 %% @todo Handle when the party already exists! And stop doing it wrong.
-event(counter_party_info_request, #client{gid=GID}) ->
+event(counter_party_info_request, Client=#client{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
-	psu_game:send_1706((User#users.character)#characters.name);
+	psu_proto:send_1706((User#users.character)#characters.name, Client);
 
 %% @todo Item distribution is always set to random for now.
 event(counter_party_options_request, _Client) ->

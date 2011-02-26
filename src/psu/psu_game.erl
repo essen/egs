@@ -375,12 +375,6 @@ send_1602() ->
 	GID = get(gid),
 	send(<< 16#16020300:32, 16#ffff:16, 0:144, 16#00011300:32, GID:32/little, 0:96, Bin/binary, 0:MiddlePaddingSize, NbNPC, 0:24, UCS2PMName/binary, 0:EndPaddingSize, 0:32 >>).
 
-%% @doc Party information.
-%% @todo Handle existing parties.
-send_1706(CharName) ->
-	send(<< (header(16#1706))/binary, 16#00000300:32, 16#d5c0faff:32, 0:64, CharName/binary,
-		16#78000000:32, 16#01010000:32, 0:1536, 16#0100c800:32, 16#0601010a:32, 16#ffffffff:32, 0:32 >>).
-
 %% @doc Party settings. Item distribution is random for now.
 %% @todo Handle correctly.
 send_170a() ->

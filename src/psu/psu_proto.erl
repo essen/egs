@@ -1650,6 +1650,14 @@ send_1601(PartyPos, #client{socket=Socket, gid=DestGID}) ->
 send_1701(#client{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#17010300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:96 >>).
 
+%% @doc Party information.
+%% @todo Handle existing parties.
+%% @todo This packet hasn't been reviewed at all yet.
+send_1706(CharName, #client{socket=Socket, gid=DestGID}) ->
+	packet_send(Socket, << 16#17060300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64,
+		16#00000300:32, 16#d5c0faff:32, 0:64, CharName/binary,
+		16#78000000:32, 16#01010000:32, 0:1536, 16#0100c800:32, 16#0601010a:32, 16#ffffffff:32, 0:32 >>).
+
 %% @doc Send the background to use for the counter.
 send_1711(Bg, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#17110300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64, Bg:8, 0:24 >>).
