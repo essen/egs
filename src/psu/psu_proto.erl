@@ -1564,6 +1564,11 @@ send_1022(#users{character=#characters{currenthp=HP}}, #client{socket=Socket, gi
 	PartyPos = 0,
 	packet_send(Socket, << 16#10220300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64, HP:32/little, PartyPos:32/little >>).
 
+%% @todo Boss related command.
+%% @todo This packet hasn't been reviewed at all yet.
+send_110e(Data, #client{socket=Socket, gid=DestGID}) ->
+	packet_send(Socket, << 16#110e0300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64, Data/binary, 0:32, 5:16/little, 12:16/little, 0:32, 260:32/little >>).
+
 %% @todo Always the same value, no idea what it's for.
 send_1204(#client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#12040300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:96, 16#20000000:32, 0:256 >>).

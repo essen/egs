@@ -172,8 +172,8 @@ raw(16#1019, _Data, _Client) ->
 	%~ psu_game:send(<< 16#10190300:32, 0:160, 16#00011300:32, GID:32/little, 0:64, 0:192, 16#00200000:32, 0:32 >>);
 
 %% @todo Not sure about that one though. Probably related to 1112 still.
-raw(16#1106, << _:352, Data/bits >>, _Client) ->
-	psu_game:send_110e(Data);
+raw(16#1106, << _:352, Data/bits >>, Client) ->
+	psu_proto:send_110e(Data, Client);
 
 %% @doc Probably asking permission to start the video (used for syncing?).
 raw(16#1112, << _:352, Data/bits >>, _Client) ->
