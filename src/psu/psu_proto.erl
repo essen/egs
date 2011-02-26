@@ -1423,6 +1423,12 @@ send_0304(FromGID, ChatTypeID, ChatGID, ChatName, ChatModifiers, ChatMessage, #c
 		ChatTypeID:32, ChatGID:32/little, 0:64, ChatType:8, ChatCutIn:8, ChatCutInAngle:8, ChatMsgLength:8,
 		ChatChannel:8, ChatCharacterType:8, 0:16, ChatName/binary, ChatMessage/binary >>).
 
+%% @todo NPC inventory. Guessing it's only for NPC characters...
+%% @todo This packet hasn't been reviewed at all yet.
+send_0a04(NPCGID, #client{socket=Socket, gid=DestGID}) ->
+	{ok, Bin} = file:read_file("p/packet0a04.bin"),
+	packet_send(Socket, << 16#0a040300:32, 0:32, 16#00001d00:32, NPCGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64, Bin/binary >>).
+
 %% @todo Inventory related. Doesn't seem to do anything.
 send_0a05(#client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#0a050300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64 >>).

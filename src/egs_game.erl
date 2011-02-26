@@ -481,7 +481,7 @@ event({npc_force_invite, NPCid}, Client=#client{gid=GID}) ->
 	psu_proto:send_010d(SentNPCUser, Client),
 	psu_proto:send_0201(SentNPCUser, Client),
 	psu_proto:send_0215(0, Client),
-	psu_game:send_0a04(SentNPCUser#users.gid),
+	psu_proto:send_0a04(SentNPCUser#users.gid, Client),
 	psu_proto:send_022c(0, 16#12, Client),
 	psu_game:send_1004(npc_mission, SentNPCUser, PartyPos),
 	psu_proto:send_100f((SentNPCUser#users.character)#characters.npcid, PartyPos, Client),

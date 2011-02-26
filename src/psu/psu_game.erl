@@ -119,7 +119,7 @@ npc_load(Leader, [{PartyPos, NPCGID}|NPCList], Client) ->
 	psu_proto:send_010d(NPCUser, Client),
 	psu_proto:send_0201(NPCUser, Client),
 	psu_proto:send_0215(0, Client),
-	send_0a04(NPCUser#users.gid),
+	psu_proto:send_0a04(NPCUser#users.gid, Client),
 	send_1004(npc_mission, NPCUser, PartyPos),
 	psu_proto:send_100f((NPCUser#users.character)#characters.npcid, PartyPos, Client),
 	psu_proto:send_1601(PartyPos, Client),
@@ -173,12 +173,6 @@ send_0503({PrevX, PrevY, PrevZ, _AnyDir}) ->
 	send(<< 16#05030300:32, 0:64, GID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64, GID:32/little, 0:32,
 		16#1000:16, IntDir:16/little, PrevX:32/little-float, PrevY:32/little-float, PrevZ:32/little-float, X:32/little-float, Y:32/little-float, Z:32/little-float,
 		QuestID:32/little, ZoneID:32/little, MapID:32/little, EntryID:32/little, 1:32/little >>).
-
-%% @todo NPC inventory. Guessing it's only for NPC characters...
-send_0a04(NPCGID) ->
-	GID = get(gid),
-	{ok, Bin} = file:read_file("p/packet0a04.bin"),
-	send(<< 16#0a040300:32, 0:32, 16#00001d00:32, NPCGID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64, Bin/binary >>).
 
 %% @todo Handle more than just goggles.
 send_0a0a(Inventory) ->
