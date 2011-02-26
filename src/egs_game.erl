@@ -142,33 +142,34 @@ raw(16#0d04, << _:352, Data/bits >>, #client{gid=GID}) ->
 %% @doc Initialize a vehicle object.
 %% @todo Find what are the many values, including the odd Whut value (and whether it's used in the reply).
 %% @todo Separate the reply.
-raw(16#0f00, << _:352, Data/bits >>, _Client) ->
+raw(16#0f00, << _:352, Data/bits >>, #client{gid=GID}) ->
 	<< A:32/little, 0:16, B:16/little, 0:16, C:16/little, 0, Whut:8, D:16/little, 0:16,
 		E:16/little, 0:16, F:16/little, G:16/little, H:16/little, I:32/little >> = Data,
 	log("init vehicle: ~b ~b ~b ~b ~b ~b ~b ~b ~b ~b", [A, B, C, Whut, D, E, F, G, H, I]),
-	psu_game:send(<< (psu_game:header(16#1208))/binary, A:32/little, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
+	psu_game:send(<< 16#12080300:32, 0:160, 16#00011300:32, GID:32/little, 0:64,
+		A:32/little, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
 		0:16, B:16/little, 0:16, C:16/little, 0:16, D:16/little, 0:112,
 		E:16/little, 0:16, F:16/little, H:16/little, 1, 0, 100, 0, 10, 0, G:16/little, 0:16 >>);
 
 %% @doc Enter vehicle.
 %% @todo Separate the reply.
-raw(16#0f02, << _:352, Data/bits >>, _Client) ->
+raw(16#0f02, << _:352, Data/bits >>, #client{gid=GID}) ->
 	<< A:32/little, B:32/little, C:32/little >> = Data,
 	log("enter vehicle: ~b ~b ~b", [A, B, C]),
 	HP = 100,
-	psu_game:send(<< (psu_game:header(16#120a))/binary, A:32/little, B:32/little, C:32/little, HP:32/little >>);
+	psu_game:send(<< 16#120a0300:32, 0:160, 16#00011300:32, GID:32/little, 0:64, A:32/little, B:32/little, C:32/little, HP:32/little >>);
 
 %% @doc Sent right after entering the vehicle. Can't move without it.
 %% @todo Separate the reply.
-raw(16#0f07, << _:352, Data/bits >>, _Client) ->
+raw(16#0f07, << _:352, Data/bits >>, #client{gid=GID}) ->
 	<< A:32/little, B:32/little >> = Data,
 	log("after enter vehicle: ~b ~b", [A, B]),
-	psu_game:send(<< (psu_game:header(16#120f))/binary, A:32/little, B:32/little >>);
+	psu_game:send(<< 16#120f0300:32, 0:160, 16#00011300:32, GID:32/little, 0:64, A:32/little, B:32/little >>);
 
 %% @todo Not sure yet.
 raw(16#1019, _Data, _Client) ->
 	ignore;
-	%~ psu_game:send(<< (psu_game:header(16#1019))/binary, 0:192, 16#00200000:32, 0:32 >>);
+	%~ psu_game:send(<< 16#10190300:32, 0:160, 16#00011300:32, GID:32/little, 0:64, 0:192, 16#00200000:32, 0:32 >>);
 
 %% @todo Not sure about that one though. Probably related to 1112 still.
 raw(16#1106, << _:352, Data/bits >>, _Client) ->
