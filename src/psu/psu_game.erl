@@ -121,7 +121,7 @@ npc_load(Leader, [{PartyPos, NPCGID}|NPCList], Client) ->
 	psu_proto:send_0215(0, Client),
 	send_0a04(NPCUser#users.gid),
 	send_1004(npc_mission, NPCUser, PartyPos),
-	send_100f((NPCUser#users.character)#characters.npcid, PartyPos),
+	psu_proto:send_100f((NPCUser#users.character)#characters.npcid, PartyPos, Client),
 	send_1601(PartyPos),
 	send_1016(PartyPos),
 	npc_load(Leader, NPCList, Client).
@@ -331,10 +331,6 @@ send_1004(Type, User, PartyPos) ->
 		0:64,
 		16#01000000:32, 16#01000000:32, %% @todo first is current hp, second is max hp
 		0:608 >>).
-
-%% @todo No idea. Also the 2 PartyPos in the built packet more often than not match, but sometimes don't? That's probably because one is PartyPos and the other is LID or something.
-send_100f(NPCid, PartyPos) ->
-	send(<< (header(16#100f))/binary, NPCid:16/little, 1, PartyPos:8, PartyPos:32/little >>).
 
 %% @doc Send the mission's quest file when starting a new mission.
 %% @todo Handle correctly. 0:32 is actually a missing value. Value before that is unknown too.

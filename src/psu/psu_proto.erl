@@ -1536,6 +1536,11 @@ send_100e({QuestID, ZoneID, MapID}, EntryID, AreaName, #client{socket=Socket, gi
 		1, PartyPos, ZoneID:16/little, MapID:16/little, EntryID:16/little, QuestID:32/little,
 		UCS2Name/binary, 0:Padding, 0:32, 16#ffffffff:32, 0:32 >>).
 
+%% @todo No idea. Also the 2 PartyPos in the built packet more often than not match, but sometimes don't? That's probably because one is PartyPos and the other is LID or something.
+%% @todo This packet hasn't been reviewed at all yet.
+send_100f(NPCid, PartyPos, #client{socket=Socket, gid=DestGID}) ->
+	packet_send(Socket, << 16#100f0300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:64, NPCid:16/little, 1, PartyPos:8, PartyPos:32/little >>).
+
 %% @doc Mission start related.
 send_1020(#client{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#10200300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64 >>).
