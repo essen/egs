@@ -177,7 +177,7 @@ raw(16#1106, << _:352, Data/bits >>, Client) ->
 
 %% @doc Probably asking permission to start the video (used for syncing?).
 raw(16#1112, << _:352, Data/bits >>, _Client) ->
-	psu_game:send_1113(Data);
+	psu_proto:send_1113(Data, Client);
 
 %% @todo Not sure yet. Value is probably a TargetID. Used in Airboard Rally. Replying with the same value starts the race.
 raw(16#1216, << _:352, Data/bits >>, _Client) ->

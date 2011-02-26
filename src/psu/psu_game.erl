@@ -337,10 +337,6 @@ send_1016(PartyPos) ->
 	GID = get(gid),
 	send(<< 16#10160300:32, 16#ffff0000:32, 0:128, 16#00011300:32, GID:32/little, 0:64, PartyPos:32/little >>).
 
-%% @todo Boss related command.
-send_1113(Data) ->
-	send(<< (header(16#1113))/binary, Data/binary >>).
-
 %% @todo Figure out what this packet does. Sane values for counter and missions for now.
 send_1202() ->
 	send(<< (header(16#1202))/binary, 0:32, 16#10000000:32, 0:64, 16#14000000:32, 0:32 >>).
