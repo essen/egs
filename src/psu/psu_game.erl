@@ -35,7 +35,7 @@ char_load(User, Client) ->
 	psu_proto:send_0222(User#users.uni, Client),
 	psu_proto:send_1500(User#users.character, Client),
 	send_1501(),
-	send_1512(),
+	psu_proto:send_1512(Client),
 	%% 0303
 	psu_proto:send_1602(Client),
 	psu_proto:send_021b(Client).
@@ -351,8 +351,3 @@ send_1332() ->
 send_1501() ->
 	GID = get(gid),
 	send(<< 16#15010300:32, 16#ffff:16, 0:144, 16#00011300:32, GID:32/little, 0:96 >>).
-
-%% @todo Send an empty blacklist.
-send_1512() ->
-	GID = get(gid),
-	send(<< 16#15120300:32, 16#ffff:16, 0:144, 16#00011300:32, GID:32/little, 0:46144 >>).
