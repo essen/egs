@@ -1644,6 +1644,20 @@ send_1601(PartyPos, #client{socket=Socket, gid=DestGID}) ->
 	{ok, << _:32, Bin/bits >>} = file:read_file("p/packet1601.bin"),
 	packet_send(Socket, << 16#16010300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64, PartyPos:32/little, Bin/binary >>).
 
+%% @doc Send the player's NPC and PM information.
+%% @todo The value 4 is the card priority. Find what 3 is. When sending, the first 0 is an unknown value.
+%% @todo This packet hasn't been reviewed at all yet.
+send_1602(#client{socket=Socket, gid=DestGID}) ->
+	NPCList = egs_npc_db:all(),
+	NbNPC = length(NPCList),
+	Bin = iolist_to_binary([<< NPCid:8, 0, 4, 0, 3, 0:24 >> || {NPCid, _Data} <- NPCList]),
+	MiddlePaddingSize = 8 * (344 - byte_size(Bin)),
+	PMName = "My PM",
+	UCS2PMName = << << X:8, 0:8 >> || X <- PMName >>,
+	EndPaddingSize = 8 * (64 - byte_size(UCS2PMName)),
+	packet_send(Socket, << 16#16020300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:96,
+		Bin/binary, 0:MiddlePaddingSize, NbNPC, 0:24, UCS2PMName/binary, 0:EndPaddingSize, 0:32 >>).
+
 %% @doc Send the list of parties to join.
 %% @todo Handle lists of parties.
 %% @todo Probably has to handle a LID here, although it should always be 0.

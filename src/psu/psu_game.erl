@@ -37,7 +37,7 @@ char_load(User, Client) ->
 	send_1501(),
 	send_1512(),
 	%% 0303
-	send_1602(),
+	psu_proto:send_1602(Client),
 	psu_proto:send_021b(Client).
 
 %% @doc Load the given map as a standard lobby.
@@ -356,16 +356,3 @@ send_1501() ->
 send_1512() ->
 	GID = get(gid),
 	send(<< 16#15120300:32, 16#ffff:16, 0:144, 16#00011300:32, GID:32/little, 0:46144 >>).
-
-%% @doc Send the player's NPC and PM information.
-%% @todo The value 4 is the card priority. Find what 3 is. When sending, the first 0 is an unknown value.
-send_1602() ->
-	NPCList = egs_npc_db:all(),
-	NbNPC = length(NPCList),
-	Bin = iolist_to_binary([<< NPCid:8, 0, 4, 0, 3, 0:24 >> || {NPCid, _Data} <- NPCList]),
-	MiddlePaddingSize = 8 * (344 - byte_size(Bin)),
-	PMName = "My PM",
-	UCS2PMName = << << X:8, 0:8 >> || X <- PMName >>,
-	EndPaddingSize = 8 * (64 - byte_size(UCS2PMName)),
-	GID = get(gid),
-	send(<< 16#16020300:32, 16#ffff:16, 0:144, 16#00011300:32, GID:32/little, 0:96, Bin/binary, 0:MiddlePaddingSize, NbNPC, 0:24, UCS2PMName/binary, 0:EndPaddingSize, 0:32 >>).
