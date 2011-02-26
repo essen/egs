@@ -290,8 +290,3 @@ send_1004(Type, User, PartyPos) ->
 		0:64,
 		16#01000000:32, 16#01000000:32, %% @todo first is current hp, second is max hp
 		0:608 >>).
-
-%% @todo Figure out this room packet.
-send_1309() ->
-	{ok, << _Size:32, Packet/bits >>} = file:read_file("p/packet1309.bin"),
-	send(Packet).
