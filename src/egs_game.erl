@@ -732,8 +732,8 @@ event(player_type_availability_request, Client) ->
 event(player_type_capabilities_request, _Client) ->
 	psu_game:send_0113();
 
-event(ppcube_request, _Client) ->
-	psu_game:send_1a04();
+event(ppcube_request, Client) ->
+	psu_proto:send_1a04(Client);
 
 event(unicube_request, Client) ->
 	psu_proto:send_021e(egs_universes:all(), Client);

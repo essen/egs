@@ -1690,6 +1690,13 @@ send_1a03(CharUser, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#1a030300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:96,
 		NbHairstyles:32/little, NbHeadtypes:32/little, 0:416, HairstylesBin/binary, 0:32 >>).
 
+%% @doc PP cube handler.
+%% @todo The 4 bytes before the file may vary. Everything past that is the same. Figure things out.
+%% @todo This packet hasn't been reviewed at all yet.
+send_1a04(#client{socket=Socket, gid=DestGID}) ->
+	{ok, File} = file:read_file("p/ppcube.bin"),
+	packet_send(Socket, << 16#1a040300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64, 0:32, File/binary >>).
+
 %% @doc Available types handler. Enable all 16 types.
 send_1a07(#client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#1a070300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:160,

@@ -374,9 +374,3 @@ send_1602() ->
 	EndPaddingSize = 8 * (64 - byte_size(UCS2PMName)),
 	GID = get(gid),
 	send(<< 16#16020300:32, 16#ffff:16, 0:144, 16#00011300:32, GID:32/little, 0:96, Bin/binary, 0:MiddlePaddingSize, NbNPC, 0:24, UCS2PMName/binary, 0:EndPaddingSize, 0:32 >>).
-
-%% @doc PP cube handler.
-%% @todo The 4 bytes before the file may vary. Everything past that is the same. Figure things out.
-send_1a04() ->
-	{ok, File} = file:read_file("p/ppcube.bin"),
-	send(<< (header(16#1a04))/binary, 0:32, File/binary >>).
