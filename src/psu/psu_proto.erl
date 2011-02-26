@@ -1589,6 +1589,11 @@ send_1204(#client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 send_1205(EventID, BlockID, Value, #client{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#12050300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64, EventID, BlockID, 0:16, Value, 0:24 >>).
 
+%% @todo Figure out what this packet does. Sane values for counter and missions for now.
+%% @todo This packet hasn't been reviewed at all yet.
+send_1206(#client{socket=Socket, gid=DestGID}) ->
+	packet_send(Socket, << 16#12060300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64, 0:32, 16#80020000:32, 0:5120 >>).
+
 %% @doc Send the player's partner card.
 %% @todo Handle the LID and comment properly.
 send_1500(Character, #client{socket=Socket, gid=DestGID}) ->

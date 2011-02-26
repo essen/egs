@@ -338,10 +338,6 @@ send_1016(PartyPos) ->
 	send(<< 16#10160300:32, 16#ffff0000:32, 0:128, 16#00011300:32, GID:32/little, 0:64, PartyPos:32/little >>).
 
 %% @todo Figure out what this packet does. Sane values for counter and missions for now.
-send_1206() ->
-	send(<< (header(16#1206))/binary, 0:32, 16#80020000:32, 0:5120 >>).
-
-%% @todo Figure out what this packet does. Sane values for counter and missions for now.
 send_1207() ->
 	Chunk = << 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 0:224, 16#0000ffff:32, 16#ff000000:32, 16#64000a00:32 >>,
 	send(<< (header(16#1207))/binary, Chunk/binary, Chunk/binary, Chunk/binary, Chunk/binary, Chunk/binary, Chunk/binary >>).
