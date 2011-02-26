@@ -581,7 +581,7 @@ event({npc_shop_request, ShopID}, Client) ->
 %% @todo Not sure what are those hardcoded values.
 event({object_boss_gate_activate, ObjectID}, Client) ->
 	psu_proto:send_1213(ObjectID, 0, Client),
-	psu_game:send_1215(2, 16#7008),
+	psu_proto:send_1215(2, 16#7008, Client),
 	%% @todo Following sent after the warp?
 	psu_proto:send_1213(37, 0, Client),
 	%% @todo Why resend this?

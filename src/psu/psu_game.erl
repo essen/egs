@@ -337,10 +337,6 @@ send_1016(PartyPos) ->
 	GID = get(gid),
 	send(<< 16#10160300:32, 16#ffff0000:32, 0:128, 16#00011300:32, GID:32/little, 0:64, PartyPos:32/little >>).
 
-%% @todo Related to boss gates.
-send_1215(A, B) ->
-	send(<< (header(16#1215))/binary, A:32/little, 0:16, B:16/little >>).
-
 %% @todo Not sure yet. Value is probably a TargetID. Used in Airboard Rally. Replying with the same value starts the race.
 send_1216(Value) ->
 	GID = get(gid),
