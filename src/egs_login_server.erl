@@ -28,8 +28,8 @@ start_link(Port) ->
 	Pid = spawn(egs_network, listen, [Port, ?MODULE]),
 	{ok, Pid}.
 
-%% @doc Initialize the game state and start receiving messages.
+%% @doc Initialize the game client and start receiving messages.
 init(Socket) ->
-	State = #state{socket=Socket, gid=egs_accounts:tmp_gid()},
-	psu_proto:send_0202(State),
-	egs_network:recv(<< >>, egs_login, State).
+	Client = #client{socket=Socket, gid=egs_accounts:tmp_gid()},
+	psu_proto:send_0202(Client),
+	egs_network:recv(<< >>, egs_login, Client).

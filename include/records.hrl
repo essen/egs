@@ -33,11 +33,11 @@
 
 %% Records.
 
-%% @doc Per-process state used by the various EGS modules.
--record(state, {
+%% @doc Client state. One per connected client.
+-record(client, {
 	socket			:: sslsocket(),
 	gid				:: integer(),
-	slot			:: 0..3,
+	slot			:: 0..3, %% @todo Probably should remove this one from the state.
 	lid = 16#ffff	:: 0..16#ffff,
 	areanb = 0		:: non_neg_integer()
 }).

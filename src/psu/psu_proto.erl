@@ -1196,7 +1196,7 @@ parse_hits(Hits, Acc) ->
 
 %% @doc Send character appearance and other information.
 %% @todo Probably don't pattern match the data like this...
-send_010d(CharUser, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_010d(CharUser, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	CharGID = CharUser#users.gid,
 	CharLID = CharUser#users.lid,
 	<< _:640, CharBin/bits >> = psu_characters:character_user_to_binary(CharUser),
@@ -1205,16 +1205,16 @@ send_010d(CharUser, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 		0:192, CharGID:32/little, CharLID:32/little, 16#ffffffff:32, CharBin/binary >>).
 
 %% @doc Trigger a character-related event.
-send_0111(CharUser, EventID, State) ->
-	send_0111(CharUser, EventID, 0, State).
-send_0111(#users{gid=CharGID, lid=CharLID}, EventID, Param, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_0111(CharUser, EventID, Client) ->
+	send_0111(CharUser, EventID, 0, Client).
+send_0111(#users{gid=CharGID, lid=CharLID}, EventID, Param, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#01110300:32, DestLID:16/little, 0:48, CharGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64,
 		CharGID:32/little, CharLID:32/little, EventID:32/little, Param:32/little >>).
 
 %% @doc Update the character level, blastbar, luck and money information.
-send_0115(CharUser, State) ->
-	send_0115(CharUser, 16#ffffffff, State).
-send_0115(#users{gid=CharGID, lid=CharLID, character=Character}, EnemyTargetID, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_0115(CharUser, Client) ->
+	send_0115(CharUser, 16#ffffffff, Client).
+send_0115(#users{gid=CharGID, lid=CharLID, character=Character}, EnemyTargetID, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#01150300:32, DestLID:16/little, 0:48, CharGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64,
 		CharGID:32/little, CharLID:32/little, EnemyTargetID:32/little, (build_char_level(Character))/binary >>).
 
@@ -1234,14 +1234,14 @@ build_char_level(#characters{type=Type, mainlevel=#level{number=Level, exp=EXP},
 
 %% @doc Revive player with optional SEs.
 %% @todo SEs.
-send_0117(#users{gid=CharGID, lid=CharLID, character=#characters{currenthp=HP}}, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_0117(#users{gid=CharGID, lid=CharLID, character=#characters{currenthp=HP}}, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	SE = << 0:64 >>,
 	packet_send(Socket, << 16#01170300:32, DestLID:16/little, 0:48, CharGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64,
 		CharGID:32/little, CharLID:32/little, SE/binary, HP:32/little, 0:32 >>).
 
 %% @doc Send the zone initialization command.
 %% @todo Handle NbPlayers properly. There's more than 1 player!
-send_0200(ZoneID, ZoneType, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_0200(ZoneID, ZoneType, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	Var = case ZoneType of
 		mission -> << 16#06000500:32, 16#01000000:32, 0:64, 16#00040000:32, 16#00010000:32, 16#00140000:32 >>;
 		myroom -> << 16#06000000:32, 16#02000000:32, 0:64, 16#40000000:32, 16#00010000:32, 16#00010000:32 >>;
@@ -1251,7 +1251,7 @@ send_0200(ZoneID, ZoneType, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 		DestLID:16/little, ZoneID:16/little, 1:32/little, 16#ffffffff:32, Var/binary, 16#ffffffff:32, 16#ffffffff:32 >>).
 
 %% @doc Send character location, appearance and other information.
-send_0201(CharUser, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_0201(CharUser, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	[CharTypeID, GameVersion] = case (CharUser#users.character)#characters.type of
 		npc -> [16#00001d00, 255];
 		_ -> [16#00001200, 0]
@@ -1265,17 +1265,17 @@ send_0201(CharUser, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 
 %% @doc Hello command. Sent when a client connects to the game or login server.
 %% @todo Can contain an error message if 0:1024 is setup similar to this: 0:32, 3:32/little, 0:48, Len:16/little, Error/binary, 0:Padding.
-send_0202(#state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_0202(#client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#020203bf:32, DestLID:16/little, 0:272, DestGID:32/little, 0:1024 >>).
 
 %% @doc Spawn a player with the given GID and LID.
-send_0203(#users{gid=CharGID, lid=CharLID}, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_0203(#users{gid=CharGID, lid=CharLID}, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#02030300:32, DestLID:16/little, 0:144, 16#00011300:32,
 		DestGID:32/little, 0:64, CharGID:32/little, CharLID:32/little >>).
 
 %% @doc Unspawn the given character.
 %% @todo The last 4 bytes are probably the number of players remaining in the zone.
-send_0204(User, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_0204(User, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	CharTypeID = case (User#users.character)#characters.type of
 		npc -> 16#00001d00;
 		_ -> 16#00001200
@@ -1285,51 +1285,51 @@ send_0204(User, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 		16#00011300:32, DestGID:32/little, 0:64, CharGID:32/little, CharLID:32/little, 100:32/little >>).
 
 %% @doc Make the client load a new map.
-send_0205(CharUser, IsSeasonal, #state{socket=Socket, gid=DestGID, lid=DestLID, areanb=AreaNb}) ->
+send_0205(CharUser, IsSeasonal, #client{socket=Socket, gid=DestGID, lid=DestLID, areanb=AreaNb}) ->
 	#users{lid=CharLID, area={_QuestID, ZoneID, MapID}, entryid=EntryID} = CharUser,
 	packet_send(Socket, << 16#02050300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64,
 		16#ffffffff:32, ZoneID:32/little, MapID:32/little, EntryID:32/little, AreaNb:32/little, CharLID:16/little, 0:8, IsSeasonal:8 >>).
 
 %% @doc Indicate to the client that loading should finish.
-send_0208(#state{socket=Socket, gid=DestGID, lid=DestLID, areanb=AreaNb}) ->
+send_0208(#client{socket=Socket, gid=DestGID, lid=DestLID, areanb=AreaNb}) ->
 	packet_send(Socket, << 16#02080300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64, AreaNb:32/little >>).
 
 %% @todo No idea what this one does. For unknown reasons it uses channel 2.
 %% @todo Handle the DestLID properly?
-send_020c(#state{socket=Socket}) ->
+send_020c(#client{socket=Socket}) ->
 	packet_send(Socket, << 16#020c0200:32, 16#ffff0000:32, 0:256 >>).
 
 %% @doc Send the quest file to be loaded by the client.
 %% @todo Handle the DestLID properly?
-send_020e(QuestData, #state{socket=Socket}) ->
+send_020e(QuestData, #client{socket=Socket}) ->
 	Size = byte_size(QuestData),
 	packet_send(Socket, << 16#020e0300:32, 16#ffff:16, 0:272, Size:32/little, 0:32, QuestData/binary, 0:32 >>).
 
 %% @doc Send the zone file to be loaded.
-send_020f(ZoneData, SetID, SeasonID, #state{socket=Socket}) ->
+send_020f(ZoneData, SetID, SeasonID, #client{socket=Socket}) ->
 	Size = byte_size(ZoneData),
 	packet_send(Socket, << 16#020f0300:32, 16#ffff:16, 0:272, SetID, SeasonID, 0:16, Size:32/little, ZoneData/binary >>).
 
 %% @doc Send the current UNIX time.
-send_0210(#state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_0210(#client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	UnixTime = calendar:datetime_to_gregorian_seconds(calendar:now_to_universal_time(now()))
 		- calendar:datetime_to_gregorian_seconds({{1970, 1, 1}, {0, 0, 0}}),
 	packet_send(Socket, << 16#02100300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:96, UnixTime:32/little >>).
 
 %% @todo No idea what this is doing.
-send_0215(UnknownValue, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_0215(UnknownValue, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#02150300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64, UnknownValue:32/little >>).
 
 %% @doc Send the game server's IP and port that the client requested.
-send_0216(IP, Port, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_0216(IP, Port, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#02160300:32, DestLID:16/little, 0:144, 16#00000f00:32, DestGID:32/little, 0:64, IP/binary, Port:16/little, 0:16 >>).
 
 %% @doc End of character loading.
-send_021b(#state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_021b(#client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#021b0300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64 >>).
 
 %% @doc Send the list of available universes.
-send_021e(Universes, #state{socket=Socket}) ->
+send_021e(Universes, #client{socket=Socket}) ->
 	NbUnis = length(Universes),
 	UnisBin = build_021e_uni(Universes, []),
 	packet_send(Socket, << 16#021e0300:32, 0:288, NbUnis:32/little, UnisBin/binary >>).
@@ -1348,7 +1348,7 @@ build_021e_uni([{UniID, {universe, Name, NbPlayers, _MaxPlayers}}|Tail], Acc) ->
 	build_021e_uni(Tail, [Bin|Acc]).
 
 %% @doc Send the current universe info along with the current level cap.
-send_0222(UniID, #state{socket=Socket, gid=DestGID}) ->
+send_0222(UniID, #client{socket=Socket, gid=DestGID}) ->
 	{_Type, Name, NbPlayers, MaxPlayers} = egs_universes:read(UniID),
 	Padding = 8 * (44 - byte_size(Name)),
 	LevelCap = egs_conf:read(level_cap),
@@ -1356,14 +1356,14 @@ send_0222(UniID, #state{socket=Socket, gid=DestGID}) ->
 		UniID:32/little, NbPlayers:16/little, MaxPlayers:16/little, Name/binary, 0:Padding, LevelCap:32/little >>).
 
 %% @doc Send the auth key, or, in case of failure, a related error message.
-send_0223(AuthGID, AuthKey, #state{socket=Socket, gid=DestGID}) ->
+send_0223(AuthGID, AuthKey, #client{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#02230300:32, 0:160, 16#00000f00:32, DestGID:32/little, 0:64, AuthGID:32/little, AuthKey:32/bits >>).
-send_0223(ErrorMsg, #state{socket=Socket, gid=DestGID}) ->
+send_0223(ErrorMsg, #client{socket=Socket, gid=DestGID}) ->
 	Length = byte_size(ErrorMsg) div 2 + 2,
 	packet_send(Socket, << 16#02230300:32, 0:160, 16#00000f00:32, DestGID:32/little, 0:128, 3:32/little, 0:48, Length:16/little, ErrorMsg/binary, 0:16 >>).
 
 %% @doc Send a MOTD page.
-send_0225(MOTD, CurrentPage, #state{socket=Socket, lid=DestLID}) ->
+send_0225(MOTD, CurrentPage, #client{socket=Socket, lid=DestLID}) ->
 	Tokens = re:split(MOTD, "\n."),
 	Msg = << << Line/binary, "\n", 0 >> || Line <- lists:sublist(Tokens, 1 + CurrentPage * 15, 15) >>,
 	NbPages = 1 + length(Tokens) div 15,
@@ -1376,18 +1376,18 @@ send_0225(MOTD, CurrentPage, #state{socket=Socket, lid=DestLID}) ->
 %% * top: Horizontal scroll on top of the screen, traditionally used for server-wide messages.
 %% * scroll: Vertical scroll on the right of the screen, traditionally used for rare missions obtention messages.
 %% * timeout: A dialog in the center of the screen that disappears after Duration seconds.
-send_0228(Type, Duration, Message, #state{socket=Socket, gid=DestGID}) ->
+send_0228(Type, Duration, Message, #client{socket=Socket, gid=DestGID}) ->
 	TypeInt = case Type of dialog -> 0; top -> 1; scroll -> 2; timeout -> 3 end,
 	UCS2Message = << << X:8, 0:8 >> || X <- Message >>,
 	packet_send(Socket, << 16#02280300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64,
 		TypeInt:32/little, Duration:32/little, UCS2Message/binary, 0:16 >>).
 
 %% @todo Not sure. Sent when going to or from room. Possibly when changing universes too?
-send_0230(#state{socket=Socket, gid=DestGID}) ->
+send_0230(#client{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#02300300:32, 16#ffff:16, 0:16, 16#00011300:32, DestGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64 >>).
 
 %% @doc Forward the player to a website. The website will open when the player closes the game. Used for login issues mostly.
-send_0231(URL, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_0231(URL, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	URLBin = list_to_binary(URL),
 	Length = byte_size(URLBin) + 1,
 	Padding = 8 * (512 - Length - 1),
@@ -1395,7 +1395,7 @@ send_0231(URL, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 		16#00000f00:32, DestGID:32/little, 0:64, Length:32/little, URLBin/binary, 0:Padding >>).
 
 %% @doc Send the list of players already spawned in the zone when entering it.
-send_0233(Users, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_0233(Users, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	NbUsers = length(Users),
 	Bin = build_0233_users(Users, []),
 	packet_send(Socket, << 16#02330300:32, DestLID:16/little, 0:16, 16#00001200:32, DestGID:32/little, 0:64,
@@ -1408,22 +1408,22 @@ build_0233_users([User|Tail], Acc) ->
 	build_0233_users(Tail, [<< Bin/binary, 0:32 >>|Acc]).
 
 %% @doc Start the zone handling: load the zone file and the objects sent separately.
-send_0236(#state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_0236(#client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#02360300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64 >>).
 
 %% @doc Chat message.
-send_0304(FromGID, ChatTypeID, ChatGID, ChatName, ChatModifiers, ChatMessage, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_0304(FromGID, ChatTypeID, ChatGID, ChatName, ChatModifiers, ChatMessage, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	{chat_modifiers, ChatType, ChatCutIn, ChatCutInAngle, ChatMsgLength, ChatChannel, ChatCharacterType} = ChatModifiers,
 	packet_send(Socket, << 16#03040300:32, DestLID:16/little, 0:16, 16#00011300:32, FromGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64,
 		ChatTypeID:32, ChatGID:32/little, 0:64, ChatType:8, ChatCutIn:8, ChatCutInAngle:8, ChatMsgLength:8,
 		ChatChannel:8, ChatCharacterType:8, 0:16, ChatName/binary, ChatMessage/binary >>).
 
 %% @todo Inventory related. Doesn't seem to do anything.
-send_0a05(#state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_0a05(#client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#0a050300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64 >>).
 
 %% @doc Send the list of ItemUUID for the items in the inventory.
-send_0a06(CharUser, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_0a06(CharUser, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	Len = length((CharUser#users.character)#characters.inventory),
 	UUIDs = lists:seq(1, Len),
 	Bin = iolist_to_binary([ << N:32/little >> || N <- UUIDs]),
@@ -1432,14 +1432,14 @@ send_0a06(CharUser, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#0a060300:32, DestLID:16/little, 0:48, DestGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64, Bin/binary, Bin2/binary >>).
 
 %% @doc Send an item's description.
-send_0a11(ItemID, ItemDesc, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_0a11(ItemID, ItemDesc, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	Length = 1 + byte_size(ItemDesc) div 2,
 	packet_send(Socket, << 16#0a110300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64,
 		ItemID:32, Length:32/little, ItemDesc/binary, 0:16 >>).
 
 %% @doc Quest init.
 %% @todo When first entering a zone it seems LID should be set to ffff apparently.
-send_0c00(CharUser, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_0c00(CharUser, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	#users{area={QuestID, _ZoneID, _MapID}} = CharUser,
 	packet_send(Socket, << 16#0c000300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64, QuestID:32/little,
 		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
@@ -1448,21 +1448,21 @@ send_0c00(CharUser, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 		16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32 >>).
 
 %% @doc Send the huge pack of quest files available in the counter.
-send_0c06(Pack, #state{socket=Socket}) ->
+send_0c06(Pack, #client{socket=Socket}) ->
 	packet_send(Socket, << 16#0c060300:32, 0:288, 1:32/little, Pack/binary >>).
 
 %% @doc Reply that the player is allowed to use the lobby transport. Always allow.
-send_0c08(#state{socket=Socket, gid=DestGID}) ->
+send_0c08(#client{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#0c080300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:96 >>).
 
 %% @doc Send the counter's mission options (0 = invisible, 2 = disabled, 3 = available).
-send_0c10(Options, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_0c10(Options, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	Size = byte_size(Options),
 	packet_send(Socket, << 16#0c100300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64, 1, 0, Size:16/little, Options/binary >>).
 
 %% @doc Send the general data and flags for the selected character.
 %% @todo Handle bitflags and value flags properly.
-send_0d01(Character, #state{socket=Socket, gid=DestGID}) ->
+send_0d01(Character, #client{socket=Socket, gid=DestGID}) ->
 	CharBin = psu_characters:character_tuple_to_binary(Character),
 	OptionsBin = psu_characters:options_tuple_to_binary(Character#characters.options),
 	packet_send(Socket, << 16#0d010300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64, CharBin/binary,
@@ -1472,7 +1472,7 @@ send_0d01(Character, #state{socket=Socket, gid=DestGID}) ->
 
 %% @doc Send the flags list. This is the whole list of available values, not the character's.
 %%      Sent without fragmentation on official for unknown reasons. Do the same here.
-send_0d05(#state{socket=Socket, gid=DestGID}) ->
+send_0d05(#client{socket=Socket, gid=DestGID}) ->
 	{ok, Flags} = file:read_file("p/flags.bin"),
 	Packet = << 16#0d050300:32, 0:32, 16#00011300:32, DestGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64, Flags/binary >>,
 	Size = 4 + byte_size(Packet),
@@ -1480,7 +1480,7 @@ send_0d05(#state{socket=Socket, gid=DestGID}) ->
 
 %% @doc Send the client's own player's party information, on the bottom left of the screen.
 %% @todo Location and the 20 bytes following sometimes have values, not sure why; when joining a party maybe?
-send_1005(Character, #state{socket=Socket, gid=DestGID}) ->
+send_1005(Character, #client{socket=Socket, gid=DestGID}) ->
 	#characters{name=Name, mainlevel=#level{number=Level}, currenthp=CurrentHP, maxhp=MaxHP} = Character,
 	Location = << 0:512 >>,
 	packet_send(Socket, << 16#10050300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64,
@@ -1496,9 +1496,9 @@ send_1005(Character, #state{socket=Socket, gid=DestGID}) ->
 		16#ffff0000:32, 16#ffff0000:32, 16#ffff0000:32, 0:3680 >>).
 
 %% @doc Party-related events.
-send_1006(EventID, State) ->
-	send_1006(EventID, 0, State).
-send_1006(EventID, PartyPos, #state{socket=Socket, gid=DestGID}) ->
+send_1006(EventID, Client) ->
+	send_1006(EventID, 0, Client).
+send_1006(EventID, PartyPos, #client{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#10060300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64, EventID:8, PartyPos:8, 0:16 >>).
 
 %% @doc Send the player's current location.
@@ -1506,14 +1506,14 @@ send_1006(EventID, PartyPos, #state{socket=Socket, gid=DestGID}) ->
 %% @todo Receive the AreaName as UCS2 directly to allow for color codes and the like.
 %% @todo Handle TargetLID probably (right after the padding).
 %% @todo Do counters even have a name?
-send_100e(CounterID, AreaName, #state{socket=Socket, gid=DestGID}) ->
+send_100e(CounterID, AreaName, #client{socket=Socket, gid=DestGID}) ->
 	PartyPos = 0,
 	UCS2Name = << << X:8, 0:8 >> || X <- AreaName >>,
 	Padding = 8 * (64 - byte_size(UCS2Name)),
 	CounterType = if CounterID =:= 16#ffffffff -> 2; true -> 1 end,
 	packet_send(Socket, << 16#100e0300:32, 16#ffffffbf:32, 0:128, 16#00011300:32, DestGID:32, 0:64,
 		1, PartyPos, 0:48, 16#ffffff7f:32, UCS2Name/binary, 0:Padding, 0:32, CounterID:32/little, CounterType:32/little >>).
-send_100e({QuestID, ZoneID, MapID}, EntryID, AreaName, #state{socket=Socket, gid=DestGID}) ->
+send_100e({QuestID, ZoneID, MapID}, EntryID, AreaName, #client{socket=Socket, gid=DestGID}) ->
 	PartyPos = 0,
 	UCS2Name = << << X:8, 0:8 >> || X <- AreaName >>,
 	Padding = 8 * (64 - byte_size(UCS2Name)),
@@ -1522,22 +1522,22 @@ send_100e({QuestID, ZoneID, MapID}, EntryID, AreaName, #state{socket=Socket, gid
 		UCS2Name/binary, 0:Padding, 0:32, 16#ffffffff:32, 0:32 >>).
 
 %% @doc Mission start related.
-send_1020(#state{socket=Socket, gid=DestGID}) ->
+send_1020(#client{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#10200300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64 >>).
 
 %% @doc Update HP in the party members information on the left.
 %% @todo Handle PartyPos. Probably only pass HP later.
-send_1022(#users{character=#characters{currenthp=HP}}, #state{socket=Socket, gid=DestGID}) ->
+send_1022(#users{character=#characters{currenthp=HP}}, #client{socket=Socket, gid=DestGID}) ->
 	PartyPos = 0,
 	packet_send(Socket, << 16#10220300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64, HP:32/little, PartyPos:32/little >>).
 
 %% @todo Always the same value, no idea what it's for.
-send_1204(#state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_1204(#client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#12040300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:96, 16#20000000:32, 0:256 >>).
 
 %% @doc Send the player's partner card.
 %% @todo Handle the LID and comment properly.
-send_1500(Character, #state{socket=Socket, gid=DestGID}) ->
+send_1500(Character, #client{socket=Socket, gid=DestGID}) ->
 	#characters{slot=Slot, name=Name, race=Race, gender=Gender, class=Class, appearance=Appearance} = Character,
 	case Appearance of
 		#flesh_appearance{voicetype=VoiceType, voicepitch=VoicePitch} -> ok;
@@ -1554,20 +1554,20 @@ send_1500(Character, #state{socket=Socket, gid=DestGID}) ->
 %% @doc Send the list of parties to join.
 %% @todo Handle lists of parties.
 %% @todo Probably has to handle a LID here, although it should always be 0.
-send_1701(#state{socket=Socket, gid=DestGID}) ->
+send_1701(#client{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#17010300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:96 >>).
 
 %% @doc Send the background to use for the counter.
-send_1711(Bg, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_1711(Bg, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#17110300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:64, Bg:8, 0:24 >>).
 
 %% @doc NPC shop request reply.
-send_1a02(A, B, C, D, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_1a02(A, B, C, D, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#1a020300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:96,
 		A:16/little, B:16/little, C:16/little, D:16/little >>).
 
 %% @doc Lumilass available hairstyles/headtypes handler.
-send_1a03(CharUser, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_1a03(CharUser, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	{ok, Conf} = file:consult("priv/lumilass.conf"),
 	Character = CharUser#users.character,
 	NbHeadtypes = proplists:get_value({headtypes, Character#characters.gender, Character#characters.race}, Conf, 0),
@@ -1578,7 +1578,7 @@ send_1a03(CharUser, #state{socket=Socket, gid=DestGID, lid=DestLID}) ->
 		NbHairstyles:32/little, NbHeadtypes:32/little, 0:416, HairstylesBin/binary, 0:32 >>).
 
 %% @doc Available types handler. Enable all 16 types.
-send_1a07(#state{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_1a07(#client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#1a070300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:160,
 		16#01010101:32, 16#01010101:32, 16#01010101:32, 16#01010101:32 >>).
 

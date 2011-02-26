@@ -46,13 +46,13 @@ accept(LSocket, CallbackMod) ->
 	?MODULE:accept(LSocket, CallbackMod).
 
 %% @doc Main loop for the network stack. Receive and handle messages.
-recv(SoFar, CallbackMod, State) ->
+recv(SoFar, CallbackMod, Client) ->
 	receive
 		{ssl, _Any, Data} ->
 			{Commands, Rest} = split(<< SoFar/bits, Data/bits >>, []),
-			case dispatch(Commands, CallbackMod, CallbackMod, State) of
-				{ok, NextCallbackMod, NewState} ->
-					?MODULE:recv(Rest, NextCallbackMod, NewState);
+			case dispatch(Commands, CallbackMod, CallbackMod, Client) of
+				{ok, NextCallbackMod, NewClient} ->
+					?MODULE:recv(Rest, NextCallbackMod, NewClient);
 				closed -> closed
 			end;
 		{ssl_closed, _} ->
@@ -60,41 +60,41 @@ recv(SoFar, CallbackMod, State) ->
 		{ssl_error, _, _} ->
 			ssl_error; %% exit
 		{egs, keepalive} ->
-			CallbackMod:keepalive(State),
-			?MODULE:recv(SoFar, CallbackMod, State);
+			CallbackMod:keepalive(Client),
+			?MODULE:recv(SoFar, CallbackMod, Client);
 		Tuple when element(1, Tuple) =:= egs ->
-			case CallbackMod:info(Tuple, State) of
-				{ok, NewState} -> ?MODULE:recv(SoFar, CallbackMod, NewState);
-				_Any -> ?MODULE:recv(SoFar, CallbackMod, State)
+			case CallbackMod:info(Tuple, Client) of
+				{ok, NewClient} -> ?MODULE:recv(SoFar, CallbackMod, NewClient);
+				_Any -> ?MODULE:recv(SoFar, CallbackMod, Client)
 			end;
 		_ ->
-			?MODULE:recv(SoFar, CallbackMod, State)
+			?MODULE:recv(SoFar, CallbackMod, Client)
 	end.
 
 %% @doc Dispatch the commands received to the right handler.
-dispatch([], _CallbackMod, NextMod, State) ->
-	{ok, NextMod, State};
-dispatch([Data|Tail], CallbackMod, NextMod, State) ->
+dispatch([], _CallbackMod, NextMod, Client) ->
+	{ok, NextMod, Client};
+dispatch([Data|Tail], CallbackMod, NextMod, Client) ->
 	Ret = case psu_proto:parse(Data) of
 		{command, Command, Channel} ->
 			case Channel of
-				1 -> CallbackMod:cast(Command, Data, State);
-				_ -> CallbackMod:raw(Command, Data, State)
+				1 -> CallbackMod:cast(Command, Data, Client);
+				_ -> CallbackMod:raw(Command, Data, Client)
 			end;
 		ignore ->
 			ignore;
 		Event ->
-			CallbackMod:event(Event, State)
+			CallbackMod:event(Event, Client)
 	end,
 	case Ret of
-		{ok, NewMod, NewState} ->
-			dispatch(Tail, CallbackMod, NewMod, NewState);
-		{ok, NewState} ->
-			dispatch(Tail, CallbackMod, NextMod, NewState);
+		{ok, NewMod, NewClient} ->
+			dispatch(Tail, CallbackMod, NewMod, NewClient);
+		{ok, NewClient} ->
+			dispatch(Tail, CallbackMod, NextMod, NewClient);
 		closed ->
 			closed;
 		_Any ->
-			dispatch(Tail, CallbackMod, NextMod, State)
+			dispatch(Tail, CallbackMod, NextMod, Client)
 	end.
 
 %% @doc Split the network data received into commands.

@@ -23,32 +23,32 @@
 -include("include/records.hrl").
 
 %% @doc Send a keepalive.
-keepalive(#state{socket=Socket}) ->
+keepalive(#client{socket=Socket}) ->
 	psu_proto:send_keepalive(Socket).
 
 %% @doc We don't expect any message here.
-info(_Msg, _State) ->
+info(_Msg, _Client) ->
 	ok.
 
 %% @doc Nothing to broadcast.
-cast(_Command, _Data, _State) ->
+cast(_Command, _Data, _Client) ->
 	ok.
 
 %% @doc Dismiss all raw commands with a log notice.
 %% @todo Have a log event handler instead.
-raw(Command, _Data, State) ->
-	io:format("~p (~p): dismissed command ~4.16.0b~n", [?MODULE, State#state.gid, Command]).
+raw(Command, _Data, Client) ->
+	io:format("~p (~p): dismissed command ~4.16.0b~n", [?MODULE, Client#client.gid, Command]).
 
 %% Events.
 
 %% @doc Character screen selection request and delivery.
-event(char_select_request, #state{gid=GID}) ->
+event(char_select_request, #client{gid=GID}) ->
 	Folder = egs_accounts:get_folder(GID),
 	psu_game:send_0d03(data_load(Folder, 0), data_load(Folder, 1), data_load(Folder, 2), data_load(Folder, 3));
 
 %% @doc The options default to 0 for everything except brightness to 4.
 %% @todo Don't forget to check for the character's name.
-event({char_select_create, Slot, CharBin}, #state{gid=GID}) ->
+event({char_select_create, Slot, CharBin}, #client{gid=GID}) ->
 	%% check for valid character appearance
 	%~ << _Name:512, RaceID:8, GenderID:8, _TypeID:8, AppearanceBin:776/bits, _/bits >> = CharBin,
 	%~ Race = proplists:get_value(RaceID, [{0, human}, {1, newman}, {2, cast}, {3, beast}]),
@@ -65,7 +65,7 @@ event({char_select_create, Slot, CharBin}, #state{gid=GID}) ->
 	file:write_file(io_lib:format("~s.options", [File]), << 0:128, 4, 0:56 >>);
 
 %% @doc Load the selected character into the game's default universe.
-event({char_select_enter, Slot, _BackToPreviousField}, State=#state{gid=GID}) ->
+event({char_select_enter, Slot, _BackToPreviousField}, Client=#client{gid=GID}) ->
 	Folder = egs_accounts:get_folder(GID),
 	[{status, 1}, {char, CharBin}, {options, OptionsBin}] = data_load(Folder, Slot),
 	<< Name:512/bits, RaceBin:8, GenderBin:8, ClassBin:8, AppearanceBin:776/bits, _/bits >> = CharBin,
@@ -88,9 +88,9 @@ event({char_select_enter, Slot, _BackToPreviousField}, State=#state{gid=GID}) ->
 	egs_users:item_add(GID, 16#01010a00, #psu_striking_weapon_item_variables{current_pp=99, max_pp=100, element=#psu_element{type=2, percent=50}}),
 	egs_users:item_add(GID, 16#01010b00, #psu_striking_weapon_item_variables{current_pp=99, max_pp=100, element=#psu_element{type=3, percent=50}}),
 	{ok, User2} = egs_users:read(GID),
-	State2 = State#state{slot=Slot},
-	psu_game:char_load(User2, State2),
-	{ok, egs_game, State2}.
+	Client2 = Client#client{slot=Slot},
+	psu_game:char_load(User2, Client2),
+	{ok, egs_game, Client2}.
 
 %% Internal.
 

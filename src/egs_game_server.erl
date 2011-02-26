@@ -53,10 +53,10 @@ on_exit(Pid) ->
 	egs_users:delete(User#users.gid),
 	io:format("game (~p): quit~n", [User#users.gid]).
 
-%% @doc Initialize the game state and start receiving messages.
+%% @doc Initialize the game client and start receiving messages.
 %% @todo Handle keepalive messages globally?
 init(Socket) ->
 	timer:send_interval(5000, {egs, keepalive}),
-	State = #state{socket=Socket, gid=egs_accounts:tmp_gid()},
-	psu_proto:send_0202(State),
-	egs_network:recv(<< >>, egs_login, State).
+	Client = #client{socket=Socket, gid=egs_accounts:tmp_gid()},
+	psu_proto:send_0202(Client),
+	egs_network:recv(<< >>, egs_login, Client).

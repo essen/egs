@@ -24,25 +24,25 @@
 
 %% @doc Load and send the character information to the client.
 %% @todo Move this whole function directly to psu_proto, probably.
-char_load(User, State) ->
-	psu_proto:send_0d01(User#users.character, State),
+char_load(User, Client) ->
+	psu_proto:send_0d01(User#users.character, Client),
 	%% 0246
 	send_0a0a((User#users.character)#characters.inventory),
-	psu_proto:send_1006(5, 0, State), %% @todo The 0 here is PartyPos, save it in User.
-	psu_proto:send_1005(User#users.character, State),
-	psu_proto:send_1006(12, State),
-	psu_proto:send_0210(State),
-	psu_proto:send_0222(User#users.uni, State),
-	psu_proto:send_1500(User#users.character, State),
+	psu_proto:send_1006(5, 0, Client), %% @todo The 0 here is PartyPos, save it in User.
+	psu_proto:send_1005(User#users.character, Client),
+	psu_proto:send_1006(12, Client),
+	psu_proto:send_0210(Client),
+	psu_proto:send_0222(User#users.uni, Client),
+	psu_proto:send_1500(User#users.character, Client),
 	send_1501(),
 	send_1512(),
 	%% 0303
 	send_1602(),
-	psu_proto:send_021b(State).
+	psu_proto:send_021b(Client).
 
 %% @doc Load the given map as a standard lobby.
-area_load(QuestID, ZoneID, MapID, EntryID, State) ->
-	{ok, OldUser} = egs_users:read(State#state.gid),
+area_load(QuestID, ZoneID, MapID, EntryID, Client) ->
+	{ok, OldUser} = egs_users:read(Client#client.gid),
 	{OldQuestID, OldZoneID, _OldMapID} = OldUser#users.area,
 	QuestChange = OldQuestID /= QuestID,
 	ZoneChange = if OldQuestID =:= QuestID, OldZoneID =:= ZoneID -> false; true -> true end,
@@ -53,78 +53,78 @@ area_load(QuestID, ZoneID, MapID, EntryID, State) ->
 	egs_users:write(User), %% @todo Booh ugly! But temporary.
 	%% Load the quest.
 	User2 = if QuestChange ->
-			psu_proto:send_0c00(User, State),
-			psu_proto:send_020e(egs_quests_db:quest_nbl(QuestID), State),
+			psu_proto:send_0c00(User, Client),
+			psu_proto:send_020e(egs_quests_db:quest_nbl(QuestID), Client),
 			User#users{questpid=egs_universes:lobby_pid(User#users.uni, QuestID)};
 		true -> User
 	end,
 	%% Load the zone.
-	State1 = if ZoneChange ->
+	Client1 = if ZoneChange ->
 			ZonePid = egs_quests:zone_pid(User2#users.questpid, ZoneID),
 			egs_zones:leave(User2#users.zonepid, User2#users.gid),
 			NewLID = egs_zones:enter(ZonePid, User2#users.gid),
-			NewState = State#state{lid=NewLID},
+			NewClient = Client#client{lid=NewLID},
 			{ok, User3} = egs_users:read(User2#users.gid),
-			psu_proto:send_0a05(NewState),
-			psu_proto:send_0111(User3, 6, NewState),
-			psu_proto:send_010d(User3, NewState),
-			psu_proto:send_0200(ZoneID, AreaType, NewState),
-			psu_proto:send_020f(egs_quests_db:zone_nbl(QuestID, ZoneID), egs_zones:setid(ZonePid), SeasonID, NewState),
-			NewState;
+			psu_proto:send_0a05(NewClient),
+			psu_proto:send_0111(User3, 6, NewClient),
+			psu_proto:send_010d(User3, NewClient),
+			psu_proto:send_0200(ZoneID, AreaType, NewClient),
+			psu_proto:send_020f(egs_quests_db:zone_nbl(QuestID, ZoneID), egs_zones:setid(ZonePid), SeasonID, NewClient),
+			NewClient;
 		true ->
 			User3 = User2,
-			State
+			Client
 	end,
 	%% Save the user.
 	egs_users:write(User3),
 	%% Load the player location.
-	State2 = State1#state{areanb=State#state.areanb + 1},
-	psu_proto:send_0205(User3, IsSeasonal, State2),
-	psu_proto:send_100e(User3#users.area, User3#users.entryid, AreaShortName, State2),
+	Client2 = Client1#client{areanb=Client#client.areanb + 1},
+	psu_proto:send_0205(User3, IsSeasonal, Client2),
+	psu_proto:send_100e(User3#users.area, User3#users.entryid, AreaShortName, Client2),
 	%% Load the zone objects.
 	if ZoneChange ->
 			send_1212(); %% @todo Only sent if there is a set file.
 		true -> ignore
 	end,
 	%% Load the player.
-	psu_proto:send_0201(User3, State2),
+	psu_proto:send_0201(User3, Client2),
 	if ZoneChange ->
-			psu_proto:send_0a06(User3, State2),
+			psu_proto:send_0a06(User3, Client2),
 			%% Load the other players in the zone.
 			OtherPlayersGID = egs_zones:get_all_players(User3#users.zonepid, User3#users.gid),
 			if	OtherPlayersGID =:= [] -> ignore;
 				true ->
 					OtherPlayers = egs_users:select(OtherPlayersGID),
-					psu_proto:send_0233(OtherPlayers, State)
+					psu_proto:send_0233(OtherPlayers, Client)
 			end;
 		true -> ignore
 	end,
 	%% End of loading.
-	State3 = State2#state{areanb=State2#state.areanb + 1},
-	psu_proto:send_0208(State3),
-	psu_proto:send_0236(State3),
+	Client3 = Client2#client{areanb=Client2#client.areanb + 1},
+	psu_proto:send_0208(Client3),
+	psu_proto:send_0236(Client3),
 	%% @todo Load APC characters.
-	{ok, State3}.
+	{ok, Client3}.
 
 %% @todo Don't change the NPC info unless you are the leader!
-npc_load(_Leader, [], _State) ->
+npc_load(_Leader, [], _Client) ->
 	ok;
-npc_load(Leader, [{PartyPos, NPCGID}|NPCList], State) ->
+npc_load(Leader, [{PartyPos, NPCGID}|NPCList], Client) ->
 	{ok, OldNPCUser} = egs_users:read(NPCGID),
 	#users{instancepid=InstancePid, area=Area, entryid=EntryID, pos=Pos} = Leader,
 	NPCUser = OldNPCUser#users{lid=PartyPos, instancepid=InstancePid, areatype=mission, area=Area, entryid=EntryID, pos=Pos},
 	%% @todo This one on mission end/abort?
 	%~ OldNPCUser#users{lid=PartyPos, instancepid=undefined, areatype=AreaType, area={0, 0, 0}, entryid=0, pos={0.0, 0.0, 0.0, 0}}
 	egs_users:write(NPCUser),
-	psu_proto:send_010d(NPCUser, State),
-	psu_proto:send_0201(NPCUser, State),
-	psu_proto:send_0215(0, State),
+	psu_proto:send_010d(NPCUser, Client),
+	psu_proto:send_0201(NPCUser, Client),
+	psu_proto:send_0215(0, Client),
 	send_0a04(NPCUser#users.gid),
 	send_1004(npc_mission, NPCUser, PartyPos),
 	send_100f((NPCUser#users.character)#characters.npcid, PartyPos),
 	send_1601(PartyPos),
 	send_1016(PartyPos),
-	npc_load(Leader, NPCList, State).
+	npc_load(Leader, NPCList, Client).
 
 %% @doc Build the packet header.
 header(Command) ->
