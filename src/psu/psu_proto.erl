@@ -1638,6 +1638,11 @@ send_1500(Character, #client{socket=Socket, gid=DestGID}) ->
 		Name/binary, RaceBin:8, GenderBin:8, ClassBin:8, VoiceType:8, VoicePitch:8, 0:24,
 		DestGID:32/little, 0:224, Comment/binary, 1, 4, 1, Slot, 0:64 >>).
 
+%% @todo Send an empty partner card list.
+%% @todo This packet hasn't been reviewed at all yet.
+send_1501(#client{socket=Socket, gid=DestGID}) ->
+	packet_send(Socket, << 16#15010300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:96 >>).
+
 %% @todo Send an empty blacklist.
 %% @todo This packet hasn't been reviewed at all yet.
 send_1512(#client{socket=Socket, gid=DestGID}) ->

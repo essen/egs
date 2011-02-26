@@ -34,7 +34,7 @@ char_load(User, Client) ->
 	psu_proto:send_0210(Client),
 	psu_proto:send_0222(User#users.uni, Client),
 	psu_proto:send_1500(User#users.character, Client),
-	send_1501(),
+	psu_proto:send_1501(Client),
 	psu_proto:send_1512(Client),
 	%% 0303
 	psu_proto:send_1602(Client),
@@ -346,8 +346,3 @@ send_1309() ->
 send_1332() ->
 	{ok, << _Size:32, Packet/bits >>} = file:read_file("p/packet1332.bin"),
 	send(Packet).
-
-%% @todo Send an empty partner card list.
-send_1501() ->
-	GID = get(gid),
-	send(<< 16#15010300:32, 16#ffff:16, 0:144, 16#00011300:32, GID:32/little, 0:96 >>).
