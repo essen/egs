@@ -546,7 +546,7 @@ event({npc_shop_buy, ShopItemIndex, QuantityOrColor}, Client=#client{gid=GID}) -
 	RarityInt = Rarity - 1,
 	psu_game:send(<< 16#010a0300:32, 0:64, GID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
 		GID:32/little, 0:32, 2:16/little, 0:16, (psu_game:build_item_variables(ItemID, ItemUUID, Variables))/binary,
-		UCS2Name/binary, 0:NamePadding, RarityInt:8, Category:8, SellPrice:32/little, (psu_game:build_item_constants(Constants))/binary >>);
+		UCS2Name/binary, 0:NamePadding, RarityInt:8, Category:8, SellPrice:32/little, (psu_proto:build_item_constants(Constants))/binary >>);
 
 %% @todo Currently send the normal items shop for all shops, differentiate.
 event({npc_shop_enter, ShopID}, Client=#client{gid=GID}) ->

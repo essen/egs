@@ -1210,7 +1210,7 @@ build_010a_list([ItemID|Tail], Acc) ->
 	UCS2Name = << << X:8, 0:8 >> || X <- Name >>,
 	NamePadding = 8 * (46 - byte_size(UCS2Name)),
 	RarityBin = Rarity - 1,
-	DataBin = psu_game:build_item_constants(Data),
+	DataBin = build_item_constants(Data),
 	BinItemID = case element(1, Data) of
 		psu_clothing_item -> %% Change the ItemID to enable all colors.
 			<< A:8, _:4, B:12, _:8 >> = << ItemID:32 >>,
@@ -1833,6 +1833,32 @@ send_1a04(#client{socket=Socket, gid=DestGID}) ->
 send_1a07(#client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#1a070300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:160,
 		16#01010101:32, 16#01010101:32, 16#01010101:32, 16#01010101:32 >>).
+
+%% Common binary building functions.
+
+build_item_constants(#psu_clothing_item{appearance=Appearance, manufacturer=Manufacturer, type=Type, overlap=Overlap, gender=Gender, colors=Colors}) ->
+	GenderInt = case Gender of male -> 16#1b; female -> 16#2b end,
+	<< Appearance:16, Type:4, Manufacturer:4, Overlap:8, GenderInt:8, Colors/binary, 0:40 >>;
+build_item_constants(#psu_consumable_item{max_quantity=MaxQuantity, pt_diff=PointsDiff,
+	status_effect=StatusEffect, target=Target, use_condition=UseCondition, item_effect=ItemEffect}) ->
+	<< 0:8, MaxQuantity:8, Target:8, UseCondition:8, PointsDiff:16/little, StatusEffect:8, ItemEffect:8, 0:96 >>;
+build_item_constants(#psu_parts_item{appearance=Appearance, manufacturer=Manufacturer, type=Type, overlap=Overlap, gender=Gender}) ->
+	GenderInt = case Gender of male -> 16#14; female -> 16#24 end,
+	<< Appearance:16, Type:4, Manufacturer:4, Overlap:8, GenderInt:8, 0:120 >>;
+%% @todo Handle rank properly.
+build_item_constants(#psu_striking_weapon_item{pp=PP, atp=ATP, ata=ATA, atp_req=Req, shop_element=#psu_element{type=EleType, percent=ElePercent},
+	hand=Hand, max_upgrades=MaxUpgrades, attack_label=AttackLabel}) ->
+	Rank = 4,
+	HandInt = case Hand of
+		both -> 0;
+		_ -> error
+	end,
+	<< PP:16/little, ATP:16/little, ATA:16/little, Req:16/little, 16#ffffff:24,
+		EleType:8, ElePercent:8, HandInt:8, 0:8, Rank:8, 0:8, MaxUpgrades:8, AttackLabel:8, 0:8 >>;
+build_item_constants(#psu_trap_item{max_quantity=MaxQuantity}) ->
+	<< 2:32/little, 16#ffffff:24, MaxQuantity:8, 0:96 >>;
+build_item_constants(#psu_special_item{}) ->
+	<< 0:160 >>.
 
 %% Utility functions.
 
