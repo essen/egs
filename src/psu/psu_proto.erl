@@ -1541,6 +1541,14 @@ send_100e({QuestID, ZoneID, MapID}, EntryID, AreaName, #client{socket=Socket, gi
 send_100f(NPCid, PartyPos, #client{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#100f0300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:64, NPCid:16/little, 1, PartyPos:8, PartyPos:32/little >>).
 
+%% @doc Send the mission's quest file when starting a new mission.
+%% @todo Handle correctly. 0:32 is actually a missing value. Value before that is unknown too.
+%% @todo This packet hasn't been reviewed at all yet.
+send_1015(QuestID, #client{socket=Socket, gid=DestGID}) ->
+	QuestData = egs_quests_db:quest_nbl(QuestID),
+	Size = byte_size(QuestData),
+	packet_send(Socket, << 16#10150300:32, 0:160, 16#00011300:32, DestGID:32/little, 0:64, QuestID:32/little, 16#01010000:32, 0:32, Size:32/little, QuestData/binary >>).
+
 %% @doc Mission start related.
 send_1020(#client{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#10200300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64 >>).

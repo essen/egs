@@ -332,13 +332,6 @@ send_1004(Type, User, PartyPos) ->
 		16#01000000:32, 16#01000000:32, %% @todo first is current hp, second is max hp
 		0:608 >>).
 
-%% @doc Send the mission's quest file when starting a new mission.
-%% @todo Handle correctly. 0:32 is actually a missing value. Value before that is unknown too.
-send_1015(QuestID) ->
-	QuestData = egs_quests_db:quest_nbl(QuestID),
-	Size = byte_size(QuestData),
-	send(<< (header(16#1015))/binary, QuestID:32/little, 16#01010000:32, 0:32, Size:32/little, QuestData/binary >>).
-
 %% @todo No idea.
 send_1016(PartyPos) ->
 	GID = get(gid),
