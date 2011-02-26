@@ -1531,6 +1531,39 @@ send_0d05(#client{socket=Socket, gid=DestGID}) ->
 	Size = 4 + byte_size(Packet),
 	ssl:send(Socket, << Size:32/little, Packet/binary >>).
 
+%% @todo Add a character (NPC or real) to the party members on the right of the screen.
+%% @todo NPCid is 65535 for normal characters.
+%% @todo Apparently the 4 location ids are set to 0 when inviting an NPC in the lobby - NPCs have their location set to 0 when in lobby; also odd value before PartyPos related to missions
+%% @todo Not sure about LID. But seems like it.
+%% @todo This packet hasn't been reviewed at all yet.
+send_1004(Type, User, PartyPos, #client{socket=Socket, gid=DestGID}) ->
+	[TypeID, LID, SomeFlag] = case Type of
+		npc_mission -> [16#00001d00, PartyPos, 2];
+		npc_invite -> [0, 16#ffffffff, 3];
+		_ -> 1 %% seems to be for players
+	end,
+	#users{gid=GID, character=Character, area={QuestID, ZoneID, MapID}, entryid=EntryID} = User,
+	#characters{npcid=NPCid, name=Name, mainlevel=MainLevel} = Character,
+	Level = MainLevel#level.number,
+	packet_send(Socket, << 16#10040300:32, 16#ffff0000:32, 0:128, 16#00011300:32, DestGID:32/little, 0:64,
+		TypeID:32, GID:32/little, 0:64, Name/binary,
+		Level:16/little, 16#ffff:16,
+		SomeFlag, 1, PartyPos:8, 1,
+		NPCid:16/little, 0:16,
+		%% Odd unknown values. PA related? No idea. Values on invite, 0 in-mission.
+		%~ 16#00001f08:32, 0:32, 16#07000000:32,
+		%~ 16#04e41f08:32, 0:32, 16#01000000:32,
+		%~ 16#64e41f08:32, 0:32, 16#02000000:32,
+		%~ 16#64e41f08:32, 0:32, 16#03000000:32,
+		%~ 16#64e41f08:32, 0:32, 16#12000000:32,
+		%~ 16#24e41f08:32,
+		0:512,
+		QuestID:32/little, ZoneID:32/little, MapID:32/little, EntryID:32/little,
+		LID:32/little,
+		0:64,
+		16#01000000:32, 16#01000000:32, %% @todo first is current hp, second is max hp
+		0:608 >>).
+
 %% @doc Send the client's own player's party information, on the bottom left of the screen.
 %% @todo Location and the 20 bytes following sometimes have values, not sure why; when joining a party maybe?
 send_1005(Character, #client{socket=Socket, gid=DestGID}) ->

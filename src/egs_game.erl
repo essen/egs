@@ -483,7 +483,7 @@ event({npc_force_invite, NPCid}, Client=#client{gid=GID}) ->
 	psu_proto:send_0215(0, Client),
 	psu_proto:send_0a04(SentNPCUser#users.gid, Client),
 	psu_proto:send_022c(0, 16#12, Client),
-	psu_game:send_1004(npc_mission, SentNPCUser, PartyPos),
+	psu_proto:send_1004(npc_mission, SentNPCUser, PartyPos, Client),
 	psu_proto:send_100f((SentNPCUser#users.character)#characters.npcid, PartyPos, Client),
 	psu_proto:send_1601(PartyPos, Client);
 
@@ -509,7 +509,7 @@ event({npc_invite, NPCid}, Client=#client{gid=GID}) ->
 	Character = NPCUser#users.character,
 	SentNPCCharacter = Character#characters{gid=NPCid, npcid=NPCid},
 	SentNPCUser = NPCUser#users{character=SentNPCCharacter},
-	psu_game:send_1004(npc_invite, SentNPCUser, PartyPos),
+	psu_proto:send_1004(npc_invite, SentNPCUser, PartyPos, Client),
 	psu_proto:send_101a(NPCid, PartyPos, Client);
 
 %% @todo Should be 0115(money) 010a03(confirm sale).

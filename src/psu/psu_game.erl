@@ -120,7 +120,7 @@ npc_load(Leader, [{PartyPos, NPCGID}|NPCList], Client) ->
 	psu_proto:send_0201(NPCUser, Client),
 	psu_proto:send_0215(0, Client),
 	psu_proto:send_0a04(NPCUser#users.gid, Client),
-	send_1004(npc_mission, NPCUser, PartyPos),
+	psu_proto:send_1004(npc_mission, NPCUser, PartyPos, Client),
 	psu_proto:send_100f((NPCUser#users.character)#characters.npcid, PartyPos, Client),
 	psu_proto:send_1601(PartyPos, Client),
 	psu_proto:send_1016(PartyPos, Client),
@@ -254,39 +254,3 @@ build_item_constants(#psu_trap_item{max_quantity=MaxQuantity}) ->
 	<< 2:32/little, 16#ffffff:24, MaxQuantity:8, 0:96 >>;
 build_item_constants(#psu_special_item{}) ->
 	<< 0:160 >>.
-
-%% @todo Add a character (NPC or real) to the party members on the right of the screen.
-%% @todo NPCid is 65535 for normal characters.
-%% @todo Apparently the 4 location ids are set to 0 when inviting an NPC in the lobby - NPCs have their location set to 0 when in lobby; also odd value before PartyPos related to missions
-%% @todo Not sure about LID. But seems like it.
-send_1004(Type, User, PartyPos) ->
-	[TypeID, LID, SomeFlag] = case Type of
-		npc_mission -> [16#00001d00, PartyPos, 2];
-		npc_invite -> [0, 16#ffffffff, 3];
-		_ -> 1 %% seems to be for players
-	end,
-
-	UserGID = get(gid),
-	#users{gid=GID, character=Character, area={QuestID, ZoneID, MapID}, entryid=EntryID} = User,
-	#characters{npcid=NPCid, name=Name, mainlevel=MainLevel} = Character,
-	Level = MainLevel#level.number,
-	send(<< 16#10040300:32, 16#ffff0000:32, 0:128, 16#00011300:32, UserGID:32/little, 0:64,
-		TypeID:32, GID:32/little, 0:64, Name/binary,
-		Level:16/little, 16#ffff:16,
-		SomeFlag, 1, PartyPos:8, 1,
-		NPCid:16/little, 0:16,
-
-		%% Odd unknown values. PA related? No idea. Values on invite, 0 in-mission.
-		%~ 16#00001f08:32, 0:32, 16#07000000:32,
-		%~ 16#04e41f08:32, 0:32, 16#01000000:32,
-		%~ 16#64e41f08:32, 0:32, 16#02000000:32,
-		%~ 16#64e41f08:32, 0:32, 16#03000000:32,
-		%~ 16#64e41f08:32, 0:32, 16#12000000:32,
-		%~ 16#24e41f08:32,
-		0:512,
-
-		QuestID:32/little, ZoneID:32/little, MapID:32/little, EntryID:32/little,
-		LID:32/little,
-		0:64,
-		16#01000000:32, 16#01000000:32, %% @todo first is current hp, second is max hp
-		0:608 >>).
