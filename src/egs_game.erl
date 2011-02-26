@@ -180,10 +180,10 @@ raw(16#1112, << _:352, Data/bits >>, Client) ->
 	psu_proto:send_1113(Data, Client);
 
 %% @todo Not sure yet. Value is probably a TargetID. Used in Airboard Rally. Replying with the same value starts the race.
-raw(16#1216, << _:352, Data/bits >>, _Client) ->
+raw(16#1216, << _:352, Data/bits >>, Client) ->
 	<< Value:32/little >> = Data,
 	log("command 1216 with value ~b", [Value]),
-	psu_game:send_1216(Value);
+	psu_proto:send_1216(Value, Client);
 
 %% @doc Dismiss all unknown raw commands with a log notice.
 %% @todo Have a log event handler instead.

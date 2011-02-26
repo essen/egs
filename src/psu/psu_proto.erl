@@ -1622,6 +1622,11 @@ send_1213(A, B, #client{socket=Socket, gid=DestGID}) ->
 send_1215(A, B, #client{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#12150300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64, A:32/little, 0:16, B:16/little >>).
 
+%% @todo Not sure yet. Value is probably a TargetID. Used in Airboard Rally. Replying with the same value starts the race.
+%% @todo This packet hasn't been reviewed at all yet.
+send_1216(Value, #client{socket=Socket, gid=DestGID}) ->
+	packet_send(Socket, << 16#12160300:32, 0:32, 16#00011300:32, DestGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64, Value:32/little >>).
+
 %% @doc Send the player's partner card.
 %% @todo Handle the LID and comment properly.
 send_1500(Character, #client{socket=Socket, gid=DestGID}) ->
