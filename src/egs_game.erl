@@ -599,12 +599,10 @@ event({object_box_destroy, ObjectID}, Client) ->
 
 %% @todo Second send_1211 argument should be User#users.lid. Fix when it's correctly handled.
 event({object_chair_sit, ObjectTargetID}, Client) ->
-	%~ {ok, User} = egs_users:read(get(gid)),
 	psu_proto:send_1211(ObjectTargetID, 0, 8, 0, Client);
 
 %% @todo Second psu_proto:send_1211 argument should be User#users.lid. Fix when it's correctly handled.
 event({object_chair_stand, ObjectTargetID}, Client) ->
-	%~ {ok, User} = egs_users:read(get(gid)),
 	psu_proto:send_1211(ObjectTargetID, 0, 8, 2, Client);
 
 event({object_crystal_activate, ObjectID}, Client) ->
@@ -708,7 +706,7 @@ event({player_options_change, Options}, #client{gid=GID, slot=Slot}) ->
 %% @todo If the player has a scape, use it! Otherwise red screen.
 %% @todo Right now we force revive with a dummy HP value.
 event(player_death, Client=#client{gid=GID}) ->
-	% @todo send_0115(get(gid), 16#ffffffff, LV=1, EXP=idk, Money=1000), % apparently sent everytime you die...
+	% @todo send_0115(GID, 16#ffffffff, LV=1, EXP=idk, Money=1000), % apparently sent everytime you die...
 	%% use scape:
 	NewHP = 10,
 	{ok, User} = egs_users:read(GID),
