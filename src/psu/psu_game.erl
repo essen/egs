@@ -164,16 +164,6 @@ send_0113() ->
 	GID = get(gid),
 	send(<< 16#01130300:32, 0:64, GID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64, GID:32/little, File/binary >>).
 
-%% @todo Force send a new player location. Used for warps.
-%% @todo The value before IntDir seems to be the player's current animation. 01 stand up, 08 ?, 17 normal sit
-send_0503({PrevX, PrevY, PrevZ, _AnyDir}) ->
-	{ok, User} = egs_users:read(get(gid)),
-	#users{gid=GID, pos={X, Y, Z, Dir}, area={QuestID, ZoneID, MapID}, entryid=EntryID} = User,
-	IntDir = trunc(Dir * 182.0416),
-	send(<< 16#05030300:32, 0:64, GID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64, GID:32/little, 0:32,
-		16#1000:16, IntDir:16/little, PrevX:32/little-float, PrevY:32/little-float, PrevZ:32/little-float, X:32/little-float, Y:32/little-float, Z:32/little-float,
-		QuestID:32/little, ZoneID:32/little, MapID:32/little, EntryID:32/little, 1:32/little >>).
-
 %% @todo Handle more than just goggles.
 send_0a0a(Inventory) ->
 	{ok, << _:68608/bits, Rest/bits >>} = file:read_file("p/packet0a0a.bin"),

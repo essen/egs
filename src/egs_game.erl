@@ -683,7 +683,7 @@ event({object_warp_take, BlockID, ListNb, ObjectNb}, Client=#client{gid=GID}) ->
 	Pos = psu_instance:warp_event(User#users.instancepid, element(2, User#users.area), BlockID, ListNb, ObjectNb),
 	NewUser = User#users{pos=Pos},
 	egs_users:write(NewUser),
-	psu_game:send_0503(User#users.pos),
+	psu_proto:send_0503(User#users.pos, Client),
 	psu_proto:send_1211(16#ffffffff, 0, 14, 0, Client);
 
 %% @todo Don't send_0204 if the player is removed from the party while in the lobby I guess.

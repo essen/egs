@@ -1423,6 +1423,17 @@ send_0304(FromGID, ChatTypeID, ChatGID, ChatName, ChatModifiers, ChatMessage, #c
 		ChatTypeID:32, ChatGID:32/little, 0:64, ChatType:8, ChatCutIn:8, ChatCutInAngle:8, ChatMsgLength:8,
 		ChatChannel:8, ChatCharacterType:8, 0:16, ChatName/binary, ChatMessage/binary >>).
 
+%% @todo Force send a new player location. Used for warps.
+%% @todo The value before IntDir seems to be the player's current animation. 01 stand up, 08 ?, 17 normal sit
+%% @todo This packet hasn't been reviewed at all yet.
+send_0503({PrevX, PrevY, PrevZ, _AnyDir}, #client{socket=Socket, gid=DestGID}) ->
+	{ok, User} = egs_users:read(DestGID),
+	#users{pos={X, Y, Z, Dir}, area={QuestID, ZoneID, MapID}, entryid=EntryID} = User,
+	IntDir = trunc(Dir * 182.0416),
+	packet_send(Socket, << 16#05030300:32, 0:64, DestGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64, DestGID:32/little, 0:32,
+		16#1000:16, IntDir:16/little, PrevX:32/little-float, PrevY:32/little-float, PrevZ:32/little-float, X:32/little-float, Y:32/little-float, Z:32/little-float,
+		QuestID:32/little, ZoneID:32/little, MapID:32/little, EntryID:32/little, 1:32/little >>).
+
 %% @todo NPC inventory. Guessing it's only for NPC characters...
 %% @todo This packet hasn't been reviewed at all yet.
 send_0a04(NPCGID, #client{socket=Socket, gid=DestGID}) ->
