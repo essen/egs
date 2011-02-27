@@ -1,5 +1,5 @@
-%% @author Loïc Hoguin <essen@dev-extend.eu>
-%% @copyright 2010 Loïc Hoguin.
+%% @author LoÃ¯c Hoguin <essen@dev-extend.eu>
+%% @copyright 2010-2011 LoÃ¯c Hoguin.
 %% @doc EGS quests database and cache manager.
 %%
 %%	This file is part of EGS.
@@ -19,13 +19,16 @@
 
 -module(egs_quests_db).
 -behavior(gen_server).
+
 -export([start_link/0, stop/0, quest_nbl/1, zone_nbl/2, area_type/2, quest_zones/1, set/3, reload/0]). %% API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
 
--record(state, {quests=[], quests_bin=[], zones_bin=[], sets=[]}).
-
 %% Use the module name for the server's name.
 -define(SERVER, ?MODULE).
+
+-include("include/types.hrl").
+
+-record(state, {quests=[], quests_bin=[], zones_bin=[], sets=[]}).
 
 %% API.
 

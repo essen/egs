@@ -1,5 +1,5 @@
-%% @author Loïc Hoguin <essen@dev-extend.eu>
-%% @copyright 2010 Loïc Hoguin.
+%% @author LoÃ¯c Hoguin <essen@dev-extend.eu>
+%% @copyright 2010-2011 LoÃ¯c Hoguin.
 %% @doc Callbacks for the egs application.
 %%
 %%	This file is part of EGS.
@@ -20,8 +20,6 @@
 -module(egs_app).
 -behaviour(application).
 -export([start/2, stop/1]).
-
--include("include/records.hrl").
 
 %% @spec start(_Type, _StartArgs) -> ServerRet
 %% @doc application start callback for egs.

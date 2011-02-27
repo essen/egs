@@ -1,5 +1,5 @@
-%% @author Loïc Hoguin <essen@dev-extend.eu>
-%% @copyright 2010 Loïc Hoguin.
+%% @author LoÃ¯c Hoguin <essen@dev-extend.eu>
+%% @copyright 2010-2011 LoÃ¯c Hoguin.
 %% @doc EGS file creation functions.
 %%
 %%	This file is part of EGS.
@@ -20,6 +20,8 @@
 -module(egs_files).
 -export([load_counter_pack/2, load_quest_xnr/1, load_script_bin/1, load_set_rel/4, load_table_rel/1,
 	load_text_bin/1, load_unit_title_table_rel/2, nbl_pack/1, nbl_padded_size/1]).
+
+-include("include/types.hrl").
 
 %% @doc Build a counter's pack file, options and return them along with the background value.
 load_counter_pack(ConfFilename, CounterNbl) ->

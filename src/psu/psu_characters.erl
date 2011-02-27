@@ -1,5 +1,5 @@
-%% @author Loïc Hoguin <essen@dev-extend.eu>
-%% @copyright 2010 Loïc Hoguin.
+%% @author LoÃ¯c Hoguin <essen@dev-extend.eu>
+%% @copyright 2010-2011 LoÃ¯c Hoguin.
 %% @doc General character functions.
 %%
 %%	This file is part of EGS.
@@ -24,6 +24,7 @@
 	race_atom_to_binary/1, race_binary_to_atom/1, stats_tuple_to_binary/1
 ]).
 
+-include("include/types.hrl").
 -include("include/records.hrl").
 
 %% @doc Convert a character tuple into a binary to be sent to clients.

@@ -1,5 +1,5 @@
-%% @author Loïc Hoguin <essen@dev-extend.eu>
-%% @copyright 2010 Loïc Hoguin.
+%% @author LoÃ¯c Hoguin <essen@dev-extend.eu>
+%% @copyright 2010-2011 LoÃ¯c Hoguin.
 %% @doc Game callback module.
 %%
 %%	This file is part of EGS.
@@ -21,6 +21,7 @@
 -export([keepalive/1, info/2, cast/3, raw/3, event/2]).
 -export([char_load/2]). %% Hopefully temporary export.
 
+-include("include/types.hrl").
 -include("include/records.hrl").
 
 %% @doc Send a keepalive.

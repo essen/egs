@@ -1,5 +1,5 @@
-%% @author Loïc Hoguin <essen@dev-extend.eu>
-%% @copyright 2010 Loïc Hoguin.
+%% @author LoÃ¯c Hoguin <essen@dev-extend.eu>
+%% @copyright 2010-2011 LoÃ¯c Hoguin.
 %% @doc EGS seasons management.
 %% @todo When we know how to do it we should change the lobby automatically to the next season.
 %%
@@ -20,11 +20,14 @@
 
 -module(egs_seasons).
 -behavior(gen_server).
+
 -export([start_link/0, stop/0, read/1]). %% API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
 
 %% Use the module name for the server's name.
 -define(SERVER, ?MODULE).
+
+-include("include/types.hrl").
 
 %% Seasonal values: {IsSeasonal, SeasonID, QuestList}.
 -define(SEASON_NONE,      {0,255, []}).

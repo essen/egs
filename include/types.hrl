@@ -1,6 +1,6 @@
 %% @author Loïc Hoguin <essen@dev-extend.eu>
-%% @copyright 2010-2011 Loïc Hoguin.
-%% @doc Login server module.
+%% @copyright 2011 Loïc Hoguin.
+%% @doc Project-wide Erlang types.
 %%
 %%	This file is part of EGS.
 %%
@@ -17,20 +17,21 @@
 %%	You should have received a copy of the GNU Affero General Public License
 %%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
--module(egs_login_server).
--export([start_link/1, init/1]).
+%% Standard library types.
 
--include("include/types.hrl").
--include("include/records.hrl").
+-opaque sslsocket() :: any().
 
-%% @spec start_link(Port) -> {ok,Pid::pid()}
-%% @doc Start the login server.
-start_link(Port) ->
-	Pid = spawn(egs_network, listen, [Port, ?MODULE]),
-	{ok, Pid}.
+%% EGS types.
 
-%% @doc Initialize the game client and start receiving messages.
-init(Socket) ->
-	Client = #client{socket=Socket, gid=egs_accounts:tmp_gid()},
-	egs_proto:send_0202(Client),
-	egs_network:recv(<< >>, egs_login, Client).
+-type gid() :: 0..16#ffffffff.
+-type lid() :: 0..1023 | 16#ffff.
+
+-type questid()	:: 0..16#ffffffff. %% @todo What's the real max?
+-type zoneid()	:: 0..16#ffff. %% @todo What's the real max?
+-type mapid()	:: 0..9999.
+-type entryid()	:: 0..16#ffff. %% @todo What's the real max?
+
+-type area() :: {questid(), zoneid(), mapid()}.
+-type position() :: {X :: float(), Y :: float(), Z :: float(), Dir :: float()}.
+
+-type character_slot() :: 0..3.

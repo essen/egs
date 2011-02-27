@@ -1,5 +1,5 @@
-%% @author Loïc Hoguin <essen@dev-extend.eu>
-%% @copyright 2010 Loïc Hoguin.
+%% @author LoÃ¯c Hoguin <essen@dev-extend.eu>
+%% @copyright 2010-2011 LoÃ¯c Hoguin.
 %% @doc EGS patch files database and cache manager.
 %%
 %%	This file is part of EGS.
@@ -19,16 +19,17 @@
 
 -module(egs_patch_files_db).
 -behavior(gen_server).
+
 -export([start_link/0, stop/0, list/0, check/3, get_size/1, get_info/1, reload/0]). %% API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
+
+%% Use the module name for the server's name.
+-define(SERVER, ?MODULE).
 
 -include_lib("kernel/include/file.hrl").
 
 -record(state, {list_bin=[], files=[]}).
 -record(file, {crc, size, folder, filename_bin, full_filename}).
-
-%% Use the module name for the server's name.
--define(SERVER, ?MODULE).
 
 %% API.
 

@@ -1,5 +1,5 @@
-%% @author Loïc Hoguin <essen@dev-extend.eu>
-%% @copyright 2010 Loïc Hoguin.
+%% @author LoÃ¯c Hoguin <essen@dev-extend.eu>
+%% @copyright 2010-2011 LoÃ¯c Hoguin.
 %% @doc Patch server module.
 %%
 %%	This file is part of EGS.
@@ -18,8 +18,10 @@
 %%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
 -module(egs_patch_server).
--export([start_link/1]). %% External.
+-export([start_link/1]). %% API.
 -export([listen/1, accept/1, init/1, recv/3]). %% Internal
+
+-include("include/types.hrl").
 
 -define(OPTIONS, [binary, {active, true}, {packet, 0}, {reuseaddr, true}, {send_timeout, 5000}]).
 

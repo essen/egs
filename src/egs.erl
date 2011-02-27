@@ -1,5 +1,5 @@
-%% @author Loïc Hoguin <essen@dev-extend.eu>
-%% @copyright 2010 Loïc Hoguin.
+%% @author LoÃ¯c Hoguin <essen@dev-extend.eu>
+%% @copyright 2010-2011 LoÃ¯c Hoguin.
 %% @doc EGS startup code.
 %%
 %%	This file is part of EGS.
@@ -18,9 +18,7 @@
 %%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
 -module(egs).
--compile(export_all).
-
--include("include/records.hrl").
+-export([start/0, stop/0, global/1, warp/4, warp/5]).
 
 %% @spec ensure_started(App) -> ok
 %% @doc Make sure the given App is started.

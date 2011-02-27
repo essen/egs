@@ -1,5 +1,5 @@
-%% @author Loïc Hoguin <essen@dev-extend.eu>
-%% @copyright 2010 Loïc Hoguin.
+%% @author LoÃ¯c Hoguin <essen@dev-extend.eu>
+%% @copyright 2010-2011 LoÃ¯c Hoguin.
 %% @doc Character appearance functions.
 %%
 %%	This file is part of EGS.
@@ -20,6 +20,7 @@
 -module(psu_appearance).
 -export([binary_to_tuple/2, tuple_to_binary/2, validate_char_create/3]).
 
+-include("include/types.hrl").
 -include("include/records.hrl").
 
 %% @doc Convert the binary character creation appearance data into a tuple.

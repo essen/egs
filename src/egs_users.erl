@@ -1,5 +1,5 @@
-%% @author Loïc Hoguin <essen@dev-extend.eu>
-%% @copyright 2010-2011 Loïc Hoguin.
+%% @author LoÃ¯c Hoguin <essen@dev-extend.eu>
+%% @copyright 2010-2011 LoÃ¯c Hoguin.
 %% @doc Users handling.
 %%
 %%	This file is part of EGS.
@@ -27,10 +27,11 @@
 
 -define(SERVER, ?MODULE).
 
+-include("include/types.hrl").
 -include("include/records.hrl").
 
 -record(state, {
-	users = [] :: list({GID::integer(), #users{}})
+	users = [] :: list({GID::gid(), #users{}})
 }).
 
 %% API.

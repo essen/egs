@@ -1,5 +1,5 @@
-%% @author Loïc Hoguin <essen@dev-extend.eu>
-%% @copyright 2010 Loïc Hoguin.
+%% @author LoÃ¯c Hoguin <essen@dev-extend.eu>
+%% @copyright 2010-2011 LoÃ¯c Hoguin.
 %% @doc Supervisor for the egs application.
 %%
 %%	This file is part of EGS.
@@ -19,6 +19,7 @@
 
 -module(egs_sup).
 -behaviour(supervisor).
+
 -export([init/1]). %% Supervisor callbacks.
 -export([start_link/0]). %% Other functions.
 

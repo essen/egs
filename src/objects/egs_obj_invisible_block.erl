@@ -1,5 +1,5 @@
-%% @author Loïc Hoguin <essen@dev-extend.eu>
-%% @copyright 2011 Loïc Hoguin.
+%% @author LoÃ¯c Hoguin <essen@dev-extend.eu>
+%% @copyright 2011 LoÃ¯c Hoguin.
 %% @doc Invisible block object.
 %%
 %%	This file is part of EGS.

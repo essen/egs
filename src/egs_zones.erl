@@ -1,5 +1,5 @@
-%% @author Loïc Hoguin <essen@dev-extend.eu>
-%% @copyright 2011 Loïc Hoguin.
+%% @author LoÃ¯c Hoguin <essen@dev-extend.eu>
+%% @copyright 2011 LoÃ¯c Hoguin.
 %% @doc Zone handler.
 %%
 %%	This file is part of EGS.
@@ -22,6 +22,8 @@
 
 -export([start_link/4, stop/1, setid/1, enter/2, leave/2, get_all_players/2, broadcast/3]). %% API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
+
+-include("include/types.hrl").
 
 -record(state, {
 	setid = 0		:: integer(),

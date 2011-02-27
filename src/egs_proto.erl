@@ -1,5 +1,5 @@
-%% @author Loïc Hoguin <essen@dev-extend.eu>
-%% @copyright 2010 Loïc Hoguin.
+%% @author LoÃ¯c Hoguin <essen@dev-extend.eu>
+%% @copyright 2010-2011 LoÃ¯c Hoguin.
 %% @doc Independent implementation of the PSU protocol.
 %%
 %%	This file is part of EGS.
@@ -20,6 +20,7 @@
 -module(egs_proto).
 -compile(export_all).
 
+-include("include/types.hrl").
 -include("include/records.hrl").
 
 %% @spec assert() -> ok

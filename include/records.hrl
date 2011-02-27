@@ -1,5 +1,5 @@
-%% @author Loïc Hoguin <essen@dev-extend.eu>
-%% @copyright 2010 Loïc Hoguin.
+%% @author LoÃ¯c Hoguin <essen@dev-extend.eu>
+%% @copyright 2010-2011 LoÃ¯c Hoguin.
 %% @doc Project-wide Erlang records.
 %%
 %%	This file is part of EGS.
@@ -17,28 +17,14 @@
 %%	You should have received a copy of the GNU Affero General Public License
 %%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
-%% Standard library types.
-
--opaque sslsocket() :: any().
-
-%% EGS types.
-
--type questid()	:: 0..16#ffffffff. %% @todo What's the real max?
--type zoneid()	:: 0..16#ffff. %% @todo What's the real max?
--type mapid()	:: 0..9999.
--type entryid()	:: 0..16#ffff. %% @todo What's the real max?
-
--type area() :: {questid(), zoneid(), mapid()}.
--type position() :: {X :: float(), Y :: float(), Z :: float(), Dir :: float()}.
-
 %% Records.
 
 %% @doc Client state. One per connected client.
 -record(client, {
 	socket			:: sslsocket(),
-	gid				:: integer(),
-	slot			:: 0..3, %% @todo Probably should remove this one from the state.
-	lid = 16#ffff	:: 0..16#ffff,
+	gid = 0			:: gid(),
+	slot = 0		:: character_slot(), %% @todo Probably should remove this one from the state.
+	lid = 16#ffff	:: lid(),
 	areanb = 0		:: non_neg_integer()
 }).
 
@@ -46,9 +32,9 @@
 %% @todo Probably can use a "param" or "extra" field to store the game-specific information (for things that don't need to be queried).
 -record(users, {
 	%% General information.
-	gid			:: integer(),
-	lid = 16#ffff	:: 0..16#ffff,
-	pid			:: pid(),
+	gid				:: gid(),
+	lid = 16#ffff	:: lid(),
+	pid				:: pid(),
 	%% Character information.
 	%% @todo Specs it.
 	type = white,

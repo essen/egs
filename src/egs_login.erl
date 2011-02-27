@@ -1,5 +1,5 @@
-%% @author Loïc Hoguin <essen@dev-extend.eu>
-%% @copyright 2010 Loïc Hoguin.
+%% @author LoÃ¯c Hoguin <essen@dev-extend.eu>
+%% @copyright 2010-2011 LoÃ¯c Hoguin.
 %% @doc Log in and authentication callback module.
 %%
 %%	This file is part of EGS.
@@ -20,6 +20,7 @@
 -module(egs_login).
 -export([keepalive/1, info/2, cast/3, raw/3, event/2]).
 
+-include("include/types.hrl").
 -include("include/records.hrl").
 
 %% @doc Don't keep alive here, authentication should go fast.

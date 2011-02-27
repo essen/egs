@@ -1,5 +1,5 @@
-%% @author Loïc Hoguin <essen@dev-extend.eu>
-%% @copyright 2010 Loïc Hoguin.
+%% @author LoÃ¯c Hoguin <essen@dev-extend.eu>
+%% @copyright 2010-2011 LoÃ¯c Hoguin.
 %% @doc Game server module.
 %%
 %%	This file is part of EGS.
@@ -20,6 +20,7 @@
 -module(egs_game_server).
 -export([start_link/1, link_exit/0, on_exit/1, init/1]).
 
+-include("include/types.hrl").
 -include("include/records.hrl").
 
 %% @spec start_link(Port) -> {ok,Pid::pid()}

@@ -1,5 +1,5 @@
-%% @author Loïc Hoguin <essen@dev-extend.eu>
-%% @copyright 2010 Loïc Hoguin.
+%% @author LoÃ¯c Hoguin <essen@dev-extend.eu>
+%% @copyright 2010-2011 LoÃ¯c Hoguin.
 %% @doc General purpose module for monitoring exit signals of linked processes.
 %%
 %%	This file is part of EGS.
@@ -18,7 +18,7 @@
 %%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
 -module(egs_exit_mon).
--export([start_link/1]). %% External.
+-export([start_link/1]). %% API.
 -export([start/1, loop/1]). %% Internal.
 
 %% @spec start_link(CleanupFn) -> {ok,Pid::pid()}

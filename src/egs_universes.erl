@@ -1,5 +1,5 @@
-%% @author Loïc Hoguin <essen@dev-extend.eu>
-%% @copyright 2010 Loïc Hoguin.
+%% @author LoÃ¯c Hoguin <essen@dev-extend.eu>
+%% @copyright 2010-2011 LoÃ¯c Hoguin.
 %% @doc EGS universes handler.
 %%
 %%	This file is part of EGS.
@@ -19,13 +19,16 @@
 
 -module(egs_universes).
 -behavior(gen_server).
+
 -export([start_link/0, stop/0, all/0, defaultid/0, enter/1, leave/1, myroomid/0, read/1, lobby_pid/2, reload/0]). %% API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
 
--record(state, {unis=[], lobbies=[]}).
-
 %% Use the module name for the server's name.
 -define(SERVER, ?MODULE).
+
+-include("include/types.hrl").
+
+-record(state, {unis=[], lobbies=[]}).
 
 %% Default universe IDs.
 -define(MYROOM_ID, 21).
