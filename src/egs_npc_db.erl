@@ -68,7 +68,7 @@ handle_call({create, NPCid, BaseLevel}, _From, State) ->
 	UCS2Name = << TmpUCS2Name/binary, 0:Padding >>,
 	User = #users{gid=NPCGID, slot=0, type=npc, npcid=NPCid, name=UCS2Name, race=Race, gender=Gender, class=Class, appearance=Appearance,
 		mainlevel={level, calc_level(BaseLevel, LevelDiff), 0}, blastbar=0, luck=2, money=0,
-		stats={stats, 0, 0, 0, 0, 0, 0, 0}, se=[], currenthp=100, maxhp=100,
+		stats={stats, 0, 0, 0, 0, 0, 0, 0}, currenthp=100, maxhp=100,
 		areatype=lobby, area={0, 0, 0}, entryid=0},
 	{reply, User, State};
 
