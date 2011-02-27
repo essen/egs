@@ -62,5 +62,4 @@ warp(QuestID, ZoneID, MapID, EntryID) ->
 
 %% @doc Warp one player to a new map.
 warp(GID, QuestID, ZoneID, MapID, EntryID) ->
-	{ok, User} = egs_users:read(GID),
-	User#users.pid ! {egs, warp, QuestID, ZoneID, MapID, EntryID}.
+	egs_users:broadcast({egs, warp, QuestID, ZoneID, MapID, EntryID}, [GID]).
