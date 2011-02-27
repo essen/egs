@@ -104,7 +104,7 @@ raw(16#0402, << _:352, Data/bits >>, Client=#client{gid=GID}) ->
 	<< SpawnID:32/little, _:64, Type:32/little, _:64 >> = Data,
 	case Type of
 		7 -> % spawn cleared @todo 1201 sent back with same values apparently, but not always
-			log("cleared spawn ~b", [SpawnID]),
+			io:format("~p: cleared spawn ~b~n", [GID, SpawnID]),
 			{ok, User} = egs_users:read(GID),
 			{BlockID, EventID} = psu_instance:spawn_cleared_event(User#users.instancepid, element(2, User#users.area), SpawnID),
 			if	EventID =:= false -> ignore;
@@ -118,7 +118,7 @@ raw(16#0402, << _:352, Data/bits >>, Client=#client{gid=GID}) ->
 %% @todo 3rd Unsafe Passage C, EventID 10 BlockID 2 = mission cleared?
 raw(16#0404, << _:352, Data/bits >>, Client) ->
 	<< EventID:8, BlockID:8, _:16, Value:8, _/bits >> = Data,
-	log("unknown command 0404: eventid ~b blockid ~b value ~b", [EventID, BlockID, Value]),
+	io:format("~p: unknown command 0404: eventid ~b blockid ~b value ~b~n", [Client#client.gid, EventID, BlockID, Value]),
 	psu_proto:send_1205(EventID, BlockID, Value, Client);
 
 %% @todo Used in the tutorial. Not sure what it does. Give an item (the PA) maybe?
@@ -128,7 +128,7 @@ raw(16#0a09, _Data, #client{socket=Socket, gid=GID}) ->
 
 %% @todo Figure out this command.
 raw(16#0c11, << _:352, A:32/little, B:32/little >>, #client{socket=Socket, gid=GID}) ->
-	log("0c11 ~p ~p", [A, B]),
+	io:format("~p: 0c11 ~p ~p~n", [GID, A, B]),
 	psu_proto:packet_send(Socket, << 16#0c120300:32, 0:160, 16#00011300:32, GID:32/little, 0:64, A:32/little, 1:32/little >>);
 
 %% @doc Set flag handler. Associate a new flag with the character.
@@ -136,7 +136,7 @@ raw(16#0c11, << _:352, A:32/little, B:32/little >>, #client{socket=Socket, gid=G
 %% @todo God save the flags.
 raw(16#0d04, << _:352, Data/bits >>, #client{socket=Socket, gid=GID}) ->
 	<< Flag:128/bits, A:16/bits, _:8, B/bits >> = Data,
-	log("flag handler for ~s", [re:replace(Flag, "\\0+", "", [global, {return, binary}])]),
+	io:format("~p: flag handler for ~s~n", [GID, re:replace(Flag, "\\0+", "", [global, {return, binary}])]),
 	psu_proto:packet_send(Socket, << 16#0d040300:32, 0:160, 16#00011300:32, GID:32/little, 0:64, Flag/binary, A/binary, 1, B/binary >>);
 
 %% @doc Initialize a vehicle object.
@@ -145,7 +145,7 @@ raw(16#0d04, << _:352, Data/bits >>, #client{socket=Socket, gid=GID}) ->
 raw(16#0f00, << _:352, Data/bits >>, #client{socket=Socket, gid=GID}) ->
 	<< A:32/little, 0:16, B:16/little, 0:16, C:16/little, 0, Whut:8, D:16/little, 0:16,
 		E:16/little, 0:16, F:16/little, G:16/little, H:16/little, I:32/little >> = Data,
-	log("init vehicle: ~b ~b ~b ~b ~b ~b ~b ~b ~b ~b", [A, B, C, Whut, D, E, F, G, H, I]),
+	io:format("~p: init vehicle: ~b ~b ~b ~b ~b ~b ~b ~b ~b ~b~n", [GID, A, B, C, Whut, D, E, F, G, H, I]),
 	psu_proto:packet_send(Socket, << 16#12080300:32, 0:160, 16#00011300:32, GID:32/little, 0:64,
 		A:32/little, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
 		0:16, B:16/little, 0:16, C:16/little, 0:16, D:16/little, 0:112,
@@ -155,7 +155,7 @@ raw(16#0f00, << _:352, Data/bits >>, #client{socket=Socket, gid=GID}) ->
 %% @todo Separate the reply.
 raw(16#0f02, << _:352, Data/bits >>, #client{socket=Socket, gid=GID}) ->
 	<< A:32/little, B:32/little, C:32/little >> = Data,
-	log("enter vehicle: ~b ~b ~b", [A, B, C]),
+	io:format("~p: enter vehicle: ~b ~b ~b~n", [GID, A, B, C]),
 	HP = 100,
 	psu_proto:packet_send(Socket, << 16#120a0300:32, 0:160, 16#00011300:32, GID:32/little, 0:64, A:32/little, B:32/little, C:32/little, HP:32/little >>);
 
@@ -163,7 +163,7 @@ raw(16#0f02, << _:352, Data/bits >>, #client{socket=Socket, gid=GID}) ->
 %% @todo Separate the reply.
 raw(16#0f07, << _:352, Data/bits >>, #client{socket=Socket, gid=GID}) ->
 	<< A:32/little, B:32/little >> = Data,
-	log("after enter vehicle: ~b ~b", [A, B]),
+	io:format("~p: after enter vehicle: ~b ~b~n", [GID, A, B]),
 	psu_proto:packet_send(Socket, << 16#120f0300:32, 0:160, 16#00011300:32, GID:32/little, 0:64, A:32/little, B:32/little >>);
 
 %% @todo Not sure yet.
@@ -182,7 +182,7 @@ raw(16#1112, << _:352, Data/bits >>, Client) ->
 %% @todo Not sure yet. Value is probably a TargetID. Used in Airboard Rally. Replying with the same value starts the race.
 raw(16#1216, << _:352, Data/bits >>, Client) ->
 	<< Value:32/little >> = Data,
-	log("command 1216 with value ~b", [Value]),
+	io:format("~p: command 1216 with value ~b~n", [Client#client.gid, Value]),
 	psu_proto:send_1216(Value, Client);
 
 %% @doc Dismiss all unknown raw commands with a log notice.
@@ -199,7 +199,7 @@ event({area_change, QuestID, ZoneID, MapID, EntryID}, Client) ->
 event({area_change, QuestID, ZoneID, MapID, EntryID, PartyPos}, Client) ->
 	case PartyPos of
 		16#ffffffff ->
-			log("area change (~b,~b,~b,~b,~b)", [QuestID, ZoneID, MapID, EntryID, PartyPos]),
+			io:format("~p: area change (~b,~b,~b,~b,~b)~n", [Client#client.gid, QuestID, ZoneID, MapID, EntryID, PartyPos]),
 			psu_game:area_load(QuestID, ZoneID, MapID, EntryID, Client);
 		_Any -> %% @todo Handle area_change event for NPCs in story missions.
 			ignore
@@ -222,7 +222,7 @@ event(char_load_complete, Client=#client{gid=GID}) ->
 event({chat, _FromTypeID, FromGID, _FromName, Modifiers, ChatMsg}, #client{gid=UserGID}) ->
 	[BcastTypeID, BcastGID, BcastName] = case FromGID of
 		0 -> %% This probably shouldn't happen. Just make it crash on purpose.
-			log("chat FromGID=0"),
+			io:format("~p: chat FromGID=0~n", [UserGID]),
 			ignore;
 		UserGID -> %% player chat: disregard whatever was sent except modifiers and message.
 			{ok, User} = egs_users:read(UserGID),
@@ -235,7 +235,7 @@ event({chat, _FromTypeID, FromGID, _FromName, Modifiers, ChatMsg}, #client{gid=U
 	[LogName|_] = re:split(BcastName, "\\0\\0", [{return, binary}]),
 	[TmpMessage|_] = re:split(ChatMsg, "\\0\\0", [{return, binary}]),
 	LogMessage = re:replace(TmpMessage, "\\n", " ", [global, {return, binary}]),
-	log("chat from ~s: ~s", [[re:replace(LogName, "\\0", "", [global, {return, binary}])], [re:replace(LogMessage, "\\0", "", [global, {return, binary}])]]),
+	io:format("~p: chat from ~s: ~s~n", [UserGID, [re:replace(LogName, "\\0", "", [global, {return, binary}])], [re:replace(LogMessage, "\\0", "", [global, {return, binary}])]]),
 	egs_users:broadcast_all({egs, chat, UserGID, BcastTypeID, BcastGID, BcastName, Modifiers, ChatMsg});
 
 %% @todo There's at least 9 different sets of locations. Handle all of them correctly.
@@ -246,7 +246,7 @@ event(counter_background_locations_request, Client) ->
 %% @todo Probably validate the From* values, to not send the player back inside a mission.
 %% @todo Handle the LID change when entering counters.
 event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}, Client=#client{gid=GID}) ->
-	log("counter load ~b", [CounterID]),
+	io:format("~p: counter load ~b~n", [GID, CounterID]),
 	{ok, OldUser} = egs_users:read(GID),
 	FromArea = {element(1, OldUser#users.area), FromZoneID, FromMapID},
 	egs_zones:leave(OldUser#users.zonepid, OldUser#users.gid),
@@ -298,7 +298,7 @@ event(counter_leave, Client=#client{gid=GID}) ->
 %% @todo Apparently background values 1 2 3 are never used on official servers. Find out why.
 %% @todo Rename to counter_bg_request.
 event({counter_options_request, CounterID}, Client) ->
-	log("counter options request ~p", [CounterID]),
+	io:format("~p: counter options request ~p~n", [Client#client.gid, CounterID]),
 	psu_proto:send_1711(egs_counters_db:bg(CounterID), Client);
 
 %% @todo Handle when the party already exists! And stop doing it wrong.
@@ -312,12 +312,12 @@ event(counter_party_options_request, Client) ->
 
 %% @doc Request the counter's quest files.
 event({counter_quest_files_request, CounterID}, Client) ->
-	log("counter quest files request ~p", [CounterID]),
+	io:format("~p: counter quest files request ~p~n", [Client#client.gid, CounterID]),
 	psu_proto:send_0c06(egs_counters_db:pack(CounterID), Client);
 
 %% @doc Counter available mission list request handler.
 event({counter_quest_options_request, CounterID}, Client) ->
-	log("counter quest options request ~p", [CounterID]),
+	io:format("~p: counter quest options request ~p~n", [Client#client.gid, CounterID]),
 	psu_proto:send_0c10(egs_counters_db:opts(CounterID), Client);
 
 %% @todo A and B are mostly unknown. Like most of everything else from the command 0e00...
@@ -450,7 +450,7 @@ event(mission_abort, Client=#client{gid=GID}) ->
 
 %% @todo Forward the mission start to other players of the same party, whatever their location is.
 event({mission_start, QuestID}, Client) ->
-	log("mission start ~b", [QuestID]),
+	io:format("~p: mission start ~b~n", [Client#client.gid, QuestID]),
 	psu_proto:send_1020(Client),
 	psu_proto:send_1015(QuestID, Client),
 	psu_proto:send_0c02(Client);
@@ -460,7 +460,7 @@ event({mission_start, QuestID}, Client) ->
 event({npc_force_invite, NPCid}, Client=#client{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
 	%% Create NPC.
-	log("npc force invite ~p", [NPCid]),
+	io:format("~p: npc force invite ~p~n", [GID, NPCid]),
 	TmpNPCUser = egs_npc_db:create(NPCid, ((User#users.character)#characters.mainlevel)#level.number),
 	%% Create and join party.
 	case User#users.partypid of
@@ -491,7 +491,7 @@ event({npc_force_invite, NPCid}, Client=#client{gid=GID}) ->
 event({npc_invite, NPCid}, Client=#client{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
 	%% Create NPC.
-	log("invited npcid ~b", [NPCid]),
+	io:format("~p: invited npcid ~b~n", [GID, NPCid]),
 	TmpNPCUser = egs_npc_db:create(NPCid, ((User#users.character)#characters.mainlevel)#level.number),
 	%% Create and join party.
 	case User#users.partypid of
@@ -516,7 +516,7 @@ event({npc_invite, NPCid}, Client=#client{gid=GID}) ->
 event({npc_shop_buy, ShopItemIndex, QuantityOrColor}, Client=#client{socket=Socket, gid=GID}) ->
 	ShopID = egs_users:shop_get(GID),
 	ItemID = egs_shops_db:nth(ShopID, ShopItemIndex + 1),
-	log("npc shop ~p buy itemid ~8.16.0b quantity/color+1 ~p", [ShopID, ItemID, QuantityOrColor]),
+	io:format("~p: npc shop ~p buy itemid ~8.16.0b quantity/color+1 ~p~n", [GID, ShopID, ItemID, QuantityOrColor]),
 	#psu_item{name=Name, rarity=Rarity, buy_price=BuyPrice, sell_price=SellPrice, data=Constants} = egs_items_db:read(ItemID),
 	{Quantity, Variables} = case element(1, Constants) of
 		psu_clothing_item ->
@@ -550,25 +550,25 @@ event({npc_shop_buy, ShopItemIndex, QuantityOrColor}, Client=#client{socket=Sock
 
 %% @todo Currently send the normal items shop for all shops, differentiate.
 event({npc_shop_enter, ShopID}, Client=#client{gid=GID}) ->
-	log("npc shop enter ~p", [ShopID]),
+	io:format("~p: npc shop enter ~p~n", [GID, ShopID]),
 	egs_users:shop_enter(GID, ShopID),
 	psu_proto:send_010a(egs_shops_db:read(ShopID), Client);
 
 event({npc_shop_leave, ShopID}, #client{socket=Socket, gid=GID}) ->
-	log("npc shop leave ~p", [ShopID]),
+	io:format("~p: npc shop leave ~p~n", [GID, ShopID]),
 	egs_users:shop_leave(GID),
 	psu_proto:packet_send(Socket, << 16#010a0300:32, 0:64, GID:32/little, 0:64, 16#00011300:32,
 		GID:32/little, 0:64, GID:32/little, 0:32 >>);
 
 %% @todo Should be 0115(money) 010a03(confirm sale).
-event({npc_shop_sell, InventoryItemIndex, Quantity}, _Client) ->
-	log("npc shop sell itemindex ~p quantity ~p", [InventoryItemIndex, Quantity]);
+event({npc_shop_sell, InventoryItemIndex, Quantity}, Client) ->
+	io:format("~p: npc shop sell itemindex ~p quantity ~p~n", [Client#client.gid, InventoryItemIndex, Quantity]);
 
 %% @todo First 1a02 value should be non-0.
 %% @todo Could the 2nd 1a02 parameter simply be the shop type or something?
 %% @todo Although the values replied should be right, they seem mostly ignored by the client.
 event({npc_shop_request, ShopID}, Client) ->
-	log("npc shop request ~p", [ShopID]),
+	io:format("~p: npc shop request ~p~n", [Client#client.gid, ShopID]),
 	case ShopID of
 		80 -> psu_proto:send_1a02(17, 17, 3, 9, Client); %% lumilass
 		90 -> psu_proto:send_1a02(5, 1, 4, 5, Client);   %% parum weapon grinding
@@ -686,7 +686,7 @@ event({object_warp_take, BlockID, ListNb, ObjectNb}, Client=#client{gid=GID}) ->
 
 %% @todo Don't send_0204 if the player is removed from the party while in the lobby I guess.
 event({party_remove_member, PartyPos}, Client=#client{gid=GID}) ->
-	log("party remove member ~b", [PartyPos]),
+	io:format("~p: party remove member ~b~n", [GID, PartyPos]),
 	{ok, DestUser} = egs_users:read(GID),
 	{ok, RemovedGID} = psu_party:get_member(DestUser#users.partypid, PartyPos),
 	psu_party:remove_member(DestUser#users.partypid, PartyPos),
@@ -771,11 +771,3 @@ event({unicube_select, Selection, EntryID}, Client=#client{gid=GID}) ->
 events(Events, Client) ->
 	[event(Event, Client) || Event <- Events],
 	ok.
-
-%% @doc Log message to the console.
-log(Message) ->
-	io:format("~p: ~s~n", [get(gid), Message]).
-
-log(Message, Format) ->
-	FormattedMessage = io_lib:format(Message, Format),
-	log(FormattedMessage).
