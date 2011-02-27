@@ -129,67 +129,61 @@ handle_call({delete, GID}, _From, State) ->
 
 handle_call({item_nth, GID, ItemIndex}, _From, State) ->
 	{GID, User} = lists:keyfind(GID, 1, State#state.users),
-	Item = lists:nth(ItemIndex + 1, (User#users.character)#characters.inventory),
+	Item = lists:nth(ItemIndex + 1, User#users.inventory),
 	{reply, Item, State};
 
 handle_call({item_add, GID, ItemID, Variables}, _From, State) ->
 	{GID, User} = lists:keyfind(GID, 1, State#state.users),
-	Character = User#users.character,
-	Inventory = Character#characters.inventory,
-	Inventory2 = case Variables of
+	Inventory = case Variables of
 		#psu_consumable_item_variables{quantity=Quantity} ->
 			#psu_item{data=#psu_consumable_item{max_quantity=MaxQuantity}} = egs_items_db:read(ItemID),
-			{ItemID, #psu_consumable_item_variables{quantity=Quantity2}} = case lists:keyfind(ItemID, 1, Inventory) of
+			{ItemID, #psu_consumable_item_variables{quantity=Quantity2}} = case lists:keyfind(ItemID, 1, User#users.inventory) of
 				false -> New = true, {ItemID, #psu_consumable_item_variables{quantity=0}};
 				Tuple -> New = false, Tuple
 			end,
 			Quantity3 = Quantity + Quantity2,
 			if	Quantity3 =< MaxQuantity ->
-				lists:keystore(ItemID, 1, Inventory, {ItemID, #psu_consumable_item_variables{quantity=Quantity3}})
+				lists:keystore(ItemID, 1, User#users.inventory, {ItemID, #psu_consumable_item_variables{quantity=Quantity3}})
 			end;
 		#psu_trap_item_variables{quantity=Quantity} ->
 			#psu_item{data=#psu_trap_item{max_quantity=MaxQuantity}} = egs_items_db:read(ItemID),
-			{ItemID, #psu_trap_item_variables{quantity=Quantity2}} = case lists:keyfind(ItemID, 1, Inventory) of
+			{ItemID, #psu_trap_item_variables{quantity=Quantity2}} = case lists:keyfind(ItemID, 1, User#users.inventory) of
 				false -> New = true, {ItemID, #psu_trap_item_variables{quantity=0}};
 				Tuple -> New = false, Tuple
 			end,
 			Quantity3 = Quantity + Quantity2,
 			if	Quantity3 =< MaxQuantity ->
-				lists:keystore(ItemID, 1, Inventory, {ItemID, #psu_trap_item_variables{quantity=Quantity3}})
+				lists:keystore(ItemID, 1, User#users.inventory, {ItemID, #psu_trap_item_variables{quantity=Quantity3}})
 			end;
 		_ ->
 			New = true,
-			if	length(Inventory) < 60 ->
-				Inventory ++ [{ItemID, Variables}]
+			if	length(User#users.inventory) < 60 ->
+				User#users.inventory ++ [{ItemID, Variables}]
 			end
 	end,
-	Character2 = Character#characters{inventory=Inventory2},
 	Users2 = lists:keydelete(User#users.gid, 1, State#state.users),
-	State2 = State#state{users=[{GID, User#users{character=Character2}}|Users2]},
+	State2 = State#state{users=[{GID, User#users{inventory=Inventory}}|Users2]},
 	case New of
 		false -> {reply, 16#ffffffff, State2};
-		true  -> {reply, length(Inventory2), State2}
+		true  -> {reply, length(Inventory), State2}
 	end;
 
 handle_call({item_qty_add, GID, ItemIndex, QuantityDiff}, _From, State) ->
 	{GID, User} = lists:keyfind(GID, 1, State#state.users),
-	Character = User#users.character,
-	Inventory = Character#characters.inventory,
-	{ItemID, Variables} = lists:nth(ItemIndex + 1, Inventory),
-	case Variables of
+	{ItemID, Variables} = lists:nth(ItemIndex + 1, User#users.inventory),
+	Inventory = case Variables of
 		#psu_trap_item_variables{quantity=Quantity} ->
 			#psu_item{data=#psu_trap_item{max_quantity=MaxQuantity}} = egs_items_db:read(ItemID),
 			Quantity2 = Quantity + QuantityDiff,
 			if	Quantity2 =:= 0 ->
-					Inventory2 = string:substr(Inventory, 1, ItemIndex) ++ string:substr(Inventory, ItemIndex + 2);
+					string:substr(User#users.inventory, 1, ItemIndex) ++ string:substr(User#users.inventory, ItemIndex + 2);
 				Quantity2 > 0, Quantity2 =< MaxQuantity ->
 					Variables2 = Variables#psu_trap_item_variables{quantity=Quantity2},
-					Inventory2 = string:substr(Inventory, 1, ItemIndex) ++ [{ItemID, Variables2}] ++ string:substr(Inventory, ItemIndex + 2)
+					string:substr(User#users.inventory, 1, ItemIndex) ++ [{ItemID, Variables2}] ++ string:substr(User#users.inventory, ItemIndex + 2)
 			end
 	end,
-	Character2 = Character#characters{inventory=Inventory2},
 	Users2 = lists:keydelete(User#users.gid, 1, State#state.users),
-	{reply, ok, State#state{users=[{GID, User#users{character=Character2}}|Users2]}};
+	{reply, ok, State#state{users=[{GID, User#users{inventory=Inventory}}|Users2]}};
 
 handle_call({shop_enter, GID, ShopID}, _From, State) ->
 	{GID, User} = lists:keyfind(GID, 1, State#state.users),
@@ -207,12 +201,10 @@ handle_call({shop_get, GID}, _From, State) ->
 
 handle_call({money_add, GID, MoneyDiff}, _From, State) ->
 	{GID, User} = lists:keyfind(GID, 1, State#state.users),
-	Character = User#users.character,
-	Money = Character#characters.money + MoneyDiff,
+	Money = User#users.money + MoneyDiff,
 	if Money >= 0 ->
-		Character2 = Character#characters{money=Money},
 		Users2 = lists:delete({GID, User}, State#state.users),
-		{reply, ok, [{GID, User#users{character=Character2}}|Users2]}
+		{reply, ok, [{GID, User#users{money=Money}}|Users2]}
 	end;
 
 handle_call(stop, _From, State) ->

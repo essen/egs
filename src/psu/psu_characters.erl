@@ -28,9 +28,9 @@
 
 %% @doc Convert a character tuple into a binary to be sent to clients.
 %%      Only contains the actually saved data, not the stats and related information.
-
+%% @todo The name isn't very good anymore now that I switched #characters to #users.
 character_tuple_to_binary(Tuple) ->
-	#characters{name=Name, race=Race, gender=Gender, class=Class, appearance=Appearance} = Tuple,
+	#users{name=Name, race=Race, gender=Gender, class=Class, appearance=Appearance} = Tuple,
 	RaceBin = race_atom_to_binary(Race),
 	GenderBin = gender_atom_to_binary(Gender),
 	ClassBin = class_atom_to_binary(Class),
@@ -45,11 +45,10 @@ character_tuple_to_binary(Tuple) ->
 %% @todo The value before IntDir seems to be the player's current animation. 01 stand up, 08 ?, 17 normal sit
 
 character_user_to_binary(User) ->
-	#users{gid=CharGID, lid=CharLID, character=Character, pos={X, Y, Z, Dir}, area={QuestID, ZoneID, MapID}, entryid=EntryID,
-		prev_area={PrevQuestID, PrevZoneID, PrevMapID}, prev_entryid=PrevEntryID} = User,
-	#characters{npcid=NPCid, type=Type, mainlevel=Level, stats=Stats, se=SE, currenthp=CurrentHP, maxhp=MaxHP} = Character,
+	#users{gid=CharGID, lid=CharLID, npcid=NPCid, type=Type, mainlevel=Level, stats=Stats, se=SE, currenthp=CurrentHP, maxhp=MaxHP,
+		pos={X, Y, Z, Dir}, area={QuestID, ZoneID, MapID}, entryid=EntryID, prev_area={PrevQuestID, PrevZoneID, PrevMapID}, prev_entryid=PrevEntryID} = User,
 	#level{number=LV} = Level,
-	CharBin = psu_characters:character_tuple_to_binary(Character),
+	CharBin = psu_characters:character_tuple_to_binary(User),
 	StatsBin = psu_characters:stats_tuple_to_binary(Stats),
 	SEBin = psu_characters:se_list_to_binary(SE),
 	EXPNextLevel = 100,

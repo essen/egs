@@ -1235,14 +1235,14 @@ send_0113(#client{socket=Socket, gid=DestGID}) ->
 	packet_send(Socket, << 16#01130300:32, 0:64, DestGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64, DestGID:32/little, File/binary >>).
 
 %% @doc Update the character level, blastbar, luck and money information.
-send_0115(CharUser, Client) ->
-	send_0115(CharUser, 16#ffffffff, Client).
-send_0115(#users{gid=CharGID, lid=CharLID, character=Character}, EnemyTargetID, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_0115(User, Client) ->
+	send_0115(User, 16#ffffffff, Client).
+send_0115(User=#users{gid=CharGID, lid=CharLID}, EnemyTargetID, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	packet_send(Socket, << 16#01150300:32, DestLID:16/little, 0:48, CharGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64,
-		CharGID:32/little, CharLID:32/little, EnemyTargetID:32/little, (build_char_level(Character))/binary >>).
+		CharGID:32/little, CharLID:32/little, EnemyTargetID:32/little, (build_char_level(User))/binary >>).
 
 %% @todo Handle class levels.
-build_char_level(#characters{type=Type, mainlevel=#level{number=Level, exp=EXP}, blastbar=BlastBar, luck=Luck, money=Money, playtime=PlayTime}) ->
+build_char_level(#users{type=Type, mainlevel=#level{number=Level, exp=EXP}, blastbar=BlastBar, luck=Luck, money=Money, playtime=PlayTime}) ->
 	ClassesBin = case Type of
 		npc ->
 			<<	16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32,
@@ -1257,7 +1257,7 @@ build_char_level(#characters{type=Type, mainlevel=#level{number=Level, exp=EXP},
 
 %% @doc Revive player with optional SEs.
 %% @todo SEs.
-send_0117(#users{gid=CharGID, lid=CharLID, character=#characters{currenthp=HP}}, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_0117(#users{gid=CharGID, lid=CharLID, currenthp=HP}, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	SE = << 0:64 >>,
 	packet_send(Socket, << 16#01170300:32, DestLID:16/little, 0:48, CharGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64,
 		CharGID:32/little, CharLID:32/little, SE/binary, HP:32/little, 0:32 >>).
@@ -1275,7 +1275,7 @@ send_0200(ZoneID, ZoneType, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 
 %% @doc Send character location, appearance and other information.
 send_0201(CharUser, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
-	[CharTypeID, GameVersion] = case (CharUser#users.character)#characters.type of
+	[CharTypeID, GameVersion] = case CharUser#users.type of
 		npc -> [16#00001d00, 255];
 		_ -> [16#00001200, 0]
 	end,
@@ -1299,7 +1299,7 @@ send_0203(#users{gid=CharGID, lid=CharLID}, #client{socket=Socket, gid=DestGID, 
 %% @doc Unspawn the given character.
 %% @todo The last 4 bytes are probably the number of players remaining in the zone.
 send_0204(User, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
-	CharTypeID = case (User#users.character)#characters.type of
+	CharTypeID = case User#users.type of
 		npc -> 16#00001d00;
 		_ -> 16#00001200
 	end,
@@ -1469,7 +1469,7 @@ send_0a05(#client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 
 %% @doc Send the list of ItemUUID for the items in the inventory.
 send_0a06(CharUser, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
-	Len = length((CharUser#users.character)#characters.inventory),
+	Len = length(CharUser#users.inventory),
 	UUIDs = lists:seq(1, Len),
 	Bin = iolist_to_binary([ << N:32/little >> || N <- UUIDs]),
 	Blanks = lists:seq(1, 60 - Len),
@@ -1548,9 +1548,9 @@ send_0c10(Options, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 
 %% @doc Send the general data and flags for the selected character.
 %% @todo Handle bitflags and value flags properly.
-send_0d01(Character, #client{socket=Socket, gid=DestGID}) ->
-	CharBin = psu_characters:character_tuple_to_binary(Character),
-	OptionsBin = psu_characters:options_tuple_to_binary(Character#characters.options),
+send_0d01(User, #client{socket=Socket, gid=DestGID}) ->
+	CharBin = psu_characters:character_tuple_to_binary(User),
+	OptionsBin = psu_characters:options_tuple_to_binary(User#users.options),
 	packet_send(Socket, << 16#0d010300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64, CharBin/binary,
 		16#ffbbef1c:32, 16#f8ff0700:32, 16#fc810916:32, 16#7802134c:32, 16#b0c0040f:32, 16#7cf0e583:32,
 		16#b7bce0c6:32, 16#7ff8f963:32, 16#3fd7ffff:32, 16#fff7ffff:32, 16#f3ff63e0:32, 16#1fe00000:32,
@@ -1590,8 +1590,7 @@ send_1004(Type, User, PartyPos, #client{socket=Socket, gid=DestGID}) ->
 		npc_invite -> [0, 16#ffffffff, 3];
 		_ -> 1 %% seems to be for players
 	end,
-	#users{gid=GID, character=Character, area={QuestID, ZoneID, MapID}, entryid=EntryID} = User,
-	#characters{npcid=NPCid, name=Name, mainlevel=MainLevel} = Character,
+	#users{gid=GID, npcid=NPCid, name=Name, mainlevel=MainLevel, area={QuestID, ZoneID, MapID}, entryid=EntryID} = User,
 	Level = MainLevel#level.number,
 	packet_send(Socket, << 16#10040300:32, 16#ffff0000:32, 0:128, 16#00011300:32, DestGID:32/little, 0:64,
 		TypeID:32, GID:32/little, 0:64, Name/binary,
@@ -1614,8 +1613,8 @@ send_1004(Type, User, PartyPos, #client{socket=Socket, gid=DestGID}) ->
 
 %% @doc Send the client's own player's party information, on the bottom left of the screen.
 %% @todo Location and the 20 bytes following sometimes have values, not sure why; when joining a party maybe?
-send_1005(Character, #client{socket=Socket, gid=DestGID}) ->
-	#characters{name=Name, mainlevel=#level{number=Level}, currenthp=CurrentHP, maxhp=MaxHP} = Character,
+send_1005(User, #client{socket=Socket, gid=DestGID}) ->
+	#users{name=Name, mainlevel=#level{number=Level}, currenthp=CurrentHP, maxhp=MaxHP} = User,
 	Location = << 0:512 >>,
 	packet_send(Socket, << 16#10050300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64,
 		16#00000100:32, 0:32, 16#ffffffff:32, 0:32, 16#00011200:32, DestGID:32/little, 0:64,
@@ -1684,7 +1683,7 @@ send_1020(#client{socket=Socket, gid=DestGID}) ->
 
 %% @doc Update HP in the party members information on the left.
 %% @todo Handle PartyPos. Probably only pass HP later.
-send_1022(#users{character=#characters{currenthp=HP}}, #client{socket=Socket, gid=DestGID}) ->
+send_1022(#users{currenthp=HP}, #client{socket=Socket, gid=DestGID}) ->
 	PartyPos = 0,
 	packet_send(Socket, << 16#10220300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64, HP:32/little, PartyPos:32/little >>).
 
@@ -1753,8 +1752,8 @@ send_1216(Value, #client{socket=Socket, gid=DestGID}) ->
 
 %% @doc Send the player's partner card.
 %% @todo Handle the LID and comment properly.
-send_1500(Character, #client{socket=Socket, gid=DestGID}) ->
-	#characters{slot=Slot, name=Name, race=Race, gender=Gender, class=Class, appearance=Appearance} = Character,
+send_1500(User, #client{socket=Socket, gid=DestGID}) ->
+	#users{slot=Slot, name=Name, race=Race, gender=Gender, class=Class, appearance=Appearance} = User,
 	case Appearance of
 		#flesh_appearance{voicetype=VoiceType, voicepitch=VoicePitch} -> ok;
 		#metal_appearance{voicetype=VoiceType, voicepitch=VoicePitch} -> ok
@@ -1833,11 +1832,10 @@ send_1a02(A, B, C, D, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 		A:16/little, B:16/little, C:16/little, D:16/little >>).
 
 %% @doc Lumilass available hairstyles/headtypes handler.
-send_1a03(CharUser, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
+send_1a03(User, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 	{ok, Conf} = file:consult("priv/lumilass.conf"),
-	Character = CharUser#users.character,
-	NbHeadtypes = proplists:get_value({headtypes, Character#characters.gender, Character#characters.race}, Conf, 0),
-	HairstylesList = proplists:get_value({hairstyles, Character#characters.gender}, Conf),
+	NbHeadtypes = proplists:get_value({headtypes, User#users.gender, User#users.race}, Conf, 0),
+	HairstylesList = proplists:get_value({hairstyles, User#users.gender}, Conf),
 	NbHairstyles = length(HairstylesList),
 	HairstylesBin = iolist_to_binary([ << N:32 >> || N <- HairstylesList]),
 	packet_send(Socket, << 16#1a030300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:96,

@@ -50,7 +50,29 @@
 	lid = 16#ffff	:: 0..16#ffff,
 	pid			:: pid(),
 	time		:: integer(),
-	character	:: tuple(), %% @todo Details.
+	%% Character information.
+	%% @todo Specs it.
+	type = white,
+	slot,
+	npcid = 16#ffff,
+	name,
+	race,
+	gender,
+	class,
+	mainlevel = {level, 1, 0},
+	classlevels,
+	currenthp = 100,
+	maxhp = 100,
+	stats = {stats, 1000, 2000, 3000, 4000, 5000, 6000, 7000},
+	se = [],
+	money = 1000000,
+	blastbar = 0,
+	luck = 3,
+	playtime = 0,
+	appearance,
+	onlinestatus = 0,
+	options = {options, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0},
+	inventory = [],
 	%% Location/state related information.
 	uni			:: integer(),
 	questpid	:: pid(),
@@ -114,34 +136,6 @@
 -record(options, {textdisplayspeed, sound, musicvolume, soundeffectvolume, vibration, radarmapdisplay,
 	cutindisplay, mainmenucursorposition, camera3y, camera3x, camera1y, camera1x, controller, weaponswap,
 	lockon, brightness, functionkeysetting, buttondetaildisplay}).
-
-%% @doc Characters data structure.
-%% @todo Make a disk table for storing characters permanently. Also keep the current character in #users.
-
--record(characters, {
-	gid,
-	type=white,
-	slot,
-	npcid=16#ffff,
-	name,
-	race,
-	gender,
-	class,
-	mainlevel={level, 1, 0},
-	classlevels,
-	currenthp=100,
-	maxhp=100,
-	stats={stats, 1000, 2000, 3000, 4000, 5000, 6000, 7000},
-	se=[],
-	money=1000000,
-	blastbar=0,
-	luck=3,
-	playtime=0,
-	appearance,
-	onlinestatus=0,
-	options={options, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0},
-	inventory=[]
-}). % also: shortcuts partnercards blacklist npcs flags...
 
 %% @doc Hit response data.
 

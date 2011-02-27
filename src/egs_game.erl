@@ -288,10 +288,10 @@ event({chat, _FromTypeID, FromGID, _FromName, Modifiers, ChatMsg}, #client{gid=U
 			ignore;
 		UserGID -> %% player chat: disregard whatever was sent except modifiers and message.
 			{ok, User} = egs_users:read(UserGID),
-			[16#00001200, User#users.gid, (User#users.character)#characters.name];
+			[16#00001200, User#users.gid, User#users.name];
 		NPCGID -> %% npc chat: @todo Check that the player is the party leader and this npc is in his party.
 			{ok, User} = egs_users:read(NPCGID),
-			[16#00001d00, FromGID, (User#users.character)#characters.name]
+			[16#00001d00, FromGID, User#users.name]
 	end,
 	%% log the message as ascii to the console
 	[LogName|_] = re:split(BcastName, "\\0\\0", [{return, binary}]),
@@ -366,7 +366,7 @@ event({counter_options_request, CounterID}, Client) ->
 %% @todo Handle when the party already exists! And stop doing it wrong.
 event(counter_party_info_request, Client=#client{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
-	egs_proto:send_1706((User#users.character)#characters.name, Client);
+	egs_proto:send_1706(User#users.name, Client);
 
 %% @todo Item distribution is always set to random for now.
 event(counter_party_options_request, Client) ->
@@ -392,7 +392,7 @@ event({hit, FromTargetID, ToTargetID, A, B}, Client=#client{socket=Socket, gid=G
 			%% @todo also has a hit sent, we should send it too
 			events(Events, Client);
 		_ ->
-			PlayerHP = (NewUser#users.character)#characters.currenthp,
+			PlayerHP = NewUser#users.currenthp,
 			case lists:member(death, TargetSE) of
 				true -> SE = 16#01000200;
 				false -> SE = 16#01000000
@@ -498,15 +498,12 @@ event(mission_abort, Client=#client{gid=GID}) ->
 		true -> psu_instance:stop(User#users.instancepid)
 	end,
 	%% full hp
-	Character = User#users.character,
-	MaxHP = Character#characters.maxhp,
-	NewCharacter = Character#characters{currenthp=MaxHP},
-	NewUser = User#users{character=NewCharacter, instancepid=undefined},
-	egs_users:write(NewUser),
+	User2 = User#users{currenthp=User#users.maxhp, instancepid=undefined},
+	egs_users:write(User2),
 	%% map change
-	if	User#users.areatype =:= mission ->
-			PrevArea = User#users.prev_area,
-			event({area_change, element(1, PrevArea), element(2, PrevArea), element(3, PrevArea), User#users.prev_entryid}, Client);
+	if	User2#users.areatype =:= mission ->
+			PrevArea = User2#users.prev_area,
+			event({area_change, element(1, PrevArea), element(2, PrevArea), element(3, PrevArea), User2#users.prev_entryid}, Client);
 		true -> ignore
 	end;
 
@@ -523,7 +520,7 @@ event({npc_force_invite, NPCid}, Client=#client{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
 	%% Create NPC.
 	io:format("~p: npc force invite ~p~n", [GID, NPCid]),
-	TmpNPCUser = egs_npc_db:create(NPCid, ((User#users.character)#characters.mainlevel)#level.number),
+	TmpNPCUser = egs_npc_db:create(NPCid, (User#users.mainlevel)#level.number),
 	%% Create and join party.
 	case User#users.partypid of
 		undefined ->
@@ -537,16 +534,13 @@ event({npc_force_invite, NPCid}, Client=#client{gid=GID}) ->
 	egs_users:write(NPCUser),
 	egs_users:write(User#users{partypid=PartyPid}),
 	%% Send stuff.
-	Character = NPCUser#users.character,
-	SentNPCCharacter = Character#characters{gid=NPCid, npcid=NPCid},
-	SentNPCUser = NPCUser#users{character=SentNPCCharacter},
-	egs_proto:send_010d(SentNPCUser, Client),
-	egs_proto:send_0201(SentNPCUser, Client),
+	egs_proto:send_010d(NPCUser, Client),
+	egs_proto:send_0201(NPCUser, Client),
 	egs_proto:send_0215(0, Client),
-	egs_proto:send_0a04(SentNPCUser#users.gid, Client),
+	egs_proto:send_0a04(NPCUser#users.gid, Client),
 	egs_proto:send_022c(0, 16#12, Client),
-	egs_proto:send_1004(npc_mission, SentNPCUser, PartyPos, Client),
-	egs_proto:send_100f((SentNPCUser#users.character)#characters.npcid, PartyPos, Client),
+	egs_proto:send_1004(npc_mission, NPCUser, PartyPos, Client),
+	egs_proto:send_100f(NPCUser#users.npcid, PartyPos, Client),
 	egs_proto:send_1601(PartyPos, Client);
 
 %% @todo Also at the end send a 101a (NPC:16, PartyPos:16, ffffffff). Not sure about PartyPos.
@@ -554,7 +548,7 @@ event({npc_invite, NPCid}, Client=#client{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
 	%% Create NPC.
 	io:format("~p: invited npcid ~b~n", [GID, NPCid]),
-	TmpNPCUser = egs_npc_db:create(NPCid, ((User#users.character)#characters.mainlevel)#level.number),
+	TmpNPCUser = egs_npc_db:create(NPCid, (User#users.mainlevel)#level.number),
 	%% Create and join party.
 	case User#users.partypid of
 		undefined ->
@@ -568,10 +562,7 @@ event({npc_invite, NPCid}, Client=#client{gid=GID}) ->
 	egs_users:write(NPCUser),
 	egs_users:write(User#users{partypid=PartyPid}),
 	%% Send stuff.
-	Character = NPCUser#users.character,
-	SentNPCCharacter = Character#characters{gid=NPCid, npcid=NPCid},
-	SentNPCUser = NPCUser#users{character=SentNPCCharacter},
-	egs_proto:send_1004(npc_invite, SentNPCUser, PartyPos, Client),
+	egs_proto:send_1004(npc_invite, NPCUser, PartyPos, Client),
 	egs_proto:send_101a(NPCid, PartyPos, Client);
 
 %% @todo Should be 0115(money) 010a03(confirm sale).
@@ -683,12 +674,11 @@ event({object_goggle_target_activate, ObjectID}, Client=#client{gid=GID}) ->
 %% @todo Make NPC characters heal too.
 event({object_healing_pad_tick, [_PartyPos]}, Client=#client{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
-	Character = User#users.character,
-	if	Character#characters.currenthp =:= Character#characters.maxhp -> ignore;
+	if	User#users.currenthp =:= User#users.maxhp -> ignore;
 		true ->
-			NewHP = Character#characters.currenthp + Character#characters.maxhp div 10,
-			NewHP2 = if NewHP > Character#characters.maxhp -> Character#characters.maxhp; true -> NewHP end,
-			User2 = User#users{character=Character#characters{currenthp=NewHP2}},
+			NewHP = User#users.currenthp + User#users.maxhp div 10,
+			NewHP2 = if NewHP > User#users.maxhp -> User#users.maxhp; true -> NewHP end,
+			User2 = User#users{currenthp=NewHP2},
 			egs_users:write(User2),
 			egs_proto:send_0117(User2, Client),
 			egs_proto:send_0111(User2, 4, Client)
@@ -753,7 +743,7 @@ event({party_remove_member, PartyPos}, Client=#client{gid=GID}) ->
 	{ok, RemovedGID} = psu_party:get_member(DestUser#users.partypid, PartyPos),
 	psu_party:remove_member(DestUser#users.partypid, PartyPos),
 	{ok, RemovedUser} = egs_users:read(RemovedGID),
-	case (RemovedUser#users.character)#characters.type of
+	case RemovedUser#users.type of
 		npc -> egs_users:delete(RemovedGID);
 		_ -> ignore
 	end,
@@ -772,8 +762,7 @@ event(player_death, Client=#client{gid=GID}) ->
 	%% use scape:
 	NewHP = 10,
 	{ok, User} = egs_users:read(GID),
-	Char = User#users.character,
-	User2 = User#users{character=Char#characters{currenthp=NewHP}},
+	User2 = User#users{currenthp=NewHP},
 	egs_users:write(User2),
 	egs_proto:send_0117(User2, Client),
 	egs_proto:send_1022(User2, Client);
@@ -836,15 +825,15 @@ events(Events, Client) ->
 
 %% @doc Load and send the character information to the client.
 char_load(User, Client) ->
-	egs_proto:send_0d01(User#users.character, Client),
+	egs_proto:send_0d01(User, Client),
 	%% 0246
-	egs_proto:send_0a0a((User#users.character)#characters.inventory, Client),
+	egs_proto:send_0a0a(User#users.inventory, Client),
 	egs_proto:send_1006(5, 0, Client), %% @todo The 0 here is PartyPos, save it in User.
-	egs_proto:send_1005(User#users.character, Client),
+	egs_proto:send_1005(User, Client),
 	egs_proto:send_1006(12, Client),
 	egs_proto:send_0210(Client),
 	egs_proto:send_0222(User#users.uni, Client),
-	egs_proto:send_1500(User#users.character, Client),
+	egs_proto:send_1500(User, Client),
 	egs_proto:send_1501(Client),
 	egs_proto:send_1512(Client),
 	%% 0303
@@ -866,7 +855,7 @@ npc_load(Leader, [{PartyPos, NPCGID}|NPCList], Client) ->
 	egs_proto:send_0215(0, Client),
 	egs_proto:send_0a04(NPCUser#users.gid, Client),
 	egs_proto:send_1004(npc_mission, NPCUser, PartyPos, Client),
-	egs_proto:send_100f((NPCUser#users.character)#characters.npcid, PartyPos, Client),
+	egs_proto:send_100f(NPCUser#users.npcid, PartyPos, Client),
 	egs_proto:send_1601(PartyPos, Client),
 	egs_proto:send_1016(PartyPos, Client),
 	npc_load(Leader, NPCList, Client).
