@@ -22,23 +22,13 @@
 
 -include("include/records.hrl").
 
-%% @doc Log the message.
-log(Msg) ->
-	io:format("~p ~s~n", [get(gid), Msg]).
-
-%% @spec log(Msg, FmtVars) -> ok
-%% @doc Format and log the message.
-log(Msg, FmtVars) ->
-	FmtMsg = io_lib:format(Msg, FmtVars),
-	log(FmtMsg).
-
 %% @spec assert() -> ok
 %% @doc Log a detailed message when the function is called.
--define(ASSERT(), log("assert error in module ~p on line ~p", [?MODULE, ?LINE])).
+-define(ASSERT(), io:format("assert error in module ~p on line ~p~n", [?MODULE, ?LINE])).
 
 %% @spec assert(A, B) -> ok
 %% @doc Log a detailed message when the assertion A =:= B fails.
--define(ASSERT_EQ(A, B), if A =:= B -> ok; true -> log("assert error in module ~p on line ~p", [?MODULE, ?LINE]) end).
+-define(ASSERT_EQ(A, B), if A =:= B -> ok; true -> io:format("assert error in module ~p on line ~p~n", [?MODULE, ?LINE]) end).
 
 %% @spec parse(Packet) -> Result
 %% @doc Parse the packet and return a result accordingly.
@@ -87,7 +77,7 @@ parse(Size, 16#0105, Channel, Data) ->
 		8 -> ignore; %% @todo item_use;
 		9 -> item_set_trap;
 		18 -> ignore; %% @todo item_unlearn_pa;
-		_ -> log("unknown 0105 EventID ~p", [EventID])
+		_ -> io:format("unknown 0105 EventID ~p~n", [EventID])
 	end,
 	case Event of
 		item_drop ->
@@ -191,7 +181,7 @@ parse(Size, 16#0110, Channel, Data) ->
 		8 -> ?ASSERT_EQ(Param, 0), player_death_return_to_lobby;
 		9 -> ?ASSERT_EQ(Param, 10), ignore; %% @todo
 		10 -> ignore; %% @todo {player_online_status_change, Param};
-		_ -> log("unknown 0110 EventID ~p", [EventID])
+		_ -> io:format("unknown 0110 EventID ~p~n", [EventID])
 	end;
 
 parse(Size, 16#020b, Channel, Data) ->
@@ -509,7 +499,7 @@ parse(Size, 16#080e, Channel, Data) ->
 	AtomPlatform = case Platform of
 		0 -> ps2;
 		1 -> pc;
-		_ -> log("unknown 080e Platform ~p", [Platform]), unknown
+		_ -> io:format("unknown 080e Platform ~p~n", [Platform]), unknown
 	end,
 	Version = Major * 1000000 + Minor * 1000 + Revision,
 	{system_client_version_info, Entrance, language_integer_to_atom(Language), AtomPlatform, Version};
@@ -1021,7 +1011,7 @@ parse(Size, 16#0f0a, Channel, Data) ->
 			?ASSERT(),
 			ignore; %% @todo object_trap(3rd)_???
 		_ -> %% Unhandled actions.
-			log("unknown 0f0a ObjectType ~p EventID ~p", [ObjectType, EventID]),
+			io:format("unknown 0f0a ObjectType ~p EventID ~p~n", [ObjectType, EventID]),
 			ignore
 	end;
 
@@ -1176,7 +1166,7 @@ parse(Size, 16#1a01, Channel, Data) ->
 			?ASSERT_EQ(VarJ, 0),
 			?ASSERT_EQ(VarK, 0),
 			player_type_availability_request;
-		_ -> log("unknown 1a01 EventID ~p", [EventID])
+		_ -> io:format("unknown 1a01 EventID ~p~n", [EventID])
 	end;
 
 %% @doc Unknown command,
@@ -1948,7 +1938,7 @@ language_integer_to_atom(6) -> italian;
 language_integer_to_atom(7) -> korean;
 language_integer_to_atom(8) -> simplified_chinese;
 language_integer_to_atom(9) -> traditional_chinese;
-language_integer_to_atom(Language) -> log("unknown 080e Language ~p", [Language]).
+language_integer_to_atom(Language) -> io:format("unknown 080e Language ~p~n", [Language]).
 
 %% @doc Prepare a packet. Return the real size and padding at the end.
 packet_prepare(Packet) ->
