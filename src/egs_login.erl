@@ -64,10 +64,8 @@ event(system_game_server_request, Client=#client{socket=Socket}) ->
 
 %% @doc Authenticate the user by pattern matching its saved state against the key received.
 %%      If the user is authenticated, send him the character flags list.
-%% @todo Remove the put calls when all the send_xxxx are moved out of psu_game and into psu_proto.
 event({system_key_auth_request, AuthGID, AuthKey}, Client) ->
 	egs_accounts:key_auth(AuthGID, AuthKey),
-	put(gid, AuthGID),
 	Client2 = Client#client{gid=AuthGID},
 	psu_proto:send_0d05(Client2),
 	{ok, egs_char_select, Client2};
