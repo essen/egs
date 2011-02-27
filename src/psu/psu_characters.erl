@@ -21,7 +21,7 @@
 -export([
 	character_tuple_to_binary/1, character_user_to_binary/1, class_atom_to_binary/1, class_binary_to_atom/1,
 	gender_atom_to_binary/1, gender_binary_to_atom/1, options_binary_to_tuple/1, options_tuple_to_binary/1,
-	race_atom_to_binary/1, race_binary_to_atom/1, stats_tuple_to_binary/1, validate_name/1
+	race_atom_to_binary/1, race_binary_to_atom/1, stats_tuple_to_binary/1
 ]).
 
 -include("include/records.hrl").
@@ -171,12 +171,3 @@ stats_tuple_to_binary(Tuple) ->
 	{stats, ATP, ATA, TP, DFP, EVP, MST, STA} = Tuple,
 	<<	ATP:16/little, DFP:16/little, ATA:16/little, EVP:16/little,
 		STA:16/little, 0:16, TP:16/little, MST:16/little >>.
-
-%% @doc Validate the character's name.
-%%      00F7 is the RGBA color control character.
-%%      03F7 is the RGB color control character.
-%%      Trigger an exception rather than handling errors.
-
-validate_name(_Name) ->
-	%~ Something like that probably: << true = X =/= 16#00F7 andalso X =/= 16#03F7 || X:16 <- Name>>.
-	ok.

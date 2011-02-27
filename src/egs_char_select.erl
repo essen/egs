@@ -48,13 +48,14 @@ event(char_select_request, Client=#client{gid=GID}) ->
 
 %% @doc The options default to 0 for everything except brightness to 4.
 %% @todo Don't forget to check for the character's name.
+%%       00F7 is the RGBA color control character.
+%%       03F7 is the RGB color control character.
 event({char_select_create, Slot, CharBin}, #client{gid=GID}) ->
 	%% check for valid character appearance
 	%~ << _Name:512, RaceID:8, GenderID:8, _TypeID:8, AppearanceBin:776/bits, _/bits >> = CharBin,
 	%~ Race = proplists:get_value(RaceID, [{0, human}, {1, newman}, {2, cast}, {3, beast}]),
 	%~ Gender = proplists:get_value(GenderID, [{0, male}, {1, female}]),
 	%~ Appearance = psu_appearance:binary_to_tuple(Race, AppearanceBin),
-	%~ psu_characters:validate_name(Name),
 	%~ psu_appearance:validate_char_create(Race, Gender, Appearance),
 	%% end of check, continue doing it wrong past that point for now
 	Folder = egs_accounts:get_folder(GID),
