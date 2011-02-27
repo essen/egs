@@ -1241,20 +1241,6 @@ send_0115(User=#users{gid=CharGID, lid=CharLID}, EnemyTargetID, #client{socket=S
 	packet_send(Socket, << 16#01150300:32, DestLID:16/little, 0:48, CharGID:32/little, 0:64, 16#00011300:32, DestGID:32/little, 0:64,
 		CharGID:32/little, CharLID:32/little, EnemyTargetID:32/little, (build_char_level(User))/binary >>).
 
-%% @todo Handle class levels.
-build_char_level(#users{type=Type, mainlevel=#level{number=Level, exp=EXP}, blastbar=BlastBar, luck=Luck, money=Money, playtime=PlayTime}) ->
-	ClassesBin = case Type of
-		npc ->
-			<<	16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32,
-				16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32,
-				16#4e4f4630:32, 16#08000000:32, 0:32, 0:32, 16#4e454e44:32 >>;
-		_ ->
-			<<	0:160,
-				16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32,
-				16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32 >>
-	end,
-	<< Level:32/little, BlastBar:16/little, Luck:8, 0:40, EXP:32/little, 0:32, Money:32/little, PlayTime:32/little, ClassesBin/binary >>.
-
 %% @doc Revive player with optional SEs.
 %% @todo SEs.
 send_0117(#users{gid=CharGID, lid=CharLID, currenthp=HP}, #client{socket=Socket, gid=DestGID, lid=DestLID}) ->
@@ -1854,6 +1840,20 @@ send_1a07(#client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 		16#01010101:32, 16#01010101:32, 16#01010101:32, 16#01010101:32 >>).
 
 %% Common binary building functions.
+
+%% @todo Handle class levels.
+build_char_level(#users{type=Type, mainlevel=#level{number=Level, exp=EXP}, blastbar=BlastBar, luck=Luck, money=Money, playtime=PlayTime}) ->
+	ClassesBin = case Type of
+		npc ->
+			<<	16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32,
+				16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32,
+				16#4e4f4630:32, 16#08000000:32, 0:32, 0:32, 16#4e454e44:32 >>;
+		_ ->
+			<<	0:160,
+				16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32,
+				16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32 >>
+	end,
+	<< Level:32/little, BlastBar:16/little, Luck:8, 0:40, EXP:32/little, 0:32, Money:32/little, PlayTime:32/little, ClassesBin/binary >>.
 
 build_item_constants(#psu_clothing_item{appearance=Appearance, manufacturer=Manufacturer, type=Type, overlap=Overlap, gender=Gender, colors=Colors}) ->
 	GenderInt = case Gender of male -> 16#1b; female -> 16#2b end,
