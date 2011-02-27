@@ -1576,8 +1576,7 @@ send_1004(Type, User, PartyPos, #client{socket=Socket, gid=DestGID}) ->
 		npc_invite -> [0, 16#ffffffff, 3];
 		_ -> 1 %% seems to be for players
 	end,
-	#users{gid=GID, npcid=NPCid, name=Name, mainlevel=MainLevel, area={QuestID, ZoneID, MapID}, entryid=EntryID} = User,
-	Level = MainLevel#level.number,
+	#users{gid=GID, npcid=NPCid, name=Name, level=Level, area={QuestID, ZoneID, MapID}, entryid=EntryID} = User,
 	packet_send(Socket, << 16#10040300:32, 16#ffff0000:32, 0:128, 16#00011300:32, DestGID:32/little, 0:64,
 		TypeID:32, GID:32/little, 0:64, Name/binary,
 		Level:16/little, 16#ffff:16,
@@ -1600,7 +1599,7 @@ send_1004(Type, User, PartyPos, #client{socket=Socket, gid=DestGID}) ->
 %% @doc Send the client's own player's party information, on the bottom left of the screen.
 %% @todo Location and the 20 bytes following sometimes have values, not sure why; when joining a party maybe?
 send_1005(User, #client{socket=Socket, gid=DestGID}) ->
-	#users{name=Name, mainlevel=#level{number=Level}, currenthp=CurrentHP, maxhp=MaxHP} = User,
+	#users{name=Name, level=Level, currenthp=CurrentHP, maxhp=MaxHP} = User,
 	Location = << 0:512 >>,
 	packet_send(Socket, << 16#10050300:32, 16#ffff:16, 0:144, 16#00011300:32, DestGID:32/little, 0:64,
 		16#00000100:32, 0:32, 16#ffffffff:32, 0:32, 16#00011200:32, DestGID:32/little, 0:64,
@@ -1842,7 +1841,7 @@ send_1a07(#client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 %% Common binary building functions.
 
 %% @todo Handle class levels.
-build_char_level(#users{type=Type, mainlevel=#level{number=Level, exp=EXP}, blastbar=BlastBar, luck=Luck, money=Money}) ->
+build_char_level(#users{type=Type, level=Level, exp=EXP, blastbar=BlastBar, luck=Luck, money=Money}) ->
 	ClassesBin = case Type of
 		npc ->
 			<<	16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32,

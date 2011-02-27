@@ -45,9 +45,8 @@ character_tuple_to_binary(Tuple) ->
 %% @todo The value before IntDir seems to be the player's current animation. 01 stand up, 08 ?, 17 normal sit
 
 character_user_to_binary(User) ->
-	#users{gid=CharGID, lid=CharLID, npcid=NPCid, type=Type, mainlevel=Level, stats=Stats, currenthp=CurrentHP, maxhp=MaxHP,
+	#users{gid=CharGID, lid=CharLID, npcid=NPCid, type=Type, level=Level, stats=Stats, currenthp=CurrentHP, maxhp=MaxHP,
 		pos={X, Y, Z, Dir}, area={QuestID, ZoneID, MapID}, entryid=EntryID, prev_area={PrevQuestID, PrevZoneID, PrevMapID}, prev_entryid=PrevEntryID} = User,
-	#level{number=LV} = Level,
 	CharBin = psu_characters:character_tuple_to_binary(User),
 	StatsBin = psu_characters:stats_tuple_to_binary(Stats),
 	EXPNextLevel = 100,
@@ -60,7 +59,7 @@ character_user_to_binary(User) ->
 		16#0100:16, IntDir:16/little, X:32/little-float, Y:32/little-float, Z:32/little-float, 0:64,
 		PrevQuestID:32/little, PrevZoneID:32/little, PrevMapID:32/little, PrevEntryID:32/little,
 		CharBin/binary, EXPNextLevel:32/little, EXPCurrentLevel:32/little, MaxHP:32/little,
-		StatsBin/binary, 0:96, LV:32/little, StatsBin/binary, CurrentHP:32/little, MaxHP:32/little,
+		StatsBin/binary, 0:96, Level:32/little, StatsBin/binary, CurrentHP:32/little, MaxHP:32/little,
 		0:1344, 16#0000803f:32, 0:64, 16#0000803f:32, 0:64, 16#0000803f:32, 0:64, 16#0000803f:32, 0:64, 16#0000803f:32, 0:160, 16#0000803f:32, 0:352 >>.
 
 %% @doc Convert a class atom into a binary to be sent to clients.

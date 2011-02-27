@@ -520,7 +520,7 @@ event({npc_force_invite, NPCid}, Client=#client{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
 	%% Create NPC.
 	io:format("~p: npc force invite ~p~n", [GID, NPCid]),
-	TmpNPCUser = egs_npc_db:create(NPCid, (User#users.mainlevel)#level.number),
+	TmpNPCUser = egs_npc_db:create(NPCid, User#users.level),
 	%% Create and join party.
 	case User#users.partypid of
 		undefined ->
@@ -548,7 +548,7 @@ event({npc_invite, NPCid}, Client=#client{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
 	%% Create NPC.
 	io:format("~p: invited npcid ~b~n", [GID, NPCid]),
-	TmpNPCUser = egs_npc_db:create(NPCid, (User#users.mainlevel)#level.number),
+	TmpNPCUser = egs_npc_db:create(NPCid, User#users.level),
 	%% Create and join party.
 	case User#users.partypid of
 		undefined ->

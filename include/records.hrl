@@ -58,7 +58,8 @@
 	race,
 	gender,
 	class,
-	mainlevel = {level, 1, 0},
+	level = 1,
+	exp = 0,
 	currenthp = 100,
 	maxhp = 100,
 	stats = {stats, 1000, 2000, 3000, 4000, 5000, 6000, 7000},
@@ -118,10 +119,6 @@
 	proportion=65535, proportionboxx=65535, proportionboxy=65535,
 	faceboxx=65535, faceboxy=65535
 }).
-
-%% @doc Character main or class level data structure.
-
--record(level, {number, exp}).
 
 %% @doc Character stats data structure.
 
