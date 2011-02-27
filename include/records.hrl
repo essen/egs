@@ -59,7 +59,6 @@
 	gender,
 	class,
 	mainlevel = {level, 1, 0},
-	classlevels,
 	currenthp = 100,
 	maxhp = 100,
 	stats = {stats, 1000, 2000, 3000, 4000, 5000, 6000, 7000},
