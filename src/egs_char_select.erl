@@ -65,6 +65,7 @@ event({char_select_create, Slot, CharBin}, #client{gid=GID}) ->
 	file:write_file(io_lib:format("~s.options", [File]), << 0:128, 4, 0:56 >>);
 
 %% @doc Load the selected character into the game's default universe.
+%% @todo Isn't very pretty to call egs_game from here but that will do for now.
 event({char_select_enter, Slot, _BackToPreviousField}, Client=#client{gid=GID}) ->
 	Folder = egs_accounts:get_folder(GID),
 	[{status, 1}, {char, CharBin}, {options, OptionsBin}] = data_load(Folder, Slot),
@@ -89,7 +90,7 @@ event({char_select_enter, Slot, _BackToPreviousField}, Client=#client{gid=GID}) 
 	egs_users:item_add(GID, 16#01010b00, #psu_striking_weapon_item_variables{current_pp=99, max_pp=100, element=#psu_element{type=3, percent=50}}),
 	{ok, User2} = egs_users:read(GID),
 	Client2 = Client#client{slot=Slot},
-	psu_game:char_load(User2, Client2),
+	egs_game:char_load(User2, Client2),
 	{ok, egs_game, Client2}.
 
 %% Internal.

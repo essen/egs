@@ -824,7 +824,7 @@ event({unicube_select, Selection, EntryID}, Client=#client{gid=GID}) ->
 	egs_users:write(User2),
 	egs_universes:leave(User#users.uni),
 	egs_universes:enter(UniID),
-	psu_game:char_load(User2, Client).
+	char_load(User2, Client).
 
 %% Internal.
 
@@ -832,6 +832,24 @@ event({unicube_select, Selection, EntryID}, Client=#client{gid=GID}) ->
 events(Events, Client) ->
 	[event(Event, Client) || Event <- Events],
 	ok.
+
+%% @doc Load and send the character information to the client.
+%% @todo Move this whole function directly to psu_proto, probably.
+char_load(User, Client) ->
+	psu_proto:send_0d01(User#users.character, Client),
+	%% 0246
+	psu_proto:send_0a0a((User#users.character)#characters.inventory, Client),
+	psu_proto:send_1006(5, 0, Client), %% @todo The 0 here is PartyPos, save it in User.
+	psu_proto:send_1005(User#users.character, Client),
+	psu_proto:send_1006(12, Client),
+	psu_proto:send_0210(Client),
+	psu_proto:send_0222(User#users.uni, Client),
+	psu_proto:send_1500(User#users.character, Client),
+	psu_proto:send_1501(Client),
+	psu_proto:send_1512(Client),
+	%% 0303
+	psu_proto:send_1602(Client),
+	psu_proto:send_021b(Client).
 
 %% @todo Don't change the NPC info unless you are the leader!
 npc_load(_Leader, [], _Client) ->
