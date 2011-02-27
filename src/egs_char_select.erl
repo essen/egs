@@ -24,7 +24,7 @@
 
 %% @doc Send a keepalive.
 keepalive(#client{socket=Socket}) ->
-	psu_proto:send_keepalive(Socket).
+	egs_proto:send_keepalive(Socket).
 
 %% @doc We don't expect any message here.
 info(_Msg, _Client) ->
@@ -44,7 +44,7 @@ raw(Command, _Data, Client) ->
 %% @doc Character screen selection request and delivery.
 event(char_select_request, Client=#client{gid=GID}) ->
 	Folder = egs_accounts:get_folder(GID),
-	psu_proto:send_0d03(data_load(Folder, 0), data_load(Folder, 1), data_load(Folder, 2), data_load(Folder, 3), Client);
+	egs_proto:send_0d03(data_load(Folder, 0), data_load(Folder, 1), data_load(Folder, 2), data_load(Folder, 3), Client);
 
 %% @doc The options default to 0 for everything except brightness to 4.
 %% @todo Don't forget to check for the character's name.

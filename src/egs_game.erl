@@ -24,32 +24,32 @@
 
 %% @doc Send a keepalive.
 keepalive(#client{socket=Socket}) ->
-	psu_proto:send_keepalive(Socket).
+	egs_proto:send_keepalive(Socket).
 
 %% @doc Forward the broadcasted command to the client.
 info({egs, cast, Command}, #client{socket=Socket, gid=GID}) ->
 	<< A:64/bits, _:32, B:96/bits, _:64, C/bits >> = Command,
-	psu_proto:packet_send(Socket, << A/binary, 16#00011300:32, B/binary, 16#00011300:32, GID:32/little, C/binary >>);
+	egs_proto:packet_send(Socket, << A/binary, 16#00011300:32, B/binary, 16#00011300:32, GID:32/little, C/binary >>);
 
 %% @doc Forward the chat message to the client.
 info({egs, chat, FromGID, ChatTypeID, ChatGID, ChatName, ChatModifiers, ChatMessage}, Client) ->
-	psu_proto:send_0304(FromGID, ChatTypeID, ChatGID, ChatName, ChatModifiers, ChatMessage, Client);
+	egs_proto:send_0304(FromGID, ChatTypeID, ChatGID, ChatName, ChatModifiers, ChatMessage, Client);
 
 info({egs, notice, Type, Message}, Client) ->
-	psu_proto:send_0228(Type, 2, Message, Client);
+	egs_proto:send_0228(Type, 2, Message, Client);
 
 %% @doc Inform the client that a player has spawn.
 %% @todo Not sure what IsSeasonal or the AreaNb in 0205 should be for other spawns.
 info({egs, player_spawn, Player}, Client) ->
-	psu_proto:send_0111(Player, 6, Client),
-	psu_proto:send_010d(Player, Client),
-	psu_proto:send_0205(Player, 0, Client),
-	psu_proto:send_0203(Player, Client),
-	psu_proto:send_0201(Player, Client);
+	egs_proto:send_0111(Player, 6, Client),
+	egs_proto:send_010d(Player, Client),
+	egs_proto:send_0205(Player, 0, Client),
+	egs_proto:send_0203(Player, Client),
+	egs_proto:send_0201(Player, Client);
 
 %% @doc Inform the client that a player has unspawn.
 info({egs, player_unspawn, Player}, Client) ->
-	psu_proto:send_0204(Player, Client);
+	egs_proto:send_0204(Player, Client);
 
 %% @doc Warp the player to the given location.
 info({egs, warp, QuestID, ZoneID, MapID, EntryID}, Client) ->
@@ -108,7 +108,7 @@ raw(16#0402, << _:352, Data/bits >>, Client=#client{gid=GID}) ->
 			{ok, User} = egs_users:read(GID),
 			{BlockID, EventID} = psu_instance:spawn_cleared_event(User#users.instancepid, element(2, User#users.area), SpawnID),
 			if	EventID =:= false -> ignore;
-				true -> psu_proto:send_1205(EventID, BlockID, 0, Client)
+				true -> egs_proto:send_1205(EventID, BlockID, 0, Client)
 			end;
 		_ ->
 			ignore
@@ -119,17 +119,17 @@ raw(16#0402, << _:352, Data/bits >>, Client=#client{gid=GID}) ->
 raw(16#0404, << _:352, Data/bits >>, Client) ->
 	<< EventID:8, BlockID:8, _:16, Value:8, _/bits >> = Data,
 	io:format("~p: unknown command 0404: eventid ~b blockid ~b value ~b~n", [Client#client.gid, EventID, BlockID, Value]),
-	psu_proto:send_1205(EventID, BlockID, Value, Client);
+	egs_proto:send_1205(EventID, BlockID, Value, Client);
 
 %% @todo Used in the tutorial. Not sure what it does. Give an item (the PA) maybe?
 %% @todo Probably should ignore that until more is known.
 raw(16#0a09, _Data, #client{socket=Socket, gid=GID}) ->
-	psu_proto:packet_send(Socket, << 16#0a090300:32, 0:32, 16#00011300:32, GID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64, 16#00003300:32, 0:32 >>);
+	egs_proto:packet_send(Socket, << 16#0a090300:32, 0:32, 16#00011300:32, GID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64, 16#00003300:32, 0:32 >>);
 
 %% @todo Figure out this command.
 raw(16#0c11, << _:352, A:32/little, B:32/little >>, #client{socket=Socket, gid=GID}) ->
 	io:format("~p: 0c11 ~p ~p~n", [GID, A, B]),
-	psu_proto:packet_send(Socket, << 16#0c120300:32, 0:160, 16#00011300:32, GID:32/little, 0:64, A:32/little, 1:32/little >>);
+	egs_proto:packet_send(Socket, << 16#0c120300:32, 0:160, 16#00011300:32, GID:32/little, 0:64, A:32/little, 1:32/little >>);
 
 %% @doc Set flag handler. Associate a new flag with the character.
 %%      Just reply with a success value for now.
@@ -137,7 +137,7 @@ raw(16#0c11, << _:352, A:32/little, B:32/little >>, #client{socket=Socket, gid=G
 raw(16#0d04, << _:352, Data/bits >>, #client{socket=Socket, gid=GID}) ->
 	<< Flag:128/bits, A:16/bits, _:8, B/bits >> = Data,
 	io:format("~p: flag handler for ~s~n", [GID, re:replace(Flag, "\\0+", "", [global, {return, binary}])]),
-	psu_proto:packet_send(Socket, << 16#0d040300:32, 0:160, 16#00011300:32, GID:32/little, 0:64, Flag/binary, A/binary, 1, B/binary >>);
+	egs_proto:packet_send(Socket, << 16#0d040300:32, 0:160, 16#00011300:32, GID:32/little, 0:64, Flag/binary, A/binary, 1, B/binary >>);
 
 %% @doc Initialize a vehicle object.
 %% @todo Find what are the many values, including the odd Whut value (and whether it's used in the reply).
@@ -146,7 +146,7 @@ raw(16#0f00, << _:352, Data/bits >>, #client{socket=Socket, gid=GID}) ->
 	<< A:32/little, 0:16, B:16/little, 0:16, C:16/little, 0, Whut:8, D:16/little, 0:16,
 		E:16/little, 0:16, F:16/little, G:16/little, H:16/little, I:32/little >> = Data,
 	io:format("~p: init vehicle: ~b ~b ~b ~b ~b ~b ~b ~b ~b ~b~n", [GID, A, B, C, Whut, D, E, F, G, H, I]),
-	psu_proto:packet_send(Socket, << 16#12080300:32, 0:160, 16#00011300:32, GID:32/little, 0:64,
+	egs_proto:packet_send(Socket, << 16#12080300:32, 0:160, 16#00011300:32, GID:32/little, 0:64,
 		A:32/little, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
 		0:16, B:16/little, 0:16, C:16/little, 0:16, D:16/little, 0:112,
 		E:16/little, 0:16, F:16/little, H:16/little, 1, 0, 100, 0, 10, 0, G:16/little, 0:16 >>);
@@ -157,33 +157,33 @@ raw(16#0f02, << _:352, Data/bits >>, #client{socket=Socket, gid=GID}) ->
 	<< A:32/little, B:32/little, C:32/little >> = Data,
 	io:format("~p: enter vehicle: ~b ~b ~b~n", [GID, A, B, C]),
 	HP = 100,
-	psu_proto:packet_send(Socket, << 16#120a0300:32, 0:160, 16#00011300:32, GID:32/little, 0:64, A:32/little, B:32/little, C:32/little, HP:32/little >>);
+	egs_proto:packet_send(Socket, << 16#120a0300:32, 0:160, 16#00011300:32, GID:32/little, 0:64, A:32/little, B:32/little, C:32/little, HP:32/little >>);
 
 %% @doc Sent right after entering the vehicle. Can't move without it.
 %% @todo Separate the reply.
 raw(16#0f07, << _:352, Data/bits >>, #client{socket=Socket, gid=GID}) ->
 	<< A:32/little, B:32/little >> = Data,
 	io:format("~p: after enter vehicle: ~b ~b~n", [GID, A, B]),
-	psu_proto:packet_send(Socket, << 16#120f0300:32, 0:160, 16#00011300:32, GID:32/little, 0:64, A:32/little, B:32/little >>);
+	egs_proto:packet_send(Socket, << 16#120f0300:32, 0:160, 16#00011300:32, GID:32/little, 0:64, A:32/little, B:32/little >>);
 
 %% @todo Not sure yet.
 raw(16#1019, _Data, _Client) ->
 	ignore;
-	%~ psu_proto:packet_send(Socket, << 16#10190300:32, 0:160, 16#00011300:32, GID:32/little, 0:64, 0:192, 16#00200000:32, 0:32 >>);
+	%~ egs_proto:packet_send(Socket, << 16#10190300:32, 0:160, 16#00011300:32, GID:32/little, 0:64, 0:192, 16#00200000:32, 0:32 >>);
 
 %% @todo Not sure about that one though. Probably related to 1112 still.
 raw(16#1106, << _:352, Data/bits >>, Client) ->
-	psu_proto:send_110e(Data, Client);
+	egs_proto:send_110e(Data, Client);
 
 %% @doc Probably asking permission to start the video (used for syncing?).
 raw(16#1112, << _:352, Data/bits >>, Client) ->
-	psu_proto:send_1113(Data, Client);
+	egs_proto:send_1113(Data, Client);
 
 %% @todo Not sure yet. Value is probably a TargetID. Used in Airboard Rally. Replying with the same value starts the race.
 raw(16#1216, << _:352, Data/bits >>, Client) ->
 	<< Value:32/little >> = Data,
 	io:format("~p: command 1216 with value ~b~n", [Client#client.gid, Value]),
-	psu_proto:send_1216(Value, Client);
+	egs_proto:send_1216(Value, Client);
 
 %% @doc Dismiss all unknown raw commands with a log notice.
 %% @todo Have a log event handler instead.
@@ -210,8 +210,8 @@ event({area_change, QuestID, ZoneID, MapID, EntryID, PartyPos=16#ffffffff}, Clie
 	egs_users:write(User), %% @todo Booh ugly! But temporary.
 	%% Load the quest.
 	User2 = if QuestChange ->
-			psu_proto:send_0c00(User, Client),
-			psu_proto:send_020e(egs_quests_db:quest_nbl(QuestID), Client),
+			egs_proto:send_0c00(User, Client),
+			egs_proto:send_020e(egs_quests_db:quest_nbl(QuestID), Client),
 			User#users{questpid=egs_universes:lobby_pid(User#users.uni, QuestID)};
 		true -> User
 	end,
@@ -222,11 +222,11 @@ event({area_change, QuestID, ZoneID, MapID, EntryID, PartyPos=16#ffffffff}, Clie
 			NewLID = egs_zones:enter(ZonePid, User2#users.gid),
 			NewClient = Client#client{lid=NewLID},
 			{ok, User3} = egs_users:read(User2#users.gid),
-			psu_proto:send_0a05(NewClient),
-			psu_proto:send_0111(User3, 6, NewClient),
-			psu_proto:send_010d(User3, NewClient),
-			psu_proto:send_0200(ZoneID, AreaType, NewClient),
-			psu_proto:send_020f(egs_quests_db:zone_nbl(QuestID, ZoneID), egs_zones:setid(ZonePid), SeasonID, NewClient),
+			egs_proto:send_0a05(NewClient),
+			egs_proto:send_0111(User3, 6, NewClient),
+			egs_proto:send_010d(User3, NewClient),
+			egs_proto:send_0200(ZoneID, AreaType, NewClient),
+			egs_proto:send_020f(egs_quests_db:zone_nbl(QuestID, ZoneID), egs_zones:setid(ZonePid), SeasonID, NewClient),
 			NewClient;
 		true ->
 			User3 = User2,
@@ -236,30 +236,30 @@ event({area_change, QuestID, ZoneID, MapID, EntryID, PartyPos=16#ffffffff}, Clie
 	egs_users:write(User3),
 	%% Load the player location.
 	Client2 = Client1#client{areanb=Client#client.areanb + 1},
-	psu_proto:send_0205(User3, IsSeasonal, Client2),
-	psu_proto:send_100e(User3#users.area, User3#users.entryid, AreaShortName, Client2),
+	egs_proto:send_0205(User3, IsSeasonal, Client2),
+	egs_proto:send_100e(User3#users.area, User3#users.entryid, AreaShortName, Client2),
 	%% Load the zone objects.
 	if ZoneChange ->
-			psu_proto:send_1212(Client2); %% @todo Only sent if there is a set file.
+			egs_proto:send_1212(Client2); %% @todo Only sent if there is a set file.
 		true -> ignore
 	end,
 	%% Load the player.
-	psu_proto:send_0201(User3, Client2),
+	egs_proto:send_0201(User3, Client2),
 	if ZoneChange ->
-			psu_proto:send_0a06(User3, Client2),
+			egs_proto:send_0a06(User3, Client2),
 			%% Load the other players in the zone.
 			OtherPlayersGID = egs_zones:get_all_players(User3#users.zonepid, User3#users.gid),
 			if	OtherPlayersGID =:= [] -> ignore;
 				true ->
 					OtherPlayers = egs_users:select(OtherPlayersGID),
-					psu_proto:send_0233(OtherPlayers, Client)
+					egs_proto:send_0233(OtherPlayers, Client)
 			end;
 		true -> ignore
 	end,
 	%% End of loading.
 	Client3 = Client2#client{areanb=Client2#client.areanb + 1},
-	psu_proto:send_0208(Client3),
-	psu_proto:send_0236(Client3),
+	egs_proto:send_0208(Client3),
+	egs_proto:send_0236(Client3),
 	%% @todo Load APC characters.
 	{ok, Client3};
 event({area_change, QuestID, ZoneID, MapID, EntryID, PartyPos}, Client) ->
@@ -301,7 +301,7 @@ event({chat, _FromTypeID, FromGID, _FromName, Modifiers, ChatMsg}, #client{gid=U
 
 %% @todo There's at least 9 different sets of locations. Handle all of them correctly.
 event(counter_background_locations_request, Client) ->
-	psu_proto:send_170c(Client);
+	egs_proto:send_170c(Client);
 
 %% @todo Make sure non-mission counters follow the same loading process.
 %% @todo Probably validate the From* values, to not send the player back inside a mission.
@@ -317,37 +317,37 @@ event({counter_enter, CounterID, FromZoneID, FromMapID, FromEntryID}, Client=#cl
 	QuestData = egs_quests_db:quest_nbl(0),
 	ZoneData = << 0:16000 >>, %% Doing like official just in case.
 	%% load counter
-	psu_proto:send_0c00(User, Client),
-	psu_proto:send_020e(QuestData, Client),
-	psu_proto:send_0a05(Client),
-	psu_proto:send_010d(User, Client),
-	psu_proto:send_0200(0, mission, Client),
-	psu_proto:send_020f(ZoneData, 0, 255, Client),
+	egs_proto:send_0c00(User, Client),
+	egs_proto:send_020e(QuestData, Client),
+	egs_proto:send_0a05(Client),
+	egs_proto:send_010d(User, Client),
+	egs_proto:send_0200(0, mission, Client),
+	egs_proto:send_020f(ZoneData, 0, 255, Client),
 	Client2 = Client#client{areanb=Client#client.areanb + 1},
-	psu_proto:send_0205(User, 0, Client2),
-	psu_proto:send_100e(CounterID, "Counter", Client2),
-	psu_proto:send_0215(0, Client2),
-	psu_proto:send_0215(0, Client2),
-	psu_proto:send_020c(Client2),
-	psu_proto:send_1202(Client2),
-	psu_proto:send_1204(Client2),
-	psu_proto:send_1206(Client2),
-	psu_proto:send_1207(Client2),
-	psu_proto:send_1212(Client2),
-	psu_proto:send_0201(User, Client2),
-	psu_proto:send_0a06(User, Client2),
+	egs_proto:send_0205(User, 0, Client2),
+	egs_proto:send_100e(CounterID, "Counter", Client2),
+	egs_proto:send_0215(0, Client2),
+	egs_proto:send_0215(0, Client2),
+	egs_proto:send_020c(Client2),
+	egs_proto:send_1202(Client2),
+	egs_proto:send_1204(Client2),
+	egs_proto:send_1206(Client2),
+	egs_proto:send_1207(Client2),
+	egs_proto:send_1212(Client2),
+	egs_proto:send_0201(User, Client2),
+	egs_proto:send_0a06(User, Client2),
 	case User#users.partypid of
 		undefined -> ignore;
-		_ -> psu_proto:send_022c(0, 16#12, Client)
+		_ -> egs_proto:send_022c(0, 16#12, Client)
 	end,
 	Client3 = Client2#client{areanb=Client2#client.areanb + 1},
-	psu_proto:send_0208(Client3),
-	psu_proto:send_0236(Client3),
+	egs_proto:send_0208(Client3),
+	egs_proto:send_0236(Client3),
 	{ok, Client3};
 
 %% @todo Handle parties to join.
 event(counter_join_party_request, Client) ->
-	psu_proto:send_1701(Client);
+	egs_proto:send_1701(Client);
 
 %% @doc Leave mission counter handler.
 event(counter_leave, Client=#client{gid=GID}) ->
@@ -360,26 +360,26 @@ event(counter_leave, Client=#client{gid=GID}) ->
 %% @todo Rename to counter_bg_request.
 event({counter_options_request, CounterID}, Client) ->
 	io:format("~p: counter options request ~p~n", [Client#client.gid, CounterID]),
-	psu_proto:send_1711(egs_counters_db:bg(CounterID), Client);
+	egs_proto:send_1711(egs_counters_db:bg(CounterID), Client);
 
 %% @todo Handle when the party already exists! And stop doing it wrong.
 event(counter_party_info_request, Client=#client{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
-	psu_proto:send_1706((User#users.character)#characters.name, Client);
+	egs_proto:send_1706((User#users.character)#characters.name, Client);
 
 %% @todo Item distribution is always set to random for now.
 event(counter_party_options_request, Client) ->
-	psu_proto:send_170a(Client);
+	egs_proto:send_170a(Client);
 
 %% @doc Request the counter's quest files.
 event({counter_quest_files_request, CounterID}, Client) ->
 	io:format("~p: counter quest files request ~p~n", [Client#client.gid, CounterID]),
-	psu_proto:send_0c06(egs_counters_db:pack(CounterID), Client);
+	egs_proto:send_0c06(egs_counters_db:pack(CounterID), Client);
 
 %% @doc Counter available mission list request handler.
 event({counter_quest_options_request, CounterID}, Client) ->
 	io:format("~p: counter quest options request ~p~n", [Client#client.gid, CounterID]),
-	psu_proto:send_0c10(egs_counters_db:opts(CounterID), Client);
+	egs_proto:send_0c10(egs_counters_db:opts(CounterID), Client);
 
 %% @todo A and B are mostly unknown. Like most of everything else from the command 0e00...
 event({hit, FromTargetID, ToTargetID, A, B}, Client=#client{socket=Socket, gid=GID}) ->
@@ -396,7 +396,7 @@ event({hit, FromTargetID, ToTargetID, A, B}, Client=#client{socket=Socket, gid=G
 				true -> SE = 16#01000200;
 				false -> SE = 16#01000000
 			end,
-			psu_proto:packet_send(Socket, << 16#0e070300:32, 0:160, 16#00011300:32, GID:32/little, 0:64,
+			egs_proto:packet_send(Socket, << 16#0e070300:32, 0:160, 16#00011300:32, GID:32/little, 0:64,
 				1:32/little, 16#01050000:32, Damage:32/little,
 				A/binary, 0:64, PlayerHP:32/little, 0:32, SE:32,
 				0:32, TargetHP:32/little, 0:32, B/binary,
@@ -405,7 +405,7 @@ event({hit, FromTargetID, ToTargetID, A, B}, Client=#client{socket=Socket, gid=G
 	end,
 	%% exp
 	if	HasEXP =:= true ->
-			psu_proto:send_0115(NewUser, ToTargetID, Client);
+			egs_proto:send_0115(NewUser, ToTargetID, Client);
 		true -> ignore
 	end,
 	%% save
@@ -415,7 +415,7 @@ event({hits, Hits}, Client) ->
 	events(Hits, Client);
 
 event({item_description_request, ItemID}, Client) ->
-	psu_proto:send_0a11(ItemID, egs_items_db:desc(ItemID), Client);
+	egs_proto:send_0a11(ItemID, egs_items_db:desc(ItemID), Client);
 
 %% @todo A and B are unknown.
 %%      Melee uses a format similar to: AAAA--BBCCCC----DDDDDDDDEE----FF with
@@ -430,7 +430,7 @@ event({item_equip, ItemIndex, TargetGID, TargetLID, A, B}, #client{socket=Socket
 	case egs_users:item_nth(GID, ItemIndex) of
 		{ItemID, Variables} when element(1, Variables) =:= psu_special_item_variables ->
 			<< Category:8, _:24 >> = << ItemID:32 >>,
-			psu_proto:packet_send(Socket, << 16#01050300:32, 0:64, TargetGID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
+			egs_proto:packet_send(Socket, << 16#01050300:32, 0:64, TargetGID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
 				TargetGID:32/little, TargetLID:32/little, ItemIndex:8, 1:8, Category:8, A:8, B:32/little >>);
 		{ItemID, Variables} when element(1, Variables) =:= psu_striking_weapon_item_variables ->
 			#psu_item{data=Constants} = egs_items_db:read(ItemID),
@@ -441,7 +441,7 @@ event({item_equip, ItemIndex, TargetGID, TargetLID, A, B}, #client{socket=Socket
 				{default, Val} -> {Val, 0};
 				{custom, Val} -> {Val, 8}
 			end,
-			psu_proto:packet_send(Socket, << 16#01050300:32, 0:64, TargetGID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
+			egs_proto:packet_send(Socket, << 16#01050300:32, 0:64, TargetGID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
 				TargetGID:32/little, TargetLID:32/little, ItemIndex:8, 1:8, Category:8, A:8, B:32/little,
 				SoundInt:32/little, HitboxA:16, HitboxB:16, HitboxC:16, HitboxD:16, SoundType:4, NbTargets:4, 0:8, Effect:8, Model:8 >>);
 		{ItemID, Variables} when element(1, Variables) =:= psu_trap_item_variables ->
@@ -454,7 +454,7 @@ event({item_equip, ItemIndex, TargetGID, TargetLID, A, B}, #client{socket=Socket
 				trap_g   -> << Effect:8, 16#4d0505:24, 16#4d000000:32, 16#00049001:32, 16#10000000:32 >>;
 				trap_ex  -> << Effect:8, 16#490a05:24, 16#4500000f:32, 16#4b055802:32, 16#10000000:32 >>
 			end,
-			psu_proto:packet_send(Socket, << 16#01050300:32, 0:64, TargetGID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
+			egs_proto:packet_send(Socket, << 16#01050300:32, 0:64, TargetGID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
 				TargetGID:32/little, TargetLID:32/little, ItemIndex:8, 1:8, Category:8, A:8, B:32/little, Bin/binary >>);
 		undefined ->
 			%% @todo Shouldn't be needed later when NPCs are handled correctly.
@@ -465,7 +465,7 @@ event({item_set_trap, ItemIndex, TargetGID, TargetLID, A, B}, #client{socket=Soc
 	{ItemID, _Variables} = egs_users:item_nth(GID, ItemIndex),
 	egs_users:item_qty_add(GID, ItemIndex, -1),
 	<< Category:8, _:24 >> = << ItemID:32 >>,
-	psu_proto:packet_send(Socket, << 16#01050300:32, 0:64, TargetGID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
+	egs_proto:packet_send(Socket, << 16#01050300:32, 0:64, TargetGID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
 		TargetGID:32/little, TargetLID:32/little, ItemIndex:8, 9:8, Category:8, A:8, B:32/little >>);
 
 %% @todo A and B are unknown.
@@ -477,20 +477,20 @@ event({item_unequip, ItemIndex, TargetGID, TargetLID, A, B}, #client{socket=Sock
 		Y when Y =:= 5; Y =:= 6; Y =:= 7 -> 0; % clothes
 		_ -> 1 % weapons
 	end,
-	psu_proto:packet_send(Socket, << 16#01050300:32, 0:64, GID:32/little, 0:64, 16#00011300:32, GID:32/little,
+	egs_proto:packet_send(Socket, << 16#01050300:32, 0:64, GID:32/little, 0:64, 16#00011300:32, GID:32/little,
 		0:64, TargetGID:32/little, TargetLID:32/little, ItemIndex, 2, Category, A, B:32/little >>);
 
 %% @todo Just ignore the meseta price for now and send the player where he wanna be!
 event(lobby_transport_request, Client) ->
-	psu_proto:send_0c08(Client);
+	egs_proto:send_0c08(Client);
 
 event(lumilass_options_request, Client=#client{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
-	psu_proto:send_1a03(User, Client);
+	egs_proto:send_1a03(User, Client);
 
 %% @todo Probably replenish the player HP when entering a non-mission area rather than when aborting the mission?
 event(mission_abort, Client=#client{gid=GID}) ->
-	psu_proto:send_1006(11, Client),
+	egs_proto:send_1006(11, Client),
 	{ok, User} = egs_users:read(GID),
 	%% delete the mission
 	if	User#users.instancepid =:= undefined -> ignore;
@@ -512,9 +512,9 @@ event(mission_abort, Client=#client{gid=GID}) ->
 %% @todo Forward the mission start to other players of the same party, whatever their location is.
 event({mission_start, QuestID}, Client) ->
 	io:format("~p: mission start ~b~n", [Client#client.gid, QuestID]),
-	psu_proto:send_1020(Client),
-	psu_proto:send_1015(QuestID, Client),
-	psu_proto:send_0c02(Client);
+	egs_proto:send_1020(Client),
+	egs_proto:send_1015(QuestID, Client),
+	egs_proto:send_0c02(Client);
 
 %% @doc Force the invite of an NPC character while inside a mission. Mostly used by story missions.
 %%      Note that the NPC is often removed and reinvited between block/cutscenes.
@@ -539,14 +539,14 @@ event({npc_force_invite, NPCid}, Client=#client{gid=GID}) ->
 	Character = NPCUser#users.character,
 	SentNPCCharacter = Character#characters{gid=NPCid, npcid=NPCid},
 	SentNPCUser = NPCUser#users{character=SentNPCCharacter},
-	psu_proto:send_010d(SentNPCUser, Client),
-	psu_proto:send_0201(SentNPCUser, Client),
-	psu_proto:send_0215(0, Client),
-	psu_proto:send_0a04(SentNPCUser#users.gid, Client),
-	psu_proto:send_022c(0, 16#12, Client),
-	psu_proto:send_1004(npc_mission, SentNPCUser, PartyPos, Client),
-	psu_proto:send_100f((SentNPCUser#users.character)#characters.npcid, PartyPos, Client),
-	psu_proto:send_1601(PartyPos, Client);
+	egs_proto:send_010d(SentNPCUser, Client),
+	egs_proto:send_0201(SentNPCUser, Client),
+	egs_proto:send_0215(0, Client),
+	egs_proto:send_0a04(SentNPCUser#users.gid, Client),
+	egs_proto:send_022c(0, 16#12, Client),
+	egs_proto:send_1004(npc_mission, SentNPCUser, PartyPos, Client),
+	egs_proto:send_100f((SentNPCUser#users.character)#characters.npcid, PartyPos, Client),
+	egs_proto:send_1601(PartyPos, Client);
 
 %% @todo Also at the end send a 101a (NPC:16, PartyPos:16, ffffffff). Not sure about PartyPos.
 event({npc_invite, NPCid}, Client=#client{gid=GID}) ->
@@ -558,7 +558,7 @@ event({npc_invite, NPCid}, Client=#client{gid=GID}) ->
 	case User#users.partypid of
 		undefined ->
 			{ok, PartyPid} = psu_party:start_link(GID),
-			psu_proto:send_022c(0, 16#12, Client);
+			egs_proto:send_022c(0, 16#12, Client);
 		PartyPid ->
 			ignore
 	end,
@@ -570,8 +570,8 @@ event({npc_invite, NPCid}, Client=#client{gid=GID}) ->
 	Character = NPCUser#users.character,
 	SentNPCCharacter = Character#characters{gid=NPCid, npcid=NPCid},
 	SentNPCUser = NPCUser#users{character=SentNPCCharacter},
-	psu_proto:send_1004(npc_invite, SentNPCUser, PartyPos, Client),
-	psu_proto:send_101a(NPCid, PartyPos, Client);
+	egs_proto:send_1004(npc_invite, SentNPCUser, PartyPos, Client),
+	egs_proto:send_101a(NPCid, PartyPos, Client);
 
 %% @todo Should be 0115(money) 010a03(confirm sale).
 event({npc_shop_buy, ShopItemIndex, QuantityOrColor}, Client=#client{socket=Socket, gid=GID}) ->
@@ -599,26 +599,26 @@ event({npc_shop_buy, ShopItemIndex, QuantityOrColor}, Client=#client{socket=Sock
 	egs_users:money_add(GID, -1 * BuyPrice * Quantity),
 	ItemUUID = egs_users:item_add(GID, ItemID, Variables),
 	{ok, User} = egs_users:read(GID),
-	psu_proto:send_0115(User, Client), %% @todo This one is apparently broadcast to everyone in the same zone.
+	egs_proto:send_0115(User, Client), %% @todo This one is apparently broadcast to everyone in the same zone.
 	%% @todo Following command isn't done 100% properly.
 	UCS2Name = << << X:8, 0:8 >> || X <- Name >>,
 	NamePadding = 8 * (46 - byte_size(UCS2Name)),
 	<< Category:8, _:24 >> = << ItemID:32 >>,
 	RarityInt = Rarity - 1,
-	psu_proto:packet_send(Socket, << 16#010a0300:32, 0:64, GID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
-		GID:32/little, 0:32, 2:16/little, 0:16, (psu_proto:build_item_variables(ItemID, ItemUUID, Variables))/binary,
-		UCS2Name/binary, 0:NamePadding, RarityInt:8, Category:8, SellPrice:32/little, (psu_proto:build_item_constants(Constants))/binary >>);
+	egs_proto:packet_send(Socket, << 16#010a0300:32, 0:64, GID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
+		GID:32/little, 0:32, 2:16/little, 0:16, (egs_proto:build_item_variables(ItemID, ItemUUID, Variables))/binary,
+		UCS2Name/binary, 0:NamePadding, RarityInt:8, Category:8, SellPrice:32/little, (egs_proto:build_item_constants(Constants))/binary >>);
 
 %% @todo Currently send the normal items shop for all shops, differentiate.
 event({npc_shop_enter, ShopID}, Client=#client{gid=GID}) ->
 	io:format("~p: npc shop enter ~p~n", [GID, ShopID]),
 	egs_users:shop_enter(GID, ShopID),
-	psu_proto:send_010a(egs_shops_db:read(ShopID), Client);
+	egs_proto:send_010a(egs_shops_db:read(ShopID), Client);
 
 event({npc_shop_leave, ShopID}, #client{socket=Socket, gid=GID}) ->
 	io:format("~p: npc shop leave ~p~n", [GID, ShopID]),
 	egs_users:shop_leave(GID),
-	psu_proto:packet_send(Socket, << 16#010a0300:32, 0:64, GID:32/little, 0:64, 16#00011300:32,
+	egs_proto:packet_send(Socket, << 16#010a0300:32, 0:64, GID:32/little, 0:64, 16#00011300:32,
 		GID:32/little, 0:64, GID:32/little, 0:32 >>);
 
 %% @todo Should be 0115(money) 010a03(confirm sale).
@@ -631,53 +631,53 @@ event({npc_shop_sell, InventoryItemIndex, Quantity}, Client) ->
 event({npc_shop_request, ShopID}, Client) ->
 	io:format("~p: npc shop request ~p~n", [Client#client.gid, ShopID]),
 	case ShopID of
-		80 -> psu_proto:send_1a02(17, 17, 3, 9, Client); %% lumilass
-		90 -> psu_proto:send_1a02(5, 1, 4, 5, Client);   %% parum weapon grinding
-		91 -> psu_proto:send_1a02(5, 5, 4, 7, Client);   %% tenora weapon grinding
-		92 -> psu_proto:send_1a02(5, 8, 4, 0, Client);   %% yohmei weapon grinding
-		93 -> psu_proto:send_1a02(5, 18, 4, 0, Client);  %% kubara weapon grinding
-		_  -> psu_proto:send_1a02(0, 1, 0, 0, Client)
+		80 -> egs_proto:send_1a02(17, 17, 3, 9, Client); %% lumilass
+		90 -> egs_proto:send_1a02(5, 1, 4, 5, Client);   %% parum weapon grinding
+		91 -> egs_proto:send_1a02(5, 5, 4, 7, Client);   %% tenora weapon grinding
+		92 -> egs_proto:send_1a02(5, 8, 4, 0, Client);   %% yohmei weapon grinding
+		93 -> egs_proto:send_1a02(5, 18, 4, 0, Client);  %% kubara weapon grinding
+		_  -> egs_proto:send_1a02(0, 1, 0, 0, Client)
 	end;
 
 %% @todo Not sure what are those hardcoded values.
 event({object_boss_gate_activate, ObjectID}, Client) ->
-	psu_proto:send_1213(ObjectID, 0, Client),
-	psu_proto:send_1215(2, 16#7008, Client),
+	egs_proto:send_1213(ObjectID, 0, Client),
+	egs_proto:send_1215(2, 16#7008, Client),
 	%% @todo Following sent after the warp?
-	psu_proto:send_1213(37, 0, Client),
+	egs_proto:send_1213(37, 0, Client),
 	%% @todo Why resend this?
-	psu_proto:send_1213(ObjectID, 0, Client);
+	egs_proto:send_1213(ObjectID, 0, Client);
 
 event({object_boss_gate_enter, ObjectID}, Client) ->
-	psu_proto:send_1213(ObjectID, 1, Client);
+	egs_proto:send_1213(ObjectID, 1, Client);
 
 %% @todo Do we need to send something back here?
 event({object_boss_gate_leave, _ObjectID}, _Client) ->
 	ignore;
 
 event({object_box_destroy, ObjectID}, Client) ->
-	psu_proto:send_1213(ObjectID, 3, Client);
+	egs_proto:send_1213(ObjectID, 3, Client);
 
 %% @todo Second send_1211 argument should be User#users.lid. Fix when it's correctly handled.
 event({object_chair_sit, ObjectTargetID}, Client) ->
-	psu_proto:send_1211(ObjectTargetID, 0, 8, 0, Client);
+	egs_proto:send_1211(ObjectTargetID, 0, 8, 0, Client);
 
-%% @todo Second psu_proto:send_1211 argument should be User#users.lid. Fix when it's correctly handled.
+%% @todo Second send_1211 argument should be User#users.lid. Fix when it's correctly handled.
 event({object_chair_stand, ObjectTargetID}, Client) ->
-	psu_proto:send_1211(ObjectTargetID, 0, 8, 2, Client);
+	egs_proto:send_1211(ObjectTargetID, 0, 8, 2, Client);
 
 event({object_crystal_activate, ObjectID}, Client) ->
-	psu_proto:send_1213(ObjectID, 1, Client);
+	egs_proto:send_1213(ObjectID, 1, Client);
 
 %% @doc Server-side event.
 event({object_event_trigger, BlockID, EventID}, Client) ->
-	psu_proto:send_1205(EventID, BlockID, 0, Client);
+	egs_proto:send_1205(EventID, BlockID, 0, Client);
 
 event({object_goggle_target_activate, ObjectID}, Client=#client{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
 	{BlockID, EventID} = psu_instance:std_event(User#users.instancepid, element(2, User#users.area), ObjectID),
-	psu_proto:send_1205(EventID, BlockID, 0, Client),
-	psu_proto:send_1213(ObjectID, 8, Client);
+	egs_proto:send_1205(EventID, BlockID, 0, Client),
+	egs_proto:send_1213(ObjectID, 8, Client);
 
 %% @todo Make NPC characters heal too.
 event({object_healing_pad_tick, [_PartyPos]}, Client=#client{gid=GID}) ->
@@ -689,52 +689,52 @@ event({object_healing_pad_tick, [_PartyPos]}, Client=#client{gid=GID}) ->
 			NewHP2 = if NewHP > Character#characters.maxhp -> Character#characters.maxhp; true -> NewHP end,
 			User2 = User#users{character=Character#characters{currenthp=NewHP2}},
 			egs_users:write(User2),
-			psu_proto:send_0117(User2, Client),
-			psu_proto:send_0111(User2, 4, Client)
+			egs_proto:send_0117(User2, Client),
+			egs_proto:send_0111(User2, 4, Client)
 	end;
 
 event({object_key_console_enable, ObjectID}, Client=#client{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
 	{BlockID, [EventID|_]} = psu_instance:std_event(User#users.instancepid, element(2, User#users.area), ObjectID),
-	psu_proto:send_1205(EventID, BlockID, 0, Client),
-	psu_proto:send_1213(ObjectID, 1, Client);
+	egs_proto:send_1205(EventID, BlockID, 0, Client),
+	egs_proto:send_1213(ObjectID, 1, Client);
 
 event({object_key_console_init, ObjectID}, Client=#client{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
 	{BlockID, [_, EventID, _]} = psu_instance:std_event(User#users.instancepid, element(2, User#users.area), ObjectID),
-	psu_proto:send_1205(EventID, BlockID, 0, Client);
+	egs_proto:send_1205(EventID, BlockID, 0, Client);
 
 event({object_key_console_open_gate, ObjectID}, Client=#client{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
 	{BlockID, [_, _, EventID]} = psu_instance:std_event(User#users.instancepid, element(2, User#users.area), ObjectID),
-	psu_proto:send_1205(EventID, BlockID, 0, Client),
-	psu_proto:send_1213(ObjectID, 1, Client);
+	egs_proto:send_1205(EventID, BlockID, 0, Client),
+	egs_proto:send_1213(ObjectID, 1, Client);
 
 %% @todo Now that it's separate from object_key_console_enable, handle it better than that, don't need a list of events.
 event({object_key_enable, ObjectID}, Client=#client{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
 	{BlockID, [EventID|_]} = psu_instance:std_event(User#users.instancepid, element(2, User#users.area), ObjectID),
-	psu_proto:send_1205(EventID, BlockID, 0, Client),
-	psu_proto:send_1213(ObjectID, 1, Client);
+	egs_proto:send_1205(EventID, BlockID, 0, Client),
+	egs_proto:send_1213(ObjectID, 1, Client);
 
 %% @todo Some switch objects apparently work differently, like the light switch in Mines in MAG'.
 event({object_switch_off, ObjectID}, Client=#client{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
 	{BlockID, EventID} = psu_instance:std_event(User#users.instancepid, element(2, User#users.area), ObjectID),
-	psu_proto:send_1205(EventID, BlockID, 1, Client),
-	psu_proto:send_1213(ObjectID, 0, Client);
+	egs_proto:send_1205(EventID, BlockID, 1, Client),
+	egs_proto:send_1213(ObjectID, 0, Client);
 
 event({object_switch_on, ObjectID}, Client=#client{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
 	{BlockID, EventID} = psu_instance:std_event(User#users.instancepid, element(2, User#users.area), ObjectID),
-	psu_proto:send_1205(EventID, BlockID, 0, Client),
-	psu_proto:send_1213(ObjectID, 1, Client);
+	egs_proto:send_1205(EventID, BlockID, 0, Client),
+	egs_proto:send_1213(ObjectID, 1, Client);
 
 event({object_vehicle_boost_enable, ObjectID}, Client) ->
-	psu_proto:send_1213(ObjectID, 1, Client);
+	egs_proto:send_1213(ObjectID, 1, Client);
 
 event({object_vehicle_boost_respawn, ObjectID}, Client) ->
-	psu_proto:send_1213(ObjectID, 0, Client);
+	egs_proto:send_1213(ObjectID, 0, Client);
 
 %% @todo Second send_1211 argument should be User#users.lid. Fix when it's correctly handled.
 event({object_warp_take, BlockID, ListNb, ObjectNb}, Client=#client{gid=GID}) ->
@@ -742,8 +742,8 @@ event({object_warp_take, BlockID, ListNb, ObjectNb}, Client=#client{gid=GID}) ->
 	Pos = psu_instance:warp_event(User#users.instancepid, element(2, User#users.area), BlockID, ListNb, ObjectNb),
 	NewUser = User#users{pos=Pos},
 	egs_users:write(NewUser),
-	psu_proto:send_0503(User#users.pos, Client),
-	psu_proto:send_1211(16#ffffffff, 0, 14, 0, Client);
+	egs_proto:send_0503(User#users.pos, Client),
+	egs_proto:send_1211(16#ffffffff, 0, 14, 0, Client);
 
 %% @todo Don't send_0204 if the player is removed from the party while in the lobby I guess.
 event({party_remove_member, PartyPos}, Client=#client{gid=GID}) ->
@@ -756,9 +756,9 @@ event({party_remove_member, PartyPos}, Client=#client{gid=GID}) ->
 		npc -> egs_users:delete(RemovedGID);
 		_ -> ignore
 	end,
-	psu_proto:send_1006(8, PartyPos, Client),
-	psu_proto:send_0204(RemovedUser, Client),
-	psu_proto:send_0215(0, Client);
+	egs_proto:send_1006(8, PartyPos, Client),
+	egs_proto:send_0204(RemovedUser, Client),
+	egs_proto:send_0215(0, Client);
 
 event({player_options_change, Options}, #client{gid=GID, slot=Slot}) ->
 	Folder = egs_accounts:get_folder(GID),
@@ -774,10 +774,10 @@ event(player_death, Client=#client{gid=GID}) ->
 	Char = User#users.character,
 	User2 = User#users{character=Char#characters{currenthp=NewHP}},
 	egs_users:write(User2),
-	psu_proto:send_0117(User2, Client),
-	psu_proto:send_1022(User2, Client);
+	egs_proto:send_0117(User2, Client),
+	egs_proto:send_1022(User2, Client);
 	%% red screen with return to lobby choice:
-	%~ psu_proto:send_0111(User2, 3, 1, Client);
+	%~ egs_proto:send_0111(User2, 3, 1, Client);
 
 %% @todo Refill the player's HP to maximum, remove SEs etc.
 event(player_death_return_to_lobby, Client=#client{gid=GID}) ->
@@ -786,16 +786,16 @@ event(player_death_return_to_lobby, Client=#client{gid=GID}) ->
 	event({area_change, element(1, PrevArea), element(2, PrevArea), element(3, PrevArea), User#users.prev_entryid}, Client);
 
 event(player_type_availability_request, Client) ->
-	psu_proto:send_1a07(Client);
+	egs_proto:send_1a07(Client);
 
 event(player_type_capabilities_request, Client) ->
-	psu_proto:send_0113(Client);
+	egs_proto:send_0113(Client);
 
 event(ppcube_request, Client) ->
-	psu_proto:send_1a04(Client);
+	egs_proto:send_1a04(Client);
 
 event(unicube_request, Client) ->
-	psu_proto:send_021e(egs_universes:all(), Client);
+	egs_proto:send_021e(egs_universes:all(), Client);
 
 %% @todo When selecting 'Your room', don't load a default room that's not yours.
 event({unicube_select, cancel, _EntryID}, _Client) ->
@@ -810,7 +810,7 @@ event({unicube_select, Selection, EntryID}, Client=#client{gid=GID}) ->
 			UniID = Selection,
 			User2 = User#users{uni=UniID, entryid=EntryID}
 	end,
-	psu_proto:send_0230(Client),
+	egs_proto:send_0230(Client),
 	%% 0220
 	case User#users.partypid of
 		undefined -> ignore;
@@ -834,22 +834,21 @@ events(Events, Client) ->
 	ok.
 
 %% @doc Load and send the character information to the client.
-%% @todo Move this whole function directly to psu_proto, probably.
 char_load(User, Client) ->
-	psu_proto:send_0d01(User#users.character, Client),
+	egs_proto:send_0d01(User#users.character, Client),
 	%% 0246
-	psu_proto:send_0a0a((User#users.character)#characters.inventory, Client),
-	psu_proto:send_1006(5, 0, Client), %% @todo The 0 here is PartyPos, save it in User.
-	psu_proto:send_1005(User#users.character, Client),
-	psu_proto:send_1006(12, Client),
-	psu_proto:send_0210(Client),
-	psu_proto:send_0222(User#users.uni, Client),
-	psu_proto:send_1500(User#users.character, Client),
-	psu_proto:send_1501(Client),
-	psu_proto:send_1512(Client),
+	egs_proto:send_0a0a((User#users.character)#characters.inventory, Client),
+	egs_proto:send_1006(5, 0, Client), %% @todo The 0 here is PartyPos, save it in User.
+	egs_proto:send_1005(User#users.character, Client),
+	egs_proto:send_1006(12, Client),
+	egs_proto:send_0210(Client),
+	egs_proto:send_0222(User#users.uni, Client),
+	egs_proto:send_1500(User#users.character, Client),
+	egs_proto:send_1501(Client),
+	egs_proto:send_1512(Client),
 	%% 0303
-	psu_proto:send_1602(Client),
-	psu_proto:send_021b(Client).
+	egs_proto:send_1602(Client),
+	egs_proto:send_021b(Client).
 
 %% @todo Don't change the NPC info unless you are the leader!
 npc_load(_Leader, [], _Client) ->
@@ -861,12 +860,12 @@ npc_load(Leader, [{PartyPos, NPCGID}|NPCList], Client) ->
 	%% @todo This one on mission end/abort?
 	%~ OldNPCUser#users{lid=PartyPos, instancepid=undefined, areatype=AreaType, area={0, 0, 0}, entryid=0, pos={0.0, 0.0, 0.0, 0}}
 	egs_users:write(NPCUser),
-	psu_proto:send_010d(NPCUser, Client),
-	psu_proto:send_0201(NPCUser, Client),
-	psu_proto:send_0215(0, Client),
-	psu_proto:send_0a04(NPCUser#users.gid, Client),
-	psu_proto:send_1004(npc_mission, NPCUser, PartyPos, Client),
-	psu_proto:send_100f((NPCUser#users.character)#characters.npcid, PartyPos, Client),
-	psu_proto:send_1601(PartyPos, Client),
-	psu_proto:send_1016(PartyPos, Client),
+	egs_proto:send_010d(NPCUser, Client),
+	egs_proto:send_0201(NPCUser, Client),
+	egs_proto:send_0215(0, Client),
+	egs_proto:send_0a04(NPCUser#users.gid, Client),
+	egs_proto:send_1004(npc_mission, NPCUser, PartyPos, Client),
+	egs_proto:send_100f((NPCUser#users.character)#characters.npcid, PartyPos, Client),
+	egs_proto:send_1601(PartyPos, Client),
+	egs_proto:send_1016(PartyPos, Client),
 	npc_load(Leader, NPCList, Client).

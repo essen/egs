@@ -35,7 +35,7 @@ character_tuple_to_binary(Tuple) ->
 	GenderBin = gender_atom_to_binary(Gender),
 	ClassBin = class_atom_to_binary(Class),
 	AppearanceBin = psu_appearance:tuple_to_binary(Race, Appearance),
-	LevelsBin = psu_proto:build_char_level(Tuple),
+	LevelsBin = egs_proto:build_char_level(Tuple),
 	<< Name/binary, RaceBin:8, GenderBin:8, ClassBin:8, AppearanceBin/binary, LevelsBin/binary >>.
 
 %% @doc Convert a character tuple into a binary to be sent to clients.

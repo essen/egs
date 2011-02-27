@@ -75,7 +75,7 @@ recv(SoFar, CallbackMod, Client) ->
 dispatch([], _CallbackMod, NextMod, Client) ->
 	{ok, NextMod, Client};
 dispatch([Data|Tail], CallbackMod, NextMod, Client) ->
-	Ret = case psu_proto:parse(Data) of
+	Ret = case egs_proto:parse(Data) of
 		{command, Command, Channel} ->
 			case Channel of
 				1 -> CallbackMod:cast(Command, Data, Client);

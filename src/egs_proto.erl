@@ -17,7 +17,7 @@
 %%	You should have received a copy of the GNU Affero General Public License
 %%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
--module(psu_proto).
+-module(egs_proto).
 -compile(export_all).
 
 -include("include/records.hrl").
@@ -1491,7 +1491,7 @@ build_0a0a_item_variables([], _N, Acc) ->
 	Padding = 17280 - 8 * byte_size(Bin),
 	<< Bin/binary, 0:Padding >>;
 build_0a0a_item_variables([{ItemID, Variables}|Tail], N, Acc) ->
-	build_0a0a_item_variables(Tail, N + 1, [psu_proto:build_item_variables(ItemID, N, Variables)|Acc]).
+	build_0a0a_item_variables(Tail, N + 1, [build_item_variables(ItemID, N, Variables)|Acc]).
 
 build_0a0a_item_constants([], Acc) ->
 	Bin = iolist_to_binary(lists:reverse(Acc)),
@@ -1502,7 +1502,7 @@ build_0a0a_item_constants([{ItemID, _Variables}|Tail], Acc) ->
 	UCS2Name = << << X:8, 0:8 >> || X <- Name >>,
 	NamePadding = 8 * (46 - byte_size(UCS2Name)),
 	<< Category:8, _:24 >> = << ItemID:32 >>,
-	DataBin = psu_proto:build_item_constants(Data),
+	DataBin = build_item_constants(Data),
 	RarityInt = Rarity - 1,
 	Bin = << UCS2Name/binary, 0:NamePadding, RarityInt:8, Category:8, SellPrice:32/little, DataBin/binary >>,
 	build_0a0a_item_constants(Tail, [Bin|Acc]).

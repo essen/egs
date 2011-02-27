@@ -47,9 +47,9 @@ raw(Command, _Data, _Client) ->
 %% @todo Reject wrong platforms too.
 event({system_client_version_info, _Entrance, _Language, _Platform, Version}, Client=#client{socket=Socket})
 		when Version < 2009002 ->
-	psu_proto:send_0231("http://psumods.co.uk/forums/comments.php?DiscussionID=40#Item_1", Client),
+	egs_proto:send_0231("http://psumods.co.uk/forums/comments.php?DiscussionID=40#Item_1", Client),
 	{ok, ErrorMsg} = file:read_file("priv/login/error_version.txt"),
-	psu_proto:send_0223(ErrorMsg, Client),
+	egs_proto:send_0223(ErrorMsg, Client),
 	ssl:close(Socket),
 	closed;
 event({system_client_version_info, _Entrance, _Language, _Platform, _Version}, _Client) ->
@@ -58,7 +58,7 @@ event({system_client_version_info, _Entrance, _Language, _Platform, _Version}, _
 %% @doc Game server info request handler.
 event(system_game_server_request, Client=#client{socket=Socket}) ->
 	{ServerIP, ServerPort} = egs_conf:read(game_server),
-	psu_proto:send_0216(ServerIP, ServerPort, Client),
+	egs_proto:send_0216(ServerIP, ServerPort, Client),
 	ssl:close(Socket),
 	closed;
 
@@ -67,7 +67,7 @@ event(system_game_server_request, Client=#client{socket=Socket}) ->
 event({system_key_auth_request, AuthGID, AuthKey}, Client) ->
 	egs_accounts:key_auth(AuthGID, AuthKey),
 	Client2 = Client#client{gid=AuthGID},
-	psu_proto:send_0d05(Client2),
+	egs_proto:send_0d05(Client2),
 	{ok, egs_char_select, Client2};
 
 %% @doc Authentication request handler. Currently always succeed.
@@ -77,10 +77,10 @@ event({system_login_auth_request, Username, Password}, Client) ->
 	{ok, GID} = egs_accounts:login_auth(Username, Password),
 	{ok, AuthKey} = egs_accounts:key_auth_init(GID),
 	io:format("auth success for ~s ~s~n", [Username, Password]),
-	psu_proto:send_0223(GID, AuthKey, Client);
+	egs_proto:send_0223(GID, AuthKey, Client);
 
 %% @doc MOTD request handler. Page number starts at 0.
 %% @todo Currently ignore the language and send the same MOTD file to everyone.
 event({system_motd_request, Page, _Language}, Client) ->
 	{ok, MOTD} = file:read_file("priv/login/motd.txt"),
-	psu_proto:send_0225(MOTD, Page, Client).
+	egs_proto:send_0225(MOTD, Page, Client).

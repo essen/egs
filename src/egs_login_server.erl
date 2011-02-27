@@ -31,5 +31,5 @@ start_link(Port) ->
 %% @doc Initialize the game client and start receiving messages.
 init(Socket) ->
 	Client = #client{socket=Socket, gid=egs_accounts:tmp_gid()},
-	psu_proto:send_0202(Client),
+	egs_proto:send_0202(Client),
 	egs_network:recv(<< >>, egs_login, Client).

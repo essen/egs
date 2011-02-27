@@ -58,5 +58,5 @@ on_exit(Pid) ->
 init(Socket) ->
 	timer:send_interval(5000, {egs, keepalive}),
 	Client = #client{socket=Socket, gid=egs_accounts:tmp_gid()},
-	psu_proto:send_0202(Client),
+	egs_proto:send_0202(Client),
 	egs_network:recv(<< >>, egs_login, Client).
