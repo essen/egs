@@ -49,7 +49,6 @@
 	gid			:: integer(),
 	lid = 16#ffff	:: 0..16#ffff,
 	pid			:: pid(),
-	time		:: integer(),
 	%% Character information.
 	%% @todo Specs it.
 	type = white,
