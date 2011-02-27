@@ -67,7 +67,6 @@
 	money = 1000000,
 	blastbar = 0,
 	luck = 3,
-	playtime = 0,
 	appearance,
 	onlinestatus = 0,
 	options = {options, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0},

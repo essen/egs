@@ -1842,7 +1842,7 @@ send_1a07(#client{socket=Socket, gid=DestGID, lid=DestLID}) ->
 %% Common binary building functions.
 
 %% @todo Handle class levels.
-build_char_level(#users{type=Type, mainlevel=#level{number=Level, exp=EXP}, blastbar=BlastBar, luck=Luck, money=Money, playtime=PlayTime}) ->
+build_char_level(#users{type=Type, mainlevel=#level{number=Level, exp=EXP}, blastbar=BlastBar, luck=Luck, money=Money}) ->
 	ClassesBin = case Type of
 		npc ->
 			<<	16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32,
@@ -1853,6 +1853,7 @@ build_char_level(#users{type=Type, mainlevel=#level{number=Level, exp=EXP}, blas
 				16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32,
 				16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32, 16#01000000:32 >>
 	end,
+	PlayTime = 0, %% @todo
 	<< Level:32/little, BlastBar:16/little, Luck:8, 0:40, EXP:32/little, 0:32, Money:32/little, PlayTime:32/little, ClassesBin/binary >>.
 
 build_item_constants(#psu_clothing_item{appearance=Appearance, manufacturer=Manufacturer, type=Type, overlap=Overlap, gender=Gender, colors=Colors}) ->
