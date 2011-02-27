@@ -39,23 +39,3 @@ char_load(User, Client) ->
 	%% 0303
 	psu_proto:send_1602(Client),
 	psu_proto:send_021b(Client).
-
-%% @todo Don't change the NPC info unless you are the leader!
-npc_load(_Leader, [], _Client) ->
-	ok;
-npc_load(Leader, [{PartyPos, NPCGID}|NPCList], Client) ->
-	{ok, OldNPCUser} = egs_users:read(NPCGID),
-	#users{instancepid=InstancePid, area=Area, entryid=EntryID, pos=Pos} = Leader,
-	NPCUser = OldNPCUser#users{lid=PartyPos, instancepid=InstancePid, areatype=mission, area=Area, entryid=EntryID, pos=Pos},
-	%% @todo This one on mission end/abort?
-	%~ OldNPCUser#users{lid=PartyPos, instancepid=undefined, areatype=AreaType, area={0, 0, 0}, entryid=0, pos={0.0, 0.0, 0.0, 0}}
-	egs_users:write(NPCUser),
-	psu_proto:send_010d(NPCUser, Client),
-	psu_proto:send_0201(NPCUser, Client),
-	psu_proto:send_0215(0, Client),
-	psu_proto:send_0a04(NPCUser#users.gid, Client),
-	psu_proto:send_1004(npc_mission, NPCUser, PartyPos, Client),
-	psu_proto:send_100f((NPCUser#users.character)#characters.npcid, PartyPos, Client),
-	psu_proto:send_1601(PartyPos, Client),
-	psu_proto:send_1016(PartyPos, Client),
-	npc_load(Leader, NPCList, Client).
