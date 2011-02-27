@@ -21,7 +21,7 @@
 -export([
 	character_tuple_to_binary/1, character_user_to_binary/1, class_atom_to_binary/1, class_binary_to_atom/1,
 	gender_atom_to_binary/1, gender_binary_to_atom/1, options_binary_to_tuple/1, options_tuple_to_binary/1,
-	race_atom_to_binary/1, race_binary_to_atom/1, se_list_to_binary/1, stats_tuple_to_binary/1, validate_name/1
+	race_atom_to_binary/1, race_binary_to_atom/1, stats_tuple_to_binary/1, validate_name/1
 ]).
 
 -include("include/records.hrl").
@@ -45,12 +45,11 @@ character_tuple_to_binary(Tuple) ->
 %% @todo The value before IntDir seems to be the player's current animation. 01 stand up, 08 ?, 17 normal sit
 
 character_user_to_binary(User) ->
-	#users{gid=CharGID, lid=CharLID, npcid=NPCid, type=Type, mainlevel=Level, stats=Stats, se=SE, currenthp=CurrentHP, maxhp=MaxHP,
+	#users{gid=CharGID, lid=CharLID, npcid=NPCid, type=Type, mainlevel=Level, stats=Stats, currenthp=CurrentHP, maxhp=MaxHP,
 		pos={X, Y, Z, Dir}, area={QuestID, ZoneID, MapID}, entryid=EntryID, prev_area={PrevQuestID, PrevZoneID, PrevMapID}, prev_entryid=PrevEntryID} = User,
 	#level{number=LV} = Level,
 	CharBin = psu_characters:character_tuple_to_binary(User),
 	StatsBin = psu_characters:stats_tuple_to_binary(Stats),
-	SEBin = psu_characters:se_list_to_binary(SE),
 	EXPNextLevel = 100,
 	EXPCurrentLevel = 0,
 	IntDir = trunc(Dir * 182.0416),
@@ -61,7 +60,7 @@ character_user_to_binary(User) ->
 		16#0100:16, IntDir:16/little, X:32/little-float, Y:32/little-float, Z:32/little-float, 0:64,
 		PrevQuestID:32/little, PrevZoneID:32/little, PrevMapID:32/little, PrevEntryID:32/little,
 		CharBin/binary, EXPNextLevel:32/little, EXPCurrentLevel:32/little, MaxHP:32/little,
-		StatsBin/binary, 0:32, SEBin/binary, 0:32, LV:32/little, StatsBin/binary, CurrentHP:32/little, MaxHP:32/little,
+		StatsBin/binary, 0:96, LV:32/little, StatsBin/binary, CurrentHP:32/little, MaxHP:32/little,
 		0:1344, 16#0000803f:32, 0:64, 16#0000803f:32, 0:64, 16#0000803f:32, 0:64, 16#0000803f:32, 0:64, 16#0000803f:32, 0:160, 16#0000803f:32, 0:352 >>.
 
 %% @doc Convert a class atom into a binary to be sent to clients.
@@ -165,12 +164,6 @@ race_binary_to_atom(RaceBin) ->
 		2 -> cast;
 		3 -> beast
 	end.
-
-%% @doc Convert a list of status effects into a binary to be sent to clients.
-%% @todo Do it for real.
-
-se_list_to_binary(_List) ->
-	<< 0:32 >>.
 
 %% @doc Convert the tuple of stats data into a binary to be sent to clients.
 
