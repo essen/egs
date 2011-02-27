@@ -192,21 +192,82 @@ raw(Command, _Data, Client) ->
 
 %% Events.
 
+%% @doc Load the given map as a standard lobby.
 %% @todo When changing lobby to the room, or room to lobby, we must perform an universe change.
-%% @todo Probably move area_load inside the event and make other events call this one when needed.
+%% @todo Handle area_change event for APCs in story missions (characters with PartyPos defined).
 event({area_change, QuestID, ZoneID, MapID, EntryID}, Client) ->
 	event({area_change, QuestID, ZoneID, MapID, EntryID, 16#ffffffff}, Client);
+event({area_change, QuestID, ZoneID, MapID, EntryID, PartyPos=16#ffffffff}, Client) ->
+	io:format("~p: area change (~b,~b,~b,~b,~b)~n", [Client#client.gid, QuestID, ZoneID, MapID, EntryID, PartyPos]),
+	{ok, OldUser} = egs_users:read(Client#client.gid),
+	{OldQuestID, OldZoneID, _OldMapID} = OldUser#users.area,
+	QuestChange = OldQuestID /= QuestID,
+	ZoneChange = if OldQuestID =:= QuestID, OldZoneID =:= ZoneID -> false; true -> true end,
+	AreaType = egs_quests_db:area_type(QuestID, ZoneID),
+	AreaShortName = "dammy", %% @todo Load the short name from egs_quests_db.
+	{IsSeasonal, SeasonID} = egs_seasons:read(QuestID),
+	User = OldUser#users{areatype=AreaType, area={QuestID, ZoneID, MapID}, entryid=EntryID},
+	egs_users:write(User), %% @todo Booh ugly! But temporary.
+	%% Load the quest.
+	User2 = if QuestChange ->
+			psu_proto:send_0c00(User, Client),
+			psu_proto:send_020e(egs_quests_db:quest_nbl(QuestID), Client),
+			User#users{questpid=egs_universes:lobby_pid(User#users.uni, QuestID)};
+		true -> User
+	end,
+	%% Load the zone.
+	Client1 = if ZoneChange ->
+			ZonePid = egs_quests:zone_pid(User2#users.questpid, ZoneID),
+			egs_zones:leave(User2#users.zonepid, User2#users.gid),
+			NewLID = egs_zones:enter(ZonePid, User2#users.gid),
+			NewClient = Client#client{lid=NewLID},
+			{ok, User3} = egs_users:read(User2#users.gid),
+			psu_proto:send_0a05(NewClient),
+			psu_proto:send_0111(User3, 6, NewClient),
+			psu_proto:send_010d(User3, NewClient),
+			psu_proto:send_0200(ZoneID, AreaType, NewClient),
+			psu_proto:send_020f(egs_quests_db:zone_nbl(QuestID, ZoneID), egs_zones:setid(ZonePid), SeasonID, NewClient),
+			NewClient;
+		true ->
+			User3 = User2,
+			Client
+	end,
+	%% Save the user.
+	egs_users:write(User3),
+	%% Load the player location.
+	Client2 = Client1#client{areanb=Client#client.areanb + 1},
+	psu_proto:send_0205(User3, IsSeasonal, Client2),
+	psu_proto:send_100e(User3#users.area, User3#users.entryid, AreaShortName, Client2),
+	%% Load the zone objects.
+	if ZoneChange ->
+			psu_proto:send_1212(Client2); %% @todo Only sent if there is a set file.
+		true -> ignore
+	end,
+	%% Load the player.
+	psu_proto:send_0201(User3, Client2),
+	if ZoneChange ->
+			psu_proto:send_0a06(User3, Client2),
+			%% Load the other players in the zone.
+			OtherPlayersGID = egs_zones:get_all_players(User3#users.zonepid, User3#users.gid),
+			if	OtherPlayersGID =:= [] -> ignore;
+				true ->
+					OtherPlayers = egs_users:select(OtherPlayersGID),
+					psu_proto:send_0233(OtherPlayers, Client)
+			end;
+		true -> ignore
+	end,
+	%% End of loading.
+	Client3 = Client2#client{areanb=Client2#client.areanb + 1},
+	psu_proto:send_0208(Client3),
+	psu_proto:send_0236(Client3),
+	%% @todo Load APC characters.
+	{ok, Client3};
 event({area_change, QuestID, ZoneID, MapID, EntryID, PartyPos}, Client) ->
-	case PartyPos of
-		16#ffffffff ->
-			io:format("~p: area change (~b,~b,~b,~b,~b)~n", [Client#client.gid, QuestID, ZoneID, MapID, EntryID, PartyPos]),
-			psu_game:area_load(QuestID, ZoneID, MapID, EntryID, Client);
-		_Any -> %% @todo Handle area_change event for NPCs in story missions.
-			ignore
-	end;
+	io:format("~p: area change (~b,~b,~b,~b,~b)~n", [Client#client.gid, QuestID, ZoneID, MapID, EntryID, PartyPos]),
+	ignore;
 
 %% @doc After the character has been (re)loaded, change the area he's in.
-%% @todo The area_load function should probably not change the user's values.
+%% @todo The area_change event should probably not change the user's values.
 %% @todo Remove that ugly code when the above is done.
 event(char_load_complete, Client=#client{gid=GID}) ->
 	{ok, User=#users{area={QuestID, ZoneID, MapID}, entryid=EntryID}} = egs_users:read(GID),
