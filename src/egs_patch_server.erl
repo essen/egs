@@ -80,7 +80,7 @@ recv(CSocket, SoFar, State) ->
 %% @doc Split the given binary into a list of commands.
 split(<< >>, Acc) ->
 	{lists:reverse(Acc), << >>};
-split(Rest = << Size:32/little, Data/bits >>, Acc) when Data + 4 < Size ->
+split(Rest = << Size:32/little, Data/bits >>, Acc) when byte_size(Data) + 4 < Size ->
 	{lists:reverse(Acc), Rest};
 split(<< Size:32/little, Cmd:16/little, _Junk:16, Rest/bits >>, Acc) ->
 	BitSize = 8 * Size - 64,
