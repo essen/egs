@@ -83,6 +83,10 @@ event entr_unit0004 ->
 	push 0, npc.talk_on, %% Linear Line NPC.
 	push 1, npc.talk_on. %% Space Docks NPC.
 
+%% @doc Enter map 5 event. Initialize the labels.
+event entr_unit0005 ->
+	push 6, push 0, obj.set_caption. %% Elevators.
+
 %% @doc Enter map 103 event. Initialize the label.
 event entr_unit0103 ->
 	push 3, push 0, obj.set_caption. %% Exits to 3rd floor.
@@ -118,7 +122,7 @@ function coli_unit0001_elevator ->
 	push 4,  %% selected option: 1st floor
 	mes.select_win_b,
 	case
-		0 -> push 11, push 5, push 0, player.change_unit;
+		0 -> push 0, push 5, num_get nElevatorEntry, player.change_unit;
 		1 -> push 0, push 4, num_get nElevatorEntry, player.change_unit;
 		2 -> push 0, push 3, num_get nElevatorEntry, player.change_unit;
 		3 -> push 0, push 2, num_get nElevatorEntry, player.change_unit
@@ -154,7 +158,7 @@ function coli_unit0002_elevator ->
 	push 3,  %% selected option: 2nd floor
 	mes.select_win_b,
 	case
-		0 -> push 11, push 5, push 0, player.change_unit;
+		0 -> push 0, push 5, num_get nElevatorEntry, player.change_unit;
 		1 -> push 0, push 4, num_get nElevatorEntry, player.change_unit;
 		2 -> push 0, push 3, num_get nElevatorEntry, player.change_unit;
 		4 -> push 0, push 1, num_get nElevatorEntry, player.change_unit
@@ -204,7 +208,7 @@ function coli_unit0003_elevator ->
 	push 2,  %% selected option: 3rd floor
 	mes.select_win_b,
 	case
-		0 -> push 11, push 5, push 0, player.change_unit;
+		0 -> push 0, push 5, num_get nElevatorEntry, player.change_unit;
 		1 -> push 0, push 4, num_get nElevatorEntry, player.change_unit;
 		3 -> push 0, push 2, num_get nElevatorEntry, player.change_unit;
 		4 -> push 0, push 1, num_get nElevatorEntry, player.change_unit
@@ -254,7 +258,7 @@ function coli_unit0004_elevator ->
 	push 1,  %% selected option: 4th floor
 	mes.select_win_b,
 	case
-		0 -> push 11, push 5, push 0, player.change_unit;
+		0 -> push 0, push 5, num_get nElevatorEntry, player.change_unit;
 		2 -> push 0, push 3, num_get nElevatorEntry, player.change_unit;
 		3 -> push 0, push 2, num_get nElevatorEntry, player.change_unit;
 		4 -> push 0, push 1, num_get nElevatorEntry, player.change_unit
@@ -286,6 +290,42 @@ event coli_unit0004_obje023 ->
 	push 23,
 	num_set nElevatorEntry,
 	coli_unit0004_elevator,
+	num_get nElevatorEntry,
+	obj.coli_end.
+
+%% Map 5.
+
+function coli_unit0005_elevator ->
+	player.pad_off,
+	push 39, %% return
+	push 29, %% 1st floor
+	push 31, %% 2nd floor
+	push 33, %% 3rd floor
+	push 35, %% 4th floor
+	push 38, %% 5th floor
+	push 27, %% stringid question
+	push 6,  %% number of options
+	push 0,  %% selected option: 5th floor
+	mes.select_win_b,
+	case
+		1 -> push 0, push 4, num_get nElevatorEntry, player.change_unit;
+		2 -> push 0, push 3, num_get nElevatorEntry, player.change_unit;
+		3 -> push 0, push 2, num_get nElevatorEntry, player.change_unit;
+		4 -> push 0, push 1, num_get nElevatorEntry, player.change_unit
+	end,
+	player.pad_on.
+
+event coli_unit0005_obje022 ->
+	push 22,
+	num_set nElevatorEntry,
+	coli_unit0005_elevator,
+	num_get nElevatorEntry,
+	obj.coli_end.
+
+event coli_unit0005_obje023 ->
+	push 23,
+	num_set nElevatorEntry,
+	coli_unit0005_elevator,
 	num_get nElevatorEntry,
 	obj.coli_end.
 
