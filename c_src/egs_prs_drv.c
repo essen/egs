@@ -1,6 +1,6 @@
 /*
 	@author Loïc Hoguin <essen@dev-extend.eu>
-	@copyright 2010 Loïc Hoguin.
+	@copyright 2010-2011 Loïc Hoguin.
 	@doc PRS Erlang driver for EGS.
 
 	This file is part of EGS.

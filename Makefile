@@ -1,5 +1,5 @@
 #	EGS: Erlang Game Server
-#	Copyright (C) 2010  Loic Hoguin
+#	Copyright (C) 2010-2011  Loic Hoguin
 #
 #	This file is part of EGS.
 #
