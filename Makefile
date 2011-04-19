@@ -16,14 +16,23 @@
 #	You should have received a copy of the GNU Affero General Public License
 #	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
+REBAR = rebar
+
 all: server
 
 server: deps
-	@./rebar compile
+	@$(REBAR) compile
 
 deps:
-	@./rebar get-deps
+	@$(REBAR) get-deps
 
 clean:
-	@./rebar clean
+	@$(REBAR) clean
 	rm -f erl_crash.dump
+
+tests:
+	@$(REBAR) eunit
+	@$(REBAR) ct
+
+dialyze:
+	@$(REBAR) dialyze
