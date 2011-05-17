@@ -46,21 +46,23 @@ raw(Command, _Data, _Client) ->
 
 %% @doc Reject version < 2.0009.2.
 %% @todo Reject wrong platforms too.
-event({system_client_version_info, _Entrance, _Language, _Platform, Version}, Client=#client{socket=Socket})
+event({system_client_version_info, _Entrance, _Language, _Platform, Version},
+		Client=#client{socket=Socket, transport=Transport})
 		when Version < 2009002 ->
 	egs_proto:send_0231("http://psumods.co.uk/forums/comments.php?DiscussionID=40#Item_1", Client),
 	{ok, ErrorMsg} = file:read_file("priv/login/error_version.txt"),
 	egs_proto:send_0223(ErrorMsg, Client),
-	ssl:close(Socket),
+	Transport:close(Socket),
 	closed;
 event({system_client_version_info, _Entrance, _Language, _Platform, _Version}, _Client) ->
 	ok;
 
 %% @doc Game server info request handler.
-event(system_game_server_request, Client=#client{socket=Socket}) ->
+event(system_game_server_request,
+		Client=#client{socket=Socket, transport=Transport}) ->
 	{ServerIP, ServerPort} = egs_conf:read(game_server),
 	egs_proto:send_0216(ServerIP, ServerPort, Client),
-	ssl:close(Socket),
+	Transport:close(Socket),
 	closed;
 
 %% @doc Authenticate the user by pattern matching its saved state against the key received.

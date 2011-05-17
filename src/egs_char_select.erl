@@ -24,8 +24,8 @@
 -include("include/records.hrl").
 
 %% @doc Send a keepalive.
-keepalive(#client{socket=Socket}) ->
-	egs_proto:send_keepalive(Socket).
+keepalive(Client) ->
+	egs_proto:send_keepalive(Client).
 
 %% @doc We don't expect any message here.
 info(_Msg, _Client) ->

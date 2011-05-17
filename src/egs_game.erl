@@ -25,13 +25,13 @@
 -include("include/records.hrl").
 
 %% @doc Send a keepalive.
-keepalive(#client{socket=Socket}) ->
-	egs_proto:send_keepalive(Socket).
+keepalive(Client) ->
+	egs_proto:send_keepalive(Client).
 
 %% @doc Forward the broadcasted command to the client.
-info({egs, cast, Command}, #client{socket=Socket, gid=GID}) ->
+info({egs, cast, Command}, Client=#client{gid=GID}) ->
 	<< A:64/bits, _:32, B:96/bits, _:64, C/bits >> = Command,
-	egs_proto:packet_send(Socket, << A/binary, 16#00011300:32, B/binary, 16#00011300:32, GID:32/little, C/binary >>);
+	egs_proto:packet_send(Client, << A/binary, 16#00011300:32, B/binary, 16#00011300:32, GID:32/little, C/binary >>);
 
 %% @doc Forward the chat message to the client.
 info({egs, chat, FromGID, ChatTypeID, ChatGID, ChatName, ChatModifiers, ChatMessage}, Client) ->
@@ -125,53 +125,53 @@ raw(16#0404, << _:352, Data/bits >>, Client) ->
 
 %% @todo Used in the tutorial. Not sure what it does. Give an item (the PA) maybe?
 %% @todo Probably should ignore that until more is known.
-raw(16#0a09, _Data, #client{socket=Socket, gid=GID}) ->
-	egs_proto:packet_send(Socket, << 16#0a090300:32, 0:32, 16#00011300:32, GID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64, 16#00003300:32, 0:32 >>);
+raw(16#0a09, _Data, Client=#client{gid=GID}) ->
+	egs_proto:packet_send(Client, << 16#0a090300:32, 0:32, 16#00011300:32, GID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64, 16#00003300:32, 0:32 >>);
 
 %% @todo Figure out this command.
-raw(16#0c11, << _:352, A:32/little, B:32/little >>, #client{socket=Socket, gid=GID}) ->
+raw(16#0c11, << _:352, A:32/little, B:32/little >>, Client=#client{gid=GID}) ->
 	io:format("~p: 0c11 ~p ~p~n", [GID, A, B]),
-	egs_proto:packet_send(Socket, << 16#0c120300:32, 0:160, 16#00011300:32, GID:32/little, 0:64, A:32/little, 1:32/little >>);
+	egs_proto:packet_send(Client, << 16#0c120300:32, 0:160, 16#00011300:32, GID:32/little, 0:64, A:32/little, 1:32/little >>);
 
 %% @doc Set flag handler. Associate a new flag with the character.
 %%      Just reply with a success value for now.
 %% @todo God save the flags.
-raw(16#0d04, << _:352, Data/bits >>, #client{socket=Socket, gid=GID}) ->
+raw(16#0d04, << _:352, Data/bits >>, Client=#client{gid=GID}) ->
 	<< Flag:128/bits, A:16/bits, _:8, B/bits >> = Data,
 	io:format("~p: flag handler for ~s~n", [GID, re:replace(Flag, "\\0+", "", [global, {return, binary}])]),
-	egs_proto:packet_send(Socket, << 16#0d040300:32, 0:160, 16#00011300:32, GID:32/little, 0:64, Flag/binary, A/binary, 1, B/binary >>);
+	egs_proto:packet_send(Client, << 16#0d040300:32, 0:160, 16#00011300:32, GID:32/little, 0:64, Flag/binary, A/binary, 1, B/binary >>);
 
 %% @doc Initialize a vehicle object.
 %% @todo Find what are the many values, including the odd Whut value (and whether it's used in the reply).
 %% @todo Separate the reply.
-raw(16#0f00, << _:352, Data/bits >>, #client{socket=Socket, gid=GID}) ->
+raw(16#0f00, << _:352, Data/bits >>, Client=#client{gid=GID}) ->
 	<< A:32/little, 0:16, B:16/little, 0:16, C:16/little, 0, Whut:8, D:16/little, 0:16,
 		E:16/little, 0:16, F:16/little, G:16/little, H:16/little, I:32/little >> = Data,
 	io:format("~p: init vehicle: ~b ~b ~b ~b ~b ~b ~b ~b ~b ~b~n", [GID, A, B, C, Whut, D, E, F, G, H, I]),
-	egs_proto:packet_send(Socket, << 16#12080300:32, 0:160, 16#00011300:32, GID:32/little, 0:64,
+	egs_proto:packet_send(Client, << 16#12080300:32, 0:160, 16#00011300:32, GID:32/little, 0:64,
 		A:32/little, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32, 16#ffffffff:32,
 		0:16, B:16/little, 0:16, C:16/little, 0:16, D:16/little, 0:112,
 		E:16/little, 0:16, F:16/little, H:16/little, 1, 0, 100, 0, 10, 0, G:16/little, 0:16 >>);
 
 %% @doc Enter vehicle.
 %% @todo Separate the reply.
-raw(16#0f02, << _:352, Data/bits >>, #client{socket=Socket, gid=GID}) ->
+raw(16#0f02, << _:352, Data/bits >>, Client=#client{gid=GID}) ->
 	<< A:32/little, B:32/little, C:32/little >> = Data,
 	io:format("~p: enter vehicle: ~b ~b ~b~n", [GID, A, B, C]),
 	HP = 100,
-	egs_proto:packet_send(Socket, << 16#120a0300:32, 0:160, 16#00011300:32, GID:32/little, 0:64, A:32/little, B:32/little, C:32/little, HP:32/little >>);
+	egs_proto:packet_send(Client, << 16#120a0300:32, 0:160, 16#00011300:32, GID:32/little, 0:64, A:32/little, B:32/little, C:32/little, HP:32/little >>);
 
 %% @doc Sent right after entering the vehicle. Can't move without it.
 %% @todo Separate the reply.
-raw(16#0f07, << _:352, Data/bits >>, #client{socket=Socket, gid=GID}) ->
+raw(16#0f07, << _:352, Data/bits >>, Client=#client{gid=GID}) ->
 	<< A:32/little, B:32/little >> = Data,
 	io:format("~p: after enter vehicle: ~b ~b~n", [GID, A, B]),
-	egs_proto:packet_send(Socket, << 16#120f0300:32, 0:160, 16#00011300:32, GID:32/little, 0:64, A:32/little, B:32/little >>);
+	egs_proto:packet_send(Client, << 16#120f0300:32, 0:160, 16#00011300:32, GID:32/little, 0:64, A:32/little, B:32/little >>);
 
 %% @todo Not sure yet.
 raw(16#1019, _Data, _Client) ->
 	ignore;
-	%~ egs_proto:packet_send(Socket, << 16#10190300:32, 0:160, 16#00011300:32, GID:32/little, 0:64, 0:192, 16#00200000:32, 0:32 >>);
+	%~ egs_proto:packet_send(Client, << 16#10190300:32, 0:160, 16#00011300:32, GID:32/little, 0:64, 0:192, 16#00200000:32, 0:32 >>);
 
 %% @todo Not sure about that one though. Probably related to 1112 still.
 raw(16#1106, << _:352, Data/bits >>, Client) ->
@@ -384,7 +384,7 @@ event({counter_quest_options_request, CounterID}, Client) ->
 	egs_proto:send_0c10(egs_counters_db:opts(CounterID), Client);
 
 %% @todo A and B are mostly unknown. Like most of everything else from the command 0e00...
-event({hit, FromTargetID, ToTargetID, A, B}, Client=#client{socket=Socket, gid=GID}) ->
+event({hit, FromTargetID, ToTargetID, A, B}, Client=#client{gid=GID}) ->
 	{ok, User} = egs_users:read(GID),
 	%% hit!
 	#hit_response{type=Type, user=NewUser, exp=HasEXP, damage=Damage, targethp=TargetHP, targetse=TargetSE, events=Events} = psu_instance:hit(User, FromTargetID, ToTargetID),
@@ -398,7 +398,7 @@ event({hit, FromTargetID, ToTargetID, A, B}, Client=#client{socket=Socket, gid=G
 				true -> SE = 16#01000200;
 				false -> SE = 16#01000000
 			end,
-			egs_proto:packet_send(Socket, << 16#0e070300:32, 0:160, 16#00011300:32, GID:32/little, 0:64,
+			egs_proto:packet_send(Client, << 16#0e070300:32, 0:160, 16#00011300:32, GID:32/little, 0:64,
 				1:32/little, 16#01050000:32, Damage:32/little,
 				A/binary, 0:64, PlayerHP:32/little, 0:32, SE:32,
 				0:32, TargetHP:32/little, 0:32, B/binary,
@@ -428,11 +428,11 @@ event({item_description_request, ItemID}, Client) ->
 %% @todo Currently use a separate file for the data sent for the weapons.
 %% @todo TargetGID and TargetLID must be validated, they're either the player's or his NPC characters.
 %% @todo Handle NPC characters properly.
-event({item_equip, ItemIndex, TargetGID, TargetLID, A, B}, #client{socket=Socket, gid=GID}) ->
+event({item_equip, ItemIndex, TargetGID, TargetLID, A, B}, Client=#client{gid=GID}) ->
 	case egs_users:item_nth(GID, ItemIndex) of
 		{ItemID, Variables} when element(1, Variables) =:= psu_special_item_variables ->
 			<< Category:8, _:24 >> = << ItemID:32 >>,
-			egs_proto:packet_send(Socket, << 16#01050300:32, 0:64, TargetGID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
+			egs_proto:packet_send(Client, << 16#01050300:32, 0:64, TargetGID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
 				TargetGID:32/little, TargetLID:32/little, ItemIndex:8, 1:8, Category:8, A:8, B:32/little >>);
 		{ItemID, Variables} when element(1, Variables) =:= psu_striking_weapon_item_variables ->
 			#psu_item{data=Constants} = egs_items_db:read(ItemID),
@@ -443,7 +443,7 @@ event({item_equip, ItemIndex, TargetGID, TargetLID, A, B}, #client{socket=Socket
 				{default, Val} -> {Val, 0};
 				{custom, Val} -> {Val, 8}
 			end,
-			egs_proto:packet_send(Socket, << 16#01050300:32, 0:64, TargetGID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
+			egs_proto:packet_send(Client, << 16#01050300:32, 0:64, TargetGID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
 				TargetGID:32/little, TargetLID:32/little, ItemIndex:8, 1:8, Category:8, A:8, B:32/little,
 				SoundInt:32/little, HitboxA:16, HitboxB:16, HitboxC:16, HitboxD:16, SoundType:4, NbTargets:4, 0:8, Effect:8, Model:8 >>);
 		{ItemID, Variables} when element(1, Variables) =:= psu_trap_item_variables ->
@@ -456,30 +456,30 @@ event({item_equip, ItemIndex, TargetGID, TargetLID, A, B}, #client{socket=Socket
 				trap_g   -> << Effect:8, 16#4d0505:24, 16#4d000000:32, 16#00049001:32, 16#10000000:32 >>;
 				trap_ex  -> << Effect:8, 16#490a05:24, 16#4500000f:32, 16#4b055802:32, 16#10000000:32 >>
 			end,
-			egs_proto:packet_send(Socket, << 16#01050300:32, 0:64, TargetGID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
+			egs_proto:packet_send(Client, << 16#01050300:32, 0:64, TargetGID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
 				TargetGID:32/little, TargetLID:32/little, ItemIndex:8, 1:8, Category:8, A:8, B:32/little, Bin/binary >>);
 		undefined ->
 			%% @todo Shouldn't be needed later when NPCs are handled correctly.
 			ignore
 	end;
 
-event({item_set_trap, ItemIndex, TargetGID, TargetLID, A, B}, #client{socket=Socket, gid=GID}) ->
+event({item_set_trap, ItemIndex, TargetGID, TargetLID, A, B}, Client=#client{gid=GID}) ->
 	{ItemID, _Variables} = egs_users:item_nth(GID, ItemIndex),
 	egs_users:item_qty_add(GID, ItemIndex, -1),
 	<< Category:8, _:24 >> = << ItemID:32 >>,
-	egs_proto:packet_send(Socket, << 16#01050300:32, 0:64, TargetGID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
+	egs_proto:packet_send(Client, << 16#01050300:32, 0:64, TargetGID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
 		TargetGID:32/little, TargetLID:32/little, ItemIndex:8, 9:8, Category:8, A:8, B:32/little >>);
 
 %% @todo A and B are unknown.
 %% @see item_equip
-event({item_unequip, ItemIndex, TargetGID, TargetLID, A, B}, #client{socket=Socket, gid=GID}) ->
+event({item_unequip, ItemIndex, TargetGID, TargetLID, A, B}, Client=#client{gid=GID}) ->
 	Category = case ItemIndex of
 		% units would be 8, traps would be 12
 		19 -> 2; % armor
 		Y when Y =:= 5; Y =:= 6; Y =:= 7 -> 0; % clothes
 		_ -> 1 % weapons
 	end,
-	egs_proto:packet_send(Socket, << 16#01050300:32, 0:64, GID:32/little, 0:64, 16#00011300:32, GID:32/little,
+	egs_proto:packet_send(Client, << 16#01050300:32, 0:64, GID:32/little, 0:64, 16#00011300:32, GID:32/little,
 		0:64, TargetGID:32/little, TargetLID:32/little, ItemIndex, 2, Category, A, B:32/little >>);
 
 %% @todo Just ignore the meseta price for now and send the player where he wanna be!
@@ -567,7 +567,7 @@ event({npc_invite, NPCid}, Client=#client{gid=GID}) ->
 	egs_proto:send_101a(NPCid, PartyPos, Client);
 
 %% @todo Should be 0115(money) 010a03(confirm sale).
-event({npc_shop_buy, ShopItemIndex, QuantityOrColor}, Client=#client{socket=Socket, gid=GID}) ->
+event({npc_shop_buy, ShopItemIndex, QuantityOrColor}, Client=#client{gid=GID}) ->
 	ShopID = egs_users:shop_get(GID),
 	ItemID = egs_shops_db:nth(ShopID, ShopItemIndex + 1),
 	io:format("~p: npc shop ~p buy itemid ~8.16.0b quantity/color+1 ~p~n", [GID, ShopID, ItemID, QuantityOrColor]),
@@ -598,7 +598,7 @@ event({npc_shop_buy, ShopItemIndex, QuantityOrColor}, Client=#client{socket=Sock
 	NamePadding = 8 * (46 - byte_size(UCS2Name)),
 	<< Category:8, _:24 >> = << ItemID:32 >>,
 	RarityInt = Rarity - 1,
-	egs_proto:packet_send(Socket, << 16#010a0300:32, 0:64, GID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
+	egs_proto:packet_send(Client, << 16#010a0300:32, 0:64, GID:32/little, 0:64, 16#00011300:32, GID:32/little, 0:64,
 		GID:32/little, 0:32, 2:16/little, 0:16, (egs_proto:build_item_variables(ItemID, ItemUUID, Variables))/binary,
 		UCS2Name/binary, 0:NamePadding, RarityInt:8, Category:8, SellPrice:32/little, (egs_proto:build_item_constants(Constants))/binary >>);
 
@@ -608,10 +608,10 @@ event({npc_shop_enter, ShopID}, Client=#client{gid=GID}) ->
 	egs_users:shop_enter(GID, ShopID),
 	egs_proto:send_010a(egs_shops_db:read(ShopID), Client);
 
-event({npc_shop_leave, ShopID}, #client{socket=Socket, gid=GID}) ->
+event({npc_shop_leave, ShopID}, Client=#client{gid=GID}) ->
 	io:format("~p: npc shop leave ~p~n", [GID, ShopID]),
 	egs_users:shop_leave(GID),
-	egs_proto:packet_send(Socket, << 16#010a0300:32, 0:64, GID:32/little, 0:64, 16#00011300:32,
+	egs_proto:packet_send(Client, << 16#010a0300:32, 0:64, GID:32/little, 0:64, 16#00011300:32,
 		GID:32/little, 0:64, GID:32/little, 0:32 >>);
 
 %% @todo Should be 0115(money) 010a03(confirm sale).

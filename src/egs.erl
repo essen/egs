@@ -35,15 +35,17 @@ start() ->
 	ensure_started(public_key),
 	ensure_started(ssl),
 	ssl:seed(crypto:rand_bytes(256)),
+	ensure_started(cowboy),
 	application:start(egs).
 
 %% @spec stop() -> ok
 %% @doc Stop the EGS server.
 stop() ->
 	Res = application:stop(egs),
-	application:stop(ssl),
-	application:stop(public_key),
-	application:stop(crypto),
+	ok = application:stop(cowboy),
+	ok = application:stop(ssl),
+	ok = application:stop(public_key),
+	ok = application:stop(crypto),
 	Res.
 
 %% @doc Send a global message.

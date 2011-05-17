@@ -8,7 +8,8 @@
 		kernel,
 		stdlib,
 		crypto,
-		ssl
+		ssl,
+		cowboy
 	]},
 	{mod, {egs_app, []}},
 	{env, []}

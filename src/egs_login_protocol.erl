@@ -1,6 +1,6 @@
 %% @author Loïc Hoguin <essen@dev-extend.eu>
 %% @copyright 2010-2011 Loïc Hoguin.
-%% @doc Login server module.
+%% @doc Cowboy protocol module for the login server.
 %%
 %%	This file is part of EGS.
 %%
@@ -17,20 +17,20 @@
 %%	You should have received a copy of the GNU Affero General Public License
 %%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
--module(egs_login_server).
--export([start_link/1, init/1]).
+-module(egs_login_protocol).
+-export([start_link/3, init/2]).
 
 -include("include/types.hrl").
 -include("include/records.hrl").
 
-%% @spec start_link(Port) -> {ok,Pid::pid()}
-%% @doc Start the login server.
-start_link(Port) ->
-	Pid = spawn(egs_network, listen, [Port, ?MODULE]),
+-spec start_link(ssl:sslsocket(), module(), []) -> {ok, pid()}.
+start_link(Socket, Transport, []) ->
+	Pid = spawn_link(?MODULE, init, [Socket, Transport]),
 	{ok, Pid}.
 
-%% @doc Initialize the game client and start receiving messages.
-init(Socket) ->
-	Client = #client{socket=Socket, gid=egs_accounts:tmp_gid()},
+-spec init(ssl:sslsocket(), module()) -> ok | closed.
+init(Socket, Transport) ->
+	Client = #client{socket=Socket, transport=Transport,
+		gid=egs_accounts:tmp_gid()},
 	egs_proto:send_0202(Client),
-	egs_network:recv(<< >>, egs_login, Client).
+	egs_network:recv(<<>>, egs_login, Client).

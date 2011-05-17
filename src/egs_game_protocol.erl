@@ -1,6 +1,6 @@
 %% @author Loïc Hoguin <essen@dev-extend.eu>
 %% @copyright 2010-2011 Loïc Hoguin.
-%% @doc Game server module.
+%% @doc Cowboy protocol module for the game server.
 %%
 %%	This file is part of EGS.
 %%
@@ -17,19 +17,28 @@
 %%	You should have received a copy of the GNU Affero General Public License
 %%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
--module(egs_game_server).
--export([start_link/1, link_exit/0, on_exit/1, init/1]).
+-module(egs_game_protocol).
+-export([start_link/3, init/2, link_exit/0, on_exit/1]).
 
 -include("include/types.hrl").
 -include("include/records.hrl").
 
-%% @spec start_link(Port) -> {ok,Pid::pid()}
-%% @doc Start the game server.
-start_link(Port) ->
+-spec start_link(ssl:sslsocket(), module(), []) -> {ok, pid()}.
+start_link(Socket, Transport, []) ->
+	%% @todo Booh this is ugly. Needs supervision!
 	{ok, MPid} = egs_exit_mon:start_link({?MODULE, on_exit}),
 	register(egs_game_server_exit_mon, MPid),
-	LPid = spawn(egs_network, listen, [Port, ?MODULE]),
+	LPid = spawn_link(?MODULE, init, [Socket, Transport]),
 	{ok, LPid}.
+
+-spec init(ssl:sslsocket(), module()) -> ok | closed.
+%% @todo Handle keepalive messages globally?
+init(Socket, Transport) ->
+	timer:send_interval(5000, {egs, keepalive}),
+	Client = #client{socket=Socket, transport=Transport,
+		gid=egs_accounts:tmp_gid()},
+	egs_proto:send_0202(Client),
+	egs_network:recv(<<>>, egs_login, Client).
 
 %% @doc Link the on_exit handler to the current process.
 link_exit() ->
@@ -53,11 +62,3 @@ on_exit(Pid) ->
 	egs_universes:leave(User#users.uni),
 	egs_users:delete(User#users.gid),
 	io:format("game (~p): quit~n", [User#users.gid]).
-
-%% @doc Initialize the game client and start receiving messages.
-%% @todo Handle keepalive messages globally?
-init(Socket) ->
-	timer:send_interval(5000, {egs, keepalive}),
-	Client = #client{socket=Socket, gid=egs_accounts:tmp_gid()},
-	egs_proto:send_0202(Client),
-	egs_network:recv(<< >>, egs_login, Client).

@@ -19,14 +19,51 @@
 
 -module(egs_app).
 -behaviour(application).
--export([start/2, stop/1]).
+-export([start/2, stop/1]). %% API.
 
-%% @spec start(_Type, _StartArgs) -> ServerRet
-%% @doc application start callback for egs.
+-type application_start_type()
+	:: normal | {takeover, node()} | {failover, node()}.
+
+-define(SSL_OPTIONS, [{certfile, "priv/ssl/servercert.pem"},
+	{keyfile, "priv/ssl/serverkey.pem"}, {password, "alpha"}]).
+
+%% API.
+
+-spec start(application_start_type(), term()) -> {ok, pid()} | {error, atom()}.
 start(_Type, _StartArgs) ->
-	egs_sup:start_link().
+	case egs_sup:start_link() of
+		{ok, Pid} ->
+			start_patch_listeners(egs_conf:read(patch_ports)),
+			start_login_listeners(egs_conf:read(login_ports)),
+			{_ServerIP, GamePort} = egs_conf:read(game_server),
+			{ok, _GamePid} = cowboy:start_listener({game, GamePort}, 10,
+				cowboy_ssl_transport, [{port, GamePort}] ++ ?SSL_OPTIONS,
+				egs_game_protocol, []),
+			{ok, Pid};
+		{error, Reason} ->
+			{error, Reason}
+	end.
 
-%% @spec stop(_State) -> ServerRet
-%% @doc application stop callback for egs.
+-spec stop(term()) -> ok.
 stop(_State) ->
 	ok.
+
+%% Internal.
+
+-spec start_patch_listeners([inet:ip_port()]) -> ok.
+start_patch_listeners([]) ->
+	ok;
+start_patch_listeners([Port|Tail]) ->
+	{ok, _Pid} = cowboy:start_listener({patch, Port}, 10,
+		cowboy_tcp_transport, [{port, Port}],
+		egs_patch_protocol, []),
+	start_patch_listeners(Tail).
+
+-spec start_login_listeners([inet:ip_port()]) -> ok.
+start_login_listeners([]) ->
+	ok;
+start_login_listeners([Port|Tail]) ->
+	{ok, _Pid} = cowboy:start_listener({login, Port}, 10,
+		cowboy_ssl_transport, [{port, Port}] ++ ?SSL_OPTIONS,
+		egs_login_protocol, []),
+	start_login_listeners(Tail).

@@ -33,7 +33,6 @@ start_link() ->
 init([]) ->
 	Procs = [
 		{egs_conf, {egs_conf, start_link, []}, permanent, 5000, worker, dynamic},
-		{egs_servers_sup, {egs_servers_sup, start_link, []}, permanent, 5000, supervisor, [egs_servers_sup]},
 		{egs_quests_sup, {egs_quests_sup, start_link, []}, permanent, 5000, supervisor, [egs_quests_sup]},
 		{egs_zones_sup, {egs_zones_sup, start_link, []}, permanent, 5000, supervisor, [egs_zones_sup]},
 		{egs_accounts, {egs_accounts, start_link, []}, permanent, 5000, worker, dynamic},

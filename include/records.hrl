@@ -21,7 +21,8 @@
 
 %% @doc Client state. One per connected client.
 -record(client, {
-	socket			:: sslsocket(),
+	socket			:: ssl:sslsocket(),
+	transport		:: module(),
 	gid = 0			:: gid(),
 	slot = 0		:: character_slot(), %% @todo Probably should remove this one from the state.
 	lid = 16#ffff	:: lid(),

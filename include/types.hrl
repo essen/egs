@@ -17,12 +17,6 @@
 %%	You should have received a copy of the GNU Affero General Public License
 %%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
-%% Standard library types.
-
--opaque sslsocket() :: any().
-
-%% EGS types.
-
 -type gid() :: 0..16#ffffffff.
 -type lid() :: 0..1023 | 16#ffff.
 
