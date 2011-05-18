@@ -101,8 +101,11 @@ init([]) ->
 	{ok, #state{}}.
 
 handle_call({find_by_pid, Pid}, _From, State) ->
-	[User] = [User || {_GID, User} <- State#state.users, User#users.pid =:= Pid],
-	{reply, User, State};
+	L = [User || {_GID, User} <- State#state.users, User#users.pid =:= Pid],
+	case L of
+		[] -> {reply, undefined, State};
+		[User] -> {reply, User, State}
+	end;
 
 handle_call({set_zone, GID, ZonePid, LID}, _From, State) ->
 	{GID, User} = lists:keyfind(GID, 1, State#state.users),

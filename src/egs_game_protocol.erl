@@ -18,47 +18,48 @@
 %%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
 -module(egs_game_protocol).
--export([start_link/3, init/2, link_exit/0, on_exit/1]).
+-export([start_link/3, init/2]).
 
 -include("include/types.hrl").
 -include("include/records.hrl").
 
 -spec start_link(ssl:sslsocket(), module(), []) -> {ok, pid()}.
 start_link(Socket, Transport, []) ->
-	%% @todo Booh this is ugly. Needs supervision!
-	{ok, MPid} = egs_exit_mon:start_link({?MODULE, on_exit}),
-	register(egs_game_server_exit_mon, MPid),
-	LPid = spawn_link(?MODULE, init, [Socket, Transport]),
-	{ok, LPid}.
+	Pid = spawn_link(?MODULE, init, [Socket, Transport]),
+	{ok, Pid}.
 
--spec init(ssl:sslsocket(), module()) -> ok | closed.
+-spec init(ssl:sslsocket(), module()) -> ok.
 %% @todo Handle keepalive messages globally?
 init(Socket, Transport) ->
-	timer:send_interval(5000, {egs, keepalive}),
+	{ok, _TRef} = timer:send_interval(5000, {egs, keepalive}),
 	Client = #client{socket=Socket, transport=Transport,
 		gid=egs_accounts:tmp_gid()},
 	egs_proto:send_0202(Client),
-	egs_network:recv(<<>>, egs_login, Client).
+	try
+		egs_network:recv(<<>>, egs_login, Client)
+	after
+		terminate()
+	end.
 
-%% @doc Link the on_exit handler to the current process.
-link_exit() ->
-	egs_game_server_exit_mon ! {link, self()}.
-
-%% @spec on_exit(Pid) -> ok
-%% @doc Cleanup the data associated with the failing process.
+-spec terminate() -> ok.
 %% @todo Cleanup the instance process if there's nobody in it anymore.
 %% @todo Leave party instead of stopping it.
-on_exit(Pid) ->
-	User = egs_users:find_by_pid(Pid),
-	case User#users.partypid of
-		undefined ->
-			ignore;
-		PartyPid ->
-			{ok, NPCList} = psu_party:get_npc(PartyPid),
-			[egs_users:delete(NPCGID) || {_Spot, NPCGID} <- NPCList],
-			psu_party:stop(PartyPid)
-	end,
-	egs_zones:leave(User#users.zonepid, User#users.gid),
-	egs_universes:leave(User#users.uni),
-	egs_users:delete(User#users.gid),
-	io:format("game (~p): quit~n", [User#users.gid]).
+%% @todo Fix the crash when user isn't in egs_users yet.
+terminate() ->
+	case egs_users:find_by_pid(self()) of
+		undefined -> ok;
+		User ->
+			case User#users.partypid of
+				undefined ->
+					ignore;
+				PartyPid ->
+					{ok, NPCList} = psu_party:get_npc(PartyPid),
+					lists:foreach(fun({_Spot, NPCGID}) ->
+						egs_users:delete(NPCGID) end, NPCList),
+					psu_party:stop(PartyPid)
+			end,
+			egs_zones:leave(User#users.zonepid, User#users.gid),
+			egs_universes:leave(User#users.uni),
+			egs_users:delete(User#users.gid),
+			io:format("game (~p): quit~n", [User#users.gid])
+	end.
