@@ -20,7 +20,6 @@
 -module(egs_char_select).
 -export([keepalive/1, info/2, cast/3, raw/3, event/2]).
 
--include("include/types.hrl").
 -include("include/records.hrl").
 
 %% @doc Send a keepalive.

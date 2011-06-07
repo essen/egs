@@ -24,7 +24,6 @@
 	race_atom_to_binary/1, race_binary_to_atom/1, stats_tuple_to_binary/1
 ]).
 
--include("include/types.hrl").
 -include("include/records.hrl").
 
 %% @doc Convert a character tuple into a binary to be sent to clients.

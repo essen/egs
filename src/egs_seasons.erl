@@ -27,8 +27,6 @@
 %% Use the module name for the server's name.
 -define(SERVER, ?MODULE).
 
--include("include/types.hrl").
-
 %% Seasonal values: {IsSeasonal, SeasonID, QuestList}.
 -define(SEASON_NONE,      {0,255, []}).
 -define(SEASON_PARTY,     {1,  0, [1100000]}).

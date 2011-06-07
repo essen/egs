@@ -20,7 +20,6 @@
 -module(egs_proto).
 -compile(export_all).
 
--include("include/types.hrl").
 -include("include/records.hrl").
 
 %% @spec assert() -> ok

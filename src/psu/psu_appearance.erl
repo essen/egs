@@ -20,7 +20,6 @@
 -module(psu_appearance).
 -export([binary_to_tuple/2, tuple_to_binary/2, validate_char_create/3]).
 
--include("include/types.hrl").
 -include("include/records.hrl").
 
 %% @doc Convert the binary character creation appearance data into a tuple.

@@ -20,7 +20,6 @@
 -module(egs_network).
 -export([recv/3]). %% API.
 
--include("include/types.hrl").
 -include("include/records.hrl").
 
 %% API.

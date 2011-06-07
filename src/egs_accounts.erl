@@ -25,20 +25,18 @@
 
 -define(SERVER, ?MODULE).
 
--include("include/types.hrl").
-
 %% @todo Make accounts permanent.
 %% @todo Hash the password.
 %% @todo Add email, password_salt, is_ingame, register_time, last_login_time, etc.
 -record(accounts, {
-	gid			:: gid(),
+	gid			:: egs:gid(),
 	username	:: string(),
 	password	:: string(),
 	auth_state	:: undefined | {wait_for_authentication, binary(), any()}
 }).
 
 -record(state, {
-	accounts = []			:: list({GID::gid(), #accounts{}}),
+	accounts = []			:: list({egs:gid(), #accounts{}}),
 	next_gid = 10000001		:: integer(),
 	tmp_gid  = 16#ff000001	:: integer()
 }).
@@ -57,17 +55,17 @@ stop() ->
 get_folder(GID) ->
 	gen_server:call(?SERVER, {get_folder, GID}).
 
--spec key_auth(GID::gid(), AuthKey::binary()) -> ok | {error, badarg}.
+-spec key_auth(egs:gid(), AuthKey::binary()) -> ok | {error, badarg}.
 %% @doc Authenticate using the given key.
 key_auth(GID, AuthKey) ->
 	gen_server:call(?SERVER, {key_auth, GID, AuthKey}).
 
--spec key_auth_init(GID::gid()) -> {ok, AuthKey::binary()}.
+-spec key_auth_init(egs:gid()) -> {ok, AuthKey::binary()}.
 %% @doc Initialize key authentication. Obtain a key for a subsequent re-authentication on a different connection.
 key_auth_init(GID) ->
 	gen_server:call(?SERVER, {key_auth_init, GID}).
 
--spec key_auth_timeout(GID::gid()) -> ok.
+-spec key_auth_timeout(egs:gid()) -> ok.
 %% @doc Key authentication timeout handling.
 %% @todo Probably handle the authentication in a gen_fsm properly.
 key_auth_timeout(GID) ->
@@ -79,7 +77,7 @@ key_auth_timeout(GID) ->
 login_auth(Username, Password) ->
 	gen_server:call(?SERVER, {login_auth, Username, Password}).
 
--spec tmp_gid() -> GID::gid().
+-spec tmp_gid() -> egs:gid().
 %% @doc Return an unused temporary GID for initial connection and APC characters.
 tmp_gid() ->
 	gen_server:call(?SERVER, tmp_gid).

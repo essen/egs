@@ -23,8 +23,6 @@
 -export([start_link/2, stop/1, zone_pid/2]). %% API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
 
--include("include/types.hrl").
-
 -record(state, {zones}).
 
 %% API.

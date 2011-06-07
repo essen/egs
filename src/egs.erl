@@ -20,8 +20,22 @@
 -module(egs).
 -export([start/0, stop/0, global/1, warp/4, warp/5]). %% API.
 
-%% @todo Don't use an include file for type specs.
--include("include/types.hrl").
+%% Player and account-related types.
+
+-type gid() :: 0..16#ffffffff.
+-type lid() :: 0..1023 | 16#ffff.
+-type character_slot() :: 0..3.
+-export_type([gid/0, lid/0, character_slot/0]).
+
+%% Location related types.
+
+-type questid() :: 0..16#ffffffff. %% @todo What's the real max?
+-type zoneid() :: 0..16#ffff. %% @todo What's the real max?
+-type mapid() :: 0..9999.
+-type entryid() :: 0..16#ffff. %% @todo What's the real max?
+-type area() :: {questid(), zoneid(), mapid()}. %% @todo Probably remove later.
+-type position() :: {X::float(), Y::float(), Z::float(), Dir::float()}.
+-export_type([questid/0, zoneid/0, mapid/0, entryid/0, area/0, position/0]).
 
 %% API.
 

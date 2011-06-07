@@ -26,8 +26,6 @@
 %% Use the module name for the server's name.
 -define(SERVER, ?MODULE).
 
--include("include/types.hrl").
-
 -record(state, {quests=[], quests_bin=[], zones_bin=[], sets=[]}).
 
 %% API.

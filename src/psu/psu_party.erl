@@ -22,8 +22,6 @@
 -export([start_link/1, stop/1, join/3, leave/2, get_instance/1, set_instance/2, remove_instance/1, get_member/2, remove_member/2, get_npc/1]). %% API.
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
 
--include("include/types.hrl").
-
 -record(state, {free_spots, users, instancepid}).
 
 %% API

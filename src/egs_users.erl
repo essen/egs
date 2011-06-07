@@ -27,11 +27,10 @@
 
 -define(SERVER, ?MODULE).
 
--include("include/types.hrl").
 -include("include/records.hrl").
 
 -record(state, {
-	users = [] :: list({GID::gid(), #users{}})
+	users = [] :: list({egs:gid(), #users{}})
 }).
 
 %% API.

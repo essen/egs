@@ -23,9 +23,9 @@
 -record(client, {
 	socket			:: ssl:sslsocket(),
 	transport		:: module(),
-	gid = 0			:: gid(),
-	slot = 0		:: character_slot(), %% @todo Probably should remove this one from the state.
-	lid = 16#ffff	:: lid(),
+	gid = 0			:: egs:gid(),
+	slot = 0		:: egs:character_slot(), %% @todo Probably should remove this one from the state.
+	lid = 16#ffff	:: egs:lid(),
 	areanb = 0		:: non_neg_integer()
 }).
 
@@ -33,8 +33,8 @@
 %% @todo Probably can use a "param" or "extra" field to store the game-specific information (for things that don't need to be queried).
 -record(users, {
 	%% General information.
-	gid				:: gid(),
-	lid = 16#ffff	:: lid(),
+	gid				:: egs:gid(),
+	lid = 16#ffff	:: egs:lid(),
 	pid				:: pid(),
 	%% Character information.
 	%% @todo Specs it.
@@ -63,12 +63,12 @@
 	zonepid		:: pid(),
 	partypid	:: pid(),
 	areatype	:: counter | mission | lobby | myroom,
-	area		:: area(),
-	entryid		:: entryid(),
-	pos = {0.0, 0.0, 0.0, 0.0} :: position(),
+	area		:: egs:area(),
+	entryid		:: egs:entryid(),
+	pos = {0.0, 0.0, 0.0, 0.0} :: egs:position(),
 	shopid		:: integer(),
-	prev_area = {0, 0, 0} :: area(),
-	prev_entryid = 0 :: entryid(),
+	prev_area = {0, 0, 0} :: egs:area(),
+	prev_entryid = 0 :: egs:entryid(),
 	%% To be moved or deleted later on.
 	instancepid	:: pid()
 }).

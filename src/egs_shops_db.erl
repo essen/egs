@@ -26,8 +26,6 @@
 %% Use the module name for the server's name.
 -define(SERVER, ?MODULE).
 
--include("include/types.hrl").
-
 %% API.
 
 %% @spec start_link() -> {ok,Pid::pid()}

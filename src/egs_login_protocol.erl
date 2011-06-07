@@ -20,7 +20,6 @@
 -module(egs_login_protocol).
 -export([start_link/3, init/2]).
 
--include("include/types.hrl").
 -include("include/records.hrl").
 
 -spec start_link(ssl:sslsocket(), module(), []) -> {ok, pid()}.
