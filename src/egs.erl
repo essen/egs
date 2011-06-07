@@ -1,6 +1,6 @@
 %% @author Loïc Hoguin <essen@dev-extend.eu>
 %% @copyright 2010-2011 Loïc Hoguin.
-%% @doc EGS startup code.
+%% @doc EGS startup code and utility functions.
 %%
 %%	This file is part of EGS.
 %%
@@ -18,18 +18,14 @@
 %%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
 -module(egs).
--export([start/0, stop/0, global/1, warp/4, warp/5]).
+-export([start/0, stop/0, global/1, warp/4, warp/5]). %% API.
 
-%% @spec ensure_started(App) -> ok
-%% @doc Make sure the given App is started.
-ensure_started(App) ->
-	case application:start(App) of
-		ok -> ok;
-		{error, {already_started, App}} -> ok
-	end.
+%% @todo Don't use an include file for type specs.
+-include("include/types.hrl").
 
-%% @spec start() -> ok
-%% @doc Start the EGS server.
+%% API.
+
+-spec start() -> ok.
 start() ->
 	ensure_started(crypto),
 	ensure_started(public_key),
@@ -38,8 +34,7 @@ start() ->
 	ensure_started(cowboy),
 	application:start(egs).
 
-%% @spec stop() -> ok
-%% @doc Stop the EGS server.
+-spec stop() -> ok.
 stop() ->
 	Res = application:stop(egs),
 	ok = application:stop(cowboy),
@@ -49,17 +44,27 @@ stop() ->
 	Res.
 
 %% @doc Send a global message.
+-spec global(string()) -> ok.
+global(Message) when length(Message) > 511 ->
+	io:format("global: message too long~n");
 global(Message) ->
-	if	length(Message) > 511 ->
-			io:format("global: message too long~n");
-		true ->
-			egs_users:broadcast_all({egs, notice, top, Message})
-	end.
+	egs_users:broadcast_all({egs, notice, top, Message}).
 
 %% @doc Warp all players to a new map.
+-spec warp(questid(), zoneid(), mapid(), entryid()) -> ok.
 warp(QuestID, ZoneID, MapID, EntryID) ->
 	egs_users:broadcast_all({egs, warp, QuestID, ZoneID, MapID, EntryID}).
 
 %% @doc Warp one player to a new map.
+-spec warp(gid(), questid(), zoneid(), mapid(), entryid()) -> ok.
 warp(GID, QuestID, ZoneID, MapID, EntryID) ->
 	egs_users:broadcast({egs, warp, QuestID, ZoneID, MapID, EntryID}, [GID]).
+
+%% Internal.
+
+-spec ensure_started(module()) -> ok.
+ensure_started(App) ->
+	case application:start(App) of
+		ok -> ok;
+		{error, {already_started, App}} -> ok
+	end.
