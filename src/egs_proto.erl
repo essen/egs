@@ -1322,8 +1322,8 @@ send_020f(ZoneData, SetID, SeasonID, Client) ->
 
 %% @doc Send the current UNIX time.
 send_0210(Client=#client{gid=DestGID, lid=DestLID}) ->
-	UnixTime = calendar:datetime_to_gregorian_seconds(erlang:universaltime())
-		- calendar:datetime_to_gregorian_seconds({{1970, 1, 1}, {0, 0, 0}}),
+	{M, S, _} = erlang:now(),
+	UnixTime = M * 1000000 + S,
 	packet_send(Client, << 16#02100300:32, DestLID:16/little, 0:144, 16#00011300:32, DestGID:32/little, 0:96, UnixTime:32/little >>).
 
 %% @todo No idea what this is doing.
