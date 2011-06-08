@@ -1,6 +1,6 @@
 %% @author Loïc Hoguin <essen@dev-extend.eu>
 %% @copyright 2010-2011 Loïc Hoguin.
-%% @doc Supervisor for the egs application.
+%% @doc Top-level supervisor for the egs application.
 %%
 %%	This file is part of EGS.
 %%
@@ -20,30 +20,36 @@
 -module(egs_sup).
 -behaviour(supervisor).
 
--export([init/1]). %% Supervisor callbacks.
--export([start_link/0]). %% Other functions.
+-export([start_link/0]). %% API.
+-export([init/1]). %% Supervisor.
 
-%% @spec start_link() -> ServerRet
-%% @doc API for starting the supervisor.
+-spec start_link() -> {ok, pid()}.
 start_link() ->
 	supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
-%% @spec init([]) -> SupervisorTree
-%% @doc supervisor callback.
+-spec init([]) -> {ok, {{one_for_one, 10, 10}, [{_, _, _, _, _, _}, ...]}}.
 init([]) ->
-	Procs = [
-		{egs_conf, {egs_conf, start_link, []}, permanent, 5000, worker, dynamic},
-		{egs_quests_sup, {egs_quests_sup, start_link, []}, permanent, 5000, supervisor, [egs_quests_sup]},
-		{egs_zones_sup, {egs_zones_sup, start_link, []}, permanent, 5000, supervisor, [egs_zones_sup]},
-		{egs_accounts, {egs_accounts, start_link, []}, permanent, 5000, worker, dynamic},
-		{egs_users, {egs_users, start_link, []}, permanent, 5000, worker, dynamic},
-		{egs_seasons, {egs_seasons, start_link, []}, permanent, 5000, worker, dynamic},
-		{egs_counters_db, {egs_counters_db, start_link, []}, permanent, 5000, worker, dynamic},
-		{egs_items_db, {egs_items_db, start_link, []}, permanent, 5000, worker, dynamic},
-		{egs_npc_db, {egs_npc_db, start_link, []}, permanent, 5000, worker, dynamic},
-		{egs_patch_files_db, {egs_patch_files_db, start_link, []}, permanent, 5000, worker, dynamic},
-		{egs_quests_db, {egs_quests_db, start_link, []}, permanent, 5000, worker, dynamic},
-		{egs_shops_db, {egs_shops_db, start_link, []}, permanent, 5000, worker, dynamic},
-		{egs_universes, {egs_universes, start_link, []}, permanent, 5000, worker, dynamic}
-	],
+	Procs = procs([egs_conf, {sup, egs_quests_sup}, {sup, egs_zones_sup},
+		egs_accounts, egs_users, egs_seasons, egs_counters_db, egs_items_db,
+		egs_npc_db, egs_patch_files_db, egs_quests_db, egs_shops_db,
+		egs_universes], []),
 	{ok, {{one_for_one, 10, 10}, Procs}}.
+
+%% Internal.
+
+-spec procs([module()|{sup, module()}], [{_, _, _, _, _, _}])
+	-> [{_, _, _, _, _, _}].
+procs([], Acc) ->
+	lists:reverse(Acc);
+procs([{sup, Module}|Tail], Acc) ->
+	procs(Tail, [sup(Module)|Acc]);
+procs([Module|Tail], Acc) ->
+	procs(Tail, [worker(Module)|Acc]).
+
+-spec worker(M) -> {M, {M, start_link, []}, permanent, 5000, worker, dynamic}.
+worker(Module) ->
+	{Module, {Module, start_link, []}, permanent, 5000, worker, dynamic}.
+
+-spec sup(M) -> {M, {M, start_link, []}, permanent, 5000, supervisor, [M]}.
+sup(Module) ->
+	{Module, {Module, start_link, []}, permanent, 5000, supervisor, [Module]}.
