@@ -43,7 +43,7 @@ zone_pid(Pid, ZoneID) ->
 init([UniID, QuestID]) ->
 	Zones = egs_quests_db:quest_zones(QuestID),
 	ZonesPids = lists:map(fun({ZoneID, ZoneData}) ->
-		{ok, Pid} = supervisor:start_child(egs_zones_sup, {{zone, UniID, QuestID, ZoneID}, {egs_zones, start_link, [UniID, QuestID, ZoneID, ZoneData]}, permanent, 5000, worker, dynamic}),
+		{ok, Pid} = egs_zones_sup:start_zone(UniID, QuestID, ZoneID, ZoneData),
 		{ZoneID, Pid}
 	end, Zones),
 	{ok, #state{zones=ZonesPids}}.
