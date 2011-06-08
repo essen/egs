@@ -29,13 +29,15 @@
 
 %% Location related types.
 
+-type uniid() :: 21 | 26..254 | 16#ffffffff.
 -type questid() :: 0..16#ffffffff. %% @todo What's the real max?
 -type zoneid() :: 0..16#ffff. %% @todo What's the real max?
 -type mapid() :: 0..9999.
 -type entryid() :: 0..16#ffff. %% @todo What's the real max?
 -type area() :: {questid(), zoneid(), mapid()}. %% @todo Probably remove later.
 -type position() :: {X::float(), Y::float(), Z::float(), Dir::float()}.
--export_type([questid/0, zoneid/0, mapid/0, entryid/0, area/0, position/0]).
+-export_type([uniid/0, questid/0, zoneid/0, mapid/0, entryid/0,
+	area/0, position/0]).
 
 %% API.
 

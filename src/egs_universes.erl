@@ -152,6 +152,6 @@ create_unis([Name|Tail], UniID, Acc) ->
 %% @doc Start lobbies for the given universe.
 init_lobbies(UniID) ->
 	lists:map(fun(QuestID) ->
-		{ok, Pid} = supervisor:start_child(egs_quests_sup, {{quest, UniID, QuestID}, {egs_quests, start_link, [UniID, QuestID]}, permanent, 5000, worker, dynamic}),
+		{ok, Pid} = egs_quests_sup:start_quest(UniID, QuestID),
 		{{UniID, QuestID}, Pid}
 	end, ?LOBBIES).
