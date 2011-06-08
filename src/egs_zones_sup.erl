@@ -38,7 +38,9 @@ start_zone(UniID, QuestID, ZoneID, ZoneData) ->
 
 %% supervisor.
 
--spec init([]) -> {ok, {{simple_one_for_one, 0, 1}, [{_, _, _, _, _, _}, ...]}}.
+-spec init([]) -> {ok, {{simple_one_for_one, 0, 1}, [{egs_zones,
+	{egs_zones, start_link, []}, temporary, brutal_kill,
+	worker, [egs_zones]}]}}.
 init([]) ->
 	{ok, {{simple_one_for_one, 0, 1}, [{egs_zones,
 		{egs_zones, start_link, []}, temporary, brutal_kill,

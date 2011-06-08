@@ -27,7 +27,7 @@
 start_link() ->
 	supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
--spec init([]) -> {ok, {{one_for_one, 10, 10}, [{_, _, _, _, _, _}, ...]}}.
+-spec init([]) -> {ok, {{one_for_one, 10, 10}, [supervisor:child_spec(), ...]}}.
 init([]) ->
 	Procs = procs([egs_conf, {sup, egs_quests_sup}, {sup, egs_zones_sup},
 		egs_accounts, egs_users, egs_seasons, egs_counters_db, egs_items_db,
@@ -37,8 +37,8 @@ init([]) ->
 
 %% Internal.
 
--spec procs([module()|{sup, module()}], [{_, _, _, _, _, _}])
-	-> [{_, _, _, _, _, _}].
+-spec procs([module()|{sup, module()}], [supervisor:child_spec()])
+	-> [supervisor:child_spec()].
 procs([], Acc) ->
 	lists:reverse(Acc);
 procs([{sup, Module}|Tail], Acc) ->
