@@ -29,20 +29,16 @@
 
 %% API.
 
--spec start(application_start_type(), term()) -> {ok, pid()} | {error, atom()}.
+-spec start(application_start_type(), term()) -> {ok, pid()}.
 start(_Type, _StartArgs) ->
-	case egs_sup:start_link() of
-		{ok, Pid} ->
-			start_patch_listeners(egs_conf:read(patch_ports)),
-			start_login_listeners(egs_conf:read(login_ports)),
-			{_ServerIP, GamePort} = egs_conf:read(game_server),
-			{ok, _GamePid} = cowboy:start_listener({game, GamePort}, 10,
-				cowboy_ssl_transport, [{port, GamePort}] ++ ?SSL_OPTIONS,
-				egs_game_protocol, []),
-			{ok, Pid};
-		{error, Reason} ->
-			{error, Reason}
-	end.
+	{ok, Pid} = egs_sup:start_link(),
+	start_patch_listeners(egs_conf:read(patch_ports)),
+	start_login_listeners(egs_conf:read(login_ports)),
+	{_ServerIP, GamePort} = egs_conf:read(game_server),
+	{ok, _GamePid} = cowboy:start_listener({game, GamePort}, 10,
+		cowboy_ssl_transport, [{port, GamePort}] ++ ?SSL_OPTIONS,
+		egs_game_protocol, []),
+	{ok, Pid}.
 
 -spec stop(term()) -> ok.
 stop(_State) ->
