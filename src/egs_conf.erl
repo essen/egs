@@ -21,40 +21,33 @@
 -behavior(gen_server).
 
 -export([start_link/0, stop/0, read/1, reload/0]). %% API.
--export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]). %% gen_server.
+-export([init/1, handle_call/3, handle_cast/2,
+	handle_info/2, terminate/2, code_change/3]). %% gen_server.
 
-%% Use the module name for the server's name.
 -define(SERVER, ?MODULE).
 
 %% API.
 
-%% @spec start_link() -> {ok,Pid::pid()}
+-spec start_link() -> {ok, pid()}.
 start_link() ->
 	gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
-%% @spec stop() -> stopped
+-spec stop() -> stopped.
 stop() ->
 	gen_server:call(?SERVER, stop).
 
-%% @spec read(Key) -> Value | undefined
+-spec read(atom()) -> undefined | any().
 read(Key) ->
 	gen_server:call(?SERVER, {read, Key}).
 
-%% @spec reload() -> ok
+-spec reload() -> ok.
 reload() ->
 	gen_server:cast(?SERVER, reload).
 
 %% gen_server.
 
 init([]) ->
-	case file:consult("priv/egs.conf") of
-		{ok, Terms} ->
-			error_logger:info_report("egs_conf started"),
-			{ok, Terms};
-		Error ->
-			error_logger:error_report(["An error occurred when trying to load the configuration file:", Error]),
-			Error
-	end.
+	{ok, _Terms} = file:consult("priv/egs.conf").
 
 handle_call({read, Key}, _From, State) ->
 	{reply, proplists:get_value(Key, State), State};
