@@ -18,9 +18,9 @@
 
 REBAR = rebar
 
-all: server
+all: app
 
-server: deps
+app: deps
 	@$(REBAR) compile
 
 deps:
