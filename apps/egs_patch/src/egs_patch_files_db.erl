@@ -107,7 +107,8 @@ code_change(_OldVsn, State, _Extra) ->
 %% Internal.
 
 build_state() ->
-	{ok, Terms} = file:consult("priv/patch.conf"),
+	{ok, App} = application:get_application(),
+	{ok, Terms} = file:consult([code:priv_dir(App), "/patch.conf"]),
 	Folders = proplists:get_value(folders, Terms),
 	{ListBin, Files} = build_list_bin(Folders, Terms),
 	#state{list_bin=ListBin, files=Files}.

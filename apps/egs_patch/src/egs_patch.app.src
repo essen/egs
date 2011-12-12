@@ -1,0 +1,14 @@
+%%-*- mode: erlang -*-
+{application, egs_patch, [
+	{description, "EGS patch server"},
+	{vsn, "0.1.0"},
+	{modules, []},
+	{registered, []},
+	{applications, [
+		kernel,
+		stdlib,
+		cowboy
+	]},
+	{mod, {egs_patch_app, []}},
+	{env, []}
+]}.

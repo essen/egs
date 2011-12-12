@@ -1,6 +1,6 @@
 %% @author Loïc Hoguin <essen@dev-extend.eu>
-%% @copyright 2010-2011 Loïc Hoguin.
-%% @doc Callbacks for the egs application.
+%% @copyright 2011 Loïc Hoguin.
+%% @doc Callbacks for the egs_patch application.
 %%
 %%	This file is part of EGS.
 %%
@@ -17,29 +17,20 @@
 %%	You should have received a copy of the GNU Affero General Public License
 %%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
--module(egs_app).
+-module(egs_patch_app).
 -behaviour(application).
 -export([start/2, stop/1]). %% API.
 
 -type application_start_type()
 	:: normal | {takeover, node()} | {failover, node()}.
 
--define(SSL_OPTIONS, [{certfile, "priv/ssl/servercert.pem"},
-	{keyfile, "priv/ssl/serverkey.pem"}, {password, "alpha"}]).
-
 %% API.
 
 -spec start(application_start_type(), term()) -> {ok, pid()}.
 start(_Type, _StartArgs) ->
-	{ok, Pid} = egs_sup:start_link(),
-	application:set_env(egs_patch, patch_ports, egs_conf:read(patch_ports)),
-	application:start(egs_patch),
-	start_login_listeners(egs_conf:read(login_ports)),
-	{_ServerIP, GamePort} = egs_conf:read(game_server),
-	{ok, _GamePid} = cowboy:start_listener({game, GamePort}, 10,
-		cowboy_ssl_transport, [{port, GamePort}] ++ ?SSL_OPTIONS,
-		egs_game_protocol, []),
-	{ok, Pid}.
+	{ok, PatchPorts} = application:get_env(patch_ports),
+	start_listeners(PatchPorts),
+	egs_patch_sup:start_link().
 
 -spec stop(term()) -> ok.
 stop(_State) ->
@@ -47,11 +38,11 @@ stop(_State) ->
 
 %% Internal.
 
--spec start_login_listeners([inet:ip_port()]) -> ok.
-start_login_listeners([]) ->
+-spec start_listeners([inet:ip_port()]) -> ok.
+start_listeners([]) ->
 	ok;
-start_login_listeners([Port|Tail]) ->
-	{ok, _Pid} = cowboy:start_listener({login, Port}, 10,
-		cowboy_ssl_transport, [{port, Port}] ++ ?SSL_OPTIONS,
-		egs_login_protocol, []),
-	start_login_listeners(Tail).
+start_listeners([Port|Tail]) ->
+	{ok, _Pid} = cowboy:start_listener({patch, Port}, 10,
+		cowboy_tcp_transport, [{port, Port}],
+		egs_patch_protocol, []),
+	start_listeners(Tail).

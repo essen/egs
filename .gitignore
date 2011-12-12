@@ -1,6 +1,6 @@
-c_src/*.o
+apps/*/c_src/*.o
+apps/*/ebin
+apps/*/priv/*.so
+apps/egs/src/egs_script_lexer.erl
+apps/egs/src/egs_script_parser.erl
 deps
-ebin
-priv/*.so
-src/egs_script_lexer.erl
-src/egs_script_parser.erl
