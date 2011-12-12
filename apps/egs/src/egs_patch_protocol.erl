@@ -18,7 +18,7 @@
 %%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
 -module(egs_patch_protocol).
--export([start_link/3, init/2]).
+-export([start_link/4, init/2]).
 
 -define(TIMEOUT, 5000).
 
@@ -33,8 +33,8 @@
 -type cmd() :: 0..16#14.
 -type cmd_size() :: 0..16#ffffffff.
 
--spec start_link(inet:socket(), module(), []) -> {ok, pid()}.
-start_link(Socket, Transport, []) ->
+-spec start_link(pid(), inet:socket(), module(), []) -> {ok, pid()}.
+start_link(_ListenerPid, Socket, Transport, []) ->
 	Pid = spawn_link(?MODULE, init, [Socket, Transport]),
 	{ok, Pid}.
 

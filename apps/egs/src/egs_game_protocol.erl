@@ -18,12 +18,12 @@
 %%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
 -module(egs_game_protocol).
--export([start_link/3, init/2]).
+-export([start_link/4, init/2]).
 
 -include("include/records.hrl").
 
--spec start_link(ssl:sslsocket(), module(), []) -> {ok, pid()}.
-start_link(Socket, Transport, []) ->
+-spec start_link(pid(), ssl:sslsocket(), module(), []) -> {ok, pid()}.
+start_link(_ListenerPid, Socket, Transport, []) ->
 	Pid = spawn_link(?MODULE, init, [Socket, Transport]),
 	{ok, Pid}.
 
