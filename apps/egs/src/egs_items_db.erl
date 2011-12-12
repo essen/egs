@@ -27,7 +27,7 @@
 -define(SERVER, ?MODULE).
 
 -include("include/records.hrl").
--include("priv/items.hrl").
+-include("../../priv/items.hrl").
 
 %% API.
 
