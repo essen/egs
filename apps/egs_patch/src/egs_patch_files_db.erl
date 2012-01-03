@@ -111,7 +111,7 @@ build_state() ->
 	PrivDir = code:priv_dir(App),
 	{ok, Terms} = file:consult([PrivDir, "/patch.conf"]),
 	Folders = proplists:get_value(folders, Terms),
-	{ListBin, Files} = build_list_bin(Folders, Terms, [PrivDir, "/patch/"]),
+	{ListBin, Files} = build_list_bin(Folders, Terms, [PrivDir, "/files/"]),
 	#state{list_bin=ListBin, files=Files}.
 
 %% The file number must start at 0.
