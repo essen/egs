@@ -108,21 +108,22 @@ code_change(_OldVsn, State, _Extra) ->
 
 build_state() ->
 	{ok, App} = application:get_application(),
-	{ok, Terms} = file:consult([code:priv_dir(App), "/patch.conf"]),
+	PrivDir = code:priv_dir(App),
+	{ok, Terms} = file:consult([PrivDir, "/patch.conf"]),
 	Folders = proplists:get_value(folders, Terms),
-	{ListBin, Files} = build_list_bin(Folders, Terms),
+	{ListBin, Files} = build_list_bin(Folders, Terms, [PrivDir, "/patch/"]),
 	#state{list_bin=ListBin, files=Files}.
 
 %% The file number must start at 0.
-build_list_bin(Folders, Terms) ->
-	build_list_bin(Folders, Terms, 0, [], []).
-build_list_bin([], _Terms, _N, Acc, FilesAcc) ->
+build_list_bin(Folders, Terms, PatchDir) ->
+	build_list_bin(Folders, Terms, PatchDir, 0, [], []).
+build_list_bin([], _Terms, _PatchDir, _N, Acc, FilesAcc) ->
 	Bin = list_to_binary(lists:reverse(Acc)),
 	Bin2 = << 16#08:32/little, 16#06:32/little, Bin/binary, 16#08:32/little, 16#08:32/little >>,
 	{Bin2, lists:flatten(FilesAcc)};
-build_list_bin([Folder|Tail], Terms, N, Acc, FilesAcc) ->
+build_list_bin([Folder|Tail], Terms, PatchDir, N, Acc, FilesAcc) ->
 	Filenames = proplists:get_value({folder, Folder}, Terms),
-	{BinFiles, Files, N2} = build_files_bin(Folder, Filenames, N),
+	{BinFiles, Files, N2} = build_files_bin(Folder, Filenames, PatchDir, N),
 	BinFiles2 = case Folder of
 		root -> BinFiles;
 		_Any ->
@@ -131,17 +132,17 @@ build_list_bin([Folder|Tail], Terms, N, Acc, FilesAcc) ->
 			<<	16#48:32/little, 16#09:32/little, FolderBin/binary, 0:Padding,
 				BinFiles/binary, 16#08:32/little, 16#0a:32/little >>
 	end,
-	build_list_bin(Tail, Terms, N2, [BinFiles2|Acc], [Files|FilesAcc]).
+	build_list_bin(Tail, Terms, PatchDir, N2, [BinFiles2|Acc], [Files|FilesAcc]).
 
-build_files_bin(Folder, Filenames, N) ->
-	build_files_bin(Folder, Filenames, N, [], []).
-build_files_bin(_Folder, [], N, Acc, FilesAcc) ->
+build_files_bin(Folder, Filenames, PatchDir, N) ->
+	build_files_bin(Folder, Filenames, PatchDir, N, [], []).
+build_files_bin(_Folder, [], _PatchDir, N, Acc, FilesAcc) ->
 	Bin = list_to_binary(lists:reverse(Acc)),
 	{Bin, FilesAcc, N};
-build_files_bin(Folder, [Filename|Tail], N, Acc, FilesAcc) ->
+build_files_bin(Folder, [Filename|Tail], PatchDir, N, Acc, FilesAcc) ->
 	FullFilename = case Folder of
-		root -> ["priv/patch/"|Filename];
-		_Any -> ["priv/patch/",Folder,"/"|Filename]
+		root -> [PatchDir|Filename];
+		_Any -> [PatchDir,Folder,"/"|Filename]
 	end,
 	Size = file_get_size(FullFilename),
 	CRC = file_get_crc(FullFilename),
@@ -149,7 +150,7 @@ build_files_bin(Folder, [Filename|Tail], N, Acc, FilesAcc) ->
 	Padding = 8 * (64 - length(Filename)),
 	FilenameBin2 = << FilenameBin/binary, 0:Padding >>,
 	Bin = << 16#4c:32/little, 16#07:32/little, N:32/little, FilenameBin2/binary >>,
-	build_files_bin(Folder, Tail, N + 1, [Bin|Acc], [{N, #file{crc=CRC, size=Size, folder=Folder, filename_bin=FilenameBin2, full_filename=FullFilename}}|FilesAcc]).
+	build_files_bin(Folder, Tail, PatchDir, N + 1, [Bin|Acc], [{N, #file{crc=CRC, size=Size, folder=Folder, filename_bin=FilenameBin2, full_filename=FullFilename}}|FilesAcc]).
 
 file_get_size(Filename) ->
 	{ok, FileInfo} = file:read_file_info(Filename),

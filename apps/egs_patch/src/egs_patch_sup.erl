@@ -1,6 +1,4 @@
-%% @author Loïc Hoguin <essen@dev-extend.eu>
-%% @copyright 2011 Loïc Hoguin.
-%% @doc Top-level supervisor for the egs_patch application.
+%%	Copyright (c) 2011, Loïc Hoguin <essen@dev-extend.eu>
 %%
 %%	This file is part of EGS.
 %%

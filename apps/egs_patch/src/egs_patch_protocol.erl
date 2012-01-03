@@ -1,6 +1,4 @@
-%% @author Loïc Hoguin <essen@dev-extend.eu>
-%% @copyright 2010-2011 Loïc Hoguin.
-%% @doc Cowboy protocol module for the patch server.
+%%	Copyright (c) 2011, Loïc Hoguin <essen@dev-extend.eu>
 %%
 %%	This file is part of EGS.
 %%
@@ -17,9 +15,12 @@
 %%	You should have received a copy of the GNU Affero General Public License
 %%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
+%% @doc Cowboy protocol module for the patch server.
 -module(egs_patch_protocol).
+
 -export([start_link/4, init/2]).
 
+%% @todo Move that in a configuration file.
 -define(TIMEOUT, 5000).
 
 -record(state, {
@@ -177,7 +178,8 @@ send_0f(#state{socket=Socket, transport=Transport, files=Files}) ->
 	Size = lists:foldl(
 		fun(N, Acc) -> Acc + egs_patch_files_db:get_size(N) end, 0, Files),
 	NbFiles = length(Files),
-	Bin = << 16#10:32/little, 16#0f:32/little, Size:32/little, NbFiles:32/little >>,
+	Bin = << 16#10:32/little, 16#0f:32/little,
+		Size:32/little, NbFiles:32/little >>,
 	ok = Transport:send(Socket, Bin).
 
 -spec send_10(state(), non_neg_integer(), binary()) -> ok.

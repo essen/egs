@@ -1,6 +1,4 @@
-%% @author Loïc Hoguin <essen@dev-extend.eu>
-%% @copyright 2011 Loïc Hoguin.
-%% @doc Callbacks for the egs_patch application.
+%%	Copyright (c) 2011, Loïc Hoguin <essen@dev-extend.eu>
 %%
 %%	This file is part of EGS.
 %%
@@ -18,6 +16,7 @@
 %%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
 -module(egs_patch_app).
+
 -behaviour(application).
 -export([start/2, stop/1]). %% API.
 
