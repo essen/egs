@@ -1,0 +1,11 @@
+%%-*- mode: erlang -*-
+{application, prs, [
+	{description, "PRS compression library."},
+	{vsn, "0.1.0"},
+	{modules, []},
+	{registered, []},
+	{applications, [
+		kernel,
+		stdlib
+	]}
+]}.

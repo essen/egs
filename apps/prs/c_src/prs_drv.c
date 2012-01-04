@@ -71,4 +71,4 @@ static ErlNifFunc nif_funcs[] = {
 	{"compress", 1, compress_nif}
 };
 
-ERL_NIF_INIT(egs_prs, nif_funcs, load, reload, upgrade, unload)
+ERL_NIF_INIT(prs, nif_funcs, load, reload, upgrade, unload)

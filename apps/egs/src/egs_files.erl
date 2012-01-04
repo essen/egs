@@ -506,7 +506,7 @@ nbl_pack_files([], {AccH, AccD, AccP, _FilePos, _PtrIndex}) ->
 	{BinD3, CompressedDataSize} = if BinDSize < 16#800 ->
 			{BinD, 0};
 		true ->
-			BinD2 = egs_prs:compress(BinD),
+			BinD2 = prs:compress(BinD),
 			BinD2Size = byte_size(BinD2),
 			{BinD2, BinD2Size}
 	end,

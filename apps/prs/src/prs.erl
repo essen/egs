@@ -17,12 +17,13 @@
 %%	You should have received a copy of the GNU Affero General Public License
 %%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
--module(egs_prs).
+-module(prs).
 -export([init/0, compress/1]).
 -on_load(init/0).
 
 init() ->
-	erlang:load_nif("priv/egs_drv", 0).
+	PrivDir = code:priv_dir(prs),
+	erlang:load_nif(PrivDir ++ "/prs_drv", 0).
 
 compress(_SrcBin) ->
 	erlang:nif_error(not_loaded).
