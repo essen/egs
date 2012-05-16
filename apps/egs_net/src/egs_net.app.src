@@ -1,0 +1,12 @@
+%%-*- mode: erlang -*-
+{application, egs_net, [
+	{description, "EGS network layer."},
+	{vsn, "0.1.0"},
+	{modules, []},
+	{registered, []},
+	{applications, [
+		kernel,
+		stdlib,
+		cowboy
+	]}
+]}.

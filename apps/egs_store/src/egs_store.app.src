@@ -1,0 +1,13 @@
+%%-*- mode: erlang -*-
+{application, egs_store, [
+	{description, "EGS storage layer."},
+	{vsn, "0.1.0"},
+	{modules, []},
+	{registered, []},
+	{applications, [
+		kernel,
+		stdlib
+	]},
+	{mod, {egs_store_app, []}},
+	{env, []}
+]}.

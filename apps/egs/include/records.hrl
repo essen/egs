@@ -20,12 +20,15 @@
 %% Records.
 
 %% @doc Client state. One per connected client.
--record(client, {
+-record(egs_net, {
 	socket			:: ssl:sslsocket(),
 	transport		:: module(),
+	handler         :: module(),
+	buffer = <<>>   :: binary(),
+	keepalive = false :: boolean(),
 	gid = 0			:: egs:gid(),
-	slot = 0		:: egs:character_slot(), %% @todo Probably should remove this one from the state.
 	lid = 16#ffff	:: egs:lid(),
+	slot = 0        :: 0..3,
 	areanb = 0		:: non_neg_integer()
 }).
 
@@ -70,7 +73,8 @@
 	prev_area = {0, 0, 0} :: egs:area(),
 	prev_entryid = 0 :: egs:entryid(),
 	%% To be moved or deleted later on.
-	instancepid	:: pid()
+	instancepid	:: pid(),
+	char
 }).
 
 %% Past this point needs to be reviewed.

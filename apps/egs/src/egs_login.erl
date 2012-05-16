@@ -18,13 +18,9 @@
 %%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
 -module(egs_login).
--export([keepalive/1, info/2, cast/3, raw/3, event/2]).
+-export([info/2, cast/3, event/2]).
 
 -include("include/records.hrl").
-
-%% @doc Don't keep alive here, authentication should go fast.
-keepalive(_Client) ->
-	ok.
 
 %% @doc We don't expect any message here.
 info(_Msg, _Client) ->
@@ -34,55 +30,52 @@ info(_Msg, _Client) ->
 cast(_Command, _Data, _Client) ->
 	ok.
 
-%% Raw commands.
-
-%% @doc Dismiss all raw commands with a log notice.
-%% @todo Have a log event handler instead.
-raw(Command, _Data, _Client) ->
-	io:format("~p: dismissed command ~4.16.0b~n", [?MODULE, Command]).
-
 %% Events.
 
 %% @doc Reject version < 2.0009.2.
 %% @todo Reject wrong platforms too.
-event({system_client_version_info, _Entrance, _Language, _Platform, Version},
-		Client=#client{socket=Socket, transport=Transport})
+%% @todo Put the URL in a configuration file.
+event({client_version, _Entrance, _Language, _Platform, Version}, Client)
 		when Version < 2009002 ->
-	egs_proto:send_0231("http://psumods.co.uk/forums/comments.php?DiscussionID=40#Item_1", Client),
-	{ok, ErrorMsg} = file:read_file("priv/login/error_version.txt"),
-	egs_proto:send_0223(ErrorMsg, Client),
-	Transport:close(Socket),
+	egs_net:system_open_url(<<"http://psumods.co.uk/forums/comments.php?DiscussionID=40#Item_1">>, Client),
+	{ok, Error} = file:read_file("priv/login/error_version.txt"),
+	egs_net:system_auth_error(Error, Client),
+	egs_net:terminate(Client),
 	closed;
-event({system_client_version_info, _Entrance, _Language, _Platform, _Version}, _Client) ->
+event({client_version, _Entrance, _Language, _Platform, _Version}, _Client) ->
 	ok;
 
 %% @doc Game server info request handler.
-event(system_game_server_request,
-		Client=#client{socket=Socket, transport=Transport}) ->
+event(system_game_server_request, Client) ->
 	{ServerIP, ServerPort} = egs_conf:read(game_server),
-	egs_proto:send_0216(ServerIP, ServerPort, Client),
-	Transport:close(Socket),
+	egs_net:system_game_server_response(ServerIP, ServerPort, Client),
+	egs_net:terminate(Client),
 	closed;
 
 %% @doc Authenticate the user by pattern matching its saved state against the key received.
 %%      If the user is authenticated, send him the character flags list.
-event({system_key_auth_request, AuthGID, AuthKey}, Client) ->
+event({system_key_auth, AuthGID, AuthKey}, Client) ->
 	egs_accounts:key_auth(AuthGID, AuthKey),
-	Client2 = Client#client{gid=AuthGID},
-	egs_proto:send_0d05(Client2),
-	{ok, egs_char_select, Client2};
+	Client2 = egs_net:set_gid(AuthGID, Client),
+	ValueFlags = egs_conf:read(value_flags),
+	BoolFlags = egs_conf:read(bool_flags),
+	TempFlags = egs_conf:read(temp_flags),
+	egs_net:account_flags(ValueFlags, BoolFlags, TempFlags, Client2),
+	Client3 = egs_net:set_handler(egs_char_select, Client2),
+	Client4 = egs_net:set_keepalive(Client3),
+	{ok, Client4};
 
 %% @doc Authentication request handler. Currently always succeed.
 %% @todo Handle real GIDs whenever there's real authentication. GID is the second SessionID in the reply.
 %% @todo Apparently it's possible to ask a question in the reply here. Used for free course on JP.
-event({system_login_auth_request, Username, Password}, Client) ->
-	{ok, GID} = egs_accounts:login_auth(Username, Password),
-	{ok, AuthKey} = egs_accounts:key_auth_init(GID),
+event({system_login_auth, Username, Password}, Client) ->
+	{ok, AuthGID} = egs_accounts:login_auth(Username, Password),
+	{ok, AuthKey} = egs_accounts:key_auth_init(AuthGID),
 	io:format("auth success for ~s ~s~n", [Username, Password]),
-	egs_proto:send_0223(GID, AuthKey, Client);
+	egs_net:system_key_auth_info(AuthGID, AuthKey, Client);
 
 %% @doc MOTD request handler. Page number starts at 0.
 %% @todo Currently ignore the language and send the same MOTD file to everyone.
 event({system_motd_request, Page, _Language}, Client) ->
 	{ok, MOTD} = file:read_file("priv/login/motd.txt"),
-	egs_proto:send_0225(MOTD, Page, Client).
+	egs_net:system_motd_response(MOTD, Page, Client).

@@ -31,16 +31,14 @@ start_link(_ListenerPid, Socket, Transport, []) ->
 %% @todo Handle keepalive messages globally?
 init(Socket, Transport) ->
 	{ok, _TRef} = timer:send_interval(5000, {egs, keepalive}),
-	Client = #client{socket=Socket, transport=Transport,
-		gid=egs_accounts:tmp_gid()},
-	egs_proto:send_0202(Client),
-	try
-		egs_network:recv(<<>>, egs_login, Client)
-	after
-		terminate()
-	end.
+	Client = egs_net:init(Socket, Transport, egs_login,
+		egs_accounts:tmp_gid()),
+	egs_net:system_hello(Client),
+	catch egs_net:loop(Client),
+	terminate().
 
 -spec terminate() -> ok.
+%% @todo Just use monitors to handle cleanups.
 %% @todo Cleanup the instance process if there's nobody in it anymore.
 %% @todo Leave party instead of stopping it.
 %% @todo Fix the crash when user isn't in egs_users yet.

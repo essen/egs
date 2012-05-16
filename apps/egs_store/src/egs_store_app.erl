@@ -1,7 +1,3 @@
-%% @author Loïc Hoguin <essen@dev-extend.eu>
-%% @copyright 2010-2011 Loïc Hoguin.
-%% @doc Cowboy protocol module for the login server.
-%%
 %%	This file is part of EGS.
 %%
 %%	EGS is free software: you can redistribute it and/or modify
@@ -17,19 +13,19 @@
 %%	You should have received a copy of the GNU Affero General Public License
 %%	along with EGS.  If not, see <http://www.gnu.org/licenses/>.
 
--module(egs_login_protocol).
--export([start_link/4, init/2]).
+-module(egs_store_app).
+-behaviour(application).
+-export([start/2, stop/1]). %% API.
 
--include("include/records.hrl").
+-type application_start_type()
+	:: normal | {takeover, node()} | {failover, node()}.
 
--spec start_link(pid(), ssl:sslsocket(), module(), []) -> {ok, pid()}.
-start_link(_ListenerPid, Socket, Transport, []) ->
-	Pid = spawn_link(?MODULE, init, [Socket, Transport]),
-	{ok, Pid}.
+%% API.
 
--spec init(ssl:sslsocket(), module()) -> ok | closed.
-init(Socket, Transport) ->
-	Client = egs_net:init(Socket, Transport, egs_login,
-		egs_accounts:tmp_gid()),
-	egs_net:system_hello(Client),
-	egs_net:loop(Client).
+-spec start(application_start_type(), any()) -> {ok, pid()}.
+start(_Type, _StartArgs) ->
+	egs_store_sup:start_link().
+
+-spec stop(any()) -> ok.
+stop(_State) ->
+	ok.

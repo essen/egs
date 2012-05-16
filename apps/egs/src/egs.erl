@@ -46,7 +46,6 @@ start() ->
 	ensure_started(crypto),
 	ensure_started(public_key),
 	ensure_started(ssl),
-	ssl:seed(crypto:rand_bytes(256)),
 	ensure_started(cowboy),
 	application:start(egs).
 

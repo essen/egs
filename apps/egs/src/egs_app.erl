@@ -34,6 +34,7 @@ start(_Type, _StartArgs) ->
 	{ok, Pid} = egs_sup:start_link(),
 	application:set_env(egs_patch, patch_ports, egs_conf:read(patch_ports)),
 	application:start(egs_patch),
+	application:start(egs_store),
 	start_login_listeners(egs_conf:read(login_ports)),
 	{_ServerIP, GamePort} = egs_conf:read(game_server),
 	{ok, _GamePid} = cowboy:start_listener({game, GamePort}, 10,

@@ -19,9 +19,7 @@
 
 -module(psu_characters).
 -export([
-	character_tuple_to_binary/1, character_user_to_binary/1, class_atom_to_binary/1, class_binary_to_atom/1,
-	gender_atom_to_binary/1, gender_binary_to_atom/1, options_binary_to_tuple/1, options_tuple_to_binary/1,
-	race_atom_to_binary/1, race_binary_to_atom/1, stats_tuple_to_binary/1
+	character_user_to_binary/1
 ]).
 
 -include("include/records.hrl").
@@ -34,7 +32,7 @@ character_tuple_to_binary(Tuple) ->
 	RaceBin = race_atom_to_binary(Race),
 	GenderBin = gender_atom_to_binary(Gender),
 	ClassBin = class_atom_to_binary(Class),
-	AppearanceBin = psu_appearance:tuple_to_binary(Race, Appearance),
+	AppearanceBin = egs_net:character_appearance_to_binary(Race, Appearance),
 	LevelsBin = egs_proto:build_char_level(Tuple),
 	<< Name/binary, RaceBin:8, GenderBin:8, ClassBin:8, AppearanceBin/binary, LevelsBin/binary >>.
 
@@ -47,8 +45,8 @@ character_tuple_to_binary(Tuple) ->
 character_user_to_binary(User) ->
 	#users{gid=CharGID, lid=CharLID, npcid=NPCid, type=Type, level=Level, stats=Stats, currenthp=CurrentHP, maxhp=MaxHP,
 		pos={X, Y, Z, Dir}, area={QuestID, ZoneID, MapID}, entryid=EntryID, prev_area={PrevQuestID, PrevZoneID, PrevMapID}, prev_entryid=PrevEntryID} = User,
-	CharBin = psu_characters:character_tuple_to_binary(User),
-	StatsBin = psu_characters:stats_tuple_to_binary(Stats),
+	CharBin = character_tuple_to_binary(User),
+	StatsBin = stats_tuple_to_binary(Stats),
 	EXPNextLevel = 100,
 	EXPCurrentLevel = 0,
 	IntDir = trunc(Dir * 182.0416),
@@ -66,45 +64,10 @@ character_user_to_binary(User) ->
 
 class_atom_to_binary(Class) ->
 	case Class of
-		hunter			-> 0;
-		ranger			-> 1;
-		force			-> 2;
-		fighgunner		-> 3;
-		guntecher		-> 4;
-		wartecher		-> 5;
-		fortefighter	-> 6;
-		fortegunner		-> 7;
-		fortetecher		-> 8;
-		protranser		-> 9;
-		acrofighter		-> 10;
-		acrotecher		-> 11;
-		fighmaster		-> 12;
-		gunmaster		-> 13;
-		masterforce		-> 14;
-		acromaster		-> 15
-	end.
-
-%% @doc Convert the binary class to an atom.
-%% @todo Probably can make a list and use that list for both functions.
-
-class_binary_to_atom(ClassBin) ->
-	case ClassBin of
-		 0 -> hunter;
-		 1 -> ranger;
-		 2 -> force;
-		 3 -> fighgunner;
-		 4 -> guntecher;
-		 5 -> wartecher;
-		 6 -> fortefighter;
-		 7 -> fortegunner;
-		 8 -> fortetecher;
-		 9 -> protranser;
-		10 -> acrofighter;
-		11 -> acrotecher;
-		12 -> fighmaster;
-		13 -> gunmaster;
-		14 -> masterforce;
-		15 -> acromaster
+		hunter			-> 12;
+		ranger			-> 13;
+		force			-> 14;
+		acro			-> 15
 	end.
 
 %% @doc Convert a gender atom into a binary to be sent to clients.
@@ -115,35 +78,6 @@ gender_atom_to_binary(Gender) ->
 		female	-> 1
 	end.
 
-%% @doc Convert the binary gender into an atom.
-
-gender_binary_to_atom(GenderBin) ->
-	case GenderBin of
-		0 -> male;
-		1 -> female
-	end.
-
-%% @doc Convert the binary options data into a tuple.
-%%      The few unknown values are probably PS2 or 360 only.
-
-options_binary_to_tuple(Binary) ->
-	<<	TextDisplaySpeed:8, Sound:8, MusicVolume:8, SoundEffectVolume:8, Vibration:8, RadarMapDisplay:8,
-		CutInDisplay:8, MainMenuCursorPosition:8, _:8, Camera3rdY:8, Camera3rdX:8, Camera1stY:8, Camera1stX:8,
-		Controller:8, WeaponSwap:8, LockOn:8, Brightness:8, FunctionKeySetting:8, _:8, ButtonDetailDisplay:8, _:32 >> = Binary,
-	{options, TextDisplaySpeed, Sound, MusicVolume, SoundEffectVolume, Vibration, RadarMapDisplay,
-		CutInDisplay, MainMenuCursorPosition, Camera3rdY, Camera3rdX, Camera1stY, Camera1stX,
-		Controller, WeaponSwap, LockOn, Brightness, FunctionKeySetting, ButtonDetailDisplay}.
-
-%% @doc Convert a tuple of options data into a binary to be sent to clients.
-
-options_tuple_to_binary(Tuple) ->
-	{options, TextDisplaySpeed, Sound, MusicVolume, SoundEffectVolume, Vibration, RadarMapDisplay,
-		CutInDisplay, MainMenuCursorPosition, Camera3rdY, Camera3rdX, Camera1stY, Camera1stX,
-		Controller, WeaponSwap, LockOn, Brightness, FunctionKeySetting, ButtonDetailDisplay} = Tuple,
-	<<	TextDisplaySpeed, Sound, MusicVolume, SoundEffectVolume, Vibration, RadarMapDisplay,
-		CutInDisplay, MainMenuCursorPosition, 0, Camera3rdY, Camera3rdX, Camera1stY, Camera1stX,
-		Controller, WeaponSwap, LockOn, Brightness, FunctionKeySetting, 0, ButtonDetailDisplay, 0:32 >>.
-
 %% @doc Convert a race atom into a binary to be sent to clients.
 
 race_atom_to_binary(Race) ->
@@ -152,16 +86,6 @@ race_atom_to_binary(Race) ->
 		newman	-> 1;
 		cast	-> 2;
 		beast	-> 3
-	end.
-
-%% @doc Convert the binary race into an atom.
-
-race_binary_to_atom(RaceBin) ->
-	case RaceBin of
-		0 -> human;
-		1 -> newman;
-		2 -> cast;
-		3 -> beast
 	end.
 
 %% @doc Convert the tuple of stats data into a binary to be sent to clients.
