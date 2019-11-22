@@ -6,9 +6,8 @@ RPG game servers, by providing facilities to handle characters, items,
 communication aspects, and more. A later goal could be to research a new
 and optimized protocol and build an associated client.
 
-This is a very early work in progress. It does not include any data files
-yet, meaning one cannot at this point run a server without using the
-proprietary files from AOTI.
+The project is in progress and does not include data files. 
+Users cannot run a server without proprietary files from AOTI
 
 The server requires Erlang R14B to compile and run.
 
